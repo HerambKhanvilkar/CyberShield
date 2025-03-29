@@ -223,8 +223,7 @@ const AllBadgesPage = () => {
           Complete challenges and earn badges to showcase your cybersecurity skills
         </p>
         
-        <div className="badges-controls glass-card">
-          {/* Search and filter controls */}
+        
           
           
           <div className="badges-filter">
@@ -233,22 +232,26 @@ const AllBadgesPage = () => {
 
 
               <button 
-                className={`filter-button ${filter === 'all' ? 'active' : ''}`}
+                className={`filter-button1 ${filter === 'all' ? 'active' : ''}`}
                 onClick={() => setFilter('all')}
               >
-                Grid 
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-grid-fill" viewBox="0 0 16 16">
+                  <path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5zm8 0A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5zm-8 8A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5zm8 0A1.5 1.5 0 0 1 10.5 9h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 13.5z" />
+                </svg>
               </button>
 
               <button 
-                className={`filter-button ${filter === '' ? 'active' : ''}`}
+                className={`filter-button2 ${filter === '' ? 'active' : ''}`}
                 onClick={() => navigate("/holo")}
               >
-               Detailed
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-text-fill" viewBox="0 0 16 16">
+                  <path d="M12 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2M5 4h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1 0-1m-.5 2.5A.5.5 0 0 1 5 6h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5M5 8h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1 0-1m0 2h3a.5.5 0 0 1 0 1H5a.5.5 0 0 1 0-1" />
+                </svg>
               </button>
 
               <button 
-                className={`filter-button ${filter === '' ? 'active' : ''}`}
-                onClick={() => setFilter('')}
+                className={`filter-button3 ${filter === '' ? 'active' : ''}`}
+                
               >
               
 
@@ -286,7 +289,7 @@ const AllBadgesPage = () => {
               </button>
             </div>
           </div>
-        </div>
+        
         
         {filteredBadges.length === 0 ? (
           <div className="no-badges-found glass-card">
@@ -391,3 +394,4 @@ const AllBadgesPage = () => {
 };
 
 export default AllBadgesPage;
+
