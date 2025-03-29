@@ -95,7 +95,124 @@
   gap: 10px;
 }
 
-.filter-button {
+
+
+.filter-button1 {
+  background: rgba(255, 255, 255, 0.15); /* Increased from 0.1 to 0.15 */
+  border: 1px solid rgba(255, 255, 255, 0.2); /* Increased border visibility */
+  color: var(--text-light); /* Changed from medium to light */
+  padding: 8px -1px;
+  border-radius: 20px;
+  cursor: pointer;
+  width: 50px;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  position: absolute;
+  
+  top: 100px;
+  right: 480px;
+  font-weight: 500; /* Added font weight */
+}
+
+.filter-button1:hover {
+  background: rgba(255, 255, 255, 0.25); /* Increased hover opacity */
+  color: var(--text-light);
+}
+
+.filter-button1.active {
+  background: var(--accent-blue-glow);
+  color: white;
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+}
+
+.filter-button1 span {
+  display: block;
+  position: relative;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.filter-button1::after {
+    content: "Grid"; 
+    background-color: rgb(65, 64, 109);
+    color: white;
+    padding: 5px 10px;
+    font-size: 12px;
+    white-space: nowrap;
+    border-radius: 5px;
+    position: absolute;
+    top: 22px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.filter-button1:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+.filter-button2 {
+  background: rgba(255, 255, 255, 0.15); /* Increased from 0.1 to 0.15 */
+  border: 1px solid rgba(255, 255, 255, 0.2); /* Increased border visibility */
+  color: var(--text-light); /* Changed from medium to light */
+  padding: 8px -1px;
+  border-radius: 20px;
+  cursor: pointer;
+  width: 50px;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  position: absolute;
+  right: 410px;
+  top: 100px;
+  font-weight: 500; /* Added font weight */
+}
+
+.filter-button2:hover {
+  background: rgba(255, 255, 255, 0.25); /* Increased hover opacity */
+  color: var(--text-light);
+}
+
+.filter-button2.active {
+  background: var(--accent-blue-glow);
+  color: white;
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+}
+
+.filter-button2 span {
+  display: block;
+  position: relative;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.filter-button2::after {
+    content: "Detailed View"; 
+    position: absolute;
+    
+    top: 22px;
+
+    background-color: rgb(65, 64, 109);
+    color: white;
+    padding: 5px 10px;
+    font-size: 12px;
+    white-space: nowrap;
+    border-radius: 5px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.filter-button2:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+
+
+.filter-button3 {
   background: rgba(255, 255, 255, 0.15); /* Increased from 0.1 to 0.15 */
   border: 1px solid rgba(255, 255, 255, 0.2); /* Increased border visibility */
   color: var(--text-light); /* Changed from medium to light */
@@ -104,20 +221,24 @@
   cursor: pointer;
   transition: all 0.2s ease;
   font-size: 14px;
+  position: absolute;
+  left: 50px;
+  top: 220px;
   font-weight: 500; /* Added font weight */
 }
 
-.filter-button:hover {
+.filter-button3:hover {
   background: rgba(255, 255, 255, 0.25); /* Increased hover opacity */
   color: var(--text-light);
 }
 
-.filter-button.active {
+.filter-button3.active {
   background: var(--accent-blue-glow);
   color: white;
   border-color: var(--accent-blue);
   box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
 }
+
 
 /* Badges grid */
 .badges-grid {
@@ -419,6 +540,8 @@
 .filter-by {
   background: none;
   padding: 3px;
+ 
+
   border: none;
   cursor: pointer;
   transition: background 0.2s ease-in-out;
@@ -428,6 +551,10 @@
   text-align: center;
 }
 
+
+
+
+
 .dropdown-container {
   position: relative;
   display: inline-block;
@@ -436,32 +563,44 @@
 .dropdown-menu {
   position: absolute;
   top: 60%; /* Places the dropdown exactly below the button */
-  left: 110%;
-  background: rgba(255, 255, 255, 0.1); /* Semi-transparent background */
-  backdrop-filter: blur(10px); /* Blur effect */
+  left: 130%;
   border-radius: 8px;
   padding: 10px;
   display: flex;
   flex-direction: column;
   width: 130px;
   z-index: 10;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  min-width: 150px;
+  background: rgba(1, 14, 49, 0.8);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  opacity: 0;
+  transform: translateY(10px);
+  animation: dropdownFadeIn 0.3s ease forwards;
 }
 
 .dropdown-item {
   background: none;
   border: none;
-  padding: 10px;
+  padding: 5px;
+  position: relative;
+ 
   text-align: center;
   width: 100%;
   cursor: pointer;
   font-size: 14px;
   color: white;
   border-radius: 5px;
+  transition: background 0.2s ease;
+  
 }
 
+
+
 .dropdown-item:hover {
-  background: rgba(255, 255, 255, 0.2); /* Lighter blur effect on hover */
+  background: rgba(0, 212, 255, 0.1);
+
 }
 
 /* Nested Dropdown for Levels */
@@ -494,10 +633,26 @@
   border: none;
   padding: 10px;
   text-align: center;
-  width: 100%;
+  width: 6px;
   cursor: pointer;
   font-size: 14px;
   color: white;
   border-radius: 5px;
-  margin-left: -20px;
+  margin-right: 60px;
 }
+
+.levels:hover{
+  max-width: 50x;
+}
+
+
+@keyframes dropdownFadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+
+
