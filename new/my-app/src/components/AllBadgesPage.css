@@ -11,10 +11,11 @@
 
 .page-title {
   text-align: center;
-  margin-bottom: 10px;
+  top: 50px;
   color: var(--text-light);
   font-size: 2.5rem;
-  position: relative;
+
+  position: absolute;
   display: inline-block;
   left: 50%;
   transform: translateX(-50%);
@@ -32,15 +33,17 @@
 .page-subtitle {
   text-align: center;
   color: var(--text-light); /* Changed from medium to light for better visibility */
-  margin-bottom: 30px;
+  position:relative;
   font-size: 1.1rem;
+  margin-bottom: 90px;
+  top: 30px;
   /* Add text shadow for better visibility */
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
 /* Search and filter controls */
 .badges-controls {
-  margin-bottom: 30px;
+  margin-bottom: 90px;
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -77,6 +80,7 @@
   flex-direction: column;
   align-items: center;
   gap: 10px;
+  margin-bottom: 5px;
 }
 
 .badges-filter span {
@@ -363,6 +367,7 @@
 .no-badges-found {
   text-align: center;
   padding: 50px 20px;
+  
   margin-bottom: 30px;
   /* Darken the glass background for better text visibility */
   background: rgba(5, 17, 86, 0.4); /* Increased opacity from 0.25 to 0.4 */
@@ -409,4 +414,90 @@
   .filter-button {
     white-space: nowrap;
   }
+}
+
+.filter-by {
+  background: none;
+  padding: 3px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease-in-out;
+  color: white;
+  display: flex;
+  align-items: center;
+  text-align: center;
+}
+
+.dropdown-container {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 60%; /* Places the dropdown exactly below the button */
+  left: 110%;
+  background: rgba(255, 255, 255, 0.1); /* Semi-transparent background */
+  backdrop-filter: blur(10px); /* Blur effect */
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  width: 130px;
+  z-index: 10;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.dropdown-item {
+  background: none;
+  border: none;
+  padding: 10px;
+  text-align: center;
+  width: 100%;
+  cursor: pointer;
+  font-size: 14px;
+  color: white;
+  border-radius: 5px;
+}
+
+.dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.2); /* Lighter blur effect on hover */
+}
+
+/* Nested Dropdown for Levels */
+.nested-dropdown {
+  position: absolute;
+  top: 0;
+  left: 102%;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  width: 130px;
+  z-index: 10;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.nested-dropdown .dropdown-item {
+  width: 100%;
+  text-align: center;
+}
+
+.nested-dropdown .dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.levels {
+  background: none;
+  border: none;
+  padding: 10px;
+  text-align: center;
+  width: 100%;
+  cursor: pointer;
+  font-size: 14px;
+  color: white;
+  border-radius: 5px;
+  margin-left: -20px;
 }
