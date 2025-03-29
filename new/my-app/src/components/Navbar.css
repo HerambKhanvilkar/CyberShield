@@ -74,11 +74,11 @@
   }
   
   /* Dropdown styling */
-  .dropdown {
+  .dropdown1 {
     position: relative;
   }
   
-  .dropdown-icon {
+  .dropdown-icon1 {
     display: inline-block;
     width: 0;
     height: 0;
@@ -89,7 +89,7 @@
     transition: transform 0.3s ease;
   }
   
-  .dropdown-menu {
+  .dropdown-menu1 {
     position: absolute;
     top: 100%;
     right: 0;
@@ -115,13 +115,13 @@
     }
   }
   
-  .dropdown-item {
+  .dropdown-item1 {
     padding: 10px 20px;
     transition: background 0.2s ease;
     cursor: pointer;
   }
   
-  .dropdown-item:hover {
+  .dropdown-item1:hover {
     background: rgba(0, 212, 255, 0.1);
   }
   
