@@ -3,6 +3,9 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import Navbar from "./Navbar";
 import "./AllBadgesPage.css";
+
+import { useNavigate } from "react-router-dom";
+
 // Keep image imports for fallback
 import img1 from "./img1.png";
 import img2 from "./img2.png";
@@ -12,6 +15,8 @@ import img5 from "./img5.png";
 import img6 from "./img6.png";
 import img7 from "./img7.png";
 import img8 from "./img8.png";
+
+
 
 const difficultyColors = {
   "Easy": "#4CAF50",
@@ -29,6 +34,14 @@ const AllBadgesPage = () => {
   const [filteredBadges, setFilteredBadges] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+
+
+ 
+ 
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const navigate = useNavigate();
+  const [levelsDropdownOpen, setLevelsDropdownOpen] = useState(false);
+
   
   // Fetch badges from API
   useEffect(() => {
@@ -212,54 +225,64 @@ const AllBadgesPage = () => {
         
         <div className="badges-controls glass-card">
           {/* Search and filter controls */}
-          <div className="badges-search">
-            <input
-              type="text"
-              placeholder="Search badges..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-input"
-            />
-          </div>
+          
           
           <div className="badges-filter">
-            <span>Filter by:</span>
+            <span></span>
             <div className="filter-buttons">
+
+
               <button 
                 className={`filter-button ${filter === 'all' ? 'active' : ''}`}
                 onClick={() => setFilter('all')}
               >
-                All
+                Grid 
               </button>
+
               <button 
-                className={`filter-button ${filter === 'fundamentals' ? 'active' : ''}`}
-                onClick={() => setFilter('fundamentals')}
+                className={`filter-button ${filter === '' ? 'active' : ''}`}
+                onClick={() => navigate("/holo")}
               >
-                Fundamentals
+               Detailed
               </button>
+
               <button 
-                className={`filter-button ${filter === 'defense' ? 'active' : ''}`}
-                onClick={() => setFilter('defense')}
+                className={`filter-button ${filter === '' ? 'active' : ''}`}
+                onClick={() => setFilter('')}
               >
-                Defense
-              </button>
-              <button 
-                className={`filter-button ${filter === 'offensive' ? 'active' : ''}`}
-                onClick={() => setFilter('offensive')}
-              >
-                Offensive
-              </button>
-              <button 
-                className={`filter-button ${filter === 'leadership' ? 'active' : ''}`}
-                onClick={() => setFilter('leadership')}
-              >
-                Leadership
-              </button>
-              <button 
-                className={`filter-button ${filter === 'mastery' ? 'active' : ''}`}
-                onClick={() => setFilter('mastery')}
-              >
-                Mastery
+              
+
+              <div className="dropdown-container">
+      {/* Main Dropdown Button */}
+      <button onClick={() => setDropdownOpen(!dropdownOpen)} className="filter-by">
+        Filter by
+      </button>
+
+      {/* Main Dropdown Menu */}
+      {dropdownOpen && (
+        <div className="dropdown-menu">
+          {/* Levels Section with Nested Dropdown */}
+          <div className="dropdown-item">
+            <button onClick={() => setLevelsDropdownOpen(!levelsDropdownOpen)} className="levels">
+            Levels
+            </button>
+
+            {/* Nested Levels Dropdown */}
+            {levelsDropdownOpen && (
+              <div className="nested-dropdown">
+                <button className="dropdown-item">Amateur</button>
+                <button className="dropdown-item">Intermediate</button>
+                <button className="dropdown-item">Expert</button>
+              </div>
+            )}
+          </div>
+
+          {/* Courses Section */}
+          <button className="dropdown-item">Courses</button>
+        </div>
+      )}
+    </div>
+
               </button>
             </div>
           </div>
@@ -300,13 +323,6 @@ const AllBadgesPage = () => {
                   </span>
                   <span className="badge-category">{badge.category || "General"}</span>
                 </div>
-                <Link 
-  to={`/badge-view/${badge.id}`}
-  className="glass-button mt-2 text-center"
-  onClick={(e) => e.stopPropagation()}
->
-  View in New 3D Display
-</Link>
               </div>
             ))}
           </div>
@@ -363,8 +379,8 @@ const AllBadgesPage = () => {
               </div>
               
               <div className="badge-details-actions">
-                <button className="glass-button">Attempt Challenge</button>
-                <Link to="/" className="glass-button secondary">Learn More</Link>
+                <button className="glass-button">Get this badge</button>
+                <Link to="/learn-more" className="glass-button secondary">Learn More</Link>
               </div>
             </div>
           </div>
