@@ -27,6 +27,8 @@ function App() {
         <Route path="/badge-view/:id?" element={<HolographicBadgeDisplay />} />
         <Route path="/new-badge/:id?" element={<NewBadgeView />} />
         <Route path="/badge/shared/:id/:username/:timestamp" element={<SharedBadgePage />} />
+        <Route path="/holo" element={<HolographicBadgeDisplay />} />
+        <Route path="/learn-more" element={<HolographicBadgeDisplay />} />
         <Route 
           path="/profile/:username" 
           element={

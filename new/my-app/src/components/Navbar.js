@@ -51,35 +51,35 @@ const Navbar = () => {
             <li onClick={() => navigate("/")}>Home</li>
             <li onClick={() => navigate("/badges")}>All Badges</li>
             <li onClick={() => navigate("/leaderboard")}>Leaderboard</li>
-            <li onClick={() => navigate("/badge-view")} className="highlight-link">3D Badge Gallery</li>
+            
             
             {/* Dropdown menu */}
-            <li className="dropdown">
+            <li className="dropdown1">
               <span onClick={() => setDropdownOpen(!dropdownOpen)}>
-                More <i className="dropdown-icon"></i>
+                More <i className="dropdown-icon1"></i>
               </span>
               {dropdownOpen && (
-                <div className="dropdown-menu">
+                <div className="dropdown-menu1">
                   <div 
-                    className="dropdown-item" 
+                    className="dropdown-item1" 
                     onClick={() => {
                       navigate("/about");
                       setDropdownOpen(false);
                     }}
                   >
                   <div 
-                    className="dropdown-item" 
+                    className="dropdown-item1" 
                     onClick={() => {
                       navigate("/admin/login");
                       setDropdownOpen(false);
                     }}
                     >
-                    Admin Login
+                  Admin Login
                   </div>
                     About Us
                   </div>
                   <div 
-                    className="dropdown-item" 
+                    className="dropdown-item1" 
                     onClick={() => {
                       navigate("/contact");
                       setDropdownOpen(false);
@@ -89,7 +89,7 @@ const Navbar = () => {
                   </div>
                   {isLoggedIn && (
                     <div 
-                      className="dropdown-item" 
+                      className="dropdown-item1" 
                       onClick={() => {
                         navigate("/admin/badges");
                         setDropdownOpen(false);

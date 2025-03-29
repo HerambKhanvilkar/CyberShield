@@ -3,6 +3,9 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import Navbar from "./Navbar";
 import "./AllBadgesPage.css";
+
+import { useNavigate } from "react-router-dom";
+
 // Keep image imports for fallback
 import img1 from "./img1.png";
 import img2 from "./img2.png";
@@ -12,6 +15,8 @@ import img5 from "./img5.png";
 import img6 from "./img6.png";
 import img7 from "./img7.png";
 import img8 from "./img8.png";
+
+
 
 const difficultyColors = {
   "Easy": "#4CAF50",
@@ -29,6 +34,14 @@ const AllBadgesPage = () => {
   const [filteredBadges, setFilteredBadges] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+
+
+ 
+ 
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const navigate = useNavigate();
+  const [levelsDropdownOpen, setLevelsDropdownOpen] = useState(false);
+
   
   // Fetch badges from API
   useEffect(() => {
@@ -210,60 +223,73 @@ const AllBadgesPage = () => {
           Complete challenges and earn badges to showcase your cybersecurity skills
         </p>
         
-        <div className="badges-controls glass-card">
-          {/* Search and filter controls */}
-          <div className="badges-search">
-            <input
-              type="text"
-              placeholder="Search badges..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-input"
-            />
-          </div>
+        
+          
           
           <div className="badges-filter">
-            <span>Filter by:</span>
+            <span></span>
             <div className="filter-buttons">
+
+
               <button 
-                className={`filter-button ${filter === 'all' ? 'active' : ''}`}
+                className={`filter-button1 ${filter === 'all' ? 'active' : ''}`}
                 onClick={() => setFilter('all')}
               >
-                All
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-grid-fill" viewBox="0 0 16 16">
+                  <path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5zm8 0A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5zm-8 8A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5zm8 0A1.5 1.5 0 0 1 10.5 9h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 13.5z" />
+                </svg>
               </button>
+
               <button 
-                className={`filter-button ${filter === 'fundamentals' ? 'active' : ''}`}
-                onClick={() => setFilter('fundamentals')}
+                className={`filter-button2 ${filter === '' ? 'active' : ''}`}
+                onClick={() => navigate("/holo")}
               >
-                Fundamentals
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-text-fill" viewBox="0 0 16 16">
+                  <path d="M12 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2M5 4h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1 0-1m-.5 2.5A.5.5 0 0 1 5 6h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5M5 8h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1 0-1m0 2h3a.5.5 0 0 1 0 1H5a.5.5 0 0 1 0-1" />
+                </svg>
               </button>
+
               <button 
-                className={`filter-button ${filter === 'defense' ? 'active' : ''}`}
-                onClick={() => setFilter('defense')}
+                className={`filter-button3 ${filter === '' ? 'active' : ''}`}
+                
               >
-                Defense
-              </button>
-              <button 
-                className={`filter-button ${filter === 'offensive' ? 'active' : ''}`}
-                onClick={() => setFilter('offensive')}
-              >
-                Offensive
-              </button>
-              <button 
-                className={`filter-button ${filter === 'leadership' ? 'active' : ''}`}
-                onClick={() => setFilter('leadership')}
-              >
-                Leadership
-              </button>
-              <button 
-                className={`filter-button ${filter === 'mastery' ? 'active' : ''}`}
-                onClick={() => setFilter('mastery')}
-              >
-                Mastery
+              
+
+              <div className="dropdown-container">
+      {/* Main Dropdown Button */}
+      <button onClick={() => setDropdownOpen(!dropdownOpen)} className="filter-by">
+        Filter by
+      </button>
+
+      {/* Main Dropdown Menu */}
+      {dropdownOpen && (
+        <div className="dropdown-menu">
+          {/* Levels Section with Nested Dropdown */}
+          <div className="dropdown-item">
+            <button onClick={() => setLevelsDropdownOpen(!levelsDropdownOpen)} className="levels">
+            Levels
+            </button>
+
+            {/* Nested Levels Dropdown */}
+            {levelsDropdownOpen && (
+              <div className="nested-dropdown">
+                <button className="dropdown-item">Amateur</button>
+                <button className="dropdown-item">Intermediate</button>
+                <button className="dropdown-item">Expert</button>
+              </div>
+            )}
+          </div>
+
+          {/* Courses Section */}
+          <button className="dropdown-item">Courses</button>
+        </div>
+      )}
+    </div>
+
               </button>
             </div>
           </div>
-        </div>
+        
         
         {filteredBadges.length === 0 ? (
           <div className="no-badges-found glass-card">
@@ -300,13 +326,6 @@ const AllBadgesPage = () => {
                   </span>
                   <span className="badge-category">{badge.category || "General"}</span>
                 </div>
-                <Link 
-  to={`/badge-view/${badge.id}`}
-  className="glass-button mt-2 text-center"
-  onClick={(e) => e.stopPropagation()}
->
-  View in New 3D Display
-</Link>
               </div>
             ))}
           </div>
@@ -363,8 +382,8 @@ const AllBadgesPage = () => {
               </div>
               
               <div className="badge-details-actions">
-                <button className="glass-button">Attempt Challenge</button>
-                <Link to="/" className="glass-button secondary">Learn More</Link>
+                <button className="glass-button">Get this badge</button>
+                <Link to="/learn-more" className="glass-button secondary">Learn More</Link>
               </div>
             </div>
           </div>
@@ -375,3 +394,4 @@ const AllBadgesPage = () => {
 };
 
 export default AllBadgesPage;
+
