@@ -153,14 +153,6 @@ const HolographicBadgeDisplay = () => {
       <div className="badge-main-content">
         {/* Left Column */}
         <div className="badge-left-column">
-          <h1 className="badge-title">{currentBadge.name}</h1>
-          
-          <div className="difficulty-badge" style={{backgroundColor: difficultyColors[currentBadge.difficulty]}}>
-            {currentBadge.difficulty}
-          </div>
-          
-          <p className="badge-description">{currentBadge.description}</p>
-          
           <h2 className="section-title">Skills Earned</h2>
           <div className="skills-grid">
             {currentBadge.skillsEarned?.map((skill, idx) => (
@@ -207,6 +199,11 @@ const HolographicBadgeDisplay = () => {
             <div className="base-ring ring1"></div>
             <div className="base-ring ring2"></div>
             <div className="base-ring ring3"></div>
+          </div>
+          <h1 className="badge-title">{currentBadge.name}</h1>
+          
+          <div className="difficulty-badge" style={{backgroundColor: difficultyColors[currentBadge.difficulty]}}>
+            {currentBadge.difficulty}
           </div>
           
           <div className="badge-info-boxes">
