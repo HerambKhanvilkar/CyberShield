@@ -111,16 +111,23 @@
   .hologram-container {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     width: 100%;
     position: relative;
+    padding-top: 0; 
     margin-bottom: 0;
+    margin-top: -70px;
   }
   
   .badge-hologram {
     position: relative;  /* Make sure it's relative for positioning */
+    height: 250px;
+    width: 250px; 
     margin-bottom: 0;
     padding-bottom: 0;
+    display: flex; /* Add this */
+    align-items: center; /* Add this */
+    justify-content: center; /* Add this */
     height: 250px;  /* Slightly smaller to make room for rings */
   }
   
@@ -155,6 +162,7 @@
     object-fit: contain;
     z-index: 1;
     filter: drop-shadow(0 0 15px rgba(0, 212, 255, 0.5));
+    margin-top: 30px; 
   }
   
   .loading-spinner {
@@ -506,4 +514,22 @@
     .info-box {
       max-width: 80%;
     }
+  }
+
+  .badge-center-title {
+    margin: 20px 0 10px 0;
+    font-size: 1.8rem;
+    color: #00d4ff;
+    text-align: center;
+    text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+  }
+  
+  .badge-center-level {
+    background: rgba(0, 212, 255, 0.1);
+    border-radius: 30px;
+    padding: 5px 15px;
+    margin-bottom: 20px;
+    text-align: center;
+    font-weight: 500;
+    color: #00d4ff;
   }
