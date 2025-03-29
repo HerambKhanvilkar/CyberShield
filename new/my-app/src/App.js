@@ -25,6 +25,8 @@ function App() {
         <Route path="/badges" element={<AllBadgesPage />} />
         <Route path="/badge-view/:id?" element={<HolographicBadgeDisplay />} />
         <Route path="/new-badge/:id?" element={<NewBadgeView />} />
+        <Route path="/holo" element={<HolographicBadgeDisplay />} />
+        <Route path="/learn-more" element={<HolographicBadgeDisplay />} />
         <Route 
           path="/profile/:username" 
           element={
