@@ -35,8 +35,14 @@ const AllBadgesPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [selectedLevel, setSelectedLevel] = useState("all");
 
- 
+
+
+  const handleLevelSelect = (level) => {
+    setSelectedLevel(level);
+  };
+  
  
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
@@ -154,6 +160,13 @@ const AllBadgesPage = () => {
       );
     }
     
+    // Filter by selected difficulty level
+    if (selectedLevel !== "all") {
+      result = result.filter(badge => 
+        badge.difficulty && badge.difficulty.toLowerCase() === selectedLevel.toLowerCase()
+      );
+    }
+    
     // Search term
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
@@ -166,7 +179,7 @@ const AllBadgesPage = () => {
     }
     
     setFilteredBadges(result);
-  }, [filter, searchTerm, badges]);
+  }, [filter, searchTerm, badges, selectedLevel]); // Added selectedLevel as a dependency
   
   const handleBadgeClick = (badge) => {
     setSelectedBadge(badge);
@@ -175,7 +188,6 @@ const AllBadgesPage = () => {
   const handleCloseDetails = () => {
     setSelectedBadge(null);
   };
-
   // Show loading spinner
   if (isLoading) {
     return (
@@ -227,6 +239,7 @@ const AllBadgesPage = () => {
           
           
           <div className="badges-filter">
+            
             <span></span>
             <div className="filter-buttons">
 
@@ -271,13 +284,18 @@ const AllBadgesPage = () => {
             </button>
 
             {/* Nested Levels Dropdown */}
-            {levelsDropdownOpen && (
-              <div className="nested-dropdown">
-                <button className="dropdown-item">Amateur</button>
-                <button className="dropdown-item">Intermediate</button>
-                <button className="dropdown-item">Expert</button>
+         
+             {levelsDropdownOpen && (
+             <div className="nested-dropdown">
+               <button className="dropdown-item" onClick={() => handleLevelSelect("Easy")}>Amateur</button>
+               <button className="dropdown-item" onClick={() => handleLevelSelect("Medium")}>Intermediate</button>
+               <button className="dropdown-item" onClick={() => handleLevelSelect("Hard")}>Hard</button>
+               <button className="dropdown-item" onClick={() => handleLevelSelect("Expert")}>Expert</button>
+               <button className="dropdown-item" onClick={() => handleLevelSelect("Extreme")}>Extreme</button>
+               <button className="dropdown-item" onClick={() => handleLevelSelect("all")}>All</button>
               </div>
-            )}
+    )}
+
           </div>
 
           {/* Courses Section */}
