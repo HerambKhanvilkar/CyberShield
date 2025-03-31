@@ -97,7 +97,7 @@ const AllBadgesPage = () => {
             id: 4, 
             name: "Cyber Elite", 
             image: img4, 
-            difficulty: "Hard", 
+            difficulty: "Expert", 
             description: "For advanced penetration testing and security analysis.",
             category: "Offensive",
             skillsRequired: ["Penetration Testing", "Vulnerability Assessment"]
