@@ -35,12 +35,28 @@ const AllBadgesPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [selectedLevel, setSelectedLevel] = useState("all");
 
- 
+
+
+  const handleLevelSelect = (level) => {
+    setSelectedLevel(level);
+  };
+
+  const [selectedcourses, setSelectedcourses] = useState("all");
+
+
+
+  const handlecoursesSelect = (courses) => {
+    setSelectedcourses(courses);
+  };
+  
+  
  
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
   const [levelsDropdownOpen, setLevelsDropdownOpen] = useState(false);
+  const [coursesDropdownOpen, setcoursesDropdownOpen] = useState(false);
 
   
   // Fetch badges from API
@@ -91,7 +107,7 @@ const AllBadgesPage = () => {
             id: 4, 
             name: "Cyber Elite", 
             image: img4, 
-            difficulty: "Hard", 
+            difficulty: "Expert", 
             description: "For advanced penetration testing and security analysis.",
             category: "Offensive",
             skillsRequired: ["Penetration Testing", "Vulnerability Assessment"]
@@ -154,6 +170,20 @@ const AllBadgesPage = () => {
       );
     }
     
+    // Filter by selected difficulty level
+    if (selectedLevel !== "all") {
+      result = result.filter(badge => 
+        badge.difficulty && badge.difficulty.toLowerCase() === selectedLevel.toLowerCase()
+      );
+    }
+
+    // Filter by selected difficulty courses
+    if (selectedcourses !== "all") {
+      result = result.filter(badge => 
+        badge.category && badge.category.toLowerCase() === selectedcourses.toLowerCase()
+      );
+    }
+    
     // Search term
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
@@ -166,7 +196,7 @@ const AllBadgesPage = () => {
     }
     
     setFilteredBadges(result);
-  }, [filter, searchTerm, badges]);
+  }, [filter, searchTerm, badges, selectedLevel, selectedcourses]); // Added selectedLevel as a dependency
   
   const handleBadgeClick = (badge) => {
     setSelectedBadge(badge);
@@ -175,7 +205,6 @@ const AllBadgesPage = () => {
   const handleCloseDetails = () => {
     setSelectedBadge(null);
   };
-
   // Show loading spinner
   if (isLoading) {
     return (
@@ -227,6 +256,7 @@ const AllBadgesPage = () => {
           
           
           <div className="badges-filter">
+            
             <span></span>
             <div className="filter-buttons">
 
@@ -271,17 +301,39 @@ const AllBadgesPage = () => {
             </button>
 
             {/* Nested Levels Dropdown */}
-            {levelsDropdownOpen && (
-              <div className="nested-dropdown">
-                <button className="dropdown-item">Amateur</button>
-                <button className="dropdown-item">Intermediate</button>
-                <button className="dropdown-item">Expert</button>
+         
+             {levelsDropdownOpen && (
+             <div className="nested-dropdown">
+               <button className="dropdown-item" onClick={() => handleLevelSelect("Easy")}>Amateur</button>
+               <button className="dropdown-item" onClick={() => handleLevelSelect("Medium")}>Intermediate</button>
+
+               <button className="dropdown-item" onClick={() => handleLevelSelect("Expert")}>Expert</button>
+               <button className="dropdown-item" onClick={() => handleLevelSelect("Extreme")}>Extreme</button>
+               <button className="dropdown-item" onClick={() => handleLevelSelect("all")}>All</button>
               </div>
-            )}
+    )}
+
           </div>
 
           {/* Courses Section */}
-          <button className="dropdown-item">Courses</button>
+          <div className="dropdown-item">
+            <button onClick={() => setcoursesDropdownOpen(!coursesDropdownOpen)} className="levels">
+            Courses
+            </button>
+
+            {/* Nested Levels Dropdown */}
+         
+             {coursesDropdownOpen && (
+             <div className="nested-dropdown">
+               <button className="dropdown-item" onClick={() => handlecoursesSelect("Defense")}>Defense</button>
+               <button className="dropdown-item" onClick={() => handlecoursesSelect("Leadership")}>Leadership</button>
+               <button className="dropdown-item" onClick={() => handlecoursesSelect("Mastery")}>Mastery</button>
+               <button className="dropdown-item" onClick={() => handlecoursesSelect("Fundamentals")}>Fundamentals</button>
+               <button className="dropdown-item" onClick={() => handlecoursesSelect("Offensive")}>Offensive</button>
+              </div>
+    )}
+
+          </div>
         </div>
       )}
     </div>

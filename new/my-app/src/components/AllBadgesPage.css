@@ -93,6 +93,7 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: 10px;
+  margin-bottom: 15px;
 }
 
 
@@ -110,7 +111,7 @@
   position: absolute;
   
   top: 100px;
-  right: 480px;
+  right: 420px;
   font-weight: 500; /* Added font weight */
 }
 
@@ -164,7 +165,7 @@
   transition: all 0.2s ease;
   font-size: 14px;
   position: absolute;
-  right: 410px;
+  right: 350px;
   top: 100px;
   font-weight: 500; /* Added font weight */
 }
@@ -571,13 +572,20 @@
   width: 130px;
   z-index: 10;
   min-width: 150px;
-  background: rgba(1, 14, 49, 0.8);
-  backdrop-filter: blur(15px);
+
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(15px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   opacity: 0;
   transform: translateY(10px);
   animation: dropdownFadeIn 0.3s ease forwards;
+}
+@keyframes dropdownFadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .dropdown-item {
