@@ -505,6 +505,29 @@
     .related-badges {
       grid-template-columns: 1fr;
     }
+
+    .badge-main-content {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .badge-center-column {
+      order: 1;
+      margin-bottom: 20px;
+    }
+    
+    .badge-left-column, .badge-right-column {
+      padding: 15px 0;
+    }
+    
+    .badge-collection {
+      max-height: 60px;
+    }
+    
+    .badge-thumbnail {
+      width: 35px;
+      height: 35px;
+    }
     
     .badge-info-boxes {
       flex-direction: column;
@@ -534,3 +557,166 @@
     color: #00d4ff;
   }
   
+  /* Comprehensive Mobile Responsiveness for Badge View Page */
+@media (max-width: 992px) {
+  /* Adjust main content to single column */
+  .badge-main-content {
+    flex-direction: column;
+    overflow-y: auto;
+    height: auto;
+    padding-bottom: 100px; /* Make room for badge collection */
+  }
+  
+  /* Reorder columns for mobile */
+  .badge-center-column {
+    order: 1;
+    padding: 10px 0 30px;
+  }
+  
+  .badge-left-column {
+    order: 2;
+    width: 100%;
+    padding: 15px 0;
+  }
+  
+  .badge-right-column {
+    order: 3;
+    width: 100%;
+    padding: 15px 0;
+  }
+  
+  /* Badge title adjustments */
+  .badge-title {
+    font-size: 2rem;
+    text-align: center;
+    margin: 0 auto 10px;
+    width: auto;
+  }
+  
+  /* Adjust hologram sizing */
+  .hologram-container {
+    margin-top: 0;
+    justify-content: space-between;
+    width: 100%;
+  }
+  
+  .badge-hologram {
+    height: 220px;
+    width: 220px;
+  }
+  
+  .badge-image {
+    max-width: 85%;
+    max-height: 85%;
+    margin-top: 20px;
+  }
+  
+  /* Improve spacing for info boxes */
+  .badge-info-boxes {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+  }
+  
+  .info-box {
+    min-width: 100px;
+  }
+  
+  /* Make action buttons more touch-friendly */
+  .action-button {
+    padding: 15px;
+    margin-bottom: 5px;
+  }
+}
+
+/* Even smaller screens */
+@media (max-width: 576px) {
+  .badge-hologram {
+    height: 180px;
+    width: 180px;
+  }
+  
+  .badge-title {
+    font-size: 1.8rem;
+  }
+  
+  .section-title {
+    font-size: 1.2rem;
+  }
+  
+  /* Further adjust grid layouts */
+  .skills-grid,
+  .related-badges {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  /* More touch-friendly navigation */
+  .nav-button {
+    width: 48px;
+    height: 48px;
+  }
+  
+  /* Compact badge collection */
+  .badge-collection {
+    max-height: 70px;
+  }
+  
+  .badge-thumbnail {
+    width: 40px;
+    height: 40px;
+  }
+  
+  /* Improve nav buttons positioning */
+  .badge-hologram-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+  
+  .nav-button.prev {
+    position: absolute;
+    left: 0;
+  }
+  
+  .nav-button.next {
+    position: absolute;
+    right: 0;
+  }
+  
+  /* Better touch area for badge thumbnails */
+  .badge-thumbnails {
+    padding: 10px 0;
+  }
+  
+  /* Make sections more distinct */
+  .badge-left-column,
+  .badge-right-column {
+    background: rgba(1, 14, 49, 0.4);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+  }
+  
+  /* Better spacing for detail items */
+  .skill-item,
+  .badge-detailed-description {
+    margin-bottom: 10px;
+  }
+  
+  /* Adjust action buttons for better tapping */
+  .badge-actions {
+    gap: 12px;
+  }
+  
+  /* Improve related badges layout */
+  .related-badge {
+    padding: 10px;
+  }
+  
+  .related-badge img {
+    width: 50px;
+    height: 50px;
+  }
+}

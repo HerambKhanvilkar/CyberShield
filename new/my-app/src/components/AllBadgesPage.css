@@ -653,6 +653,26 @@
   }
 }
 
-
+/* Add to AllBadgesPage.css */
+@media (max-width: 576px) {
+  .badges-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  .badge-card {
+    margin-bottom: 0;
+  }
+  
+  .filter-button3, .filter-button1, .filter-button2 {
+    position: static;
+    margin: 5px;
+  }
+  
+  .dropdown-menu {
+    left: 0;
+    width: 100%;
+  }
+}
 
 

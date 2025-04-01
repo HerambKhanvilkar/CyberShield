@@ -232,6 +232,28 @@
   }
   
   @media (max-width: 768px) {
+    .navbar-container {
+      padding: 12px 15px;
+    }
+    
+    .navbar-links.mobile-active {
+      max-height: 100vh;
+      padding: 15px 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .navbar-links li {
+      padding: 12px 0;
+    }
+    
+    /* Improve dropdown usability on mobile */
+    .dropdown-menu1 {
+      position: static;
+      width: 100%;
+      margin: 8px 0;
+      animation: none;
+      box-shadow: none;
+    }
     .mobile-toggle {
       display: block;
       order: 3;

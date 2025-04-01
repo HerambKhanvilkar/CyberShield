@@ -4,7 +4,7 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import Navbar from './Navbar';
 import './HolographicBadgeDisplay.css';
-
+import { useSwipeable } from 'react-swipeable';
 const HolographicBadgeDisplay = () => {
   const [badges, setBadges] = useState([]);
   const [currentBadgeIndex, setCurrentBadgeIndex] = useState(0);
@@ -13,9 +13,17 @@ const HolographicBadgeDisplay = () => {
   const [error, setError] = useState(null);
   const [showShareSuccess, setShowShareSuccess] = useState(false);
   const hologramRef = useRef(null);
-  
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+
   // Fetch badges from backend
   useEffect(() => {
+
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    window.addEventListener('resize', handleResize);
+    
     const fetchBadges = async () => {
       try {
         setIsDataLoading(true);

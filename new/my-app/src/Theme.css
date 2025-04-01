@@ -263,6 +263,44 @@
   }
   
   @media (max-width: 768px) {
+    .glass-button, .action-button, .carousel-item, .related-badge {
+      min-height: 44px; /* Apple's recommended minimum */
+    }
+    body {
+      font-size: 16px; /* Base font size for readability */
+    }
+    
+    h1 {
+      font-size: 1.8rem;
+    }
+    
+    h2 {
+      font-size: 1.5rem;
+    }
+    
+    h3 {
+      font-size: 1.25rem;
+    }
+    
+    .badge-title {
+      font-size: 1.8rem;
+    }
+    
+    /* Ensure readability of smaller text */
+    .info-label, .stat-label, .detail-label {
+      font-size: 0.8rem;
+    }
+    /* Add more space between touch targets */
+    .badge-actions, .filter-buttons, .badge-thumbnails {
+      gap: 12px;
+    }
+    
+    /* Make badge cards easier to tap */
+    .badge-card {
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+
     .grid-2, .grid-3, .grid-4 {
       grid-template-columns: 1fr;
     }

@@ -260,3 +260,21 @@
     font-size: 1.6rem;
   }
 }
+
+/* Add to LoginPage.css */
+@media (max-width: 768px) {
+  .auth-card {
+    width: 90%;
+    padding: 25px 15px;
+  }
+  
+  .form-group input {
+    padding: 15px;
+    font-size: 16px; /* Prevents iOS zoom on input focus */
+  }
+  
+  .submit-button {
+    padding: 15px;
+    height: auto;
+  }
+}
