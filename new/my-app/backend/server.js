@@ -13,10 +13,17 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+const { generateToken, authenticateJWT, isAdmin } = require('./middleware/auth');
+
+
+
 // Connect to MongoDB Atlas
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log("MongoDB Atlas Connected"))
-  .catch(err => console.error("MongoDB Connection Error:", err));
+mongoose.connect(process.env.MONGO_URI, { 
+  useNewUrlParser: true, 
+  useUnifiedTopology: true 
+})
+.then(() => console.log("MongoDB Atlas Connected"))
+.catch(err => console.error("MongoDB Connection Error:", err));
 
 // Get all badges
 app.get("/badges", async (req, res) => {
@@ -43,17 +50,84 @@ app.get("/badge/:id", async (req, res) => {
   }
 });
 
-// Get all users (admin only)
-app.get("/users", async (req, res) => {
+// Verify shared badge
+app.get("/verify-badge/:id/:username/:timestamp", async (req, res) => {
   try {
-    // In a production app, add admin authentication check here
-    const users = await User.find({}).select("-password");
-    res.json({ users });
+    const { id, username, timestamp } = req.params;
+    
+    // Check if the badge was actually earned by this user
+    const userBadges = await BadgesEarned.findOne({ username });
+    
+    if (!userBadges) {
+      return res.status(404).json({ verified: false });
+    }
+    
+    // Check if user has this specific badge
+    const badgeEarned = userBadges.badges.find(
+      b => b.badgeId === parseInt(id)
+    );
+    
+    if (!badgeEarned) {
+      return res.status(403).json({ verified: false });
+    }
+    
+    // Optional: Add timestamp validation 
+    const currentTime = Math.floor(Date.now() / 1000);
+    const linkAge = currentTime - parseInt(timestamp);
+    
+    // Invalidate links older than 30 days
+    if (linkAge > 30 * 24 * 60 * 60) {
+      return res.status(410).json({ verified: false });
+    }
+    
+    res.json({ verified: true });
   } catch (error) {
-    console.error("Error fetching users:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error("Verification error:", error);
+    res.status(500).json({ verified: false });
   }
 });
+
+// Generate share link endpoint
+app.post("/generate-share-link", authenticateJWT, async (req, res) => {
+  try {
+    const { badgeId } = req.body;
+    const username = req.headers.username;
+
+    if (!username) {
+      return res.status(400).json({ message: "Username is required" });
+    }
+
+    if (!badgeId) {
+      return res.status(400).json({ message: "Badge ID is required" });
+    }
+    
+    // Fetch earned badges
+    const userBadges = await BadgesEarned.findOne({ username }).lean();
+    
+    if (!userBadges) {
+      return res.status(403).json({ message: "No badges found for user" });
+    }
+    
+    // Check if user has this badge
+    const hasBadge = userBadges.badges.some(badge => badge.badgeId === parseInt(badgeId));
+    
+    if (!hasBadge) {
+      return res.status(403).json({ message: "You can only share badges you've earned" });
+    }
+    
+    // Generate timestamp for the link
+    const timestamp = Math.floor(Date.now()/1000);
+    
+    // Generate share link
+    const shareLink = `/badge/shared/${badgeId}/${encodeURIComponent(username)}/${timestamp}`;
+    
+    res.json({ shareLink });
+  } catch (error) {
+    console.error("Error generating share link:", error);
+    res.status(500).json({ message: "Failed to generate share link" });
+  }
+});
+
 
 // Signup Route
 app.post("/signup", async (req, res) => {
@@ -70,14 +144,31 @@ app.post("/signup", async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Save new user
-    const newUser = new User({ email, username, password: hashedPassword });
+    const newUser = new User({ 
+      email, 
+      username, 
+      password: hashedPassword,
+      isAdmin: false // Default to non-admin
+    });
     await newUser.save();
 
-    res.json({ message: "Signup successful!", username: newUser.username });
+    // Generate JWT token
+    const token = generateToken(newUser);
+
+    res.json({ 
+      message: "Signup successful!", 
+      token, // Send token to client
+      user: { 
+        username: newUser.username, 
+        email: newUser.email 
+      } 
+    });
   } catch (error) {
+    console.error("Signup error:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
+
 
 // Login Route (Accepts email or username)
 app.post("/login", async (req, res) => {
@@ -93,6 +184,9 @@ app.post("/login", async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: "Invalid Credentials" });
 
+    // Generate JWT token
+    const token = generateToken(user);
+
     // Fetch earned badges
     const userBadges = await BadgesEarned.findOne({ username: user.username }).lean();
     const allBadges = userBadges
@@ -107,14 +201,16 @@ app.post("/login", async (req, res) => {
 
     res.json({
       message: "Login Successful!",
+      token, // Send token to client
       user: {
         username: user.username,
         email: user.email,
-        isAdmin: user.isAdmin, // Include admin status
+        isAdmin: user.isAdmin,
         badges: earnedBadges,
       },
     });
   } catch (error) {
+    console.error("Login error:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
@@ -128,30 +224,13 @@ app.get("/badges-earned/:username", async (req, res) => {
     const userBadges = await BadgesEarned.findOne({ username }).lean();
     
     if (!userBadges) {
-      console.log(`No badges found for user: ${username}`);
       return res.json({ badges: [] });
     }
 
     // Fetch full badge details for each earned badge
     const badgeIds = userBadges.badges.map(b => b.badgeId);
-    console.log(`Looking for badge IDs: ${badgeIds.join(', ')}`);
     
     const allBadges = await Badge.find({ id: { $in: badgeIds } }).lean();
-    console.log(`Found ${allBadges.length} badges`);
-
-    // If no badges found but user has badge entries, log this discrepancy
-    if (allBadges.length === 0 && badgeIds.length > 0) {
-      console.log("Warning: User has badge records but no matching badges found");
-      console.log("Badge IDs in user record:", badgeIds);
-      
-      // Check if badges exist at all
-      const totalBadges = await Badge.countDocuments();
-      console.log(`Total badges in database: ${totalBadges}`);
-      
-      // Check a sample badge to see its structure
-      const sampleBadge = await Badge.findOne();
-      console.log("Sample badge structure:", sampleBadge);
-    }
 
     // Map earned badges with dates
     const earnedBadges = allBadges.map(badge => ({
@@ -159,11 +238,9 @@ app.get("/badges-earned/:username", async (req, res) => {
       earnedDate: userBadges.badges.find(b => b.badgeId === badge.id)?.earnedDate
     }));
 
-    console.log(`Returning ${earnedBadges.length} badges`);
     res.json({ badges: earnedBadges });
   } catch (error) {
     console.error("Error fetching badges:", error);
-    // Send better error message
     res.status(500).json({ 
       message: "Error loading badges", 
       error: error.message 
@@ -173,12 +250,9 @@ app.get("/badges-earned/:username", async (req, res) => {
 
 // Get user details
 app.get("/user/:username", async (req, res) => {
-  console.log("Route hit with username:", req.params.username);
   try {
     const { username } = req.params;
-    console.log("Looking up user:", username);
     const user = await User.findOne({ username }).select("-password");
-    console.log("Query result:", user);
     
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -186,13 +260,13 @@ app.get("/user/:username", async (req, res) => {
     
     res.json(user);
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Error fetching user:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
 // Assign badge to user
-app.post("/assign-badge", async (req, res) => {
+app.post("/assign-badge",authenticateJWT, async (req, res) => {
   try {
     const { username, badgeId, adminUsername } = req.body;
     
@@ -244,28 +318,8 @@ app.post("/assign-badge", async (req, res) => {
   }
 });
 
-// Add this to server.js to provide more detailed badge information when requested
-app.get("/badge/:id", async (req, res) => {
-  try {
-    const badge = await Badge.findOne({ id: parseInt(req.params.id) });
-    
-    if (!badge) {
-      return res.status(404).json({ message: "Badge not found" });
-    }
-    
-    // You could enhance this with additional information from other collections
-    // For example, add issuer information, criteria, etc.
-    
-    // For now, we'll just return the badge data
-    res.json(badge);
-  } catch (error) {
-    console.error("Error fetching badge:", error);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-});
-
-// Add an endpoint to check admin status
-app.get("/check-admin", async (req, res) => {
+// Check admin status
+app.get("/check-admin",authenticateJWT, async (req, res) => {
   try {
     const { username } = req.query;
     const user = await User.findOne({ username });

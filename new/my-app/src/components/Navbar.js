@@ -1,27 +1,19 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";  
+import React, { useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
 import "./Navbar.css";
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [username, setUsername] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
-  useEffect(() => {
-    // Check if user is logged in
-    const storedUsername = localStorage.getItem("username");
-    if (storedUsername) {
-      setIsLoggedIn(true);
-      setUsername(storedUsername);
-    }
-  }, []);
+  // Use only the AuthContext for authentication state
+  const { isAuthenticated, user, logout } = useContext(AuthContext);
   
   const handleLogout = () => {
-    localStorage.removeItem("username");
-    setIsLoggedIn(false);
-    setUsername("");
+    // Use the logout function from AuthContext
+    logout();
     navigate("/");
   };
   
@@ -52,7 +44,6 @@ const Navbar = () => {
             <li onClick={() => navigate("/badges")}>All Badges</li>
             <li onClick={() => navigate("/leaderboard")}>Leaderboard</li>
             
-            
             {/* Dropdown menu */}
             <li className="dropdown1">
               <span onClick={() => setDropdownOpen(!dropdownOpen)}>
@@ -67,16 +58,16 @@ const Navbar = () => {
                       setDropdownOpen(false);
                     }}
                   >
+                    About Us
+                  </div>
                   <div 
                     className="dropdown-item1" 
                     onClick={() => {
                       navigate("/admin/login");
                       setDropdownOpen(false);
                     }}
-                    >
-                  Admin Login
-                  </div>
-                    About Us
+                  >
+                    Admin Login
                   </div>
                   <div 
                     className="dropdown-item1" 
@@ -87,7 +78,7 @@ const Navbar = () => {
                   >
                     Contact
                   </div>
-                  {isLoggedIn && (
+                  {isAuthenticated && user?.isAdmin && (
                     <div 
                       className="dropdown-item1" 
                       onClick={() => {
@@ -106,16 +97,16 @@ const Navbar = () => {
         
         {/* User section */}
         <div className="navbar-user">
-          {isLoggedIn ? (
+          {isAuthenticated && user ? (
             <>
               <div 
                 className="user-profile" 
-                onClick={() => navigate(`/profile/${username}`)}
+                onClick={() => navigate(`/profile/${user.username}`)}
               >
                 <div className="user-avatar">
-                  {username.charAt(0).toUpperCase()}
+                  {user.username.charAt(0).toUpperCase()}
                 </div>
-                <span className="username-display">{username}</span>
+                <span className="username-display">{user.username}</span>
               </div>
               <button 
                 className="glass-button logout-btn" 
@@ -127,7 +118,10 @@ const Navbar = () => {
           ) : (
             <button 
               className="glass-button" 
-              onClick={() => navigate("/login")}
+              onClick={() => {
+                console.log("Navigating to login page");
+                navigate("/login");
+              }}
             >
               Login / Signup
             </button>

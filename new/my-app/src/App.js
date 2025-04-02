@@ -10,6 +10,7 @@ import AdminRoute from "./components/AdminRoute"; // Add this
 import HolographicBadgeDisplay from "./components/HolographicBadgeDisplay";
 import NewBadgeView from './components/NewBadgeView';
 import SharedBadgePage from "./components/SharedBadgePage";
+import { AuthProvider } from "./context/AuthContext";
 // Protected Route for Profile
 const ProtectedRoute = ({ children }) => {
   const username = localStorage.getItem("username");
@@ -18,6 +19,7 @@ const ProtectedRoute = ({ children }) => {
 
 function App() {
   return (
+    <AuthProvider>
     <Router>
       <Routes>
         <Route path="/" element={<MainPage />} />
@@ -49,6 +51,7 @@ function App() {
         />
       </Routes>
     </Router>
+    </AuthProvider>
   );
 }
 

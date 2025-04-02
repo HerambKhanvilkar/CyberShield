@@ -1,17 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Navbar from './Navbar';
 import './NewBadgeView.css';
 
 const NewBadgeView = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [badges, setBadges] = useState([]);
   const [currentBadgeIndex, setCurrentBadgeIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [showShareLink, setShowShareLink] = useState(false);
   const [shareLink, setShareLink] = useState('');
+  const [shareError, setShareError] = useState('');
   
+  // Get logged-in username
+  const username = localStorage.getItem('username');
+ 
   // Convert difficulty to level
   const difficultyToLevel = {
     'Easy': 'Amateur',
@@ -27,7 +32,6 @@ const NewBadgeView = () => {
       try {
         setIsLoading(true);
         const response = await axios.get('http://localhost:5000/badges');
-        console.log("Fetched badges:", response.data);
         
         if (id && response.data.badges) {
           const badgeIndex = response.data.badges.findIndex(b => b.id === parseInt(id));
@@ -41,6 +45,7 @@ const NewBadgeView = () => {
       } catch (err) {
         console.error("Error fetching badges:", err);
         setIsLoading(false);
+        // Fallback badges
         setBadges([
           { 
             id: 1, 
@@ -68,14 +73,56 @@ const NewBadgeView = () => {
   }, [id]);
   
   // Generate share link
-  useEffect(() => {
-    if (badges.length > 0) {
-      const username = localStorage.getItem('username') || 'user';
-      const badge = badges[currentBadgeIndex];
-      const timestamp = Math.floor(Date.now()/1000);
-      setShareLink(`${window.location.origin}/badge/shared/${badge.id}/${encodeURIComponent(username)}/${timestamp}`);
+  const generateShareLink = async () => {
+    // Reset previous states
+    setShareError('');
+    setShareLink('');
+
+    // Check if user is logged in
+    if (!username) {
+      setShareError('Please log in to generate a share link.');
+      return;
     }
-  }, [badges, currentBadgeIndex]);
+
+    try {
+      const badge = badges[currentBadgeIndex];
+      const response = await axios.post(
+        'http://localhost:5000/generate-share-link', 
+        { badgeId: badge.id },
+        { 
+          headers: { 
+            'username': username 
+          } 
+        }
+      );
+
+      // Construct full share link
+      const fullShareLink = `${window.location.origin}${response.data.shareLink}`;
+
+      // Copy to clipboard
+      navigator.clipboard.writeText(fullShareLink);
+
+      // Set share link for display
+      setShareLink(fullShareLink);
+      
+      // Show share link panel
+      setShowShareLink(true);
+    } catch (error) {
+      console.error('Error generating share link:', error);
+      setShareError(
+        error.response?.data?.message || 
+        'Failed to generate share link. Please try again.'
+      );
+    }
+  };
+
+  // Handle copy to clipboard
+  const handleCopyLink = () => {
+    if (shareLink) {
+      navigator.clipboard.writeText(shareLink);
+      alert('Share link copied to clipboard!');
+    }
+  };
   
   // Loading state
   if (isLoading) {
@@ -203,22 +250,31 @@ const NewBadgeView = () => {
                 <span>Get this Badge</span>
               </button>
               
-              <button className="action-button share-badge" onClick={() => setShowShareLink(!showShareLink)}>
+              <button 
+                className="action-button share-badge" 
+                onClick={generateShareLink}
+              >
                 <span className="action-icon">🔗</span>
                 <span>Generate Share Link</span>
               </button>
               
-              {showShareLink && (
+              {shareError && (
+                <div className="share-error">{shareError}</div>
+              )}
+              
+              {showShareLink && shareLink && (
                 <div className="share-panel">
                   <p>Share your badge achievement:</p>
                   <div className="share-input-group">
-                    <input type="text" readOnly value={shareLink} className="share-input" />
+                    <input 
+                      type="text" 
+                      readOnly 
+                      value={shareLink} 
+                      className="share-input" 
+                    />
                     <button 
                       className="copy-button"
-                      onClick={() => {
-                        navigator.clipboard.writeText(shareLink);
-                        alert('Share link copied to clipboard!');
-                      }}
+                      onClick={handleCopyLink}
                     >
                       Copy
                     </button>

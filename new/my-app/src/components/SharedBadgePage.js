@@ -11,6 +11,7 @@ const SharedBadgePage = () => {
   const [issuerData, setIssuerData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [verificationStatus, setVerificationStatus] = useState(null);
   
   useEffect(() => {
     const fetchBadgeData = async () => {
@@ -21,13 +22,23 @@ const SharedBadgePage = () => {
         const badgeResponse = await axios.get(`http://localhost:5000/badge/${id}`);
         setBadge(badgeResponse.data);
         
-        // In a production app, we would also fetch the issuer data
-        // For now, we'll create static issuer data
+        // Static issuer data
         setIssuerData({
           name: "CyberBadge Academy",
           logo: "/logo.png",
           website: "https://cyberbadge.example.com"
         });
+        
+        // Optional: Verify badge authenticity
+        try {
+          const verifyResponse = await axios.get(
+            `http://localhost:5000/verify-badge/${id}/${username}/${timestamp}`
+          );
+          setVerificationStatus(verifyResponse.data.verified);
+        } catch (verifyError) {
+          console.error("Verification error:", verifyError);
+          setVerificationStatus(false);
+        }
         
         setIsLoading(false);
       } catch (err) {
@@ -38,7 +49,7 @@ const SharedBadgePage = () => {
     };
     
     fetchBadgeData();
-  }, [id]);
+  }, [id, username, timestamp]);
   
   // Format date from timestamp
   const formatDate = (timestamp) => {
@@ -48,6 +59,33 @@ const SharedBadgePage = () => {
       month: 'long', 
       day: 'numeric'
     });
+  };
+  
+  // Verification render helper
+  const renderVerificationStatus = () => {
+    if (verificationStatus === null) {
+      return (
+        <div className="verification-status verifying">
+          <span>Verifying badge...</span>
+        </div>
+      );
+    }
+    
+    return (
+      <div className={`verification-status ${verificationStatus ? 'verified' : 'unverified'}`}>
+        {verificationStatus ? (
+          <>
+            <CheckCircle color="green" />
+            <span>Badge Verified</span>
+          </>
+        ) : (
+          <>
+            <Shield color="red" />
+            <span>Unable to Verify Badge</span>
+          </>
+        )}
+      </div>
+    );
   };
   
   if (isLoading) {
@@ -105,20 +143,14 @@ const SharedBadgePage = () => {
               <Award size={24} />
             </div>
             <div>
-              <p style={{margin: '0'}}>This badge was issued to <strong>{username}</strong> on {formatDate(timestamp)}</p>
+              <p style={{margin: '0'}}>
+                This badge was issued to <strong>{username}</strong> on {formatDate(timestamp)}
+              </p>
             </div>
           </div>
           
           <div className="verification-actions">
-            <button className="glass-button" style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              background: 'rgba(0, 212, 255, 0.2)'
-            }}>
-              <CheckCircle size={18} />
-              <span>Verify</span>
-            </button>
+            {renderVerificationStatus()}
           </div>
         </div>
         
@@ -154,6 +186,13 @@ const SharedBadgePage = () => {
             
             {/* Badge Details */}
             <div className="badge-details">
+              <div style={{
+                marginBottom: '20px',
+                color: 'rgba(255,255,255,0.7)'
+              }}>
+                Badge issued to <strong>{username}</strong> on {formatDate(timestamp)}
+              </div>
+
               <h1 style={{
                 fontSize: '2.2rem',
                 marginTop: '0',

@@ -720,3 +720,23 @@
     height: 50px;
   }
 }
+
+.share-error {
+  background: rgba(255, 42, 109, 0.2);
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  text-align: center;
+  margin-top: 10px;
+  animation: fadeIn 0.3s;
+}
+
+.share-error {
+  background: rgba(255, 42, 109, 0.2);
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  text-align: center;
+  margin-top: 10px;
+  animation: fadeIn 0.3s;
+}

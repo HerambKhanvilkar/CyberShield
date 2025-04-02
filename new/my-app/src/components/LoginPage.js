@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
+import { AuthContext } from "../context/AuthContext";
 import Navbar from "./Navbar";
 import "./LoginPage.css";
 import logo from "./logo.png";
+
 
 const LoginPage = () => {
   const [identifier, setIdentifier] = useState(""); // Username or Email
@@ -15,6 +17,7 @@ const LoginPage = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [formValid, setFormValid] = useState(false);
+  const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
   // Check for form validity
@@ -34,31 +37,34 @@ const LoginPage = () => {
     }
   }, [identifier, username, email, password, confirmPassword, isSignup]);
 
-  // Check for already logged in user
-  useEffect(() => {
-    const storedUsername = localStorage.getItem("username");
-    if (storedUsername) {
-      navigate("/");
-    }
-  }, [navigate]);
+// Check if already authenticated using AuthContext
+const { isAuthenticated } = useContext(AuthContext);
 
+useEffect(() => {
+  if (isAuthenticated) {
+    navigate("/");
+  }
+}, [isAuthenticated, navigate]);
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
-
+  
     try {
       const url = isSignup ? "http://localhost:5000/signup" : "http://localhost:5000/login";
       const data = isSignup 
         ? { email, username, password } 
         : { identifier, password };
-
+  
       const response = await axios.post(url, data);
-
-      // Store user session in local storage
-      localStorage.setItem("username", response.data.user?.username || response.data.username);
-
-      // Show success message and redirect
+      
+      // Extract token and user data
+      const { token, user } = response.data;
+      
+      // Use the login function from context
+      login(token, user);
+      
+      // Navigate to badges page
       setLoading(false);
       navigate("/badges");
     } catch (error) {

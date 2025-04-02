@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import axios from "axios";
 import UserBadges from "./UserBadges";
 import Navbar from "./Navbar";
 import "./ProfilePage.css";
+import api from '../utils/api';
+import { AuthContext } from "../context/AuthContext";
 
 const ProfilePage = () => {
   const { username } = useParams();
@@ -14,12 +15,14 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("badges");
+  
+  // Get auth state from context
+  const { isAuthenticated, user: authUser } = useContext(AuthContext);
 
   // Fetch user details and earned badges from backend
   useEffect(() => {
-    // Check if user is logged in
-    const loggedInUser = localStorage.getItem("username");
-    if (!loggedInUser) {
+    // Check if user is logged in using AuthContext
+    if (!isAuthenticated) {
       navigate("/login");
       return;
     }
@@ -30,7 +33,7 @@ const ProfilePage = () => {
         
         // First fetch user details
         try {
-          const userResponse = await axios.get(`http://localhost:5000/user/${username}`);
+          const userResponse = await api.get(`/user/${username}`);
           setUser(userResponse.data);
         } catch (userErr) {
           console.log("Could not fetch detailed user info:", userErr);
@@ -40,7 +43,7 @@ const ProfilePage = () => {
         
         // Then fetch earned badges
         try {
-          const badgesResponse = await axios.get(`http://localhost:5000/badges-earned/${username}`);
+          const badgesResponse = await api.get(`/badges-earned/${username}`);
           console.log("Badge response data:", badgesResponse.data);
           
           // The API now returns complete badge objects including all metadata
@@ -72,7 +75,7 @@ const ProfilePage = () => {
     };
 
     fetchUserData();
-  }, [username, navigate]);
+  }, [username, navigate, isAuthenticated]);
 
   // Format date helper
   const formatDate = (dateString) => {
