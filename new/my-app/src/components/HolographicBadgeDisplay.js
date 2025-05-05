@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext} from 'react';
 import { ChevronLeft, ChevronRight, Award, Share2, Shield, Code } from 'lucide-react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import Navbar from './Navbar';
 import './HolographicBadgeDisplay.css';
+import { AuthContext } from "../context/AuthContext";
 import { useSwipeable } from 'react-swipeable';
 const HolographicBadgeDisplay = () => {
   const [badges, setBadges] = useState([]);
@@ -14,7 +15,10 @@ const HolographicBadgeDisplay = () => {
   const [showShareSuccess, setShowShareSuccess] = useState(false);
   const hologramRef = useRef(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [showLoginMessage, setShowLoginMessage] = useState(false);
 
+// Use only the AuthContext for authentication state
+  const { isAuthenticated, user, logout } = useContext(AuthContext);
 
   // Fetch badges from backend
   useEffect(() => {
@@ -241,24 +245,33 @@ const HolographicBadgeDisplay = () => {
               <Award className="action-icon" />
               <span>Get this Badge</span>
             </button>
-            
-            <button 
-              className="action-button share-badge"
-              onClick={() => {
-                const shareUrl = `${window.location.origin}/badge/shared/${currentBadge.id}/${encodeURIComponent(localStorage.getItem("username") || "user")}/${Math.floor(Date.now()/1000)}`;
-                navigator.clipboard.writeText(shareUrl);
-                setShowShareSuccess(true);
-                setTimeout(() => setShowShareSuccess(false), 3000);
-              }}
-            >
-              <Share2 className="action-icon" />
-              <span>Generate Share Link</span>
-            </button>
-            
-            {showShareSuccess && (
-              <div className="share-success">Link copied to clipboard!</div>
-            )}
-          </div>
+
+              <button 
+                className="action-button share-badge"
+                // disabled={!isAuthenticated}
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    setShowLoginMessage(true);
+                    setTimeout(() => setShowLoginMessage(false), 3000);
+                  } else {
+                    const shareUrl = `${window.location.origin}/badge/shared/${currentBadge.id}/${encodeURIComponent(localStorage.getItem("username") || "user")}/${Math.floor(Date.now()/1000)}`;
+                    navigator.clipboard.writeText(shareUrl);
+                    setShowShareSuccess(true);
+                    setTimeout(() => setShowShareSuccess(false), 3000);
+                  }
+                }}
+              >
+                <Share2 className="action-icon" />
+                <span>Generate Share Link</span>
+              </button>
+
+              {showShareSuccess && (
+                <div className="share-success">Link copied to clipboard!</div>
+              )}
+              {showLoginMessage && (
+                <div className="share-success">Please login first!</div>
+              )}
+            </div>
           
           <h2 className="section-title">Related Badges</h2>
           <div className="related-badges">
