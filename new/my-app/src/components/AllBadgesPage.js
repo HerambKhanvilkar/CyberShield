@@ -64,7 +64,7 @@ const AllBadgesPage = () => {
     const fetchBadges = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.get('http://localhost:5000/badges');
+        const response = await axios.get(`${process.env.REACT_APP_SERVER_URL}/badges`);
         console.log("Fetched badges:", response.data);
         setBadges(response.data.badges);
         setFilteredBadges(response.data.badges);

@@ -27,7 +27,7 @@ const HolographicBadgeDisplay = () => {
     const fetchBadges = async () => {
       try {
         setIsDataLoading(true);
-        const response = await axios.get('http://localhost:5000/badges');
+        const response = await axios.get(`${process.env.REACT_APP_SERVER_URL}/badges`);
         console.log("Fetched badges:", response.data);
         setBadges(response.data.badges);
         setIsDataLoading(false);

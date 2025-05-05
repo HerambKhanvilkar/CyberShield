@@ -51,7 +51,7 @@ useEffect(() => {
     setLoading(true);
   
     try {
-      const url = isSignup ? "http://localhost:5000/signup" : "http://localhost:5000/login";
+      const url = isSignup ? `${process.env.REACT_APP_SERVER_URL}/signup` : `${process.env.REACT_APP_SERVER_URL}/login`;
       const data = isSignup 
         ? { email, username, password } 
         : { identifier, password };

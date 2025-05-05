@@ -18,12 +18,12 @@ const BadgeAdminPage = () => {
       setIsLoading(true);
       try {
         // Fetch badges
-        const badgesResponse = await axios.get("http://localhost:5000/badges");
+        const badgesResponse = await axios.get(`${process.env.REACT_APP_SERVER_URL}/badges`);
         setBadges(badgesResponse.data.badges);
         
         // Fetch users
         try {
-          const usersResponse = await axios.get("http://localhost:5000/users");
+          const usersResponse = await axios.get(`${process.env.REACT_APP_SERVER_URL}/users`);
           setUsers(usersResponse.data.users);
         } catch (userError) {
           console.error("Error fetching users:", userError);
@@ -53,7 +53,7 @@ const BadgeAdminPage = () => {
     }
     
     try {
-      const response = await axios.post("http://localhost:5000/assign-badge", {
+      const response = await axios.post(`${process.env.REACT_APP_SERVER_URL}/assign-badge`, {
         username: selectedUser,
         badgeId: parseInt(selectedBadge),
         adminUsername: adminUsername // Send admin username for verification

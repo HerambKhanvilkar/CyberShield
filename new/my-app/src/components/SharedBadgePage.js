@@ -19,7 +19,7 @@ const SharedBadgePage = () => {
         setIsLoading(true);
         
         // Fetch badge details
-        const badgeResponse = await axios.get(`http://localhost:5000/badge/${id}`);
+        const badgeResponse = await axios.get(`${process.env.REACT_APP_SERVER_URL}/badge/${id}`);
         setBadge(badgeResponse.data);
         
         // Static issuer data
@@ -32,7 +32,7 @@ const SharedBadgePage = () => {
         // Optional: Verify badge authenticity
         try {
           const verifyResponse = await axios.get(
-            `http://localhost:5000/verify-badge/${id}/${username}/${timestamp}`
+            `${process.env.REACT_APP_SERVER_URL}/verify-badge/${id}/${username}/${timestamp}`
           );
           setVerificationStatus(verifyResponse.data.verified);
         } catch (verifyError) {

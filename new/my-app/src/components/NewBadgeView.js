@@ -31,7 +31,7 @@ const NewBadgeView = () => {
     const fetchBadges = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.get('http://localhost:5000/badges');
+        const response = await axios.get(`${process.env.REACT_APP_SERVER_URL}/badges`);
         
         if (id && response.data.badges) {
           const badgeIndex = response.data.badges.findIndex(b => b.id === parseInt(id));
@@ -87,7 +87,7 @@ const NewBadgeView = () => {
     try {
       const badge = badges[currentBadgeIndex];
       const response = await axios.post(
-        'http://localhost:5000/generate-share-link', 
+        `${process.env.REACT_APP_SERVER_URL}/generate-share-link`, 
         { badgeId: badge.id },
         { 
           headers: { 

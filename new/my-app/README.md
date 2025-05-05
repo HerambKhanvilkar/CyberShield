@@ -2,6 +2,22 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+## Env Files Required
+
+```frontend.env
+REACT_APP_SERVER_URL=http://ip:port`
+```
+```backedn.env
+# Database Configuration
+MONGO_URI=mongodb+srv://user:secret@cluster.hn2lplb.mongodb.net/database
+PORT=3001
+
+# JWT Configuration (add these new values)
+JWT_SECRET=random_jargon
+JWT_EXPIRES_IN=[no._of_hours]h
+```
+
+
 ## Available Scripts
 
 In the project directory, you can run:
