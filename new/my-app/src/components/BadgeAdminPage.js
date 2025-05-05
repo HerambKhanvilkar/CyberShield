@@ -23,8 +23,19 @@ const BadgeAdminPage = () => {
         
         // Fetch users
         try {
-          const usersResponse = await axios.get("http://localhost:5000/users");
-          setUsers(usersResponse.data.users);
+        const token = localStorage.getItem("token");
+          const usersResponse = await axios.get(                                                                                        
+            `http://localhost:5000/users`,             
+            {                                                                       
+              headers: {                                                            
+                Authorization: `Bearer ${token}`,                                   
+                "Content-Type": "application/json",                                 
+              },                                                                    
+              // Add a timeout to abort requests that take too long                 
+              timeout: 10000,                                                       
+            }                                                                       
+          );
+          setUsers(usersResponse.data);
         } catch (userError) {
           console.error("Error fetching users:", userError);
           setMessage("Error loading users");
@@ -101,7 +112,7 @@ const BadgeAdminPage = () => {
                   className="select-input"
                 >
                   <option value="">-- Select User --</option>
-                  {users.map(user => (
+                  {users && users.map(user => (
                     <option key={user.username} value={user.username}>
                       {user.username} ({user.email})
                     </option>

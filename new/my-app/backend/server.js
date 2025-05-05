@@ -1,4 +1,5 @@
 require("dotenv").config();
+const jwt = require('jsonwebtoken');
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -15,6 +16,19 @@ app.use(cors());
 
 const { generateToken, authenticateJWT, isAdmin } = require('./middleware/auth');
 
+const getUsername = async (authHeader) => {
+  const token = authHeader.split(" ")[1];
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+  const user = await User.findOne({
+    _id: decoded.id,
+  });
+
+  if (!user) {
+    return null
+  }
+  return user.username
+}
 
 
 // Connect to MongoDB Atlas
@@ -331,6 +345,41 @@ app.get("/check-admin",authenticateJWT, async (req, res) => {
     res.json({ isAdmin: user.isAdmin || false });
   } catch (error) {
     console.error("Error checking admin status:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// Get user details
+app.get("/users", authenticateJWT, async (req, res) => {
+  try {
+    // dummy approach, as the variable is modifiable
+    // const { adminUsername } = req.body;
+
+    const authHeader = req.headers.authorization;
+
+    const adminUsername = await getUsername(authHeader);
+
+    if (!adminUsername) {
+      return res.status(403).json({ message: "User not found." });
+    }
+
+    // Check if admin user exists and is actually an admin
+    const adminUser = await User.findOne({ username: adminUsername});
+
+    if (!adminUser || !adminUser.isAdmin) {
+      return res.status(403).json({ message: "Unauthorized. Admin access required." });
+    }
+
+    const users = await User.find({isAdmin: false});
+    
+    res.json(users.map( (user) => {
+      return { 
+        username: user.username,
+        email: user.email
+      }
+    }));
+  } catch (error) {
+    console.error("Error fetching user:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
