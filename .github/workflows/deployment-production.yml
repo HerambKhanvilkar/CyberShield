@@ -68,7 +68,7 @@ jobs:
             mkdir -p /home/${{ secrets.PROD_SERVER_USER }}/Badge-Viewer
 
             # Navigate to the app directory
-            cd /home/${{ secrets.PROD_SERVER_USER }}/BadgeViewer
+            cd /home/${{ secrets.PROD_SERVER_USER }}/Badge-Viewer
 
             # Check if unzip is installed, if not, install it
             if ! command -v unzip &> /dev/null; then
