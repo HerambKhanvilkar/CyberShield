@@ -8,8 +8,8 @@
 # testing
 /coverage
 
-# production
-my-app/build
+# build for react app
+frontend/build
 
 # misc
 .DS_Store
