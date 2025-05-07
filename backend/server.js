@@ -384,6 +384,49 @@ app.get("/api/users", authenticateJWT, async (req, res) => {
   }
 });
 
+// Users autocomplete
+app.get("/api/users/autocomplete", authenticateJWT, async (req, res) => {
+  try {
+    // dummy approach, as the variable is modifiable
+    // const { adminUsername } = req.body;
+
+    const authHeader = req.headers.authorization;
+
+    const adminUsername = await getUsername(authHeader);
+
+    if (!adminUsername) {
+      return res.status(403).json({ message: "User not found." });
+    }
+
+    // Check if admin user exists and is actually an admin
+    const adminUser = await User.findOne({ username: adminUsername});
+
+    if (!adminUser || !adminUser.isAdmin) {
+      return res.status(403).json({ message: "Unauthorized. Admin access required." });
+    }
+
+    const query = req.query.q || "";
+
+    const normalizedQuery = query.replace(/\s+/g, "").toLowerCase();
+
+    const users = await User.find({isAdmin: false, username: { "$regex": normalizedQuery} });
+
+    const sortedUsers = users.sort(
+      (a, b) => a.username.length - b.username.length
+    );
+
+    res.json(sortedUsers.map( (user) => {
+      return { 
+        username: user.username,
+        email: user.email
+      }
+    }));
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
 // Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
