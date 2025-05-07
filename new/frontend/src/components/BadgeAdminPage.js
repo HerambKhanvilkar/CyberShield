@@ -64,11 +64,22 @@ const BadgeAdminPage = () => {
     }
     
     try {
-      const response = await axios.post(`${process.env.REACT_APP_SERVER_URL}/assign-badge`, {
-        username: selectedUser,
-        badgeId: parseInt(selectedBadge),
-        adminUsername: adminUsername // Send admin username for verification
-      });
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `${process.env.REACT_APP_SERVER_URL}/assign-badge`,             
+        {
+          username: selectedUser,
+          badgeId: parseInt(selectedBadge),
+          adminUsername: adminUsername // Send admin username for verification
+        },
+        {                                                                       
+          headers: {                                                            
+            Authorization: `Bearer ${token}`,                                   
+            "Content-Type": "application/json",                                 
+          },                                                                    
+          // Add a timeout to abort requests that take too long                 
+          timeout: 10000,                                                       
+        });
       
       setMessage(response.data.message);
       setMessageType("success");

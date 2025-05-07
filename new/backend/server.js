@@ -40,7 +40,7 @@ mongoose.connect(process.env.MONGO_URI, {
 .catch(err => console.error("MongoDB Connection Error:", err));
 
 // Get all badges
-app.get("/badges", async (req, res) => {
+app.get("/api/badges", async (req, res) => {
   try {
     const badges = await Badge.find({});
     res.json({ badges });
@@ -51,7 +51,7 @@ app.get("/badges", async (req, res) => {
 });
 
 // Get single badge by ID
-app.get("/badge/:id", async (req, res) => {
+app.get("/api/badge/:id", async (req, res) => {
   try {
     const badge = await Badge.findOne({ id: parseInt(req.params.id) });
     if (!badge) {
@@ -65,7 +65,7 @@ app.get("/badge/:id", async (req, res) => {
 });
 
 // Verify shared badge
-app.get("/verify-badge/:id/:username/:timestamp", async (req, res) => {
+app.get("/api/verify-badge/:id/:username/:timestamp", async (req, res) => {
   try {
     const { id, username, timestamp } = req.params;
     
@@ -102,7 +102,7 @@ app.get("/verify-badge/:id/:username/:timestamp", async (req, res) => {
 });
 
 // Generate share link endpoint
-app.post("/generate-share-link", authenticateJWT, async (req, res) => {
+app.post("/api/generate-share-link", authenticateJWT, async (req, res) => {
   try {
     const { badgeId } = req.body;
     const username = req.headers.username;
@@ -144,7 +144,7 @@ app.post("/generate-share-link", authenticateJWT, async (req, res) => {
 
 
 // Signup Route
-app.post("/signup", async (req, res) => {
+app.post("/api/signup", async (req, res) => {
   try {
     const { email, username, password } = req.body;
 
@@ -185,7 +185,7 @@ app.post("/signup", async (req, res) => {
 
 
 // Login Route (Accepts email or username)
-app.post("/login", async (req, res) => {
+app.post("/api/login", async (req, res) => {
   try {
     const { identifier, password } = req.body;
     const user = await User.findOne({
@@ -230,7 +230,7 @@ app.post("/login", async (req, res) => {
 });
 
 // Get Badges Earned by User
-app.get("/badges-earned/:username", async (req, res) => {
+app.get("/api/badges-earned/:username", async (req, res) => {
   try {
     const { username } = req.params;
 
@@ -263,7 +263,7 @@ app.get("/badges-earned/:username", async (req, res) => {
 });
 
 // Get user details
-app.get("/user/:username", async (req, res) => {
+app.get("/api/user/:username", async (req, res) => {
   try {
     const { username } = req.params;
     const user = await User.findOne({ username }).select("-password");
@@ -280,7 +280,7 @@ app.get("/user/:username", async (req, res) => {
 });
 
 // Assign badge to user
-app.post("/assign-badge",authenticateJWT, async (req, res) => {
+app.post("/api/assign-badge",authenticateJWT, async (req, res) => {
   try {
     const { username, badgeId, adminUsername } = req.body;
     
@@ -333,7 +333,7 @@ app.post("/assign-badge",authenticateJWT, async (req, res) => {
 });
 
 // Check admin status
-app.get("/check-admin",authenticateJWT, async (req, res) => {
+app.get("/api/check-admin",authenticateJWT, async (req, res) => {
   try {
     const { username } = req.query;
     const user = await User.findOne({ username });
@@ -350,7 +350,7 @@ app.get("/check-admin",authenticateJWT, async (req, res) => {
 });
 
 // Get user details
-app.get("/users", authenticateJWT, async (req, res) => {
+app.get("/api/users", authenticateJWT, async (req, res) => {
   try {
     // dummy approach, as the variable is modifiable
     // const { adminUsername } = req.body;

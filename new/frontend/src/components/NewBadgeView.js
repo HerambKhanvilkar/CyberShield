@@ -99,8 +99,10 @@ const NewBadgeView = () => {
       // Construct full share link
       const fullShareLink = `${window.location.origin}${response.data.shareLink}`;
 
+      console.log(fullShareLink);
+
       // Copy to clipboard
-      navigator.clipboard.writeText(fullShareLink);
+      //navigator.clipboard.writeText(fullShareLink);
 
       // Set share link for display
       setShareLink(fullShareLink);

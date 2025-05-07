@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Award, Share2, Shield, Code } from 'lucide-r
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import Navbar from './Navbar';
+import Footer from './Footer';
 import './HolographicBadgeDisplay.css';
 import { AuthContext } from "../context/AuthContext";
 import { useSwipeable } from 'react-swipeable';
@@ -241,7 +242,8 @@ const HolographicBadgeDisplay = () => {
           <h2 className="section-title">Badge Actions</h2>
           
           <div className="badge-actions">
-            <button className="action-button get-badge">
+            <button className="action-button get-badge" onClick={() => window.location.href = "https://learn.deepcytes.io/"}>
+              
               <Award className="action-icon" />
               <span>Get this Badge</span>
             </button>
@@ -254,8 +256,11 @@ const HolographicBadgeDisplay = () => {
                     setShowLoginMessage(true);
                     setTimeout(() => setShowLoginMessage(false), 3000);
                   } else {
-                    const shareUrl = `${window.location.origin}/badge/shared/${currentBadge.id}/${encodeURIComponent(localStorage.getItem("username") || "user")}/${Math.floor(Date.now()/1000)}`;
-                    navigator.clipboard.writeText(shareUrl);
+                    const user = localStorage.getItem("user");
+                    const userObject = JSON.parse(user);
+                    const shareUrl = `${window.location.origin}/badge/shared/${currentBadge.id}/${userObject.username}/${Math.floor(Date.now()/1000)}`;
+                    // navigator.clipboard.writeText(shareUrl);
+                    console.log(shareUrl);
                     setShowShareSuccess(true);
                     setTimeout(() => setShowShareSuccess(false), 3000);
                   }
@@ -313,6 +318,7 @@ const HolographicBadgeDisplay = () => {
       </div>
     </div>
   );
+  <Footer/>
 };
 
 export default HolographicBadgeDisplay;
