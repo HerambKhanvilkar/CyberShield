@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import "./AllBadgesPage.css"; // Reuse existing styles
+import SearchBox from "./SearchBox";
 
 const BadgeAdminPage = () => {
   const [badges, setBadges] = useState([]);
@@ -57,11 +58,11 @@ const BadgeAdminPage = () => {
   const handleAssignBadge = async (e) => {
     e.preventDefault();
     
-    if (!selectedBadge || !selectedUser) {
-      setMessage("Please select both a user and a badge");
-      setMessageType("error");
-      return;
-    }
+    // if (!selectedBadge || !selectedUser) {
+    //   setMessage("Please select both a user and a badge");
+    //   setMessageType("error");
+    //   return;
+    // }
     
     try {
       const token = localStorage.getItem("token");
@@ -116,19 +117,7 @@ const BadgeAdminPage = () => {
             <form onSubmit={handleAssignBadge}>
               <div className="form-group">
                 <label>Select User:</label>
-                <select 
-                  value={selectedUser} 
-                  onChange={e => setSelectedUser(e.target.value)}
-                  required
-                  className="select-input"
-                >
-                  <option value="">-- Select User --</option>
-                  {users && users.map(user => (
-                    <option key={user.username} value={user.username}>
-                      {user.username} ({user.email})
-                    </option>
-                  ))}
-                </select>
+                <SearchBox onUserSelect={(user) => setSelectedUser(user.username)} />
               </div>
               
               <div className="form-group">
