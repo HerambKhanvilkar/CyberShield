@@ -98,6 +98,7 @@ const BadgeAdminPage = () => {
     <div className="badges-page">
       <div className="badges-container">
         <h1 className="page-title">Badge Administration</h1>
+        <br/><br/><br/>
         <p className="page-subtitle">Assign badges to users</p>
         
         {message && (
@@ -128,7 +129,7 @@ const BadgeAdminPage = () => {
                   required
                   className="select-input"
                 >
-                  <option value="">-- Select Badge --</option>
+                  <option value="">-- Select Badges --</option>
                   {badges.map(badge => (
                     <option key={badge.id} value={badge.id}>
                       {badge.name} ({badge.difficulty})

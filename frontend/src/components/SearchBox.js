@@ -79,7 +79,7 @@ function SearchBox({ onUserSelect }) {
           className="search-input"
           autoComplete="off"
         />
-        <Search className="search-icon" />
+          {query.trim() === "" && <Search className="search-icon" />}
       </div>
 
       {showDropdown && (
