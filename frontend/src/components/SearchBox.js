@@ -1,7 +1,7 @@
-"use client";
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { Search } from "lucide-react";
+import "./SearchBox.css";
 
 function SearchBox({ onUserSelect }) {
   const [query, setQuery] = useState("");
@@ -17,7 +17,6 @@ function SearchBox({ onUserSelect }) {
         setShowDropdown(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -49,11 +48,10 @@ function SearchBox({ onUserSelect }) {
           setError("");
           setShowDropdown(true);
         } else {
-          setResults([]);
-          setError("Unexpected API response");
+          throw new Error("Unexpected response");
         }
       } catch (err) {
-        setError("Search failed");
+        setError("Search failed. Please try again.");
         setResults([]);
       } finally {
         setLoading(false);
@@ -65,68 +63,56 @@ function SearchBox({ onUserSelect }) {
   }, [query]);
 
   const handleSelect = (user) => {
-    if (onUserSelect) {
-      onUserSelect(user);
-    }
+    onUserSelect?.(user);
     setShowDropdown(false);
     setQuery(`${user.username} (${user.email})`);
   };
 
   return (
-    <div ref={searchRef} className="relative flex flex-auto">
-      <div className="relative w-full">
+    <section className="searchbox-container" ref={searchRef}>
+      <div className="input-wrapper">
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search for Users"
-          className="grow w-full bg-[#1A1B2E] text-white placeholder-gray-400 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+          placeholder="    Search for users..."
+          className="search-input"
           autoComplete="off"
         />
-        <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+        <Search className="search-icon" />
       </div>
 
       {showDropdown && (
-        <div className="absolute w-full top-full mt-1 bg-[#1A1B2E] rounded-lg shadow-lg border border-gray-800 z-50">
+        <div className="dropdown">
           {loading && (
-            <div className="p-4 text-center">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-cyan-500 mx-auto"></div>
+            <div className="loading-container">
+              <div className="spinner"></div>
             </div>
           )}
 
-          {error && <div className="p-4 text-red-500 text-sm">{error}</div>}
+          {error && <div className="error-text">{error}</div>}
 
           {!loading && !error && results.length > 0 && (
-            <div className="py-2">
-              <h3 className="px-4 text-xs font-semibold text-gray-400 uppercase mb-2">
-                Users
-              </h3>
+            <div className="results-list">
+              <h3 className="results-header">Users</h3>
               {results.slice(0, 5).map((user) => (
                 <button
                   key={user.username}
                   onClick={() => handleSelect(user)}
-                  className="block w-full text-left px-4 py-2 text-white hover:bg-cyan-600 rounded-lg"
+                  className="result-item"
                 >
                   {user.username} ({user.email})
                 </button>
               ))}
-              <a
-                className="block px-4 py-2 text-sm text-cyan-400 hover:underline"
-                href="/search"
-              >
-                See more
-              </a>
             </div>
           )}
 
           {!loading && !error && results.length === 0 && (
-            <div className="px-4 py-2 text-gray-400 text-sm">
-              No results found
-            </div>
+            <div className="no-results">No results found</div>
           )}
         </div>
       )}
-    </div>
+    </section>
   );
 }
 

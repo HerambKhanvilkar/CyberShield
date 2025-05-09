@@ -1,0 +1,135 @@
+/* Base container */
+.searchbox-container {
+  position: relative;
+  max-width: 480px;
+  width: 100%;
+  margin: 2rem auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Input styling */
+.input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.search-input {
+  width: 100%;
+  background-color: #1A1B2E;
+  color: #fff;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  border: 1px solid #2c2d3e;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  transition: box-shadow 0.3s ease;
+}
+
+.search-input::placeholder {
+  color: #9ca3af;
+}
+
+.search-input:focus {
+  box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.5); /* Cyan ring */
+  outline: none;
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 1.25rem;
+  width: 1.25rem;
+  color: #9ca3af;
+}
+
+/* Dropdown */
+.dropdown {
+  position: absolute;
+  top: 100%;
+  margin-top: 0.5rem;
+  width: 100%;
+  background-color: #1A1B2E;
+  border: 1px solid #374151;
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+/* Spinner animation */
+.spinner {
+  margin: 0 auto;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  border-bottom-color: #06b6d4;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Feedback text */
+.loading-container,
+.error-text,
+.no-results {
+  padding: 1rem;
+  text-align: center;
+  font-size: 0.875rem;
+}
+
+.error-text {
+  color: #f87171;
+}
+
+.no-results {
+  color: #9ca3af;
+}
+
+/* Results */
+.results-list {
+  padding: 0.5rem 0;
+}
+
+.results-header {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #9ca3af;
+  padding: 0.5rem 1rem;
+}
+
+.result-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem 1rem;
+  color: #fff;
+  background: none;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.result-item:hover {
+  background-color: #0891b2;
+}
+
+.see-more-link {
+  display: block;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  color: #22d3ee;
+  text-decoration: none;
+}
+
+.see-more-link:hover {
+  text-decoration: underline;
+}

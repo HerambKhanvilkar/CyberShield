@@ -162,7 +162,6 @@ const HolographicBadgeDisplay = () => {
   return (
     <div className="badge-view-page">
       <Navbar />
-      
       <div className="badge-main-content">
         {/* Left Column */}
         <div className="badge-left-column">
@@ -242,8 +241,7 @@ const HolographicBadgeDisplay = () => {
           <h2 className="section-title">Badge Actions</h2>
           
           <div className="badge-actions">
-            <button className="action-button get-badge" onClick={() => window.location.href = "https://learn.deepcytes.io/"}>
-              
+            <button className="action-button get-badge" onClick={() => window.location.href="https://learn.deepcytes.io/"}>
               <Award className="action-icon" />
               <span>Get this Badge</span>
             </button>
