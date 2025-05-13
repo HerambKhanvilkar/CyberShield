@@ -101,7 +101,7 @@ function SearchBox({ onUserSelect }) {
                   onClick={() => handleSelect(user)}
                   className="result-item"
                 >
-                  {user.username} ({user.email})
+                  {user.username}
                 </button>
               ))}
             </div>

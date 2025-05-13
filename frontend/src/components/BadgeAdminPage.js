@@ -145,35 +145,70 @@ const darkThemeStyles = {
             <p>Loading data...</p>
           </div>
         ) : (
-          <div className="admin-form glass-card">
-            <h2>Assign Badge to User</h2>
-            <form onSubmit={handleAssignBadge}>
-              <div className="form-group">
-                <label>Select User:</label>
-                <SearchBox onUserSelect={(user) => setSelectedUser(user.username)} />
+          <div>
+            {/* Top Section: Badge Assignment */}
+            <div className="admin-form glass-card">
+              <h2>Assign Badge to User</h2>
+              <form onSubmit={handleAssignBadge}>
+                <div className="form-group">
+                  <label>Select User:</label>
+                  <SearchBox onUserSelect={(user) => setSelectedUser(user)} />
+                </div>
+
+                <div className="form-group">
+                  <label>Select Badge:</label>
+                  <Select
+                    options={badgeOptions}
+                    value={badgeOptions.find(option => option.value === selectedBadge)}
+                    onChange={option => setSelectedBadge(option.value)}
+                    styles={darkThemeStyles}
+                  />
+                </div>
+
+                <button type="submit" className="glass-button">
+                  Assign Badge
+                </button>
+              </form>
+            </div>
+
+            {/* Bottom Section: Profile View - Only shown if a user is selected */}
+            {selectedUser && (
+              <div className="admin-form glass-card">
+                <h2>User Profile</h2>
+                <div className="user-profile">
+                  <div className="profile-photo">
+                    {/* <img src={selectedUser?.photo} alt="Profile" /> */}
+                    <img src={"https://png.pngtree.com/png-clipart/20210129/ourmid/pngtree-default-male-avatar-png-image_2811083.jpg"} alt="Profile" />
+                  </div>
+                  <div className="profile-info">
+                    <div>
+                      <label>First Name:</label>
+                      <span>{selectedUser?.firstName}</span>
+                    </div>
+                    <div>
+                      <label>Last Name:</label>
+                      <span>{selectedUser?.lastName}</span>
+                    </div>
+                    <div>
+                      <label>Email:</label>
+                      <span>{selectedUser?.email}</span>
+                    </div>
+
+                    <div className="profile-actions">
+                      <button className="glass-button save-button">
+                        Save Changes
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
-              
-              <div className="form-group">
-                <label>Select Badge:</label>
-                <Select
-                  options={badgeOptions}
-                  value={badgeOptions.find(option => option.value === selectedBadge)}
-                  onChange={option => setSelectedBadge(option.value)}
-                  styles={darkThemeStyles}
-                />
-              </div>
-              
-              <button type="submit" className="glass-button">
-                Assign Badge
-              </button>
-            </form>
+
+            )}
+            <Link to="/" className="glass-button back-button">Back to Home</Link>
           </div>
         )}
-        
-        <Link to="/" className="glass-button back-button">Back to Home</Link>
       </div>
     </div>
-  );
-};
-
+);
+}
 export default BadgeAdminPage;
