@@ -62,15 +62,6 @@ const Navbar = () => {
                   <div 
                     className="dropdown-item1" 
                     onClick={() => {
-                      navigate("/admin/login");
-                      setDropdownOpen(false);
-                    }}
-                  >
-                    Admin Login
-                  </div>
-                  <div 
-                    className="dropdown-item1" 
-                    onClick={() => {
                       navigate("/contact");
                       setDropdownOpen(false);
                     }}
