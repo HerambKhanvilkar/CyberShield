@@ -420,7 +420,7 @@ const AllBadgesPage = () => {
                 >
                   Get this badge
                 </button>
-                <Link to="/learn-more" className="glass-button secondary">Learn More</Link>
+                <Link to={"/learn-more?id=" + selectedBadge._id} className="glass-button secondary">Learn More</Link>
               </div>
             </div>
           </div>

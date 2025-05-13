@@ -70,14 +70,14 @@ app.get("/api/verify-badge/:id/:username/:timestamp", async (req, res) => {
     const { id, username, timestamp } = req.params;
     
     // Check if the badge was actually earned by this user
-    const userBadges = await Users.findById(username);
+    const user = await User.findById(username);
     
-    if (!userBadges) {
+    if (user.badges === []) {
       return res.status(404).json({ verified: false });
     }
     
     // Check if user has this specific badge
-    const badgeEarned = userBadges.badges.find(
+    const badgeEarned = user.badges.find(
       b => b.badgeId === parseInt(id)
     );
     
@@ -86,15 +86,15 @@ app.get("/api/verify-badge/:id/:username/:timestamp", async (req, res) => {
     }
     
     // Optional: Add timestamp validation 
-    const currentTime = Math.floor(Date.now() / 1000);
-    const linkAge = currentTime - parseInt(timestamp);
+    // const currentTime = Math.floor(Date.now() / 1000);
+    // const linkAge = currentTime - parseInt(timestamp);
     
     // Invalidate links older than 30 days
-    if (linkAge > 30 * 24 * 60 * 60) {
-      return res.status(410).json({ verified: false });
-    }
+    // if (linkAge > 30 * 24 * 60 * 60) {
+    //   return res.status(410).json({ verified: false });
+    // }
     
-    res.json({ verified: true });
+    res.json({ verified: true , firstName: user.firstName, lastName: user.lastName});
   } catch (error) {
     console.error("Verification error:", error);
     res.status(500).json({ verified: false });

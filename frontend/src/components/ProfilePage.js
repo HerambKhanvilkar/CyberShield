@@ -203,7 +203,7 @@ const ProfilePage = () => {
                       showDates={true} 
                       badgeActions={(badge) => (
                         <Link 
-                          to={`/badge-view/${badge.id}`}
+                          to={`/learn-more?id=${badge._id}`}
                           className="glass-button text-sm mt-2 w-full text-center"
                         >
                           View in 3D

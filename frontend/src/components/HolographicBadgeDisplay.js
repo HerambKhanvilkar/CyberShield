@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Award, Share2, Shield, Code } from 'lucide-react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
@@ -9,6 +10,8 @@ import { AuthContext } from "../context/AuthContext";
 import { useSwipeable } from 'react-swipeable';
 
 const HolographicBadgeDisplay = () => {
+  const [searchParams] = useSearchParams();
+  const badgeId = searchParams.get('id');
   const [badges, setBadges] = useState([]);
   const [shareUrl, setShareUrl] = useState(null);
   const [earnedBadges, setEarnedBadges] = useState([]);
@@ -41,7 +44,20 @@ const HolographicBadgeDisplay = () => {
 
         // Fetch earned badges for the user
         if (user && user.username) {
-          const responseEarnedBadges = await axios.get(`${process.env.REACT_APP_SERVER_URL}/badges-earned/${user.username}`);
+        const token = localStorage.getItem("token");
+          const responseEarnedBadges = 
+            await axios.get(
+              `${process.env.REACT_APP_SERVER_URL}/badges-earned`,
+            {                                                                       
+              headers: {                                                            
+                Authorization: `Bearer ${token}`,                                   
+                "Content-Type": "application/json",                                 
+              },                                                                    
+              // Add a timeout to abort requests that take too long                 
+              timeout: 10000,                                                       
+            }                                                                       
+          );
+
           console.log("Fetched earned badges:", responseEarnedBadges.data);
           setEarnedBadges(responseEarnedBadges.data.badges || []); // Store earned badges
         }
@@ -125,6 +141,16 @@ const HolographicBadgeDisplay = () => {
 
     return () => clearTimeout(timer);
   }, [currentBadgeIndex]);
+
+  useEffect(() => {
+    if ( badges.length > 0 && badgeId){
+      console.log("dkfjalksdjfasd");
+      console.log(badges);
+      console.log(badgeId);
+      const index = badges.findIndex(b => b._id === badgeId);
+      setCurrentBadgeIndex(index);
+    }
+  }, [badges]);
 
   // Get current badge
   const currentBadge = badges.length > 0 ? badges[currentBadgeIndex] : {
@@ -210,8 +236,8 @@ const earnedBadge = earnedBadges.find(badge => badge.id === currentBadge.id);
 
           <div className="badge-info-boxes">
             <div className="info-box">
-              <span className="info-label">Vertical</span>
-              <span className="info-value">{currentBadge.category}</span>
+              <span className="info-label">Level</span>
+              <span className="info-value">{currentBadge.level}</span>
             </div>
 
             <div className="info-box">
@@ -232,12 +258,32 @@ const earnedBadge = earnedBadges.find(badge => badge.id === currentBadge.id);
 
           <div className="badge-actions">
             {earnedBadge ? (
+              <>
               <div className="action-button get-badge earned-badge">
                 <Award className="action-icon" />
                 <span>
                   {earnedBadge.earnedDate ? `Earned on ${new Date(earnedBadge.earnedDate).toLocaleDateString()}` : "Not Earned Yet"}
                 </span>
               </div>
+            <button className="action-button share-badge"
+              onClick={() => {
+                if (!isAuthenticated) {
+                  setShowLoginMessage(true);
+                  setTimeout(() => setShowLoginMessage(false), 3000);
+                } else {
+                  const user = localStorage.getItem("user");
+                  const userObject = JSON.parse(user);
+                  const shareURL = `${window.location.origin}/badge/shared/${currentBadge.id}/${userObject.username}/${Math.floor(Date.now()/1000)}`;
+                  setShareUrl(shareURL);
+                  setShowShareSuccess(true);
+                  setTimeout(() => setShowShareSuccess(false), 3000);
+                }
+              }}
+            >
+              <Share2 className="action-icon" />
+              <span>Generate Share Link</span>
+            </button>
+              </>
             ) : (
               <button
                 className="action-button get-badge"
@@ -248,27 +294,7 @@ const earnedBadge = earnedBadges.find(badge => badge.id === currentBadge.id);
               </button>
             )}
 
-            <button
-              className="action-button share-badge"
-              onClick={() => {
-                if (!isAuthenticated) {
-                  setShowLoginMessage(true);
-                  setTimeout(() => setShowLoginMessage(false), 3000);
-                } else {
-                  const user = localStorage.getItem("user");
-                  const userObject = JSON.parse(user);
-                  const shareUrl = `${window.location.origin}/badge/shared/${currentBadge.id}/${userObject.username}/${Math.floor(Date.now()/1000)}`;
-                  console.log(shareUrl);
-                  setShowShareSuccess(true);
-                  setTimeout(() => setShowShareSuccess(false), 3000);
-                }
-              }}
-            >
-              <Share2 className="action-icon" />
-              <span>Generate Share Link</span>
-            </button>
-
-            {showShareSuccess && <div className="share-success">Link copied to clipboard!</div>}
+            {showShareSuccess && <div className="share-success">Link copied to clipboard! <Link to={shareUrl}>view</Link></div>}
             {showLoginMessage && <div className="share-success">Please login to share!</div>}
           </div>
          <h2 className="section-title">Related Badges</h2>

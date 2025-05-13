@@ -8,6 +8,7 @@ import './HolographicBadgeDisplay.css';
 const SharedBadgePage = () => {
   const { id, username, timestamp } = useParams();
   const [badge, setBadge] = useState(null);
+  const [user, setUser] = useState("");
   const [issuerData, setIssuerData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -35,6 +36,7 @@ const SharedBadgePage = () => {
             `${process.env.REACT_APP_SERVER_URL}/verify-badge/${id}/${username}/${timestamp}`
           );
           setVerificationStatus(verifyResponse.data.verified);
+          setUser(verifyResponse.data.firstName + " " + verifyResponse.data.lastName);
         } catch (verifyError) {
           console.error("Verification error:", verifyError);
           setVerificationStatus(false);
@@ -103,7 +105,6 @@ const SharedBadgePage = () => {
   if (error || !badge) {
     return (
       <div className="badge-view-page">
-        <Navbar />
         <div className="container" style={{textAlign: 'center', padding: '50px 20px'}}>
           <div className="glass-card" style={{maxWidth: '600px', margin: '0 auto', padding: '30px'}}>
             <h2 className="neon-text">Badge Not Found</h2>
@@ -119,7 +120,6 @@ const SharedBadgePage = () => {
 
   return (
     <div className="badge-view-page">
-      <Navbar />
       
       <div className="shared-badge-container" style={{maxWidth: '1000px', margin: '20px auto', padding: '0 20px'}}>
         {/* Verification Header */}
@@ -144,7 +144,7 @@ const SharedBadgePage = () => {
             </div>
             <div>
               <p style={{margin: '0'}}>
-                This badge was issued to <strong>{username}</strong> on {formatDate(timestamp)}
+                This badge was issued to <strong>{user}</strong> on {formatDate(timestamp)}
               </p>
             </div>
           </div>
