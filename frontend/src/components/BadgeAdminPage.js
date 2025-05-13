@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import "./AllBadgesPage.css"; // Reuse existing styles
 import SearchBox from "./SearchBox";
 import Select from "react-select";
+import Navbar from "./Navbar";
 
 const BadgeAdminPage = () => {
   const [badges, setBadges] = useState([]);
@@ -13,7 +14,7 @@ const BadgeAdminPage = () => {
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState(""); // "success" or "error"
   const [isLoading, setIsLoading] = useState(true);
-  const adminUsername = localStorage.getItem("username");
+  const adminUsername = localStorage.getItem("user");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,16 +38,15 @@ const BadgeAdminPage = () => {
               timeout: 10000,                                                       
             }                                                                       
           );
+
           setUsers(usersResponse.data);
         } catch (userError) {
-          console.error("Error fetching users:", userError);
           setMessage("Error loading users");
           setMessageType("error");
         }
         
         setIsLoading(false);
       } catch (error) {
-        console.error("Error fetching data:", error);
         setMessage("Error loading data");
         setMessageType("error");
         setIsLoading(false);
@@ -70,7 +70,7 @@ const BadgeAdminPage = () => {
       const response = await axios.post(
         `${process.env.REACT_APP_SERVER_URL}/assign-badge`,             
         {
-          username: selectedUser,
+          email: selectedUser,
           badgeId: parseInt(selectedBadge),
           adminUsername: adminUsername // Send admin username for verification
         },
@@ -92,6 +92,8 @@ const BadgeAdminPage = () => {
     } catch (error) {
       setMessage(error.response?.data?.message || "Error assigning badge");
       setMessageType("error");
+      setSelectedBadge("");
+      setSelectedUser("");
     }
   };
 
@@ -99,6 +101,7 @@ const BadgeAdminPage = () => {
   value: badge.id,
   label: `${badge.name} (${badge.difficulty})`
 }));
+
 
 const darkThemeStyles = {
   control: (styles) => ({
@@ -128,6 +131,7 @@ const darkThemeStyles = {
 
   return (
     <div className="badges-page">
+        <Navbar />
       <div className="badges-container">
         <h1 className="page-title">Badge Administration</h1>
         <br/><br/><br/>
@@ -150,17 +154,17 @@ const darkThemeStyles = {
             <form onSubmit={handleAssignBadge}>
               <div className="form-group">
                 <label>Select User:</label>
-                <SearchBox onUserSelect={(user) => setSelectedUser(user.username)} />
+           <SearchBox 
+              onUserSelect={(user) => setSelectedUser(user.email)} 
+          /> 
               </div>
               
               <div className="form-group">
                 <label>Select Badge:</label>
-                <Select
-                  options={badgeOptions}
-                  value={badgeOptions.find(option => option.value === selectedBadge)}
-                  onChange={option => setSelectedBadge(option.value)}
-                  styles={darkThemeStyles}
-                />
+           <Select options={badgeOptions} 
+              value={badgeOptions.find( option => option.value === selectedBadge)} 
+            onChange={option => setSelectedBadge(option.value)} styles={darkThemeStyles} 
+            /> 
               </div>
               
               <button type="submit" className="glass-button">

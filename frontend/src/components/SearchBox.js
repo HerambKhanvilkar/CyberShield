@@ -65,7 +65,7 @@ function SearchBox({ onUserSelect }) {
   const handleSelect = (user) => {
     onUserSelect?.(user);
     setShowDropdown(false);
-    setQuery(`${user.username} (${user.email})`);
+    setQuery(`${user.firstName + " " + user.lastName} (${user.email})`);
   };
 
   return (
@@ -97,11 +97,11 @@ function SearchBox({ onUserSelect }) {
               <h3 className="results-header">Users</h3>
               {results.slice(0, 5).map((user) => (
                 <button
-                  key={user.username}
+                  key={user.email}
                   onClick={() => handleSelect(user)}
                   className="result-item"
                 >
-                  {user.username} ({user.email})
+                  {user.firstName + " " +user.lastName} ({user.email})
                 </button>
               ))}
             </div>

@@ -27,7 +27,7 @@ const getUsername = async (authHeader) => {
   if (!user) {
     return null
   }
-  return user.username
+  return user.email
 }
 
 
@@ -70,7 +70,7 @@ app.get("/api/verify-badge/:id/:username/:timestamp", async (req, res) => {
     const { id, username, timestamp } = req.params;
     
     // Check if the badge was actually earned by this user
-    const userBadges = await BadgesEarned.findOne({ username });
+    const userBadges = await Users.findById(username);
     
     if (!userBadges) {
       return res.status(404).json({ verified: false });
@@ -146,10 +146,10 @@ app.post("/api/generate-share-link", authenticateJWT, async (req, res) => {
 // Signup Route
 app.post("/api/signup", async (req, res) => {
   try {
-    const { email, username, password } = req.body;
+    const { email, firstName, lastName, password } = req.body;
 
     // Check if email or username already exists
-    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists! Please log in." });
     }
@@ -160,7 +160,8 @@ app.post("/api/signup", async (req, res) => {
     // Save new user
     const newUser = new User({ 
       email, 
-      username, 
+      firstName, 
+      lastName, 
       password: hashedPassword,
       isAdmin: false // Default to non-admin
     });
@@ -173,7 +174,8 @@ app.post("/api/signup", async (req, res) => {
       message: "Signup successful!", 
       token, // Send token to client
       user: { 
-        username: newUser.username, 
+        username: newUser.id, 
+        firstName: newUser.firstName, 
         email: newUser.email 
       } 
     });
@@ -217,7 +219,8 @@ app.post("/api/login", async (req, res) => {
       message: "Login Successful!",
       token, // Send token to client
       user: {
-        username: user.username,
+        username: user.id,
+        firstName: user.firstName,
         email: user.email,
         isAdmin: user.isAdmin,
         badges: earnedBadges,
@@ -230,26 +233,32 @@ app.post("/api/login", async (req, res) => {
 });
 
 // Get Badges Earned by User
-app.get("/api/badges-earned/:username", async (req, res) => {
+app.get("/api/badges-earned", authenticateJWT, async (req, res) => {
   try {
-    const { username } = req.params;
+
+    const authHeader = req.headers.authorization;
+    const email = await getUsername(authHeader);
 
     // Fetch earned badges
-    const userBadges = await BadgesEarned.findOne({ username }).lean();
+    const user = await User.findOne({ email }).lean();
     
-    if (!userBadges) {
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    if (user.badges === []) {
       return res.json({ badges: [] });
     }
 
     // Fetch full badge details for each earned badge
-    const badgeIds = userBadges.badges.map(b => b.badgeId);
+    const badgeIds = user.badges.map(b => b.badgeId);
     
     const allBadges = await Badge.find({ id: { $in: badgeIds } }).lean();
 
     // Map earned badges with dates
     const earnedBadges = allBadges.map(badge => ({
       ...badge,
-      earnedDate: userBadges.badges.find(b => b.badgeId === badge.id)?.earnedDate
+      earnedDate: user.badges.find(b => b.badgeId === badge.id)?.earnedDate
     }));
 
     res.json({ badges: earnedBadges });
@@ -263,11 +272,12 @@ app.get("/api/badges-earned/:username", async (req, res) => {
 });
 
 // Get user details
-app.get("/api/user/:username", async (req, res) => {
+app.get("/api/user", authenticateJWT, async (req, res) => {
   try {
-    const { username } = req.params;
-    const user = await User.findOne({ username }).select("-password");
-    
+    const authHeader = req.headers.authorization;
+    const email = await getUsername(authHeader);
+    const user = await User.findOne({ email }).select("-password");
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -282,16 +292,20 @@ app.get("/api/user/:username", async (req, res) => {
 // Assign badge to user
 app.post("/api/assign-badge",authenticateJWT, async (req, res) => {
   try {
-    const { username, badgeId, adminUsername } = req.body;
+    const { email, badgeId } = req.body;
+
+    const authHeader = req.headers.authorization;
+
+    const adminUsername = await getUsername(authHeader);
+
+    const adminUser = await User.findOne({ email: adminUsername });
     
-    // Check if admin user exists and is actually an admin
-    const adminUser = await User.findOne({ username: adminUsername });
     if (!adminUser || !adminUser.isAdmin) {
       return res.status(403).json({ message: "Unauthorized. Admin access required." });
     }
     
     // Check if user exists
-    const user = await User.findOne({ username });
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -302,28 +316,16 @@ app.post("/api/assign-badge",authenticateJWT, async (req, res) => {
       return res.status(404).json({ message: "Badge not found" });
     }
     
-    // Check if user already has badge record
-    let userBadges = await BadgesEarned.findOne({ username });
-    
-    if (userBadges) {
-      // Check if user already has this badge
-      const hasBadge = userBadges.badges.some(b => b.badgeId === badgeId);
-      
-      if (hasBadge) {
-        return res.status(400).json({ message: "User already has this badge" });
-      }
-      
-      // Add badge to existing record
-      userBadges.badges.push({ badgeId, earnedDate: new Date() });
-      await userBadges.save();
-    } else {
-      // Create new badges earned record
-      userBadges = new BadgesEarned({
-        username,
-        badges: [{ badgeId, earnedDate: new Date() }]
-      });
-      await userBadges.save();
+    // Check if user already has this badge
+    const hasBadge = user.badges.some(b => b.badgeId === badgeId);
+
+    if (hasBadge) {
+      return res.status(400).json({ message: "User already has this badge" });
     }
+
+    // Add badge to existing record
+    user.badges.push({ badgeId, earnedDate: new Date() });
+    await user.save();
     
     res.json({ message: "Badge assigned successfully" });
   } catch (error) {
@@ -360,11 +362,11 @@ app.get("/api/users", authenticateJWT, async (req, res) => {
     const adminUsername = await getUsername(authHeader);
 
     if (!adminUsername) {
-      return res.status(403).json({ message: "User not found." });
+      return res.status(403).json({ message: "Logged in user not found." });
     }
 
     // Check if admin user exists and is actually an admin
-    const adminUser = await User.findOne({ username: adminUsername});
+    const adminUser = await User.findOne({ email: adminUsername});
 
     if (!adminUser || !adminUser.isAdmin) {
       return res.status(403).json({ message: "Unauthorized. Admin access required." });
@@ -374,8 +376,9 @@ app.get("/api/users", authenticateJWT, async (req, res) => {
     
     res.json(users.map( (user) => {
       return { 
-        username: user.username,
-        email: user.email
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
       }
     }));
   } catch (error) {
@@ -395,11 +398,11 @@ app.get("/api/users/autocomplete", authenticateJWT, async (req, res) => {
     const adminUsername = await getUsername(authHeader);
 
     if (!adminUsername) {
-      return res.status(403).json({ message: "User not found." });
+      return res.status(403).json({ message: "Logged in user not found." });
     }
 
     // Check if admin user exists and is actually an admin
-    const adminUser = await User.findOne({ username: adminUsername});
+    const adminUser = await User.findOne({ email: adminUsername});
 
     if (!adminUser || !adminUser.isAdmin) {
       return res.status(403).json({ message: "Unauthorized. Admin access required." });
@@ -409,20 +412,120 @@ app.get("/api/users/autocomplete", authenticateJWT, async (req, res) => {
 
     const normalizedQuery = query.replace(/\s+/g, "").toLowerCase();
 
-    const users = await User.find({isAdmin: false, username: { "$regex": normalizedQuery} });
+    const users = await User.find({isAdmin: false, email: { "$regex": normalizedQuery} });
 
     const sortedUsers = users.sort(
-      (a, b) => a.username.length - b.username.length
+      (a, b) => a.email.length - b.email.length
     );
 
     res.json(sortedUsers.map( (user) => {
       return { 
-        username: user.username,
-        email: user.email
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
       }
     }));
   } catch (error) {
     console.error("Error fetching user:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// Users info edit
+app.post("/api/user/info", authenticateJWT, async (req, res) => {
+  try {
+    // dummy approach, as the variable is modifiable
+    // const { adminUsername } = req.body;
+
+    const authHeader = req.headers.authorization;
+
+    const adminUsername = await getUsername(authHeader);
+
+    if (!adminUsername) {
+      return res.status(403).json({ message: "Logged in user not found." });
+    }
+
+    // Check if admin user exists and is actually an admin
+    const adminUser = await User.findOne({ email: adminUsername});
+
+    if (!adminUser || !adminUser.isAdmin) {
+      return res.status(403).json({ message: "Unauthorized. Admin access required." });
+    }
+
+    const { email, newFirstName, newLastName, newPassword } = req.body;
+
+    const filter = { email };
+    const update = {};
+    if (newFirstName){
+      update["firstName"] = newFirstName;
+    }
+    if (newLastName){
+      update["lastName"] = newLastName;
+    }
+    if (newPassword){
+      // Hash the password before storing
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      update["password"] = hashedPassword;
+    }
+
+    console.log(filter);
+    console.log(update);
+    const user = await User.findOneAndUpdate(filter, update);
+
+    await user.save();
+    
+    res.json({ message: "User Info Updated Successfully." });
+
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// Assign badge to user
+app.post("/api/revoke-badge",authenticateJWT, async (req, res) => {
+  try {
+    const { email, badgeId } = req.body;
+
+    const authHeader = req.headers.authorization;
+
+    const adminUsername = await getUsername(authHeader);
+
+    const adminUser = await User.findOne({ email: adminUsername });
+    
+    if (!adminUser || !adminUser.isAdmin) {
+      return res.status(403).json({ message: "Unauthorized. Admin access required." });
+    }
+    
+    // Check if user exists
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    // Check if badge exists
+    const badge = await Badge.findOne({ id: badgeId });
+    if (!badge) {
+      return res.status(404).json({ message: "Badge not found" });
+    }
+    
+    // Check if user already has this badge
+    const hasBadge = user.badges.some(b => b.badgeId === badgeId);
+
+    if (!hasBadge) {
+      return res.status(400).json({ message: "Badge is not assigned to user" });
+    }
+
+    // Remove an badge with a specific id
+    const index = user.badges.findIndex(b => b.badgeId === badgeId);
+    if (index !== -1) {
+      user.badges.splice(index, 1);
+    }
+    await user.save();
+    
+    res.json({ message: "Badge revoked successfully" });
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });

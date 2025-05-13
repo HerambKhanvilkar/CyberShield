@@ -10,6 +10,7 @@ import { useSwipeable } from 'react-swipeable';
 
 const HolographicBadgeDisplay = () => {
   const [badges, setBadges] = useState([]);
+  const [shareUrl, setShareUrl] = useState(null);
   const [earnedBadges, setEarnedBadges] = useState([]);
   const [currentBadgeIndex, setCurrentBadgeIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);

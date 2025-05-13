@@ -8,8 +8,9 @@ import logo from "./logo.png";
 
 
 const LoginPage = () => {
-  const [identifier, setIdentifier] = useState(""); // Username or Email
-  const [username, setUsername] = useState("");
+  const [identifier, setIdentifier] = useState(""); // Email
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -29,13 +30,14 @@ const LoginPage = () => {
     // Signup form validation
     else {
       const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-      const validUsername = username.trim().length >= 3;
+      const validFirstName = firstName.trim().length >= 3;
+      const validLastName = lastName.trim().length >= 3;
       const validPassword = password.length >= 6;
       const passwordsMatch = password === confirmPassword;
       
-      setFormValid(validEmail && validUsername && validPassword && passwordsMatch);
+      setFormValid(validEmail && validFirstName && validLastName && validPassword && passwordsMatch);
     }
-  }, [identifier, username, email, password, confirmPassword, isSignup]);
+  }, [identifier, firstName, lastName, email, password, confirmPassword, isSignup]);
 
 // Check if already authenticated using AuthContext
 const { isAuthenticated } = useContext(AuthContext);
@@ -53,7 +55,7 @@ useEffect(() => {
     try {
       const url = isSignup ? `${process.env.REACT_APP_SERVER_URL}/signup` : `${process.env.REACT_APP_SERVER_URL}/login`;
       const data = isSignup 
-        ? { email, username, password } 
+        ? { email, firstName, lastName, password } 
         : { identifier, password };
   
       const response = await axios.post(url, data);
@@ -80,7 +82,8 @@ useEffect(() => {
     setError(null);
     // Reset form fields
     setIdentifier("");
-    setUsername("");
+    setFirstName("");
+    setLastName("");
     setEmail("");
     setPassword("");
     setConfirmPassword("");
@@ -117,13 +120,25 @@ useEffect(() => {
                 </div>
                 
                 <div className="form-group">
-                  <label htmlFor="username">Username</label>
+                  <label htmlFor="FirstName">First Name</label>
                   <input
                     type="text"
-                    id="username"
-                    placeholder="Choose a username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    id="firstName"
+                    placeholder="Enter your First Name"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="LastName">Last Name ( Optional )</label>
+                  <input
+                    type="text"
+                    id="lastName"
+                    placeholder="Enter your Last Name"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
                     required
                   />
                 </div>
@@ -159,11 +174,11 @@ useEffect(() => {
               // Login form fields
               <>
                 <div className="form-group">
-                  <label htmlFor="identifier">Username or Email</label>
+                  <label htmlFor="identifier">Email</label>
                   <input
                     type="text"
                     id="identifier"
-                    placeholder="Enter your username or email"
+                    placeholder="Enter your email"
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
                     required

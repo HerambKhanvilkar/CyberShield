@@ -4,7 +4,7 @@ import UserBadges from "./UserBadges";
 import Navbar from "./Navbar";
 import "./ProfilePage.css";
 import api from '../utils/api';
-import { AuthContext } from "../context/AuthContext";
+// import { AuthContext } from "../context/AuthContext";
 
 const ProfilePage = () => {
   const { username } = useParams();
@@ -17,7 +17,7 @@ const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState("badges");
   
   // Get auth state from context
-  const { isAuthenticated, user: authUser } = useContext(AuthContext);
+  // const { isAuthenticated} = useContext(AuthContext);
 
   // Fetch user details and earned badges from backend
   useEffect(() => {
@@ -33,7 +33,7 @@ const ProfilePage = () => {
         
         // First fetch user details
         try {
-          const userResponse = await api.get(`/user/${username}`);
+          const userResponse = await api.get(`/user`);
           setUser(userResponse.data);
         } catch (userErr) {
           console.log("Could not fetch detailed user info:", userErr);
@@ -43,7 +43,7 @@ const ProfilePage = () => {
         
         // Then fetch earned badges
         try {
-          const badgesResponse = await api.get(`/badges-earned/${username}`);
+          const badgesResponse = await api.get(`/badges-earned`);
           console.log("Badge response data:", badgesResponse.data);
           
           // The API now returns complete badge objects including all metadata
@@ -75,7 +75,7 @@ const ProfilePage = () => {
     };
 
     fetchUserData();
-  }, [username, navigate, isAuthenticated]);
+  }, [username, navigate]);
 
   // Format date helper
   const formatDate = (dateString) => {

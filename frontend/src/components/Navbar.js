@@ -62,15 +62,6 @@ const Navbar = () => {
                   <div 
                     className="dropdown-item1" 
                     onClick={() => {
-                      navigate("/admin/login");
-                      setDropdownOpen(false);
-                    }}
-                  >
-                    Admin Login
-                  </div>
-                  <div 
-                    className="dropdown-item1" 
-                    onClick={() => {
                       navigate("/contact");
                       setDropdownOpen(false);
                     }}
@@ -100,12 +91,12 @@ const Navbar = () => {
             <>
               <div 
                 className="user-profile" 
-                onClick={() => navigate(`/profile/${user.username}`)}
+                onClick={() => navigate(`/profile/${user.email}`)}
               >
                 <div className="user-avatar">
-                  {user.username.charAt(0).toUpperCase()}
+                  {user.firstName.charAt(0).toUpperCase()}
                 </div>
-                <span className="username-display">{user.username}</span>
+                <span className="username-display">{user.firstName}</span>
               </div>
               <button 
                 className="glass-button logout-btn" 
