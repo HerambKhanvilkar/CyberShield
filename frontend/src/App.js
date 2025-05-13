@@ -13,8 +13,8 @@ import SharedBadgePage from "./components/SharedBadgePage";
 import { AuthProvider } from "./context/AuthContext";
 // Protected Route for Profile
 const ProtectedRoute = ({ children }) => {
-  const username = localStorage.getItem("username");
-  return username ? children : <Navigate to="/login" />;
+  const user = localStorage.getItem("user");
+  return user ? children : <Navigate to="/login" />;
 };
 
 function App() {
@@ -32,7 +32,7 @@ function App() {
         <Route path="/holo" element={<HolographicBadgeDisplay />} />
         <Route path="/learn-more" element={<HolographicBadgeDisplay />} />
         <Route 
-          path="/profile/:username" 
+          path="/profile" 
           element={
             <ProtectedRoute>
               <ProfilePage />

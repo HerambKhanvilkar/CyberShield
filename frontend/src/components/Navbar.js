@@ -91,7 +91,7 @@ const Navbar = () => {
             <>
               <div 
                 className="user-profile" 
-                onClick={() => navigate(`/profile/${user.email}`)}
+                onClick={() => navigate(`/profile`)}
               >
                 <div className="user-avatar">
                   {user.firstName.charAt(0).toUpperCase()}

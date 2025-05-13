@@ -258,6 +258,7 @@
   justify-content: center;
   height: 100vh;
   color: var(--text-light);
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-medium) 100%);
 }
 
 .profile-loading p {
