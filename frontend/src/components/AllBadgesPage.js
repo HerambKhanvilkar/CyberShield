@@ -9,14 +9,12 @@ import { useNavigate } from "react-router-dom";
 // Keep image imports for fallback
 import img1 from "./img1.png";
 import img2 from "./img2.png";
-import img3 from "./img3.jpg";
-import img4 from "./img4.jpg";
+import img3 from "./img3.png";
+import img4 from "./img4.png";
 import img5 from "./img5.png";
 import img6 from "./img6.png";
 import img7 from "./img7.png";
 import img8 from "./img8.png";
-
-
 
 const difficultyColors = {
   "Easy": "#4CAF50",
@@ -40,27 +38,20 @@ const AllBadgesPage = () => {
 
   const [selectedDifficulty, setSelectedDifficulty] = useState("all");
 
-
-
   const handleLevelSelect = (difficulty) => {
     setSelectedDifficulty(difficulty);
   };
 
   const [selectedcourses, setSelectedcourses] = useState("all");
 
-
-
   const handlecoursesSelect = (courses) => {
     setSelectedcourses(courses);
   };
   
-  
- 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [subDropdownOpen, setSubDropdownOpen] = useState(null);
   const navigate = useNavigate();
 
-  
   // Fetch badges from API
   useEffect(() => {
     const fetchBadges = async () => {
@@ -253,10 +244,7 @@ const AllBadgesPage = () => {
         <p className="page-subtitle">
           Complete challenges and earn badges to showcase your cybersecurity skills
         </p>
-        
-        
-          
-          
+
           <div className="badges-filter">
             
             <span></span>
@@ -284,10 +272,10 @@ const AllBadgesPage = () => {
 
     <div className={`filter-button3 ${filter === '' ? 'active' : ''}`}>
               <div className="dropdown-container">
-      {/* Main Dropdown Button */}
-      <button onClick={() => setDropdownOpen(!dropdownOpen)} className="filter-by">
-        Filter by
-      </button>
+              {/* Main Dropdown Button */}
+              <button onClick={() => setDropdownOpen(!dropdownOpen)} className="filter-by">
+                Filter by
+              </button>
 
       {/* Main Dropdown Menu */}
       {dropdownOpen && (
@@ -307,7 +295,6 @@ const AllBadgesPage = () => {
                ))}
              </div>
     )}
-
           </div>
 
           {/* Courses Section */}
@@ -427,7 +414,12 @@ const AllBadgesPage = () => {
               </div>
               
               <div className="badge-details-actions">
-                <button className="glass-button">Get this badge</button>
+                <button
+                  className="glass-button"
+                  onClick={() => window.open('https://learn.deepcytes.io/')}
+                >
+                  Get this badge
+                </button>
                 <Link to="/learn-more" className="glass-button secondary">Learn More</Link>
               </div>
             </div>

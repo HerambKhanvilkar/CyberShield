@@ -3,6 +3,7 @@ import axios from "axios";
 import { Link } from "react-router-dom";
 import "./AllBadgesPage.css"; // Reuse existing styles
 import SearchBox from "./SearchBox";
+import Select from "react-select";
 
 const BadgeAdminPage = () => {
   const [badges, setBadges] = useState([]);
@@ -94,10 +95,42 @@ const BadgeAdminPage = () => {
     }
   };
 
+  const badgeOptions = badges.map(badge => ({
+  value: badge.id,
+  label: `${badge.name} (${badge.difficulty})`
+}));
+
+const darkThemeStyles = {
+  control: (styles) => ({
+    ...styles,
+    backgroundColor: '#1A1A2E',
+    borderColor: '#333',
+    color: '#f1f1f1',
+    borderRadius: '10px',
+  }),
+  option: (styles, { isFocused, isSelected }) => ({
+    ...styles,
+    backgroundColor: isSelected ? '#252545' : isFocused ? '#2c2c48' : '#1A1A2E',
+    color: '#f1f1f1',
+    cursor: 'pointer'
+  }),
+  singleValue: (styles) => ({
+    ...styles,
+    color: '#f1f1f1',
+  }),
+  menu: (styles) => ({
+    ...styles,
+    backgroundColor: '#1A1A2E',
+    zIndex: 100
+  }),
+};
+
+
   return (
     <div className="badges-page">
       <div className="badges-container">
         <h1 className="page-title">Badge Administration</h1>
+        <br/><br/><br/>
         <p className="page-subtitle">Assign badges to users</p>
         
         {message && (
@@ -122,19 +155,12 @@ const BadgeAdminPage = () => {
               
               <div className="form-group">
                 <label>Select Badge:</label>
-                <select 
-                  value={selectedBadge} 
-                  onChange={e => setSelectedBadge(e.target.value)}
-                  required
-                  className="select-input"
-                >
-                  <option value="">-- Select Badge --</option>
-                  {badges.map(badge => (
-                    <option key={badge.id} value={badge.id}>
-                      {badge.name} ({badge.difficulty})
-                    </option>
-                  ))}
-                </select>
+                <Select
+                  options={badgeOptions}
+                  value={badgeOptions.find(option => option.value === selectedBadge)}
+                  onChange={option => setSelectedBadge(option.value)}
+                  styles={darkThemeStyles}
+                />
               </div>
               
               <button type="submit" className="glass-button">

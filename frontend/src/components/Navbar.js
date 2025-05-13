@@ -42,7 +42,6 @@ const Navbar = () => {
           <ul>
             <li onClick={() => navigate("/")}>Home</li>
             <li onClick={() => navigate("/badges")}>All Badges</li>
-            <li onClick={() => navigate("/leaderboard")}>Leaderboard</li>
             
             {/* Dropdown menu */}
             <li className="dropdown1">

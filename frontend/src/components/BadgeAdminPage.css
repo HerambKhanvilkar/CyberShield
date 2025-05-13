@@ -375,5 +375,20 @@
   
   .filter-button {
     white-space: nowrap;
-  }
+  }  
+}
+
+.select-input {
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background-color: #1A1A2E; /* dark background */
+  color: #F1F1F1; /* light text */
+  border: 1px solid #333;
+  font-size: 16px;
+}
+
+.select-input option {
+  background-color: #1A1A2E;
+  color: #F1F1F1;
 }
