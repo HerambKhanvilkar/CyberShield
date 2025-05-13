@@ -190,7 +190,7 @@ const SharedBadgePage = () => {
                 marginBottom: '20px',
                 color: 'rgba(255,255,255,0.7)'
               }}>
-                Badge issued to <strong>{username}</strong> on {formatDate(timestamp)}
+                Badge issued to <strong>{user}</strong> on {formatDate(timestamp)}
               </div>
 
               <h1 style={{
