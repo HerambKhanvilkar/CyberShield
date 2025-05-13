@@ -209,7 +209,7 @@ const earnedBadge = earnedBadges.find(badge => badge.id === currentBadge.id);
 
           <div className="badge-info-boxes">
             <div className="info-box">
-              <span className="info-label">Level</span>
+              <span className="info-label">Vertical</span>
               <span className="info-value">{currentBadge.category}</span>
             </div>
 

@@ -156,8 +156,8 @@ const ProfilePage = () => {
             </div>
             
             <div className="profile-actions">
-              <Link to="/leaderboard" className="glass-button">
-                View Leaderboard
+              <Link className="glass-button">
+                Edit Profile
               </Link>
               <Link to="/badges" className="glass-button">
                 All Badges
