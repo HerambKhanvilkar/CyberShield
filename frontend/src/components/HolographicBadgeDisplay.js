@@ -9,6 +9,7 @@ import { AuthContext } from "../context/AuthContext";
 import { useSwipeable } from 'react-swipeable';
 const HolographicBadgeDisplay = () => {
   const [badges, setBadges] = useState([]);
+  const [shareUrl, setShareUrl] = useState(null);
   const [currentBadgeIndex, setCurrentBadgeIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isDataLoading, setIsDataLoading] = useState(true);
@@ -239,15 +240,10 @@ const HolographicBadgeDisplay = () => {
         
         {/* Right Column */}
         <div className="badge-right-column">
-          <h2 className="section-title">Badge Actions</h2>
-          
           <div className="badge-actions">
-            <button className="action-button get-badge" onClick={() => window.location.href = "https://learn.deepcytes.io/"}>
-              
-              <Award className="action-icon" />
-              <span>Get this Badge</span>
-            </button>
-
+          <h2 className="section-title">Badge Actions</h2>
+          {isAuthenticated && user ? (
+            <>
               <button 
                 className="action-button share-badge"
                 // disabled={!isAuthenticated}
@@ -256,11 +252,12 @@ const HolographicBadgeDisplay = () => {
                     setShowLoginMessage(true);
                     setTimeout(() => setShowLoginMessage(false), 3000);
                   } else {
+                    shareUrl ?  setShowShareSuccess(true) : setShowShareSuccess(false);
                     const user = localStorage.getItem("user");
                     const userObject = JSON.parse(user);
-                    const shareUrl = `${window.location.origin}/badge/shared/${currentBadge.id}/${userObject.username}/${Math.floor(Date.now()/1000)}`;
+                    const shareURL = `${window.location.origin}/badge/shared/${currentBadge.id}/${userObject.username}/${Math.floor(Date.now()/1000)}`;
+                    setShareUrl(shareURL);
                     // navigator.clipboard.writeText(shareUrl);
-                    console.log(shareUrl);
                     setShowShareSuccess(true);
                     setTimeout(() => setShowShareSuccess(false), 3000);
                   }
@@ -271,11 +268,19 @@ const HolographicBadgeDisplay = () => {
               </button>
 
               {showShareSuccess && (
-                <div className="share-success">Link copied to clipboard!</div>
+                <div className="share-success">Share Link generated! <Link to={`${shareUrl}`}>view</Link> </div>
               )}
               {showLoginMessage && (
                 <div className="share-success">Please login first!</div>
               )}
+            </>
+          ) : (
+            <button className="action-button get-badge" onClick={() => window.location.href = "https://learn.deepcytes.io/"}>
+              
+              <Award className="action-icon" />
+              <span>Get this Badge</span>
+            </button>
+          )}
             </div>
           
           <h2 className="section-title">Related Badges</h2>

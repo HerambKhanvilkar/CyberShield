@@ -22,10 +22,10 @@ const ProfilePage = () => {
   // Fetch user details and earned badges from backend
   useEffect(() => {
     // Check if user is logged in using AuthContext
-    if (!isAuthenticated) {
-      navigate("/login");
-      return;
-    }
+    // if (!isAuthenticated) {
+    //   navigate("/login");
+    //   return;
+    // }
 
     const fetchUserData = async () => {
       try {

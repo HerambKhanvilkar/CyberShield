@@ -26,6 +26,9 @@ const difficultyColors = {
   "Extreme": "#F44336"
 };
 
+const difficultyLevels = [ "Easy", "Medium", "Hard", "Expert", "Extreme", "All"];
+const courses = [ "Defense", "Leadership", "Mastery", "Fundamentals", "Offensive", "All"];
+
 const AllBadgesPage = () => {
   const [badges, setBadges] = useState([]);
   const [selectedBadge, setSelectedBadge] = useState(null);
@@ -35,12 +38,12 @@ const AllBadgesPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [selectedLevel, setSelectedLevel] = useState("all");
+  const [selectedDifficulty, setSelectedDifficulty] = useState("all");
 
 
 
-  const handleLevelSelect = (level) => {
-    setSelectedLevel(level);
+  const handleLevelSelect = (difficulty) => {
+    setSelectedDifficulty(difficulty);
   };
 
   const [selectedcourses, setSelectedcourses] = useState("all");
@@ -54,9 +57,8 @@ const AllBadgesPage = () => {
   
  
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [subDropdownOpen, setSubDropdownOpen] = useState(null);
   const navigate = useNavigate();
-  const [levelsDropdownOpen, setLevelsDropdownOpen] = useState(false);
-  const [coursesDropdownOpen, setcoursesDropdownOpen] = useState(false);
 
   
   // Fetch badges from API
@@ -75,82 +77,82 @@ const AllBadgesPage = () => {
         setIsLoading(false);
         
         // Fallback to hardcoded data if API fails
-        const fallbackBadges = [
-          { 
-            id: 1, 
-            name: "Cyber Titan Level I", 
-            image: img1, 
-            difficulty: "Easy", 
-            description: "Awarded for completing basic cybersecurity challenges.",
-            category: "Fundamentals",
-            skillsRequired: ["Basic Security", "Web Awareness"]
-          },
-          { 
-            id: 2, 
-            name: "Cyber Warrior", 
-            image: img2, 
-            difficulty: "Medium", 
-            description: "Earned after passing the second level of security defenses.",
-            category: "Defense",
-            skillsRequired: ["Network Security", "Threat Identification"]
-          },
-          { 
-            id: 3, 
-            name: "Cyber Defender", 
-            image: img3, 
-            difficulty: "Medium", 
-            description: "Awarded for identifying and mitigating cyber threats.",
-            category: "Defense",
-            skillsRequired: ["Threat Prevention", "Security Policy"]
-          },
-          { 
-            id: 4, 
-            name: "Cyber Elite", 
-            image: img4, 
-            difficulty: "Expert", 
-            description: "For advanced penetration testing and security analysis.",
-            category: "Offensive",
-            skillsRequired: ["Penetration Testing", "Vulnerability Assessment"]
-          },
-          { 
-            id: 5, 
-            name: "Cyber Guardian", 
-            image: img5, 
-            difficulty: "Expert", 
-            description: "Given to experts in cybersecurity incident response.",
-            category: "Defense",
-            skillsRequired: ["Incident Response", "Forensic Analysis"]
-          },
-          { 
-            id: 6, 
-            name: "Cyber Commander", 
-            image: img6, 
-            difficulty: "Expert", 
-            description: "Achieved by mastering network security and ethical hacking.",
-            category: "Leadership",
-            skillsRequired: ["Strategic Planning", "Team Leadership"]
-          },
-          { 
-            id: 7, 
-            name: "Cyber Legend", 
-            image: img7, 
-            difficulty: "Extreme", 
-            description: "Reserved for elite professionals in cybersecurity.",
-            category: "Mastery",
-            skillsRequired: ["Advanced Techniques", "Innovative Solutions"]
-          },
-          { 
-            id: 8, 
-            name: "Cyber Master", 
-            image: img8, 
-            difficulty: "Extreme", 
-            description: "Top-tier badge awarded for cybersecurity mastery.",
-            category: "Mastery",
-            skillsRequired: ["Complete Expertise", "Industry Leadership"]
-          },
-        ];
-        setBadges(fallbackBadges);
-        setFilteredBadges(fallbackBadges);
+        // const fallbackBadges = [
+        //   { 
+        //     id: 1, 
+        //     name: "Cyber Titan Level I", 
+        //     image: img1, 
+        //     difficulty: "Easy", 
+        //     description: "Awarded for completing basic cybersecurity challenges.",
+        //     category: "Fundamentals",
+        //     skillsRequired: ["Basic Security", "Web Awareness"]
+        //   },
+        //   { 
+        //     id: 2, 
+        //     name: "Cyber Warrior", 
+        //     image: img2, 
+        //     difficulty: "Medium", 
+        //     description: "Earned after passing the second level of security defenses.",
+        //     category: "Defense",
+        //     skillsRequired: ["Network Security", "Threat Identification"]
+        //   },
+        //   { 
+        //     id: 3, 
+        //     name: "Cyber Defender", 
+        //     image: img3, 
+        //     difficulty: "Medium", 
+        //     description: "Awarded for identifying and mitigating cyber threats.",
+        //     category: "Defense",
+        //     skillsRequired: ["Threat Prevention", "Security Policy"]
+        //   },
+        //   { 
+        //     id: 4, 
+        //     name: "Cyber Elite", 
+        //     image: img4, 
+        //     difficulty: "Expert", 
+        //     description: "For advanced penetration testing and security analysis.",
+        //     category: "Offensive",
+        //     skillsRequired: ["Penetration Testing", "Vulnerability Assessment"]
+        //   },
+        //   { 
+        //     id: 5, 
+        //     name: "Cyber Guardian", 
+        //     image: img5, 
+        //     difficulty: "Expert", 
+        //     description: "Given to experts in cybersecurity incident response.",
+        //     category: "Defense",
+        //     skillsRequired: ["Incident Response", "Forensic Analysis"]
+        //   },
+        //   { 
+        //     id: 6, 
+        //     name: "Cyber Commander", 
+        //     image: img6, 
+        //     difficulty: "Expert", 
+        //     description: "Achieved by mastering network security and ethical hacking.",
+        //     category: "Leadership",
+        //     skillsRequired: ["Strategic Planning", "Team Leadership"]
+        //   },
+        //   { 
+        //     id: 7, 
+        //     name: "Cyber Legend", 
+        //     image: img7, 
+        //     difficulty: "Extreme", 
+        //     description: "Reserved for elite professionals in cybersecurity.",
+        //     category: "Mastery",
+        //     skillsRequired: ["Advanced Techniques", "Innovative Solutions"]
+        //   },
+        //   { 
+        //     id: 8, 
+        //     name: "Cyber Master", 
+        //     image: img8, 
+        //     difficulty: "Extreme", 
+        //     description: "Top-tier badge awarded for cybersecurity mastery.",
+        //     category: "Mastery",
+        //     skillsRequired: ["Complete Expertise", "Industry Leadership"]
+        //   },
+        // ];
+        // setBadges(fallbackBadges);
+        // setFilteredBadges(fallbackBadges);
       }
     };
     
@@ -166,21 +168,21 @@ const AllBadgesPage = () => {
     // Category filter
     if (filter !== "all") {
       result = result.filter(badge => 
-        badge.category && badge.category.toLowerCase() === filter.toLowerCase()
+        badge.level && badge.level.toLowerCase() === filter.toLowerCase()
       );
     }
     
     // Filter by selected difficulty level
-    if (selectedLevel !== "all") {
+    if (selectedDifficulty !== "all") {
       result = result.filter(badge => 
-        badge.difficulty && badge.difficulty.toLowerCase() === selectedLevel.toLowerCase()
+        badge.difficulty && badge.difficulty.toLowerCase() === selectedDifficulty.toLowerCase()
       );
     }
 
     // Filter by selected difficulty courses
     if (selectedcourses !== "all") {
       result = result.filter(badge => 
-        badge.category && badge.category.toLowerCase() === selectedcourses.toLowerCase()
+        badge.level && badge.level.toLowerCase() === selectedcourses.toLowerCase()
       );
     }
     
@@ -190,13 +192,13 @@ const AllBadgesPage = () => {
       result = result.filter(badge => 
         badge.name.toLowerCase().includes(term) || 
         (badge.description && badge.description.toLowerCase().includes(term)) ||
-        (badge.category && badge.category.toLowerCase().includes(term)) ||
+        (badge.level && badge.level.toLowerCase().includes(term)) ||
         (badge.difficulty && badge.difficulty.toLowerCase().includes(term))
       );
     }
     
     setFilteredBadges(result);
-  }, [filter, searchTerm, badges, selectedLevel, selectedcourses]); // Added selectedLevel as a dependency
+  }, [filter, searchTerm, badges, selectedDifficulty, selectedcourses]); // Added selectedLevel as a dependency
   
   const handleBadgeClick = (badge) => {
     setSelectedBadge(badge);
@@ -265,7 +267,7 @@ const AllBadgesPage = () => {
                 className={`filter-button1 ${filter === 'all' ? 'active' : ''}`}
                 onClick={() => setFilter('all')}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-grid-fill" viewBox="0 0 16 16">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-grid-fill" viewBox="0 0 16 16">
                   <path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5zm8 0A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5zm-8 8A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5zm8 0A1.5 1.5 0 0 1 10.5 9h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 13.5z" />
                 </svg>
               </button>
@@ -274,17 +276,13 @@ const AllBadgesPage = () => {
                 className={`filter-button2 ${filter === '' ? 'active' : ''}`}
                 onClick={() => navigate("/holo")}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-text-fill" viewBox="0 0 16 16">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-file-text-fill" viewBox="0 0 16 16">
                   <path d="M12 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2M5 4h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1 0-1m-.5 2.5A.5.5 0 0 1 5 6h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5M5 8h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1 0-1m0 2h3a.5.5 0 0 1 0 1H5a.5.5 0 0 1 0-1" />
                 </svg>
               </button>
 
-              <button 
-                className={`filter-button3 ${filter === '' ? 'active' : ''}`}
-                
-              >
-              
 
+    <div className={`filter-button3 ${filter === '' ? 'active' : ''}`}>
               <div className="dropdown-container">
       {/* Main Dropdown Button */}
       <button onClick={() => setDropdownOpen(!dropdownOpen)} className="filter-by">
@@ -296,40 +294,35 @@ const AllBadgesPage = () => {
         <div className="dropdown-menu">
           {/* Levels Section with Nested Dropdown */}
           <div className="dropdown-item">
-            <button onClick={() => setLevelsDropdownOpen(!levelsDropdownOpen)} className="levels">
+            <button onClick={() => setSubDropdownOpen("levels")} className="levels">
             Levels
             </button>
 
             {/* Nested Levels Dropdown */}
          
-             {levelsDropdownOpen && (
+             {subDropdownOpen === "levels" && (
              <div className="nested-dropdown">
-               <button className="dropdown-item" onClick={() => handleLevelSelect("Easy")}>Amateur</button>
-               <button className="dropdown-item" onClick={() => handleLevelSelect("Medium")}>Intermediate</button>
-
-               <button className="dropdown-item" onClick={() => handleLevelSelect("Expert")}>Expert</button>
-               <button className="dropdown-item" onClick={() => handleLevelSelect("Extreme")}>Extreme</button>
-               <button className="dropdown-item" onClick={() => handleLevelSelect("all")}>All</button>
-              </div>
+               { difficultyLevels.map((d) => (
+               <button className="dropdown-item" onClick={() => handleLevelSelect(d)}>{d}</button>
+               ))}
+             </div>
     )}
 
           </div>
 
           {/* Courses Section */}
           <div className="dropdown-item">
-            <button onClick={() => setcoursesDropdownOpen(!coursesDropdownOpen)} className="levels">
+            <button onClick={() => setSubDropdownOpen("courses")} className="levels">
             Courses
             </button>
 
             {/* Nested Levels Dropdown */}
          
-             {coursesDropdownOpen && (
+             {subDropdownOpen === 'courses' && (
              <div className="nested-dropdown">
-               <button className="dropdown-item" onClick={() => handlecoursesSelect("Defense")}>Defense</button>
-               <button className="dropdown-item" onClick={() => handlecoursesSelect("Leadership")}>Leadership</button>
-               <button className="dropdown-item" onClick={() => handlecoursesSelect("Mastery")}>Mastery</button>
-               <button className="dropdown-item" onClick={() => handlecoursesSelect("Fundamentals")}>Fundamentals</button>
-               <button className="dropdown-item" onClick={() => handlecoursesSelect("Offensive")}>Offensive</button>
+               { courses.map((c) => (
+                 <button className="dropdown-item" onClick={() => handlecoursesSelect(c)}>{c}</button>
+               ))}
               </div>
     )}
 
@@ -338,7 +331,7 @@ const AllBadgesPage = () => {
       )}
     </div>
 
-              </button>
+              </div>
             </div>
           </div>
         
@@ -376,7 +369,7 @@ const AllBadgesPage = () => {
                   >
                     {badge.difficulty || "Medium"}
                   </span>
-                  <span className="badge-category">{badge.category || "General"}</span>
+                  <span className="badge-category">{badge.level || "General"}</span>
                 </div>
               </div>
             ))}
@@ -390,7 +383,7 @@ const AllBadgesPage = () => {
       
       {/* Badge details modal */}
       {selectedBadge && (
-        <div className="badge-details-overlay" onClick={handleCloseDetails}>
+        <div className="badge-details-overlay" onClick={() => navigate("/ajsldkf")}>
           <div className="badge-details glass-card" onClick={(e) => e.stopPropagation()}>
             <button className="close-button" onClick={handleCloseDetails}>×</button>
             
@@ -407,7 +400,7 @@ const AllBadgesPage = () => {
                   >
                     {selectedBadge.difficulty || "Medium"}
                   </span>
-                  <span className="badge-category">{selectedBadge.category || "General"}</span>
+                  <span className="badge-category">{selectedBadge.level || "General"}</span>
                 </div>
               </div>
             </div>

@@ -70,7 +70,7 @@ app.get("/api/verify-badge/:id/:username/:timestamp", async (req, res) => {
     const { id, username, timestamp } = req.params;
     
     // Check if the badge was actually earned by this user
-    const userBadges = await BadgesEarned.findOne({ username });
+    const userBadges = await users.findById(username);
     
     if (!userBadges) {
       return res.status(404).json({ verified: false });
@@ -146,10 +146,10 @@ app.post("/api/generate-share-link", authenticateJWT, async (req, res) => {
 // Signup Route
 app.post("/api/signup", async (req, res) => {
   try {
-    const { email, username, password } = req.body;
+    const { email, firstName, lastName, password } = req.body;
 
     // Check if email or username already exists
-    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists! Please log in." });
     }
@@ -160,7 +160,8 @@ app.post("/api/signup", async (req, res) => {
     // Save new user
     const newUser = new User({ 
       email, 
-      username, 
+      firstName, 
+      lastName, 
       password: hashedPassword,
       isAdmin: false // Default to non-admin
     });
@@ -173,7 +174,8 @@ app.post("/api/signup", async (req, res) => {
       message: "Signup successful!", 
       token, // Send token to client
       user: { 
-        username: newUser.username, 
+        username: newUser.id, 
+        firstName: newUser.firstName, 
         email: newUser.email 
       } 
     });
@@ -217,7 +219,8 @@ app.post("/api/login", async (req, res) => {
       message: "Login Successful!",
       token, // Send token to client
       user: {
-        username: user.username,
+        username: user.id,
+        firstName: user.firstName,
         email: user.email,
         isAdmin: user.isAdmin,
         badges: earnedBadges,
@@ -360,7 +363,7 @@ app.get("/api/users", authenticateJWT, async (req, res) => {
     const adminUsername = await getUsername(authHeader);
 
     if (!adminUsername) {
-      return res.status(403).json({ message: "User not found." });
+      return res.status(403).json({ message: "Logged in user not found." });
     }
 
     // Check if admin user exists and is actually an admin
@@ -395,7 +398,7 @@ app.get("/api/users/autocomplete", authenticateJWT, async (req, res) => {
     const adminUsername = await getUsername(authHeader);
 
     if (!adminUsername) {
-      return res.status(403).json({ message: "User not found." });
+      return res.status(403).json({ message: "Logged in user not found." });
     }
 
     // Check if admin user exists and is actually an admin

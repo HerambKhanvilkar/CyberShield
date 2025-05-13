@@ -6,14 +6,23 @@ const UserSchema = new mongoose.Schema({
     required: true, 
     unique: true 
   },
-  username: { 
+  firstName: { 
     type: String, 
     required: true, 
-    unique: true 
+    unique: false 
+  },
+  lastName: { 
+    type: String, 
+    required: false, 
+    unique: false 
   },
   password: { 
     type: String, 
     required: true 
+  },
+  badges: {
+    type: Array,
+    default: []
   },
   isAdmin: {
     type: Boolean,

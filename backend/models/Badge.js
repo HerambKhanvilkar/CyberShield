@@ -23,9 +23,14 @@ const BadgeSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  category: {
+  level: {
     type: String,
-    enum: ['Amateur', 'Intermediate', 'Professional', 'Expert'],
+    enum: ['Amateur', 'Intermediate', 'Professional'],
+    required: true
+  },
+  vertical: {
+    type: String,
+    enum: ['Information Security', 'Incident Response and Management', 'Cybersecurity', 'Cybersecurity Professional Development'],
     required: true
   },
   skillsEarned: [{
