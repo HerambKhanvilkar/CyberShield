@@ -434,3 +434,47 @@
     align-items: center;
   }
 }
+
+.editable-field {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.editable-field input {
+  background: #1A1A2E;
+  border: 1px solid #444;
+  color: #f1f1f1;
+  border-radius: 5px;
+  padding: 5px 10px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.edit-btn {
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  background-color: #2a2a40;
+  border: none;
+  color: #f1f1f1;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.edit-btn:hover {
+  background-color: #3d3d5c;
+}
+
+@media (max-width: 768px) {
+  .editable-field {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .edit-btn {
+    align-self: flex-end;
+  }
+}

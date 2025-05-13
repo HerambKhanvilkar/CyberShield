@@ -100,6 +100,34 @@ const BadgeAdminPage = () => {
   label: `${badge.name} (${badge.difficulty})`
 }));
 
+const [editableFields, setEditableFields] = useState({
+  firstName: false,
+  lastName: false,
+  email: false
+});
+const [editedUser, setEditedUser] = useState({});
+const [hasChanges, setHasChanges] = useState(false);
+
+const handleFieldChange = (field, value) => {
+  setEditedUser(prev => ({ ...prev, [field]: value }));
+  setHasChanges(true);
+};
+
+const toggleEdit = (field) => {
+  setEditableFields(prev => ({
+    ...prev,
+    [field]: !prev[field]
+  }));
+};
+
+const handleSaveChanges = () => {
+  // TODO: Save editedUser data to server
+  console.log("Save user changes:", editedUser);
+  setHasChanges(false);
+  setEditableFields({ firstName: false, lastName: false, email: false });
+};
+
+
 const darkThemeStyles = {
   control: (styles) => ({
     ...styles,
@@ -107,6 +135,13 @@ const darkThemeStyles = {
     borderColor: '#333',
     color: '#f1f1f1',
     borderRadius: '10px',
+    zIndex: 100
+  }),
+  menu: (styles) => ({
+    ...styles,
+    backgroundColor: '#1A1A2E',
+    zIndex: 9999, // ensure it's above profile cards
+    position: 'absolute'
   }),
   option: (styles, { isFocused, isSelected }) => ({
     ...styles,
@@ -118,13 +153,7 @@ const darkThemeStyles = {
     ...styles,
     color: '#f1f1f1',
   }),
-  menu: (styles) => ({
-    ...styles,
-    backgroundColor: '#1A1A2E',
-    zIndex: 100
-  }),
 };
-
 
   return (
     <div className="badges-page">
@@ -162,6 +191,7 @@ const darkThemeStyles = {
                     value={badgeOptions.find(option => option.value === selectedBadge)}
                     onChange={option => setSelectedBadge(option.value)}
                     styles={darkThemeStyles}
+                    menuPlacement="top" // Open upward
                   />
                 </div>
 
@@ -181,25 +211,36 @@ const darkThemeStyles = {
                     <img src={"https://png.pngtree.com/png-clipart/20210129/ourmid/pngtree-default-male-avatar-png-image_2811083.jpg"} alt="Profile" />
                   </div>
                   <div className="profile-info">
-                    <div>
-                      <label>First Name:</label>
-                      <span>{selectedUser?.firstName}</span>
-                    </div>
-                    <div>
-                      <label>Last Name:</label>
-                      <span>{selectedUser?.lastName}</span>
-                    </div>
-                    <div>
-                      <label>Email:</label>
-                      <span>{selectedUser?.email}</span>
-                    </div>
+                    {["firstName", "lastName", "email"].map(field => (
+                      <div key={field} className="editable-field">
+                        <label>{field.replace(/^\w/, c => c.toUpperCase())}:</label>
+                        {editableFields[field] ? (
+                          <input
+                            type="text"
+                            value={editedUser[field] ?? selectedUser?.[field] ?? ""}
+                            onChange={e => handleFieldChange(field, e.target.value)}
+                          />
+                        ) : (
+                          <span>{editedUser[field] ?? selectedUser?.[field]}</span>
+                        )}
+                        <button
+                          className="glass-button edit-btn"
+                          onClick={() => toggleEdit(field)}
+                        >
+                          {editableFields[field] ? "Cancel" : "Edit"}
+                        </button>
+                      </div>
+                    ))}
 
-                    <div className="profile-actions">
-                      <button className="glass-button save-button">
-                        Save Changes
-                      </button>
-                    </div>
+                    {hasChanges && (
+                      <div className="profile-actions">
+                        <button className="glass-button save-button" onClick={handleSaveChanges}>
+                          Save Changes
+                        </button>
+                      </div>
+                    )}
                   </div>
+
                 </div>
               </div>
 
