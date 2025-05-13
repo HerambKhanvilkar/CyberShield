@@ -16,8 +16,6 @@ import img6 from "./img6.png";
 import img7 from "./img7.png";
 import img8 from "./img8.png";
 
-
-
 const difficultyColors = {
   "Easy": "#4CAF50",
   "Medium": "#2196F3",
@@ -37,28 +35,21 @@ const AllBadgesPage = () => {
 
   const [selectedLevel, setSelectedLevel] = useState("all");
 
-
-
   const handleLevelSelect = (level) => {
     setSelectedLevel(level);
   };
 
   const [selectedcourses, setSelectedcourses] = useState("all");
 
-
-
   const handlecoursesSelect = (courses) => {
     setSelectedcourses(courses);
   };
   
-  
- 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
   const [levelsDropdownOpen, setLevelsDropdownOpen] = useState(false);
   const [coursesDropdownOpen, setcoursesDropdownOpen] = useState(false);
 
-  
   // Fetch badges from API
   useEffect(() => {
     const fetchBadges = async () => {
@@ -251,10 +242,7 @@ const AllBadgesPage = () => {
         <p className="page-subtitle">
           Complete challenges and earn badges to showcase your cybersecurity skills
         </p>
-        
-        
-          
-          
+
           <div className="badges-filter">
             
             <span></span>
@@ -286,32 +274,32 @@ const AllBadgesPage = () => {
               
 
               <div className="dropdown-container">
-      {/* Main Dropdown Button */}
-      <button onClick={() => setDropdownOpen(!dropdownOpen)} className="filter-by">
-        Filter by
-      </button>
+              {/* Main Dropdown Button */}
+              <button onClick={() => setDropdownOpen(!dropdownOpen)} className="filter-by">
+                Filter by
+              </button>
 
-      {/* Main Dropdown Menu */}
-      {dropdownOpen && (
-        <div className="dropdown-menu">
-          {/* Levels Section with Nested Dropdown */}
-          <div className="dropdown-item">
-            <button onClick={() => setLevelsDropdownOpen(!levelsDropdownOpen)} className="levels">
-            Levels
-            </button>
+              {/* Main Dropdown Menu */}
+              {dropdownOpen && (
+                <div className="dropdown-menu">
+                  {/* Levels Section with Nested Dropdown */}
+                  <div className="dropdown-item">
+                    <button onClick={() => setLevelsDropdownOpen(!levelsDropdownOpen)} className="levels">
+                    Levels
+                    </button>
 
-            {/* Nested Levels Dropdown */}
-         
-             {levelsDropdownOpen && (
-             <div className="nested-dropdown">
-               <button className="dropdown-item" onClick={() => handleLevelSelect("Easy")}>Amateur</button>
-               <button className="dropdown-item" onClick={() => handleLevelSelect("Medium")}>Intermediate</button>
+                    {/* Nested Levels Dropdown */}
+                
+                    {levelsDropdownOpen && (
+                    <div className="nested-dropdown">
+                      <button className="dropdown-item" onClick={() => handleLevelSelect("Easy")}>Amateur</button>
+                      <button className="dropdown-item" onClick={() => handleLevelSelect("Medium")}>Intermediate</button>
 
-               <button className="dropdown-item" onClick={() => handleLevelSelect("Expert")}>Expert</button>
-               <button className="dropdown-item" onClick={() => handleLevelSelect("Extreme")}>Extreme</button>
-               <button className="dropdown-item" onClick={() => handleLevelSelect("all")}>All</button>
-              </div>
-    )}
+                      <button className="dropdown-item" onClick={() => handleLevelSelect("Expert")}>Expert</button>
+                      <button className="dropdown-item" onClick={() => handleLevelSelect("Extreme")}>Extreme</button>
+                      <button className="dropdown-item" onClick={() => handleLevelSelect("all")}>All</button>
+                      </div>
+            )}
 
           </div>
 
@@ -434,7 +422,12 @@ const AllBadgesPage = () => {
               </div>
               
               <div className="badge-details-actions">
-                <button className="glass-button">Get this badge</button>
+                <button
+                  className="glass-button"
+                  onClick={() => window.open('https://learn.deepcytes.io/')}
+                >
+                  Get this badge
+                </button>
                 <Link to="/learn-more" className="glass-button secondary">Learn More</Link>
               </div>
             </div>

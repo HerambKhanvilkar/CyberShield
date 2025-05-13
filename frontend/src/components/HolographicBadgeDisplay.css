@@ -359,6 +359,12 @@
     text-overflow: ellipsis;
     width: 100%;
   }
+
+  .earned-badge {
+  background-color: #2d6a4f;
+  color: white;
+  cursor: default;
+}
   
   /* Badge Collection - fixed at bottom with higher z-index */
   .badge-collection {
