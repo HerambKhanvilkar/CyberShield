@@ -134,7 +134,6 @@ const HolographicBadgeDisplay = () => {
   // Handle hologram loading when changing badges
   useEffect(() => {
     setIsLoading(true);
-
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 1000);
@@ -144,7 +143,6 @@ const HolographicBadgeDisplay = () => {
 
   useEffect(() => {
     if ( badges.length > 0 && badgeId){
-      console.log("dkfjalksdjfasd");
       console.log(badges);
       console.log(badgeId);
       const index = badges.findIndex(b => b._id === badgeId);
