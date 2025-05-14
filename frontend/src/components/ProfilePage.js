@@ -181,12 +181,12 @@ const ProfilePage = () => {
               >
                 Achievements
               </button>
-              <button 
+              {/* <button 
                 className={`tab-button ${activeTab === 'history' ? 'active' : ''}`}
                 onClick={() => setActiveTab('history')}
               >
                 History
-              </button>
+              </button> */}
             </div>
             
             {/* Tab content */}

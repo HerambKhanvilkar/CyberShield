@@ -102,6 +102,33 @@ const BadgeAdminPage = () => {
   label: `${badge.name} (${badge.difficulty})`
 }));
 
+const [editableFields, setEditableFields] = useState({
+  firstName: false,
+  lastName: false,
+  email: false
+});
+const [editedUser, setEditedUser] = useState({});
+const [hasChanges, setHasChanges] = useState(false);
+
+const handleFieldChange = (field, value) => {
+  setEditedUser(prev => ({ ...prev, [field]: value }));
+  setHasChanges(true);
+};
+
+const toggleEdit = (field) => {
+  setEditableFields(prev => ({
+    ...prev,
+    [field]: !prev[field]
+  }));
+};
+
+const handleSaveChanges = () => {
+  // TODO: Save editedUser data to server
+  console.log("Save user changes:", editedUser);
+  setHasChanges(false);
+  setEditableFields({ firstName: false, lastName: false, email: false });
+};
+
 
 const darkThemeStyles = {
   control: (styles) => ({
@@ -110,6 +137,13 @@ const darkThemeStyles = {
     borderColor: '#333',
     color: '#f1f1f1',
     borderRadius: '10px',
+    zIndex: 100
+  }),
+  menu: (styles) => ({
+    ...styles,
+    backgroundColor: '#1A1A2E',
+    zIndex: 9999, // ensure it's above profile cards
+    position: 'absolute'
   }),
   option: (styles, { isFocused, isSelected }) => ({
     ...styles,
@@ -121,13 +155,7 @@ const darkThemeStyles = {
     ...styles,
     color: '#f1f1f1',
   }),
-  menu: (styles) => ({
-    ...styles,
-    backgroundColor: '#1A1A2E',
-    zIndex: 100
-  }),
 };
-
 
   return (
     <div className="badges-page">
@@ -149,35 +177,82 @@ const darkThemeStyles = {
             <p>Loading data...</p>
           </div>
         ) : (
-          <div className="admin-form glass-card">
-            <h2>Assign Badge to User</h2>
-            <form onSubmit={handleAssignBadge}>
-              <div className="form-group">
-                <label>Select User:</label>
-           <SearchBox 
-              onUserSelect={(user) => setSelectedUser(user.email)} 
-          /> 
+          <div>
+            {/* Top Section: Badge Assignment */}
+            <div className="admin-form glass-card">
+              <h2>Assign Badge to User</h2>
+              <form onSubmit={handleAssignBadge}>
+                <div className="form-group">
+                  <label>Select User:</label>
+                  <SearchBox onUserSelect={(user) => setSelectedUser(user)} />
+                </div>
+
+                <div className="form-group">
+                  <label>Select Badge:</label>
+                  <Select
+                    options={badgeOptions}
+                    value={badgeOptions.find(option => option.value === selectedBadge)}
+                    onChange={option => setSelectedBadge(option.value)}
+                    styles={darkThemeStyles}
+                    menuPlacement="top" // Open upward
+                  />
+                </div>
+
+                <button type="submit" className="glass-button">
+                  Assign Badge
+                </button>
+              </form>
+            </div>
+
+            {/* Bottom Section: Profile View - Only shown if a user is selected */}
+            {selectedUser && (
+              <div className="admin-form glass-card">
+                <h2>User Profile</h2>
+                <div className="user-profile">
+                  <div className="profile-photo">
+                    {/* <img src={selectedUser?.photo} alt="Profile" /> */}
+                    <img src={"https://png.pngtree.com/png-clipart/20210129/ourmid/pngtree-default-male-avatar-png-image_2811083.jpg"} alt="Profile" />
+                  </div>
+                  <div className="profile-info">
+                    {["firstName", "lastName", "email"].map(field => (
+                      <div key={field} className="editable-field">
+                        <label>{field.replace(/^\w/, c => c.toUpperCase())}:</label>
+                        {editableFields[field] ? (
+                          <input
+                            type="text"
+                            value={editedUser[field] ?? selectedUser?.[field] ?? ""}
+                            onChange={e => handleFieldChange(field, e.target.value)}
+                          />
+                        ) : (
+                          <span>{editedUser[field] ?? selectedUser?.[field]}</span>
+                        )}
+                        <button
+                          className="glass-button edit-btn"
+                          onClick={() => toggleEdit(field)}
+                        >
+                          {editableFields[field] ? "Cancel" : "Edit"}
+                        </button>
+                      </div>
+                    ))}
+
+                    {hasChanges && (
+                      <div className="profile-actions">
+                        <button className="glass-button save-button" onClick={handleSaveChanges}>
+                          Save Changes
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                </div>
               </div>
-              
-              <div className="form-group">
-                <label>Select Badge:</label>
-           <Select options={badgeOptions} 
-              value={badgeOptions.find( option => option.value === selectedBadge)} 
-            onChange={option => setSelectedBadge(option.value)} styles={darkThemeStyles} 
-            /> 
-              </div>
-              
-              <button type="submit" className="glass-button">
-                Assign Badge
-              </button>
-            </form>
+
+            )}
+            <Link to="/" className="glass-button back-button">Back to Home</Link>
           </div>
         )}
-        
-        <Link to="/" className="glass-button back-button">Back to Home</Link>
       </div>
     </div>
-  );
-};
-
+);
+}
 export default BadgeAdminPage;

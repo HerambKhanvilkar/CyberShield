@@ -94,8 +94,9 @@ const Navbar = () => {
                 onClick={() => navigate(`/profile`)}
               >
                 <div className="user-avatar">
-                  {user.firstName.charAt(0).toUpperCase()}
+                  {user?.firstName?.charAt(0)?.toUpperCase() || ''}
                 </div>
+
                 <span className="username-display">{user.firstName}</span>
               </div>
               <button 
