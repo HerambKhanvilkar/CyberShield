@@ -5,6 +5,7 @@ import "./AllBadgesPage.css"; // Reuse existing styles
 import SearchBox from "./SearchBox";
 import Select from "react-select";
 import Navbar from "./Navbar";
+import Footer from "./Footer";
 
 const BadgeAdminPage = () => {
   const [badges, setBadges] = useState([]);
@@ -252,6 +253,7 @@ const darkThemeStyles = {
           </div>
         )}
       </div>
+      <Footer/>
     </div>
 );
 }

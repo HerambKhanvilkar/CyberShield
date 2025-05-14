@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import Navbar from "./Navbar";
+import Footer from "./Footer";
 import "./AllBadgesPage.css";
 
 import { useNavigate } from "react-router-dom";
@@ -342,7 +343,8 @@ const AllBadgesPage = () => {
               <div 
                 key={badge.id} 
                 className="badge-card glass-card"
-                onClick={() => handleBadgeClick(badge)}
+                onClick={() => navigate(`/learn-more?id=${badge._id}`)}
+              
               >
                 <div className="badge-img-container">
                   <img src={badge.image} alt={badge.name} className="badge-img" />
@@ -370,7 +372,7 @@ const AllBadgesPage = () => {
       
       {/* Badge details modal */}
       {selectedBadge && (
-        <div className="badge-details-overlay" onClick={() => navigate("/ajsldkf")}>
+        <div className="badge-details-overlay">
           <div className="badge-details glass-card" onClick={(e) => e.stopPropagation()}>
             <button className="close-button" onClick={handleCloseDetails}>×</button>
             
@@ -426,6 +428,7 @@ const AllBadgesPage = () => {
           </div>
         </div>
       )}
+      <Footer/>
     </div>
   );
 };
