@@ -355,7 +355,7 @@ app.get("/api/check-admin",authenticateJWT, async (req, res) => {
 app.get("/api/users", authenticateJWT, async (req, res) => {
   try {
     // dummy approach, as the variable is modifiable
-    // const { adminUsername } = req.body;
+    const { email } = req.query || null;
 
     const authHeader = req.headers.authorization;
 
@@ -372,13 +372,23 @@ app.get("/api/users", authenticateJWT, async (req, res) => {
       return res.status(403).json({ message: "Unauthorized. Admin access required." });
     }
 
-    const users = await User.find({isAdmin: false});
+    const filter = {};
+
+    filter["isAdmin"] = false;
+
+      console.log("email", email);
+    if (email){
+      filter["email"] = email;
+    }
+
+    const users = await User.find(filter);
     
     res.json(users.map( (user) => {
       return { 
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
+        badges: user.badges,
       }
     }));
   } catch (error) {
@@ -452,19 +462,22 @@ app.post("/api/user/info", authenticateJWT, async (req, res) => {
       return res.status(403).json({ message: "Unauthorized. Admin access required." });
     }
 
-    const { email, newFirstName, newLastName, newPassword } = req.body;
+    const { email, firstName, lastName, password } = req.body;
 
+    if (!email){
+      return res.status(402).json({ message: "No email found. Email required to perform action." });
+    }
     const filter = { email };
     const update = {};
-    if (newFirstName){
-      update["firstName"] = newFirstName;
+    if (firstName){
+      update["firstName"] = firstName;
     }
-    if (newLastName){
-      update["lastName"] = newLastName;
+    if (lastName){
+      update["lastName"] = lastName;
     }
-    if (newPassword){
+    if (password){
       // Hash the password before storing
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      const hashedPassword = await bcrypt.hash(password, 10);
       update["password"] = hashedPassword;
     }
 

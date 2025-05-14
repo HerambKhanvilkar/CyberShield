@@ -46,7 +46,9 @@ function SearchBox({ onUserSelect }) {
         if (Array.isArray(response.data)) {
           setResults(response.data);
           setError("");
-          setShowDropdown(true);
+          if (query !== response.data[0].email){
+            setShowDropdown(true);
+          }
         } else {
           throw new Error("Unexpected response");
         }
@@ -64,8 +66,8 @@ function SearchBox({ onUserSelect }) {
 
   const handleSelect = (user) => {
     onUserSelect?.(user);
+    setQuery(user.email);
     setShowDropdown(false);
-    setQuery(`${user.firstName + " " + user.lastName} (${user.email})`);
   };
 
   return (
