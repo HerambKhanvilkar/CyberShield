@@ -4,6 +4,8 @@ import axios from "axios"; // Import axios for API requests
 import Navbar from "./Navbar";
 import "./MainPage.css";
 import logo from "./logo.png";
+import Footer from "./Footer"
+
 // Keep image imports for fallback
 import img1 from "./img1.png";
 import img2 from "./img2.png";
@@ -295,7 +297,7 @@ const MainPage = () => {
         </div>
       </section>
       
-      <footer className="main-footer">
+      {/* <footer className="main-footer">
         <div className="container">
           <div className="footer-content">
             <div className="footer-logo">
@@ -342,8 +344,10 @@ const MainPage = () => {
             <p>&copy; 2023 CyberBadge System. All rights reserved.</p>
           </div>
         </div>
-      </footer>
+      </footer> */}
+      <Footer/>
     </div>
+
   );
 };
 

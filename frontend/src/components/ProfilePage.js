@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import UserBadges from "./UserBadges";
 import Navbar from "./Navbar";
+import Footer from "./Footer";
 import "./ProfilePage.css";
 import api from '../utils/api';
 // import { AuthContext } from "../context/AuthContext";
@@ -260,6 +261,7 @@ const ProfilePage = () => {
           </div>
         </div>
       </div>
+      <Footer/>
     </div>
   );
 };

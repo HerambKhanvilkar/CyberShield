@@ -1,2 +1,2 @@
-start cmd /k " cd .\new\my-app\backend\ && npm i
-start cmd /k " cd .\new\my-app\ && npm i
+start cmd /k " cd .\backend\ && npm i
+start cmd /k " cd .\frontend\ && npm i
