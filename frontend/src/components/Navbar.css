@@ -177,6 +177,7 @@
   .mobile-toggle {
     display: none;
     cursor: pointer;
+    order:0;
   }
   
   .hamburger {
@@ -267,6 +268,7 @@
     
     .navbar-logo {
       flex-grow: 1;
+      order: 1;
     }
     
     .navbar-links {
@@ -274,7 +276,7 @@
       max-height: 0;
       overflow: hidden;
       transition: max-height 0.3s ease;
-      order: 4;
+      order: 2;
     }
     
     .navbar-links.mobile-active {
@@ -295,7 +297,7 @@
     }
     
     .navbar-user {
-      order: 2;
+    order: 3;
     }
     
     .user-profile {

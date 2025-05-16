@@ -135,7 +135,7 @@
 }
 
 .filter-button1::after {
-    content: "Grid"; 
+    content: "My Badges"; 
     background-color: rgb(65, 64, 109);
     color: white;
     padding: 5px 10px;
@@ -154,6 +154,62 @@
     visibility: visible;
 }
 
+.filter-button15 {
+  background: rgba(255, 255, 255, 0.15); /* Increased from 0.1 to 0.15 */
+  border: 1px solid rgba(255, 255, 255, 0.2); /* Increased border visibility */
+  color: var(--text-light); /* Changed from medium to light */
+  padding: 8px -1px;
+  border-radius: 20px;
+  cursor: pointer;
+  width: 50px;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  position: absolute;
+  
+  top: 100px;
+  right: 350px;
+  font-weight: 500; /* Added font weight */
+}
+
+.filter-button15:hover {
+  background: rgba(255, 255, 255, 0.25); /* Increased hover opacity */
+  color: var(--text-light);
+}
+
+.filter-button15.active {
+  background: var(--accent-blue-glow);
+  color: white;
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+}
+
+.filter-button15 span {
+  display: block;
+  position: relative;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.filter-button15::after {
+    content: "Grid"; 
+    background-color: rgb(65, 64, 109);
+    color: white;
+    padding: 5px 10px;
+    font-size: 12px;
+    white-space: nowrap;
+    border-radius: 5px;
+    position: absolute;
+    top: 22px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.filter-button15:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
 .filter-button2 {
   background: rgba(255, 255, 255, 0.15); /* Increased from 0.1 to 0.15 */
   border: 1px solid rgba(255, 255, 255, 0.2); /* Increased border visibility */
@@ -165,7 +221,7 @@
   transition: all 0.2s ease;
   font-size: 14px;
   position: absolute;
-  right: 350px;
+  right: 280px;
   top: 100px;
   font-weight: 500; /* Added font weight */
 }
@@ -551,10 +607,6 @@
   align-items: center;
   text-align: center;
 }
-
-
-
-
 
 .dropdown-container {
   position: relative;

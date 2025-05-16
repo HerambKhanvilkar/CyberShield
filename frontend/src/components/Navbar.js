@@ -24,19 +24,21 @@ const Navbar = () => {
   return (
     <header className="navbar-glass">
       <div className="navbar-container">
-        <div className="navbar-logo" onClick={() => navigate("/")}>
-          <span className="neon-text">CyberBadge</span>
-        </div>
         
-        {/* Mobile menu toggle */}
-        <div className="mobile-toggle" onClick={toggleMobileMenu}>
-          <div className={`hamburger ${isMobileMenuOpen ? 'active' : ''}`}>
-            <span></span>
-            <span></span>
-            <span></span>
+        {/* Mobile toggle left */}
+          <div className="mobile-toggle" onClick={toggleMobileMenu}>
+            <div className={`hamburger ${isMobileMenuOpen ? 'active' : ''}`}>
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
           </div>
-        </div>
-        
+
+          {/* Logo center-left */}
+          <div className="navbar-logo" onClick={() => navigate("/")}>
+            <span className="neon-text">CyberBadge</span>
+          </div>
+                
         {/* Navigation links */}
         <nav className={`navbar-links ${isMobileMenuOpen ? 'mobile-active' : ''}`}>
           <ul>

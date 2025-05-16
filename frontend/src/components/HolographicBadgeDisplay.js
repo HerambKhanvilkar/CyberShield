@@ -25,6 +25,7 @@ const HolographicBadgeDisplay = () => {
   const [showLoginMessage, setShowLoginMessage] = useState(false);
 
   const { isAuthenticated, user, logout } = useContext(AuthContext);
+  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
   // Fetch badges from backend
   useEffect(() => {
@@ -67,6 +68,8 @@ const HolographicBadgeDisplay = () => {
         console.error("Error fetching badges:", err);
         setError("Failed to load badges from database. Please try again later.");
         setIsDataLoading(false);
+
+
 
         // Fallback to hardcoded data if API fails
         setBadges([
@@ -235,16 +238,19 @@ const earnedBadge = earnedBadges.find(badge => badge.id === currentBadge.id);
           <div className="badge-info-boxes">
             <div className="info-box">
               <span className="info-label">Level</span>
+              <br/>
               <span className="info-value">{currentBadge.level}</span>
             </div>
 
             <div className="info-box">
               <span className="info-label">Branch</span>
+              <br/>
               <span className="info-value">{currentBadge.skillsEarned[0] || "General"}</span>
             </div>
 
             <div className="info-box">
               <span className="info-label">Earners</span>
+              <br/>
               <span className="info-value">43</span>
             </div>
           </div>
@@ -322,6 +328,9 @@ const earnedBadge = earnedBadges.find(badge => badge.id === currentBadge.id);
         </div>
         
         <div className="badge-thumbnails">
+          <button className="nav-button prev" onClick={() => setCurrentBadgeIndex(prev => prev === 0 ? badges.length - 1 : prev - 1)}>
+              <ChevronLeft />
+            </button>
           {badges.map((badge, index) => (
             <div 
               key={badge.id}
@@ -331,6 +340,9 @@ const earnedBadge = earnedBadges.find(badge => badge.id === currentBadge.id);
               <img src={badge.image} alt={badge.name} />
             </div>
           ))}
+          <button className="nav-button next" onClick={() => setCurrentBadgeIndex(prev => prev === badges.length - 1 ? 0 : prev + 1)}>
+              <ChevronRight />
+            </button>
         </div>
       </div>
     </div>
