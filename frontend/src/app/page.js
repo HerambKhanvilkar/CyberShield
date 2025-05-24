@@ -1,79 +1,45 @@
 "use client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import React, { useEffect, useRef } from "react";
-
-const badges = [
-  {
-    id: 1,
-    title: "Cyber Defender",
-    img: "/images/img1.png",
-    description:
-      "Awarded for demonstrating exceptional skills in protecting digital infrastructure against cyber threats and attacks.",
-  },
-  {
-    id: 2,
-    title: "Network Sentinel",
-    img: "/images/img2.png",
-    description:
-      "Recognizes expertise in monitoring and defending enterprise networks.",
-  },
-  {
-    id: 3,
-    title: "Malware Hunter",
-    img: "/images/img3.png",
-    description:
-      "Given to individuals who identify and neutralize malware threats effectively.",
-  },
-  {
-    id: 4,
-    title: "Encryption Expert",
-    img: "/images/img4.png",
-    description:
-      "Honors deep understanding and implementation of encryption protocols.",
-  },
-  {
-    id: 5,
-    title: "Encryption Expert",
-    img: "/images/img5.png",
-    description:
-      "Honors deep understanding and implementation of encryption protocols.",
-  },
-  {
-    id: 6,
-    title: "Encryption Expert",
-    img: "/images/img6.png",
-    description:
-      "Honors deep understanding and implementation of encryption protocols.",
-  },
-  {
-    id: 7,
-    title: "Encryption Expert",
-    img: "/images/img7.png",
-    description:
-      "Honors deep understanding and implementation of encryption protocols.",
-  },
-  {
-    id: 8,
-    title: "Encryption Expert",
-    img: "/images/img8.png",
-    description:
-      "Honors deep understanding and implementation of encryption protocols.",
-  },
-];
+import React, { useEffect, useRef, useState } from "react";
 
 export default function LandingPage() {
-  const [activeIndex, setActiveIndex] = React.useState(0);
+  const [activeIndex, setActiveIndex] = useState(0);
   const carouselRef = useRef(null);
+  const [badges, setBadges] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const selectBadge = (i) => setActiveIndex(i);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % badges.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
+    const fetchBadges = async () => {
+      try {
+        const res = await fetch(`${process.env.SERVER_URL}api/badges`);
+        const data = await res.json();
 
-  const selectBadge = (i) => setActiveIndex(i);
+        if (Array.isArray(data.badges)) {
+          setBadges(data.badges);
+        } else {
+          console.error("API response format unexpected:", data);
+          setBadges([]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch badges:", error);
+        setBadges([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBadges();
+
+    const interval = setInterval(() => {
+      setActiveIndex((prev) =>
+        badges.length ? (prev + 1) % badges.length : 0
+      );
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [badges.length]);
 
   return (
     <>
@@ -106,65 +72,69 @@ export default function LandingPage() {
           </section>
 
           {/* Featured Badge */}
-          <section className="py-20">
-            <h2 className="text-3xl sm:text-4xl mb-10 text-center">Featured Badge</h2>
-            <div className="flex items-center gap-10 flex-wrap md:flex-nowrap text-text-light">
-              <div className="flex-1 text-center md:text-left">
-                <h3 className="text-xl sm:text-2xl mb-5 font-semibold">
-                  {badges[activeIndex].title}
-                </h3>
-                <p className="text-text-medium text-base sm:text-lg leading-relaxed mb-8 max-w-lg mx-auto md:mx-0">
-                  {badges[activeIndex].description}
-                </p>
-                <div className="flex gap-8 flex-wrap justify-center md:justify-start">
-                  <div className="bg-white/5 rounded-lg p-4 text-center flex-1 min-w-[150px]">
-                    <p className="text-xl font-bold text-cyan-400 mb-1">150+</p>
-                    <p className="text-sm text-text-medium">Holders</p>
-                  </div>
-                  <div className="bg-white/5 rounded-lg p-4 text-center flex-1 min-w-[150px]">
-                    <p className="text-xl font-bold text-cyan-400 mb-1">2024</p>
-                    <p className="text-sm text-text-medium">Year Launched</p>
+          {!loading && badges.length > 0 && (
+            <section className="py-20">
+              <h2 className="text-3xl sm:text-4xl mb-10 text-center">Featured Badge</h2>
+              <div className="flex items-center gap-10 flex-wrap md:flex-nowrap text-text-light">
+                <div className="flex-1 text-center md:text-left">
+                  <h3 className="text-xl sm:text-2xl mb-5 font-semibold">
+                    {badges[activeIndex].title}
+                  </h3>
+                  <p className="text-text-medium text-base sm:text-lg leading-relaxed mb-8 max-w-lg mx-auto md:mx-0">
+                    {badges[activeIndex].description}
+                  </p>
+                  <div className="flex gap-8 flex-wrap justify-center md:justify-start">
+                    <div className="bg-white/5 rounded-lg p-4 text-center flex-1 min-w-[150px]">
+                      <p className="text-xl font-bold text-cyan-400 mb-1">150+</p>
+                      <p className="text-sm text-text-medium">Holders</p>
+                    </div>
+                    <div className="bg-white/5 rounded-lg p-4 text-center flex-1 min-w-[150px]">
+                      <p className="text-xl font-bold text-cyan-400 mb-1">2024</p>
+                      <p className="text-sm text-text-medium">Year Launched</p>
+                    </div>
                   </div>
                 </div>
+                <div className="w-[250px] h-[250px] rounded-full bg-gradient-radial from-cyan-400/10 to-transparent flex items-center justify-center mx-auto md:mx-0">
+                  <img
+                    src={badges[activeIndex].image || badges[activeIndex].img?.data}
+                    alt={badges[activeIndex].title}
+                    className="max-w-[80%] max-h-[80%] object-contain drop-shadow-md animate-float"
+                  />
+                </div>
               </div>
-              <div className="w-[250px] h-[250px] rounded-full bg-gradient-radial from-cyan-400/10 to-transparent flex items-center justify-center mx-auto md:mx-0">
-                <img
-                  src={badges[activeIndex].img}
-                  alt={badges[activeIndex].title}
-                  className="max-w-[80%] max-h-[80%] object-contain drop-shadow-md animate-float"
-                />
-              </div>
-            </div>
-          </section>
+            </section>
+          )}
 
           {/* Badge Carousel */}
-          <section className="py-20 bg-gradient-to-t from-primary-dark to-transparent">
-            <h2 className="text-3xl sm:text-4xl mb-10 text-center">All Badges</h2>
-            <div className="overflow-x-auto no-scrollbar px-5">
-              <div
-                className="flex gap-6 justify-start scroll-smooth snap-x snap-mandatory"
-                ref={carouselRef}
-              >
-                {badges.map((badge, i) => (
-                  <div
-                    key={badge.id}
-                    onClick={() => selectBadge(i)}
-                    className={`w-24 h-24 flex-shrink-0 snap-center cursor-pointer rounded-lg flex items-center justify-center transition transform ${
-                      i === activeIndex
-                        ? "bg-cyan-400/20 shadow-lg scale-110"
-                        : "bg-white/5 hover:bg-white/10 hover:-translate-y-1"
-                    }`}
-                  >
-                    <img
-                      src={badge.img}
-                      alt={badge.title}
-                      className="max-w-[80%] max-h-[80%] object-contain"
-                    />
-                  </div>
-                ))}
+          {!loading && badges.length > 0 && (
+            <section className="py-20 bg-gradient-to-t from-primary-dark to-transparent">
+              <h2 className="text-3xl sm:text-4xl mb-10 text-center">All Badges</h2>
+              <div className="overflow-x-auto no-scrollbar px-5">
+                <div
+                  className="flex gap-6 justify-start scroll-smooth snap-x snap-mandatory"
+                  ref={carouselRef}
+                >
+                  {badges.map((badge, i) => (
+                    <div
+                      key={badge.id}
+                      onClick={() => selectBadge(i)}
+                      className={`w-24 h-24 flex-shrink-0 snap-center cursor-pointer rounded-lg flex items-center justify-center transition transform ${
+                        i === activeIndex
+                          ? "bg-cyan-400/20 shadow-lg scale-110"
+                          : "bg-white/5 hover:bg-white/10 hover:-translate-y-1"
+                      }`}
+                    >
+                      <img
+                        src={badge.image || badge.img?.data}
+                        alt={badge.title}
+                        className="max-w-[80%] max-h-[80%] object-contain"
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          )}
 
           {/* Why Earn Badges */}
           <section className="py-20">

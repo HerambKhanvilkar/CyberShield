@@ -7,7 +7,7 @@ import Navbar from "@/components/Navbar";
 import Footer from '@/components/Footer';
 import { useAuthContext } from "@/components/AuthContext";
 
-const badgeid = () => {
+const BadgeId = () => {
   const searchParams = useSearchParams();
   const badgeId = searchParams.get('id');
   const [badges, setBadges] = useState([]);
@@ -32,13 +32,13 @@ const badgeid = () => {
       try {
         setIsDataLoading(true);
 
-        const responseBadges = await axios.get(`${process.env.REACT_APP_SERVER_URL}/badges`);
+        const responseBadges = await axios.get(`${process.env.SERVER_URL}api/badges`);
         setBadges(responseBadges.data.badges);
 
         if (user?.username) {
           const token = localStorage.getItem('token');
           const responseEarnedBadges = await axios.get(
-            `${process.env.REACT_APP_SERVER_URL}/badges-earned`,
+            `${process.env.SERVER_URL}api/badges-earned`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -76,7 +76,7 @@ const badgeid = () => {
           {
             id: 3,
             name: 'Cyber Defender',
-            image: '/images/img3.jpg',
+            image: '/images/img3.png',
             difficulty: 'Medium',
             description: 'Awarded for identifying and mitigating cyber threats.',
             category: 'Intermediate',
@@ -85,7 +85,7 @@ const badgeid = () => {
           {
             id: 4,
             name: 'Cyber Elite',
-            image: '/images/img4.jpg',
+            image: '/images/img4.png',
             difficulty: 'Hard',
             description: 'For advanced penetration testing and security analysis.',
             category: 'Professional',
@@ -382,4 +382,4 @@ const badgeid = () => {
   );
 };
 
-export default badgeid;
+export default BadgeId;
