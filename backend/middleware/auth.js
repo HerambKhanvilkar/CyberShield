@@ -13,6 +13,15 @@ const generateToken = (user) => {
   );
 };
 
+// Generate JWT token
+const generateRefreshToken = (user) => {
+  return jwt.sign(
+    { id: user._id, username: user.username, isAdmin: user.isAdmin },
+    JWT_SECRET,
+    { expiresIn: JWT_EXPIRES_IN }
+  );
+};
+
 // Verify JWT token middleware
 const authenticateJWT = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -41,4 +50,4 @@ const isAdmin = (req, res, next) => {
   next();
 };
 
-module.exports = { generateToken, authenticateJWT, isAdmin };
+module.exports = { generateRefreshToken, generateToken, authenticateJWT, isAdmin };
