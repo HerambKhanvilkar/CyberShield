@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import { Buffer } from "buffer";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import "./AllBadgesPage.css";
@@ -30,6 +31,7 @@ const courses = [ "Defense", "Leadership", "Mastery", "Fundamentals", "Offensive
 
 const AllBadgesPage = () => {
   const [badges, setBadges] = useState([]);
+  const [images, setImages] = useState([]);
   const [selectedBadge, setSelectedBadge] = useState(null);
   const [filter, setFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
@@ -53,6 +55,9 @@ const AllBadgesPage = () => {
   const [subDropdownOpen, setSubDropdownOpen] = useState(null);
   const navigate = useNavigate();
 
+  function bufferToBase64(buffer) {
+    return `data:${buffer.contentType};base64,${buffer.data.data.toString('base64')}`; // Adjust the MIME type as needed
+  }
   // Fetch badges from API
   useEffect(() => {
     const fetchBadges = async () => {
@@ -60,7 +65,11 @@ const AllBadgesPage = () => {
         setIsLoading(true);
         const response = await axios.get(`${process.env.REACT_APP_SERVER_URL}/badges`);
         console.log("Fetched badges:", response.data);
-        setBadges(response.data.badges);
+        setBadges(response.data.badges.filter(b => b.id === 103));
+        setImages(badges.map((b) => { 
+          return { id: b.id, image: bufferToBase64(b.img) }
+        }));
+        console.log("Fetched Images:", images);
         setFilteredBadges(response.data.badges);
         setIsLoading(false);
       } catch (err) {
@@ -355,7 +364,7 @@ const AllBadgesPage = () => {
                 onClick={() => navigate(`/holo?id=${badge._id}`)}
               >
                 <div className="badge-img-container">
-                  <img src={badge.image} alt={badge.name} className="badge-img" />
+                  <img src={images[0]} alt={badge.name} className="badge-img" />
                 </div>
                 <h3 className="badge-name">{badge.name}</h3>
                 <p className="badge-description">{badge.description || `A badge for ${badge.name} achievement.`}</p>
@@ -386,7 +395,7 @@ const AllBadgesPage = () => {
             
             <div className="badge-details-header">
               <div className="badge-details-img">
-                <img src={selectedBadge.image} alt={selectedBadge.name} />
+                <img src={images[0]} alt={selectedBadge.name} />
               </div>
               <div className="badge-details-info">
                 <h2>{selectedBadge.name}</h2>

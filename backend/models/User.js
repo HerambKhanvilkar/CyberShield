@@ -27,7 +27,11 @@ const UserSchema = new mongoose.Schema({
   isAdmin: {
     type: Boolean,
     default: false
+  },
+  refreshToken: {
+    type: String,
+    default: ""
   }
-});
+}, { timestamps: { } });
 
 module.exports = mongoose.model('User', UserSchema);

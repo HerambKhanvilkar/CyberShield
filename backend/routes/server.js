@@ -1,20 +1,23 @@
-require("dotenv").config();
 const jwt = require('jsonwebtoken');
 const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
+const router = express.Router();
 const bcrypt = require("bcrypt");
+const multer = require('multer');
+const csv = require('csv-parser');
+const { Parser } = require('json2csv');
+const fs = require('fs');
+const path = require('path');
+
+
+// Set up multer for file uploads
+const upload = multer({ dest: '../uploads/' });
 
 // Import models from the models directory
-const User = require("./models/User");
-const Badge = require("./models/Badge");
-const BadgesEarned = require("./models/BadgesEarned");
+const User = require("../models/User");
+const Badge = require("../models/Badge");
+const BadgesEarned = require("../models/BadgesEarned");
 
-const app = express();
-app.use(express.json());
-app.use(cors());
-
-const { generateToken, authenticateJWT, isAdmin } = require('./middleware/auth');
+const { generateToken, authenticateJWT, isAdmin } = require('../middleware/auth');
 
 const getUsername = async (authHeader) => {
   const token = authHeader.split(" ")[1];
@@ -31,16 +34,8 @@ const getUsername = async (authHeader) => {
 }
 
 
-// Connect to MongoDB Atlas
-mongoose.connect(process.env.MONGO_URI, { 
-  useNewUrlParser: true, 
-  useUnifiedTopology: true 
-})
-.then(() => console.log("MongoDB Atlas Connected"))
-.catch(err => console.error("MongoDB Connection Error:", err));
-
 // Get all badges
-app.get("/api/badges", async (req, res) => {
+router.get("/badges", async (req, res) => {
   try {
     const badges = await Badge.find({});
     res.json({ badges });
@@ -51,7 +46,7 @@ app.get("/api/badges", async (req, res) => {
 });
 
 // Get single badge by ID
-app.get("/api/badge/:id", async (req, res) => {
+router.get("/badge/:id", async (req, res) => {
   try {
     const badge = await Badge.findOne({ id: parseInt(req.params.id) });
     if (!badge) {
@@ -65,7 +60,7 @@ app.get("/api/badge/:id", async (req, res) => {
 });
 
 // Verify shared badge
-app.get("/api/verify-badge/:id/:username/:timestamp", async (req, res) => {
+router.get("/verify-badge/:id/:username/:timestamp", async (req, res) => {
   try {
     const { id, username, timestamp } = req.params;
     
@@ -102,7 +97,7 @@ app.get("/api/verify-badge/:id/:username/:timestamp", async (req, res) => {
 });
 
 // Generate share link endpoint
-app.post("/api/generate-share-link", authenticateJWT, async (req, res) => {
+router.post("/generate-share-link", authenticateJWT, async (req, res) => {
   try {
     const { badgeId } = req.body;
     const username = req.headers.username;
@@ -144,7 +139,7 @@ app.post("/api/generate-share-link", authenticateJWT, async (req, res) => {
 
 
 // Signup Route
-app.post("/api/signup", async (req, res) => {
+router.post("/signup", async (req, res) => {
   try {
     const { email, firstName, lastName, password } = req.body;
 
@@ -186,54 +181,8 @@ app.post("/api/signup", async (req, res) => {
 });
 
 
-// Login Route (Accepts email or username)
-app.post("/api/login", async (req, res) => {
-  try {
-    const { identifier, password } = req.body;
-    const user = await User.findOne({
-      $or: [{ email: identifier }, { username: identifier }]
-    });
-
-    if (!user) return res.status(400).json({ message: "Invalid Credentials" });
-
-    // Verify password
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: "Invalid Credentials" });
-
-    // Generate JWT token
-    const token = generateToken(user);
-
-    // Fetch earned badges
-    const userBadges = await BadgesEarned.findOne({ username: user.username }).lean();
-    const allBadges = userBadges
-      ? await Badge.find({ id: { $in: userBadges.badges.map(b => b.badgeId) } })
-      : [];
-
-    // Map earned badges with dates
-    const earnedBadges = allBadges.map(badge => ({
-      ...badge.toObject(),
-      earnedDate: userBadges?.badges.find(b => b.badgeId === badge.id)?.earnedDate
-    }));
-
-    res.json({
-      message: "Login Successful!",
-      token, // Send token to client
-      user: {
-        username: user.id,
-        firstName: user.firstName,
-        email: user.email,
-        isAdmin: user.isAdmin,
-        badges: earnedBadges,
-      },
-    });
-  } catch (error) {
-    console.error("Login error:", error);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-});
-
 // Get Badges Earned by User
-app.get("/api/badges-earned", authenticateJWT, async (req, res) => {
+router.get("/badges-earned", authenticateJWT, async (req, res) => {
   try {
 
     const authHeader = req.headers.authorization;
@@ -272,7 +221,7 @@ app.get("/api/badges-earned", authenticateJWT, async (req, res) => {
 });
 
 // Get user details
-app.get("/api/user", authenticateJWT, async (req, res) => {
+router.get("/user", authenticateJWT, async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
     const email = await getUsername(authHeader);
@@ -290,7 +239,7 @@ app.get("/api/user", authenticateJWT, async (req, res) => {
 });
 
 // Assign badge to user
-app.post("/api/assign-badge",authenticateJWT, async (req, res) => {
+router.post("/assign-badge", authenticateJWT, async (req, res) => {
   try {
     const { email, badgeId } = req.body;
 
@@ -317,7 +266,7 @@ app.post("/api/assign-badge",authenticateJWT, async (req, res) => {
     }
     
     // Check if user already has this badge
-    const hasBadge = user.badges.some(b => b.badgeId === badgeId);
+    const hasBadge = user.badges.some(b => b.badgeId == badgeId);
 
     if (hasBadge) {
       return res.status(400).json({ message: "User already has this badge" });
@@ -327,7 +276,15 @@ app.post("/api/assign-badge",authenticateJWT, async (req, res) => {
     user.badges.push({ badgeId, earnedDate: new Date() });
     await user.save();
     
-    res.json({ message: "Badge assigned successfully" });
+    res.json({ 
+      message: "Badge assigned successfully", 
+      user: {
+        email: user.email, 
+        firstName: user.firstName, 
+        lastName: user.lastName, 
+        badges: user.badges
+      } 
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -335,7 +292,7 @@ app.post("/api/assign-badge",authenticateJWT, async (req, res) => {
 });
 
 // Check admin status
-app.get("/api/check-admin",authenticateJWT, async (req, res) => {
+router.get("/check-admin",authenticateJWT, async (req, res) => {
   try {
     const { username } = req.query;
     const user = await User.findOne({ username });
@@ -352,7 +309,7 @@ app.get("/api/check-admin",authenticateJWT, async (req, res) => {
 });
 
 // Get user details
-app.get("/api/users", authenticateJWT, async (req, res) => {
+router.get("/users", authenticateJWT, async (req, res) => {
   try {
     // dummy approach, as the variable is modifiable
     const { email } = req.query || null;
@@ -398,7 +355,7 @@ app.get("/api/users", authenticateJWT, async (req, res) => {
 });
 
 // Users autocomplete
-app.get("/api/users/autocomplete", authenticateJWT, async (req, res) => {
+router.get("/users/autocomplete", async (req, res) => {
   try {
     // dummy approach, as the variable is modifiable
     // const { adminUsername } = req.body;
@@ -422,7 +379,14 @@ app.get("/api/users/autocomplete", authenticateJWT, async (req, res) => {
 
     const normalizedQuery = query.replace(/\s+/g, "").toLowerCase();
 
-    const users = await User.find({isAdmin: false, email: { "$regex": normalizedQuery} });
+    const users = await User.find({
+      isAdmin: false, 
+      $or: [
+        { email: new RegExp(normalizedQuery, "i")},
+        { firstName: new RegExp(normalizedQuery, "i")},
+        { lastName: new RegExp(normalizedQuery, "i")},
+      ]
+      });
 
     const sortedUsers = users.sort(
       (a, b) => a.email.length - b.email.length
@@ -433,6 +397,7 @@ app.get("/api/users/autocomplete", authenticateJWT, async (req, res) => {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
+        badges: user.badges,
       }
     }));
   } catch (error) {
@@ -442,7 +407,7 @@ app.get("/api/users/autocomplete", authenticateJWT, async (req, res) => {
 });
 
 // Users info edit
-app.post("/api/user/info", authenticateJWT, async (req, res) => {
+router.post("/user/info", authenticateJWT, async (req, res) => {
   try {
     // dummy approach, as the variable is modifiable
     // const { adminUsername } = req.body;
@@ -482,12 +447,20 @@ app.post("/api/user/info", authenticateJWT, async (req, res) => {
     }
 
     console.log(filter);
-    console.log(update);
-    const user = await User.findOneAndUpdate(filter, update);
+    const user = await User.findOneAndUpdate(filter, update, { returnDocument:'after'});
 
     await user.save();
+    console.log("updated user", user);
     
-    res.json({ message: "User Info Updated Successfully." });
+    res.json({ 
+      message: "User Info Updated Successfully.",
+      user: {
+        email: user.email, 
+        firstName: user.firstName, 
+        lastName: user.lastName, 
+        badges: user.badges
+      } 
+    });
 
   } catch (error) {
     console.error("Error fetching user:", error);
@@ -496,7 +469,7 @@ app.post("/api/user/info", authenticateJWT, async (req, res) => {
 });
 
 // Assign badge to user
-app.post("/api/revoke-badge",authenticateJWT, async (req, res) => {
+router.post("/revoke-badge", authenticateJWT, async (req, res) => {
   try {
     const { email, badgeId } = req.body;
 
@@ -523,26 +496,122 @@ app.post("/api/revoke-badge",authenticateJWT, async (req, res) => {
     }
     
     // Check if user already has this badge
-    const hasBadge = user.badges.some(b => b.badgeId === badgeId);
+    const hasBadge = user.badges.some((b) => b.badgeId == badgeId);
+    user.badges.forEach(b => { 
+      console.log("users.badges", b.badgeId);
+    })
 
     if (!hasBadge) {
       return res.status(400).json({ message: "Badge is not assigned to user" });
     }
 
     // Remove an badge with a specific id
-    const index = user.badges.findIndex(b => b.badgeId === badgeId);
+    const index = user.badges.findIndex(b => b.badgeId == badgeId);
+    console.log("index", index);
     if (index !== -1) {
       user.badges.splice(index, 1);
     }
     await user.save();
+    console.log("after");
+    user.badges.forEach(b => { 
+      console.log("users.badges", b.badgeId);
+    })
     
-    res.json({ message: "Badge revoked successfully" });
+    res.json({ message: "Badge revoked successfully", 
+      user: {
+        email: user.email, 
+        firstName: user.firstName, 
+        lastName: user.lastName, 
+        badges: user.badges
+      } 
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
-// Start Server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+//file upload
+router.post("/users/import",authenticateJWT, upload.single('file'), async (req, res) => {
+  try {
+    const results = [];
+    const errors = [];
+    let count = 0;
+     // Validate CSV file
+    fs.createReadStream(req.file.path)
+      .pipe(csv())
+      .on('data', (data) => {
+        count++;
+        // Example validation: Check if required fields are present
+        if (!data._id || !data.email || !data.firstName || !data.lastName  || !data.badgeIds) {
+          errors.push(`${count} Missing required fields in row: ` + JSON.stringify(data));
+        } else {
+          results.push(data);
+          console.log(JSON.parse("["+ data.badgeIds +"]"));
+        }
+      })
+      .on('end', () => {
+          // Clean up uploaded file
+          fs.unlinkSync(req.file.path);
+
+          if (errors.length > 0) {
+            return res.status(400).json({ errors });
+          }
+          res.status(200).json({ message: 'CSV file processed successfully', data: results });
+        })
+      .on('error', (error) => {
+        res.status(500).json({ error: 'Error processing CSV file' }, { invalidRows: errors});
+      });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// Route for downloading a dummy data sample CSV
+router.get('/users/sample', authenticateJWT, async (req, res) => {
+  // Create dummy data
+  const sampleData = [
+    { _id: '1', email: 'user1@example.com', firstName: 'John', lastName: 'Doe', badgeIds: [101, 102].toString() },
+    { _id: '2', email: 'user2@example.com', firstName: 'Jane', lastName: 'Smith', badgeIds: [101].toString() },
+    { _id: '3', email: 'user3@example.com', firstName: 'Alice', lastName: 'Johnson', badgeIds: [104, 111].toString() },
+  ];
+
+  // Convert JSON to CSV
+  const json2csvParser = new Parser();
+  const csv = json2csvParser.parse(sampleData);
+
+  // Set the filename and content type
+  const fileName = 'sample_data.csv';
+  res.header('Content-Type', 'text/csv');
+  res.attachment(fileName);
+  res.send(csv);
+});
+
+// upload badge
+router.post("/badge/import",authenticateJWT, upload.single('image'), async (req, res) => {
+  try {
+    var obj = {
+        id: req.body.id,
+        name: req.body.name,
+        description: req.body.desc,
+        difficulty: req.body.diff,
+        level: req.body.level,
+        vertical: req.body.vertical,
+        skillsEarned: req.body.skillsEarned,
+        img: {
+            data: fs.readFileSync(path.join(__dirname + '/uploads/' + req.file.filename)),
+            contentType: 'image/png'
+        }
+    };
+    const newBadge = new Badge(obj);
+    newBadge.save();
+    res.status(200).json({ message: 'Badge created successfully', data: newBadge });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+module.exports = router;

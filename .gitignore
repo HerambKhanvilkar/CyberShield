@@ -18,6 +18,8 @@ frontend/build
 .env.test.local
 .env.production.local
 backend/.env
+backend/uploads*
+*uploads*
 *.env
 
 npm-debug.log*
