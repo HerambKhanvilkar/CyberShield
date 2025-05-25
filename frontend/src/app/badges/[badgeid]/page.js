@@ -18,16 +18,12 @@ const BadgeId = () => {
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showShareSuccess, setShowShareSuccess] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [showLoginMessage, setShowLoginMessage] = useState(false);
 
  const { isAuthenticated, user } = useAuthContext();
 
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener('resize', handleResize);
-
     const fetchBadges = async () => {
       try {
         setIsDataLoading(true);
@@ -96,8 +92,6 @@ const BadgeId = () => {
     };
 
     fetchBadges();
-
-    return () => window.removeEventListener('resize', handleResize);
   }, [user]);
 
   const difficultyColors = {
@@ -157,44 +151,78 @@ const BadgeId = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gray-900 text-white">
       <Navbar />
-      <main className="flex flex-grow flex-col md:flex-row max-w-7xl mx-auto p-6 gap-6">
-        {/* Left Column */}
-        <section className="md:w-1/4 space-y-6">
-          <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Skills Earned</h2>
-          <div className="grid grid-cols-1 gap-3">
-            {currentBadge.skillsEarned?.map((skill, idx) => (
-              <div
-                key={idx}
-                className="flex items-center bg-gray-800 rounded-md px-3 py-2 shadow-md"
-              >
-                {getSkillIcon(skill)}
-                <span>{skill}</span>
-              </div>
-            ))}
+      <main className="flex flex-grow max-w-7xl mx-auto p-6 gap-6">
+        {/* Mobile Layout */}
+
+        <section className="flex flex-col space-y-6 md:hidden w-full text-white">
+          {/* Badge Actions on top */}
+          <div>
+            <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Badge Actions</h2>
+            <div className="flex flex-col space-y-4">
+              {earnedBadge ? (
+                <>
+                  <div className="flex items-center space-x-2 bg-green-700 rounded-md p-3 shadow-md">
+                    <Award className="w-6 h-6" />
+                    <span>
+                      {earnedBadge.earnedDate
+                        ? `Earned on ${new Date(earnedBadge.earnedDate).toLocaleDateString()}`
+                        : 'Not Earned Yet'}
+                    </span>
+                  </div>
+
+                  <button
+                    className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 transition rounded-md p-3 shadow-md"
+                    onClick={() => {
+                      if (!isAuthenticated) {
+                        setShowLoginMessage(true);
+                        setTimeout(() => setShowLoginMessage(false), 3000);
+                        return;
+                      }
+
+                      const user = localStorage.getItem('user');
+                      const userObject = user ? JSON.parse(user) : null;
+                      if (!userObject) return;
+
+                      const shareURL = `${window.location.origin}/badge/shared/${currentBadge.id}/${userObject.username}/${Math.floor(
+                        Date.now() / 1000
+                      )}`;
+                      setShareUrl(shareURL);
+                      setShowShareSuccess(true);
+                      setTimeout(() => setShowShareSuccess(false), 3000);
+                      navigator.clipboard.writeText(shareURL);
+                    }}
+                  >
+                    <Share2 className="w-6 h-6" />
+                    <span>Generate Share Link</span>
+                  </button>
+                </>
+              ) : (
+                <button
+                  className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 transition rounded-md p-3 shadow-md"
+                  onClick={() => (window.location.href = 'https://learn.deepcytes.io/')}
+                >
+                  <Award className="w-6 h-6" />
+                  <span>Get this Badge</span>
+                </button>
+              )}
+
+              {showShareSuccess && (
+                <div className="bg-green-600 text-white p-2 rounded-md text-center animate-pulse">
+                  Link generated! Share URL copied to clipboard.
+                </div>
+              )}
+
+              {showLoginMessage && (
+                <div className="bg-red-600 text-white p-2 rounded-md text-center animate-pulse">
+                  Please log in to generate a share link.
+                </div>
+              )}
+            </div>
           </div>
 
-          <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Badge Details</h2>
-          <p className="text-gray-300 leading-relaxed">
-            This badge recognizes excellence in cybersecurity fundamentals. Earners have
-            demonstrated practical knowledge of core security concepts and have successfully
-            applied these skills in various defensive scenarios.
-          </p>
-        </section>
-
-        {/* Center Column */}
-        <section className="md:w-2/4 flex flex-col items-center space-y-6">
-          <div className="relative flex items-center justify-center w-full max-w-md">
-            <button
-              aria-label="Previous Badge"
-              onClick={() =>
-                setCurrentBadgeIndex((prev) => (prev === 0 ? badges.length - 1 : prev - 1))
-              }
-              className="absolute left-0 p-2 bg-gray-700 rounded-full hover:bg-gray-600 transition"
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </button>
-
-            <div className="w-64 h-64 rounded-xl bg-gradient-to-tr from-indigo-700 via-purple-600 to-pink-600 shadow-lg flex items-center justify-center relative overflow-hidden">
+          {/* Badge Image */}
+          <div className="flex justify-center">
+            <div className="w-48 h-48 rounded-xl bg-gradient-to-tr from-indigo-700 via-purple-600 to-pink-600 shadow-lg flex items-center justify-center relative overflow-hidden">
               {!isLoading ? (
                 <img
                   src={currentBadge.image}
@@ -205,34 +233,10 @@ const BadgeId = () => {
                 <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-300 h-16 w-16 animate-spin"></div>
               )}
             </div>
-
-            <button
-              aria-label="Next Badge"
-              onClick={() =>
-                setCurrentBadgeIndex((prev) => (prev === badges.length - 1 ? 0 : prev + 1))
-              }
-              className="absolute right-0 p-2 bg-gray-700 rounded-full hover:bg-gray-600 transition"
-            >
-              <ChevronRight className="w-6 h-6" />
-            </button>
           </div>
 
-          {/* Hologram Base Rings */}
-          <div className="relative w-64 h-12 mt-[-1rem]">
-            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-48 h-4 border-t-4 border-indigo-400 rounded-full opacity-70 animate-pulse"></div>
-            <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-40 h-3 border-t-4 border-purple-400 rounded-full opacity-60 animate-pulse delay-150"></div>
-            <div className="absolute top-4 left-1/2 transform -translate-x-1/2 w-32 h-2 border-t-4 border-pink-400 rounded-full opacity-50 animate-pulse delay-300"></div>
-          </div>
-
-          <h1 className="text-3xl font-bold text-center">{currentBadge.name}</h1>
-
-          <div
-            className={`inline-block px-4 py-1 rounded-full text-white font-semibold ${difficultyColors[currentBadge.difficulty]}`}
-          >
-            {currentBadge.difficulty}
-          </div>
-
-          <div className="w-full flex justify-around mt-4 space-x-4 text-center">
+          {/* Metrics */}
+          <div className="flex justify-around mt-2 space-x-4 text-center">
             <div className="bg-gray-800 rounded-md p-3 flex-1 shadow-md">
               <div className="text-sm uppercase text-gray-400">Level</div>
               <div className="text-lg font-semibold">{currentBadge.level || 'N/A'}</div>
@@ -248,105 +252,322 @@ const BadgeId = () => {
               <div className="text-lg font-semibold">43</div>
             </div>
           </div>
+
+          {/* Description */}
+          <section>
+            <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Badge Details</h2>
+            <p className="text-gray-300 leading-relaxed">{currentBadge.description}</p>
+          </section>
+
+          {/* Skills Earned */}
+          <section>
+            <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Skills Earned</h2>
+            <div className="grid grid-cols-1 gap-3">
+              {currentBadge.skillsEarned?.map((skill, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center bg-gray-800 rounded-md px-3 py-2 shadow-md"
+                >
+                  {getSkillIcon(skill)}
+                  <span>{skill}</span>
+                </div>
+              ))}
+            </div>
+          </section>
         </section>
 
-        {/* Right Column */}
-        <section className="md:w-1/4 space-y-6">
-          <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Badge Actions</h2>
-
-          <div className="flex flex-col space-y-4">
-            {earnedBadge ? (
-              <>
-                <div className="flex items-center space-x-2 bg-green-700 rounded-md p-3 shadow-md">
-                  <Award className="w-6 h-6" />
-                  <span>
-                    {earnedBadge.earnedDate
-                      ? `Earned on ${new Date(earnedBadge.earnedDate).toLocaleDateString()}`
-                      : 'Not Earned Yet'}
-                  </span>
-                </div>
-
-                <button
-                  className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 transition rounded-md p-3 shadow-md"
-                  onClick={() => {
-                    if (!isAuthenticated) {
-                      setShowLoginMessage(true);
-                      setTimeout(() => setShowLoginMessage(false), 3000);
-                      return;
-                    }
-
-                    const user = localStorage.getItem('user');
-                    const userObject = user ? JSON.parse(user) : null;
-                    if (!userObject) return;
-
-                    const shareURL = `${window.location.origin}/badge/shared/${currentBadge.id}/${userObject.username}/${Math.floor(
-                      Date.now() / 1000
-                    )}`;
-                    setShareUrl(shareURL);
-                    setShowShareSuccess(true);
-                    setTimeout(() => setShowShareSuccess(false), 3000);
-                    navigator.clipboard.writeText(shareURL);
-                  }}
-                >
-                  <Share2 className="w-6 h-6" />
-                  <span>Generate Share Link</span>
-                </button>
-              </>
-            ) : (
-              <button
-                className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 transition rounded-md p-3 shadow-md"
-                onClick={() => (window.location.href = 'https://learn.deepcytes.io/')}
-              >
-                <Award className="w-6 h-6" />
-                <span>Get this Badge</span>
-              </button>
-            )}
-
-            {showShareSuccess && (
-              <div className="bg-green-600 text-white p-2 rounded-md text-center animate-pulse">
-                Link generated! Share URL copied to clipboard.
+        {/* Tablet Layout */}
+        <section className="hidden md:flex lg:hidden flex-col w-full gap-6 text-white">
+          {/* Top Row: Badge and Description */}
+          <div className="flex w-full gap-6">
+            {/* Badge and Badge Actions */}
+            <div className="flex flex-col items-center w-1/2 space-y-4">
+              {/* Badge Image */}
+              <div className="w-48 h-48 rounded-xl bg-gradient-to-tr from-indigo-700 via-purple-600 to-pink-600 shadow-lg flex items-center justify-center relative overflow-hidden">
+                {!isLoading ? (
+                  <img
+                    src={currentBadge.image}
+                    alt={currentBadge.name}
+                    className="max-w-full max-h-full object-contain"
+                  />
+                ) : (
+                  <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-300 h-16 w-16 animate-spin"></div>
+                )}
               </div>
-            )}
 
-            {showLoginMessage && (
-              <div className="bg-red-600 text-white p-2 rounded-md text-center animate-pulse">
-                Please log in to generate a share link.
-              </div>
-            )}
+              {/* Badge Actions / Get this Badge as small buttons */}
+              <div className="flex flex-wrap justify-center gap-2">
+                {earnedBadge ? (
+                  <>
+                    <button
+                      className="flex items-center space-x-1 bg-green-700 hover:bg-green-800 rounded-md px-3 py-1 text-sm shadow"
+                      disabled
+                    >
+                      <Award className="w-4 h-4" />
+                      <span>
+                        {earnedBadge.earnedDate
+                          ? `Earned on ${new Date(earnedBadge.earnedDate).toLocaleDateString()}`
+                          : 'Earned'}
+                      </span>
+                    </button>
 
-            <h3 className="text-xl font-semibold border-b border-gray-700 pb-1 mt-6">Related Badges</h3>
-            <div className="flex space-x-4 overflow-x-auto">
-              {badges
-                .filter((b) => b.id !== currentBadge.id)
-                .slice(0, 3)
-                .map((relatedBadge) => (
-                  <div
-                    key={relatedBadge.id}
-                    className="flex-shrink-0 cursor-pointer flex flex-col items-center w-24 space-y-2"
-                    onClick={() => {
-                      const index = badges.findIndex((b) => b.id === relatedBadge.id);
-                      if (index !== -1) setCurrentBadgeIndex(index);
-                    }}
-                    tabIndex={0}
-                    role="button"
-                    aria-pressed="false"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        const index = badges.findIndex((b) => b.id === relatedBadge.id);
-                        if (index !== -1) setCurrentBadgeIndex(index);
-                      }
-                    }}
+                    <button
+                      className="flex items-center space-x-1 bg-blue-600 hover:bg-blue-700 rounded-md px-3 py-1 text-sm shadow"
+                      onClick={() => {
+                        if (!isAuthenticated) {
+                          setShowLoginMessage(true);
+                          setTimeout(() => setShowLoginMessage(false), 3000);
+                          return;
+                        }
+                        const user = localStorage.getItem('user');
+                        const userObject = user ? JSON.parse(user) : null;
+                        if (!userObject) return;
+
+                        const shareURL = `${window.location.origin}/badge/shared/${currentBadge.id}/${userObject.username}/${Math.floor(
+                          Date.now() / 1000
+                        )}`;
+                        setShareUrl(shareURL);
+                        setShowShareSuccess(true);
+                        setTimeout(() => setShowShareSuccess(false), 3000);
+                        navigator.clipboard.writeText(shareURL);
+                      }}
+                    >
+                      <Share2 className="w-4 h-4" />
+                      <span>Share</span>
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    className="flex items-center space-x-1 bg-indigo-600 hover:bg-indigo-700 rounded-md px-3 py-1 text-sm shadow"
+                    onClick={() => (window.location.href = 'https://learn.deepcytes.io/')}
                   >
-                    <img
-                      src={relatedBadge.image}
-                      alt={relatedBadge.name}
-                      className="rounded-lg shadow-md w-20 h-20 object-cover"
-                    />
-                    <span className="text-sm text-center">{relatedBadge.name}</span>
+                    <Award className="w-4 h-4" />
+                    <span>Get Badge</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Description */}
+            <section className="w-1/2">
+              <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Badge Details</h2>
+              <p className="text-gray-300 leading-relaxed">{currentBadge.description}</p>
+            </section>
+          </div>
+
+          {/* Bottom Row: Stats and Skills Side by Side */}
+          <div className="flex w-full gap-6">
+            {/* Stats */}
+            <section className="w-1/2 grid grid-cols-3 gap-4">
+              <div className="bg-gray-800 rounded-md p-3 shadow-md text-center">
+                <div className="text-sm uppercase text-gray-400">Level</div>
+                <div className="text-lg font-semibold">{currentBadge.level || 'N/A'}</div>
+              </div>
+              <div className="bg-gray-800 rounded-md p-3 shadow-md text-center">
+                <div className="text-sm uppercase text-gray-400">Branch</div>
+                <div className="text-lg font-semibold">{currentBadge.skillsEarned[0] || 'General'}</div>
+              </div>
+              <div className="bg-gray-800 rounded-md p-3 shadow-md text-center">
+                <div className="text-sm uppercase text-gray-400">Earners</div>
+                <div className="text-lg font-semibold">43</div>
+              </div>
+            </section>
+
+            {/* Skills Earned */}
+            <section className="w-1/2">
+              <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Skills Earned</h2>
+              <div className="grid grid-cols-1 gap-3">
+                {currentBadge.skillsEarned?.map((skill, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center bg-gray-800 rounded-md px-3 py-2 shadow-md"
+                  >
+                    {getSkillIcon(skill)}
+                    <span>{skill}</span>
                   </div>
                 ))}
-            </div>
+              </div>
+            </section>
           </div>
+        </section>
+
+        {/* Desktop Layout */}
+        <section className="hidden md:hidden lg:flex flex-grow flex-col md:flex-row gap-6 w-full">
+          {/* Left Column */}
+          <section className="md:w-1/4 space-y-6">
+            <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Skills Earned</h2>
+            <div className="grid grid-cols-1 gap-3">
+              {currentBadge.skillsEarned?.map((skill, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center bg-gray-800 rounded-md px-3 py-2 shadow-md"
+                >
+                  {getSkillIcon(skill)}
+                  <span>{skill}</span>
+                </div>
+              ))}
+            </div>
+
+            <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Badge Details</h2>
+            <p className="text-gray-300 leading-relaxed">{currentBadge.description}</p>
+          </section>
+
+          {/* Center Column */}
+          <section className="md:w-2/4 flex flex-col items-center space-y-6">
+            <div className="relative flex items-center justify-center w-full max-w-md">
+              <button
+                aria-label="Previous Badge"
+                onClick={() =>
+                  setCurrentBadgeIndex((prev) => (prev === 0 ? badges.length - 1 : prev - 1))
+                }
+                className="absolute left-0 p-2 bg-gray-700 rounded-full hover:bg-gray-600 transition"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+
+              <div className="w-64 h-64 rounded-xl bg-gradient-to-tr from-indigo-700 via-purple-600 to-pink-600 shadow-lg flex items-center justify-center relative overflow-hidden">
+                {!isLoading ? (
+                  <img
+                    src={currentBadge.image}
+                    alt={currentBadge.name}
+                    className="max-w-full max-h-full object-contain"
+                  />
+                ) : (
+                  <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-300 h-16 w-16 animate-spin"></div>
+                )}
+              </div>
+
+              <button
+                aria-label="Next Badge"
+                onClick={() =>
+                  setCurrentBadgeIndex((prev) => (prev === badges.length - 1 ? 0 : prev + 1))
+                }
+                className="absolute right-0 p-2 bg-gray-700 rounded-full hover:bg-gray-600 transition"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Hologram Base Rings */}
+            <div className="relative w-64 h-12 mt-[-1rem]">
+              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-48 h-4 border-t-4 border-indigo-400 rounded-full opacity-70 animate-pulse"></div>
+              <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-40 h-3 border-t-4 border-purple-400 rounded-full opacity-60 animate-pulse delay-150"></div>
+              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 w-32 h-2 border-t-4 border-pink-400 rounded-full opacity-50 animate-pulse delay-300"></div>
+            </div>
+
+            <h1 className="text-3xl font-bold text-center">{currentBadge.name}</h1>
+
+            <div
+              className={`inline-block px-4 py-1 rounded-full text-white font-semibold ${difficultyColors[currentBadge.difficulty]}`}
+            >
+              {currentBadge.difficulty}
+            </div>
+
+            <div className="w-full flex justify-around mt-4 space-x-4 text-center">
+              <div className="bg-gray-800 rounded-md p-3 flex-1 shadow-md">
+                <div className="text-sm uppercase text-gray-400">Level</div>
+                <div className="text-lg font-semibold">{currentBadge.level || 'N/A'}</div>
+              </div>
+              <div className="bg-gray-800 rounded-md p-3 flex-1 shadow-md">
+                <div className="text-sm uppercase text-gray-400">Branch</div>
+                <div className="text-lg font-semibold">{currentBadge.skillsEarned[0] || 'General'}</div>
+              </div>
+              <div className="bg-gray-800 rounded-md p-3 flex-1 shadow-md">
+                <div className="text-sm uppercase text-gray-400">Earners</div>
+                <div className="text-lg font-semibold">43</div>
+              </div>
+            </div>
+          </section>
+
+          {/* Right Column */}
+          <section className="md:w-1/4 space-y-6">
+            <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Badge Actions</h2>
+
+            <div className="flex flex-col space-y-4">
+              {earnedBadge ? (
+                <>
+                  <div className="flex items-center space-x-2 bg-green-700 rounded-md p-3 shadow-md">
+                    <Award className="w-6 h-6" />
+                    <span>
+                      {earnedBadge.earnedDate
+                        ? `Earned on ${new Date(earnedBadge.earnedDate).toLocaleDateString()}`
+                        : 'Not Earned Yet'}
+                    </span>
+                  </div>
+
+                  <button
+                    className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 transition rounded-md p-3 shadow-md"
+                    onClick={() => {
+                      if (!isAuthenticated) {
+                        setShowLoginMessage(true);
+                        setTimeout(() => setShowLoginMessage(false), 3000);
+                        return;
+                      }
+
+                      const user = localStorage.getItem('user');
+                      const userObject = user ? JSON.parse(user) : null;
+                      if (!userObject) return;
+
+                      const shareURL = `${window.location.origin}/badge/shared/${currentBadge.id}/${userObject.username}/${Math.floor(
+                        Date.now() / 1000
+                      )}`;
+                      setShareUrl(shareURL);
+                      setShowShareSuccess(true);
+                      setTimeout(() => setShowShareSuccess(false), 3000);
+                      navigator.clipboard.writeText(shareURL);
+                    }}
+                  >
+                    <Share2 className="w-6 h-6" />
+                    <span>Generate Share Link</span>
+                  </button>
+                </>
+              ) : (
+                <button
+                  className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 transition rounded-md p-3 shadow-md"
+                  onClick={() => (window.location.href = 'https://learn.deepcytes.io/')}
+                >
+                  <Award className="w-6 h-6" />
+                  <span>Get this Badge</span>
+                </button>
+              )}
+
+              {showShareSuccess && (
+                <div className="bg-green-600 text-white p-2 rounded-md text-center animate-pulse">
+                  Link generated! Share URL copied to clipboard.
+                </div>
+              )}
+
+              {showLoginMessage && (
+                <div className="bg-red-600 text-white p-2 rounded-md text-center animate-pulse">
+                  Please log in to generate a share link.
+                </div>
+              )}
+
+              <h3 className="text-xl font-semibold border-b border-gray-700 pb-1 mt-6">Related Badges</h3>
+              <div className="flex space-x-4 overflow-x-auto">
+                {badges
+                  .filter((b) => b.id !== currentBadge.id)
+                  .slice(0, 3)
+                  .map((relatedBadge) => (
+                    <div
+                      key={relatedBadge.id}
+                      className="flex-shrink-0 cursor-pointer flex flex-col items-center"
+                      onClick={() => {
+                        setCurrentBadgeIndex(badges.findIndex((b) => b.id === relatedBadge.id));
+                        setEarnedBadge(null);
+                      }}
+                    >
+                      <img
+                        src={relatedBadge.image}
+                        alt={relatedBadge.name}
+                        className="w-16 h-16 rounded-xl"
+                      />
+                      <span className="text-sm mt-1">{relatedBadge.name}</span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </section>
         </section>
       </main>
 
