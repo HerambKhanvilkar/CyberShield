@@ -28,7 +28,7 @@ const LoginDialog = () => {
 
   const handleLogin = async () => {
     try {
-      const response = await fetch(`${process.env.SERVER_URL}api/login`, {
+      const response = await fetch(`${process.env.SERVER_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -41,7 +41,9 @@ const LoginDialog = () => {
         // console.log("Login successful:", data);
 
         // Save tokens
-        localStorage.setItem("accessToken", data.accessToken);
+        localStorage.setItem("accessToken", data.token);
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
         localStorage.setItem("refreshToken", data.refreshToken);
 
 

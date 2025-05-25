@@ -265,3 +265,113 @@ export const RadialGraphData = {
   "source": "Unified",
   "tag": "N"
 };
+
+export const users = [
+  {
+    "email": "test123@gmail.com",
+    "firstName": "foobar",
+    "lastName": "foobar",
+    "badges": []
+  },
+  {
+    "email": "vp@cccp.rs",
+    "firstName": "Vladimir",
+    "lastName": "Putin",
+    "badges": []
+  },
+  {
+    "email": "vikas@foobar.in",
+    "firstName": "ViKaS",
+    "lastName": "U",
+    "badges": [
+      {
+        "badgeId": 1,
+        "earnedDate": "2025-05-14T11:38:20.898Z"
+      },
+      {
+        "badgeId": 2,
+        "earnedDate": "2025-05-14T14:17:07.940Z"
+      }
+    ]
+  },
+  {
+    "email": "test@me.in",
+    "firstName": "test",
+    "lastName": "y",
+    "badges": [
+      {
+        "badgeId": 5,
+        "earnedDate": "2025-05-13T18:14:47.689Z"
+      },
+      {
+        "badgeId": 6,
+        "earnedDate": "2025-05-13T18:20:00.916Z"
+      },
+      {
+        "badgeId": 3,
+        "earnedDate": "2025-05-14T04:53:53.300Z"
+      }
+    ]
+  },
+  {
+    "email": "agastyasakhare4040@gmail.com",
+    "firstName": "Agastya",
+    "lastName": "Sakhare",
+    "badges": []
+  },
+  {
+    "email": "mohit16dpga0305@student.mes.ac.in",
+    "firstName": "Mohit",
+    "lastName": "Dewani",
+    "badges": []
+  },
+  {
+    "email": "siddharth16dpga0115@student.mes.ac.in",
+    "firstName": "Siddharth",
+    "lastName": "Nair",
+    "badges": []
+  },
+  {
+    "email": "riya17dpga0005@student.mes.ac.in",
+    "firstName": "Riya",
+    "lastName": "Rattish",
+    "badges": []
+  },
+  {
+    "email": "srushti17dpga0074@student.mes.ac.in",
+    "firstName": "Srushti",
+    "lastName": "Jadhav",
+    "badges": []
+  },
+  {
+    "email": "24dpga0064@student.mes.ac.in",
+    "firstName": "Vaishnavi",
+    "lastName": "Konar",
+    "badges": []
+  },
+  {
+    "email": "22dpga0046@student.mes.ac.in",
+    "firstName": "Shaurya",
+    "lastName": "Shettigar",
+    "badges": []
+  },
+  {
+    "email": "teest@gmail.com",
+    "firstName": "test55",
+    "lastName": "est",
+    "badges": [
+      {
+        "badgeId": 6,
+        "earnedDate": "2025-05-14T04:54:37.431Z"
+      },
+      {
+        "badgeId": 2,
+        "earnedDate": "2025-05-14T05:19:01.940Z"
+      },
+      {
+        "badgeId": 7,
+        "earnedDate": "2025-05-14T05:19:19.181Z"
+      }
+    ]
+  }
+];

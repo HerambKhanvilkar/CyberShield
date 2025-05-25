@@ -1,7 +1,7 @@
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
 import { AuthProvider } from "@/components/AuthContext";
 import "react-toastify/dist/ReactToastify.css";
-import { ToastContainer } from "react-toastify";
+import { ToastContainer, Slide } from "react-toastify";
 import { WatchlistProvider } from "@/context/WatchlistContext";
 import "./globals.css";
 
@@ -19,16 +19,18 @@ export default function RootLayout({ children }) {
             <WatchlistProvider>
               {children}
               <ToastContainer
-                position="top-right"
+                position="bottom-left"
                 autoClose={5000}
                 hideProgressBar={false}
-                newestOnTop={false}
-                closeOnClick
+                newestOnTop
+                closeOnClick={false}
                 rtl={false}
                 pauseOnFocusLoss
                 draggable
                 pauseOnHover
-                theme="colored"
+                hideProgressBar
+                theme="dark"
+                transition={Slide}
               />
             </WatchlistProvider>
           </AuthProvider>

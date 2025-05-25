@@ -16,7 +16,7 @@ const useAuth = () => {
 
     try {
       const response = await axios.get(
-        `${process.env.SERVER_URL}api/auth/me`,
+        `${process.env.SERVER_URL}/auth/me`,
         {
           headers: { Authorization: `Bearer ${accessToken}` },
         }
