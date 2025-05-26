@@ -1,7 +1,7 @@
 'use client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { FaTrashAlt } from 'react-icons/fa';
 import UsersPagination from '@/components/UsersPagination';
 import UserBlock from '@/components/UserBlock';
@@ -19,7 +19,7 @@ const ITEMS_PER_PAGE = 10;
 export default function SettingsPage() {
   const [searchResults, setSearchResults] = useState([]); // Initialize as an empty array
 
-  const [activeTab, setActiveTab] = useState('Import');
+  const [activeTab, setActiveTab] = useState('Badges');
 
   // Page status
   const [currentPage, setCurrentPage] = useState(1);
@@ -111,6 +111,18 @@ export default function SettingsPage() {
     }
   };
 
+  const [isSkillsDropDownOpen, setIsSkillsDropDownOpen] = useState(false);
+  const [isVerticalsDropDownOpen, setIsVerticalsDropDownOpen] = useState(false);
+  const dropDownInputRef = useRef(null);
+
+  const handleSkillsDropDownToggle = () => {
+    setIsSkillsDropDownOpen(!isSkillsDropDownOpen);
+  }
+
+  const handleVerticalsDropDownToggle = () => {
+    setIsVerticalsDropDownOpen(!isVerticalsDropDownOpen);
+  }
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'Users':
@@ -152,7 +164,7 @@ export default function SettingsPage() {
         <label 
           for="id" 
                       className="peer-focus:font-medium absolute text-sm text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
-          BadgeId
+          Badge ID
           </label>
     </div>
     <div className="relative z-0 w-full mb-5 group">
@@ -170,7 +182,7 @@ export default function SettingsPage() {
     </div>
   </div>
               <div className="relative z-0 w-full mb-5 group">
-            <textarea id="message" rows="4" class="block p-2.5 w-full text-sm text-gray-900 rounded-lg border bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500" placeholder="Description"/>
+            <textarea id="message" rows="4" className="block p-2.5 w-full text-sm text-gray-900 rounded-lg border bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500" placeholder="Description"/>
               </div>
   <div className="grid md:grid-cols-2 md:gap-6">
     <div className="relative z-0 w-full mb-5 group">
@@ -196,7 +208,129 @@ export default function SettingsPage() {
           </select>
     </div>
   </div>
-  <button type="submit" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Submit</button>
+  <div className="grid md:grid-cols-2 md:gap-6">
+
+    <div className="relative z-0 w-full mb-5 group">
+    <button 
+          id="dropdownSearchButton" onClick={handleSkillsDropDownToggle} data-dropdown-toggle="dropdownSearch" data-dropdown-placement="bottom" 
+          className={`${isSkillsDropDownOpen ? 'bg-blue-600' : 'bg-gray-700' } text-white justify-between focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-2.5 py-2.5 text-center inline-flex items-center bg-blue-600 hover:bg-blue-700 focus:ring-blue-800`} 
+          type="button"
+          >
+              Skills
+            <svg
+              className="w-2.5 h-2.5 ms-3"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 10 6"
+             >
+            <path
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="m1 1 4 4 4-4"
+            />
+              </svg>
+      </button>
+    </div>
+    <div className={`relative z-0 w-full mb-5 group ${isSkillsDropDownOpen ? '' : 'hidden' }`}>
+<div id="dropdownSearch" className={`${isSkillsDropDownOpen ? '' : 'hidden' } z-50 absolute rounded-lg shadow-sm w-60 bg-gray-700`}>
+    <div className="p-3">
+      <label for="input-group-search" className="sr-only">Search</label>
+      <div className="relative">
+        <div className="absolute inset-y-0 rtl:inset-r-0 start-0 flex items-center ps-3 pointer-events-none">
+          <svg className="w-4 h-4 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+          </svg>
+        </div>
+        <input type="text" id="input-group-search"  ref={dropDownInputRef} className="block w-full p-2 ps-10 text-sm bg-gray-600 border-gray-500 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500" placeholder="Search user"/>
+      </div>
+    </div>
+    <ul className="h-48 px-3 pb-3 overflow-y-auto text-sm text-gray-200" aria-labelledby="dropdownSearchButton">
+      <li>
+        <div className="flex items-center ps-2 rounded-sm hover:bg-gray-600">
+          <input id="checkbox-item-11" type="checkbox" value="" className="w-4 h-4 text-blue-600 rounded-sm  ring-offset-gray-700 focus:ring-offset-gray-700 focus:ring-2 bg-gray-600 border-gray-500"/>
+          <label for="checkbox-item-11" className="w-full py-2 ms-2 text-sm font-medium rounded-sm text-gray-300">Bonnie Green</label>
+        </div>
+      </li>
+    </ul>
+          <a
+          className="flex items-center p-3 text-sm font-medium border-gray-600 bg-gray-700 hover:bg-gray-600 text-blue-500 hover:underline"
+          >
+          <svg class="w-4 h-4 me-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 18">
+          <path d="M6.5 9a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9ZM8 10H5a5.006 5.006 0 0 0-5 5v2a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-2a5.006 5.006 0 0 0-5-5Zm11-3h-2V5a1 1 0 0 0-2 0v2h-2a1 1 0 1 0 0 2h2v2a1 1 0 0 0 2 0V9h2a1 1 0 1 0 0-2Z"/>
+          </svg>
+          Add new Skill
+          </a>
+    </div>
+
+  </div>
+  </div>
+  <div className="grid md:grid-cols-2 md:gap-6">
+
+    <div className="relative z-0 w-full mb-5 group">
+    <button 
+          id="dropdownSearchButton" onClick={handleVerticalsDropDownToggle} data-dropdown-toggle="dropdownSearch" data-dropdown-placement="bottom" 
+          className={`${isVerticalsDropDownOpen ? 'bg-blue-600' : 'bg-gray-700' } text-white justify-between focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-2.5 py-2.5 text-center inline-flex items-center bg-blue-600 hover:bg-blue-700 focus:ring-blue-800`} 
+          type="button"
+          >
+              Vertical
+            <svg
+              className="w-2.5 h-2.5 ms-3"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 10 6"
+             >
+            <path
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="m1 1 4 4 4-4"
+            />
+              </svg>
+      </button>
+    </div>
+    <div className={`relative z-0 w-full mb-5 group ${isVerticalsDropDownOpen ? '' : 'hidden' }`}>
+<div id="dropdownSearch" className={`${isVerticalsDropDownOpen ? '' : 'hidden' } z-50 absolute rounded-lg shadow-sm w-60 bg-gray-700`}>
+    <div className="p-3">
+      <label for="input-group-search" className="sr-only">Search</label>
+      <div className="relative">
+        <div className="absolute inset-y-0 rtl:inset-r-0 start-0 flex items-center ps-3 pointer-events-none">
+          <svg className="w-4 h-4 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+          </svg>
+        </div>
+        <input type="text" id="input-group-search"  ref={dropDownInputRef} className="block w-full p-2 ps-10 text-sm bg-gray-600 border-gray-500 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500" placeholder="Search user"/>
+      </div>
+    </div>
+    <ul className="h-48 px-3 pb-3 overflow-y-auto text-sm text-gray-200" aria-labelledby="dropdownSearchButton">
+      <li>
+        <div className="flex items-center ps-2 rounded-sm hover:bg-gray-600">
+          <input id="checkbox-item-11" type="checkbox" value="" className="w-4 h-4 text-blue-600 rounded-sm  ring-offset-gray-700 focus:ring-offset-gray-700 focus:ring-2 bg-gray-600 border-gray-500"/>
+          <label for="checkbox-item-11" className="w-full py-2 ms-2 text-sm font-medium rounded-sm text-gray-300">Bonnie Green</label>
+        </div>
+      </li>
+    </ul>
+          <a
+          className="flex items-center p-3 text-sm font-medium border-gray-600 bg-gray-700 hover:bg-gray-600 text-blue-500 hover:underline"
+          >
+          <svg class="w-4 h-4 me-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 18">
+          <path d="M6.5 9a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9ZM8 10H5a5.006 5.006 0 0 0-5 5v2a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-2a5.006 5.006 0 0 0-5-5Zm11-3h-2V5a1 1 0 0 0-2 0v2h-2a1 1 0 1 0 0 2h2v2a1 1 0 0 0 2 0V9h2a1 1 0 1 0 0-2Z"/>
+          </svg>
+          Add new Vertical
+          </a>
+    </div>
+
+  </div>
+  </div>
+
+          <button
+          type="submit"
+          className="text-white bg-blue-600 hover:bg-blue-700 focus:ring-blue-800 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center"
+          >
+          Submit
+          </button>
 </form>
           </div>
         );
@@ -215,7 +349,7 @@ export default function SettingsPage() {
           accept=".csv" 
           id="file_input"
           onChange={handleFileChange} />
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-300" id="file_input_help">CSV (MAX. 10MB).</p>
+          <p className="mt-1 text-sm text-gray-300" id="file_input_help">CSV (MAX. 10MB).</p>
 
               </div>
               <div className="space-x-2">
