@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import AssignBadgePopUp from "@/components/AssignBadgePopUp";
 import RevokeBadgePopUp from "@/components/RevokeBadgePopUp";
-import UpdateInfoPopUp from "@/components/UpdateInfoPopUp";
+import DeleteUserPopUp from "@/components/DeleteUserPopUp";
 
 function UserBlock({ data, updateUserDetails, onSelect }) {
 
@@ -28,6 +28,7 @@ function UserBlock({ data, updateUserDetails, onSelect }) {
       <div className="flex flex-col lg:flex-row justify-between pl-4 w:1/3 space-y-2 mt-4 ">
         <AssignBadgePopUp user={data} updateUserDetails={updateUserDetails} />
         <RevokeBadgePopUp user={data} updateUserDetails={updateUserDetails} />
+        <DeleteUserPopUp user={data} updateUserDetails={updateUserDetails} />
       </div>
     </div>
   );
