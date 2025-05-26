@@ -12,7 +12,7 @@ export default function AllBadgesPage() {
 useEffect(() => {
   const fetchBadges = async () => {
     try {
-      const res = await fetch(`${process.env.SERVER_URL}api/badges`);
+      const res = await fetch(`${process.env.SERVER_URL}/badges`);
       const data = await res.json();
 
       if (Array.isArray(data.badges)) {
