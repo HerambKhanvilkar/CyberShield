@@ -18,13 +18,13 @@ export default function Page() {
               />
             </div>
             <h2 className="text-lg font-bold text-center">User</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 items-center mt-6 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 items-center mt-6 gap-4">
               {["1", "2", "3", "4", "5"].map((badge, i) => (
                 <div key={i} className="flex justify-center">
                   <img
                     src={`/images/img${badge}.png`}
                     alt={`${badge} badge`}
-                    className="w-40 rounded-full border-2 border-purple-500"
+                    className="w-15 md:w-40 rounded-full border-2 border-purple-500"
                   />
                 </div>
               ))}
