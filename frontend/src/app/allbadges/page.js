@@ -6,31 +6,81 @@ import React from "react";
 import Link from "next/link";
 
 export default function AllBadgesPage() {
+  const [allBadges, setAllBadges] = useState([]);
+  const [myBadges, setMyBadges] = useState([]);
   const [badges, setBadges] = useState([]);
+  const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(true);
 
 useEffect(() => {
-  const fetchBadges = async () => {
+  const fetchAllBadges = async () => {
     try {
       const res = await fetch(`${process.env.SERVER_URL}/badges`);
       const data = await res.json();
 
       if (Array.isArray(data.badges)) {
+        setAllBadges(data.badges);
         setBadges(data.badges);
       } else {
         console.error("API response format unexpected:", data);
-        setBadges([]); // fallback to empty array
+        setAllBadges([]); // fallback to empty array
       }
     } catch (error) {
       console.error("Failed to fetch badges:", error);
-      setBadges([]); // fallback
+      setAllBadges([]); // fallback
     } finally {
       setLoading(false);
     }
   };
 
-  fetchBadges();
+  const fetchMyBadges = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${process.env.SERVER_URL}/badges-earned`, {
+        method: 'GET', // Specify the method if needed (GET is default)
+        headers: {
+          'Authorization': `Bearer ${token}`, // Add the token to the Authorization header
+          'Content-Type': 'application/json' // Optional: specify content type if needed
+        }
+      });
+
+      const data = await res.json();
+
+      if (Array.isArray(data.badges)) {
+        setMyBadges(data.badges);
+      } else {
+        console.error("API response format unexpected:", data);
+        setMyBadges([]); // fallback to empty array
+      }
+    } catch (error) {
+      console.error("Failed to fetch badges:", error);
+      setMyBadges([]); // fallback
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchAllBadges();
+  fetchMyBadges();
 }, []);
+
+  const activeButton = "px-5 py-1.5 text-xs font-medium text-gray-900 bg-gray-300 rounded-lg";
+  const inActiveButton = "px-5 py-1.5 text-xs font-medium text-white hover:bg-gray-700 rounded-lg";
+
+  const [allBadgesClass, setAllBadgesClass] = useState(activeButton);
+  const [myBadgesClass, setMyBadgesClass] = useState(inActiveButton);
+
+  const handleAllBadges = () => {
+    setBadges(allBadges);
+    setAllBadgesClass(activeButton);
+    setMyBadgesClass(inActiveButton);
+  }
+
+  const handleMyBadges = () => {
+    setBadges(myBadges);
+    setMyBadgesClass(activeButton);
+    setAllBadgesClass(inActiveButton);
+  }
 
 
   return (
@@ -45,6 +95,16 @@ useEffect(() => {
             Complete challenges and earn badges to showcase your cybersecurity skills
           </p>
         </section>
+    <section className="text-center max-w-4xl mx-auto mb-12">
+    </section>
+    <div className="grid max-w-xs grid-cols-2 gap-1 p-1 mx-auto my-4 rounded-lg bg-gray-600" role="group">
+    <button onClick={handleAllBadges} type="button" className={allBadgesClass} >
+    All Badges
+</button>
+    <button onClick={handleMyBadges} type="button" className={myBadgesClass}>
+    My Badges
+</button>
+        </div>
 
         {loading ? (
           <p className="text-center text-gray-400">Loading badges...</p>

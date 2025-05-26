@@ -64,6 +64,16 @@ jobs:
                 # verifies the right npm version is in the environment
                 npm -v # should print `10.8`
             fi
+
+            # Install PM2
+            npm install pm2 -g
+
+            # Install dependencies
+            npm ci
+             
+            #pm2 path
+            export PATH="$HOME/.nvm/versions/node/v20.18.1/bin:$PATH"
+
             # Create app directory if it doesn't exist
             mkdir -p /home/${{ secrets.PROD_SERVER_USER }}/Badge-Viewer
 
@@ -81,16 +91,8 @@ jobs:
             unzip -o /home/${{ secrets.PROD_SERVER_USER }}/deploy.zip
 
             # First run the backend
+
             cd backend
-
-            # Install PM2
-            npm install pm2 -g
-
-            # Install dependencies
-            npm ci
-             
-            #pm2 path
-            export PATH="$HOME/.nvm/versions/node/v20.18.1/bin:$PATH"
 
             # Start or restart your Node.js application with PM2
             pm2 describe Badge-Viewer-Backend > /dev/null
@@ -110,7 +112,7 @@ jobs:
             cd ../frontend
 
             # Install dependencies
-            npm ci
+            npm i
 
             # Build the frontend
             npm run build
@@ -118,6 +120,7 @@ jobs:
             # Start or restart your Next.js application with PM2
             pm2 describe Badge-Viewer-Frontend > /dev/null
             if [ $? -eq 0 ]; then
+              npm ci
               # Restart the application if it exists
               pm2 restart Badge-Viewer-Frontend
             else
