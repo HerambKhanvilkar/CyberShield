@@ -49,7 +49,13 @@ app.use(express.json());
 
 app.use(express.urlencoded({extended:true}))
 
-app.use( cors());
+app.use(
+  cors({
+    origin: process.env.FRONTEND || "http://localhost:3000",
+    // origin: "http://localhost:5173",
+    // origin: "http://dccveengine-vm.eastus.cloudapp.azure.com",
+  })
+);
 
 // Sanitize & Escape All Inputs Middleware
 app.use((req, res, next) => {
