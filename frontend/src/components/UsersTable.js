@@ -1,9 +1,10 @@
 
 export function UsersTable({ data, columns, type, pagination, rowLimit }) {
 
+  {/*
         <div className="h-175 overflow-y-auto scrollbar">
         <Table className="table-fixed">
-          {/* Header Row - No Borders & Forced White Text */}
+          {/* Header Row - No Borders & Forced White Text * /}
           <TableHeader>
             <TableRow className="bg-[#00B3F3] text-white text-opacity-100 !important border-none">
               {columns.map((column) => (
@@ -40,4 +41,6 @@ export function UsersTable({ data, columns, type, pagination, rowLimit }) {
             ))}
           </TableBody>
         </Table>
-        </div>
+    </div>
+    */}
+}

@@ -23,7 +23,8 @@ import { toast } from "react-toastify"; // Import toast
 
 const SignupDialog = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -37,7 +38,7 @@ const SignupDialog = () => {
   const handleSendOtp = async () => {
     try {
       const response = await axios.post(
-        `${process.env.SERVER_URL}/api/auth/request-otp`,
+        `${process.env.SERVER_URL}/auth/register/otp`,
         { email }
       );
 
@@ -73,21 +74,23 @@ const SignupDialog = () => {
 
     try {
       const response = await axios.post(
-        `${process.env.SERVER_URL}/api/auth/register`,
+        `${process.env.SERVER_URL}/auth/register`,
         {
-          name,
+          firstName,
+          lastName,
           email,
           password,
           otp,
         }
       );
 
-      if (response.status === 201) {
-        const { accessToken, refreshToken } = response.data; // Extract tokens
+      if (response.status === 200) {
+        const { token, accessToken, refreshToken } = response.data; // Extract tokens
         console.log("Signup successful:", response.data);
 
         // Save tokens in localStorage
-        localStorage.setItem("accessToken", accessToken);
+        localStorage.setItem("accessToken", token);
+        localStorage.setItem("token", token);
         localStorage.setItem("refreshToken", refreshToken);
 
         // Fetch the user's data
@@ -121,14 +124,26 @@ const SignupDialog = () => {
         <div className="grid gap-4 py-4">
           {error && <div className="text-red-500 font-medium">{error}</div>}
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
-              Name
+            <Label htmlFor="firstName" className="text-right">
+              First Name
             </Label>
             <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter your name"
+              id="firstName"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="Enter your First name"
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="lastName" className="text-right">
+              Last Name
+            </Label>
+            <Input
+              id="lastName"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              placeholder="Enter your First name"
               className="col-span-3"
             />
           </div>
@@ -176,7 +191,7 @@ const SignupDialog = () => {
               <DialogFooter>
                 <Button
                   onClick={handleSendOtp}
-                  disabled={!name || !email || !password || !confirmPassword}
+                  disabled={!firstName || !firstName || !email || !password || !confirmPassword}
                   className="w-full bg-[#3DB5DA] hover:bg-[#0592be] font-bold"
                 >
                   Send OTP

@@ -138,49 +138,6 @@ router.post("/generate-share-link", authenticateJWT, async (req, res) => {
 });
 
 
-// Signup Route
-router.post("/signup", async (req, res) => {
-  try {
-    const { email, firstName, lastName, password } = req.body;
-
-    // Check if email or username already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: "User already exists! Please log in." });
-    }
-
-    // Hash the password before storing
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Save new user
-    const newUser = new User({ 
-      email, 
-      firstName, 
-      lastName, 
-      password: hashedPassword,
-      isAdmin: false // Default to non-admin
-    });
-    await newUser.save();
-
-    // Generate JWT token
-    const token = generateToken(newUser);
-
-    res.json({ 
-      message: "Signup successful!", 
-      token, // Send token to client
-      user: { 
-        username: newUser.id, 
-        firstName: newUser.firstName, 
-        email: newUser.email 
-      } 
-    });
-  } catch (error) {
-    console.error("Signup error:", error);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-});
-
-
 // Get Badges Earned by User
 router.get("/badges-earned", authenticateJWT, async (req, res) => {
   try {
@@ -333,7 +290,7 @@ router.get("/users", authenticateJWT, async (req, res) => {
 
     filter["isAdmin"] = false;
 
-      console.log("email", email);
+      // console.log("email", email);
     if (email){
       filter["email"] = email;
     }
@@ -446,11 +403,11 @@ router.post("/user/info", authenticateJWT, async (req, res) => {
       update["password"] = hashedPassword;
     }
 
-    console.log(filter);
+    // console.log(filter);
     const user = await User.findOneAndUpdate(filter, update, { returnDocument:'after'});
 
     await user.save();
-    console.log("updated user", user);
+    // console.log("updated user", user);
     
     res.json({ 
       message: "User Info Updated Successfully.",
@@ -498,7 +455,7 @@ router.post("/revoke-badge", authenticateJWT, async (req, res) => {
     // Check if user already has this badge
     const hasBadge = user.badges.some((b) => b.badgeId == badgeId);
     user.badges.forEach(b => { 
-      console.log("users.badges", b.badgeId);
+      // console.log("users.badges", b.badgeId);
     })
 
     if (!hasBadge) {
@@ -507,14 +464,14 @@ router.post("/revoke-badge", authenticateJWT, async (req, res) => {
 
     // Remove an badge with a specific id
     const index = user.badges.findIndex(b => b.badgeId == badgeId);
-    console.log("index", index);
+    // console.log("index", index);
     if (index !== -1) {
       user.badges.splice(index, 1);
     }
     await user.save();
-    console.log("after");
+    // console.log("after");
     user.badges.forEach(b => { 
-      console.log("users.badges", b.badgeId);
+      // console.log("users.badges", b.badgeId);
     })
     
     res.json({ message: "Badge revoked successfully", 
@@ -547,7 +504,7 @@ router.post("/users/import",authenticateJWT, upload.single('file'), async (req, 
           errors.push(`${count} Missing required fields in row: ` + JSON.stringify(data));
         } else {
           results.push(data);
-          console.log(JSON.parse("["+ data.badgeIds +"]"));
+          // console.log(JSON.parse("["+ data.badgeIds +"]"));
         }
       })
       .on('end', async () => {
@@ -564,7 +521,7 @@ router.post("/users/import",authenticateJWT, upload.single('file'), async (req, 
 
             // Hash the password before storing
             const hashedPassword = await bcrypt.hash(password, 10);
-            console.log(user);
+            // console.log(user);
             
             const badgesIds = JSON.parse("["+ user.badgeIds +"]");
             const badges = badgesIds.map(b => {
