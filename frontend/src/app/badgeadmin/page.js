@@ -130,22 +130,24 @@ const updateUserDetails = (email, updatedUser) => {
           {/* Main Content: Left = User List | Right = User Details */}
           <div className="flex flex-col md:flex-row gap-4">
             {/* Left: User List */}
-            <div className="w-full max-w-full md:w-1/3 bg-slate-800/60 rounded-lg p-2 border border-gray-700">
+            <div className="w-full md:w-1/3 bg-slate-800/60 rounded-lg p-2 border border-gray-700">
               <h2 className="text-white font-semibold mb-2">User List</h2>
-              <ScrollArea className="h-[350px] pr-2">
-                {Array.isArray(searchResults) && searchResults.length > 0 ? (
-                  searchResults.map((user, index) => (
-                    <UserBlock
-                      key={index}
-                      className="block w-full mb-2"
-                      data={user}
-                      updateUserDetails={updateUserDetails}
-                      onSelect={() => setSelectedUser(user)}
-                    />
-                  ))
-                ) : (
-                  <p className="text-gray-400">No data available.</p>
-                )}
+              <ScrollArea className="h-[350px] pr-2 overflow-y-auto">
+                <div className="flex flex-col space-y-2 w-full">
+                  {Array.isArray(searchResults) && searchResults.length > 0 ? (
+                    searchResults.map((user, index) => (
+                      <UserBlock
+                        key={index}
+                        className="w-full"
+                        data={user}
+                        updateUserDetails={updateUserDetails}
+                        onSelect={() => setSelectedUser(user)}
+                      />
+                    ))
+                  ) : (
+                    <p className="text-gray-400">No data available.</p>
+                  )}
+                </div>
               </ScrollArea>
             </div>
 
