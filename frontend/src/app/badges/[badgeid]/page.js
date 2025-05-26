@@ -28,7 +28,7 @@ const BadgeId = () => {
       try {
         setIsDataLoading(true);
 
-        const responseBadges = await axios.get(`${process.env.SERVER_URL}api/badges`);
+        const responseBadges = await axios.get(`${process.env.SERVER_URL}/badges`);
         setBadges(responseBadges.data.badges);
 
         if (user?.username) {
