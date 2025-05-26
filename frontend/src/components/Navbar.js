@@ -32,6 +32,11 @@ function Navbar() {
   const { status } = useSession(); // for loading state
   const router = useRouter();
 
+  //show userdata in console
+  //   useEffect(() => {
+  //   if (user) console.log("User info in navbar:", user);
+  // }, [user]);
+
   // Handle signup rerouting
   const handleSignup = async (userData) => {
     try {
@@ -266,7 +271,7 @@ function Navbar() {
                   {user.profilePicture ? (
                     <img
                       src={user.profilePicture}
-                      alt={user.name}
+                      alt={user.firstName}
                       className="w-8 h-8 rounded-full object-cover"
                       onError={(e) =>
                         (e.currentTarget.src = "/default-avatar.png")
@@ -275,7 +280,7 @@ function Navbar() {
                   ) : (
                     <FaUserCircle className="w-8 h-8" />
                   )}
-                  <span className="hidden sm:inline ">{user.name}</span>
+                  <span className="hidden sm:inline ">{user.firstName}</span>
                 </button>
                 {isDropdownOpen && (
                   <ul className="mt-2 w-36 bg-white text-black rounded-lg shadow-md z-50 absolute top-12 right-0">
