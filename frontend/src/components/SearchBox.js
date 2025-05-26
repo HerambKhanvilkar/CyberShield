@@ -50,17 +50,22 @@ function SearchBox({ onSearch }) {
   };
 
   return (
-      <div className="flex justify-start h-10 text-sm bg-gray-800 rounded-full mx-4">
-          {query.trim() === "" && <Search className="mt-2 ml-2 px-1" />}
-        <input
-          type="text"
-          value={query}
-          onChange={handleInputChange}
-          placeholder="Search for users..."
-          className="text-sm w-full text-white-500 focus:outline-none sm:mx-4 my-2"
-          autoComplete="off"
-        />
-      </div>
+    <div className="relative w-full md:max-w-md mb-4 md:mb-0">
+      <input
+        type="text"
+        value={query}
+        onChange={handleInputChange}
+        placeholder="Search for users..."
+        className={`bg-[#1A1B2E] text-white placeholder-gray-400 rounded-lg 
+          ${query === "" ? "pl-10" : "pl-4"} pr-4 py-2
+          focus:outline-none focus:ring-2 focus:ring-cyan-500 
+          w-full transition-all duration-300`}
+        autoComplete="off"
+      />
+      {query === "" && (
+        <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+      )}
+    </div>
   );
 }
 

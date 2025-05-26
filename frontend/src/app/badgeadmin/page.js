@@ -12,14 +12,15 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
+import UserDetailsView from '@/components/UserDetailsView';
 
-const TABS = ['Users', 'Import', 'Badges', 'bar'];
+const TABS = ['Users', 'Import', 'Badges'];
 const ITEMS_PER_PAGE = 10;
 
 export default function SettingsPage() {
   const [searchResults, setSearchResults] = useState([]); // Initialize as an empty array
-
-  const [activeTab, setActiveTab] = useState('Import');
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [activeTab, setActiveTab] = useState('Users');
 
   // Page status
   const [currentPage, setCurrentPage] = useState(1);
@@ -115,91 +116,114 @@ export default function SettingsPage() {
     switch (activeTab) {
       case 'Users':
         return (
-          <div className="">
-            <div className="md:flex md:justify-end rounded-xl shadow-lg hover:shadow-xl">
-            <SearchBox onSearch={handleSearch}  />
-            <UsersPagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
+          <div className="p-4 rounded-xl bg-slate-900/60 backdrop-blur-xl shadow-lg border border-gray-700">
+  {/* Top Row: Search + Pagination */}
+  <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+    <div className="flex-1">
+      <SearchBox onSearch={handleSearch} />
+    </div>
+    <div className="flex-none">
+      <UsersPagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
+    </div>
+  </div>
+
+  {/* Main Content: Left = User List | Right = User Details */}
+  <div className="flex flex-col md:flex-row gap-4">
+    {/* Left: User List */}
+    <div className="w-full md:w-1/3 bg-slate-800/60 rounded-lg p-2 border border-gray-700">
+      <h2 className="text-white font-semibold mb-2">User List</h2>
+      <ScrollArea className="h-[350px] pr-2">
+        {Array.isArray(searchResults) && searchResults.length > 0 ? (
+          searchResults.map((user, index) => (
+            <UserBlock
+              key={index}
+              className="block mb-2"
+              data={user}
+              updateUserDetails={updateUserDetails}
+              onSelect={() => setSelectedUser(user)}
             />
-            </div>
-            <ScrollArea className="h-[350px] pr-4">
-            { Array.isArray(searchResults) && searchResults.length > 0 ? (
-              searchResults.map((user, index) => (
-              <UserBlock key={index} className="block" data={user} updateUserDetails={updateUserDetails}/>
-              ))
-            ) : (
-              <p>No data available.</p>
-            )}
-            </ScrollArea>
-          </div>
+          ))
+        ) : (
+          <p className="text-gray-400">No data available.</p>
+        )}
+      </ScrollArea>
+    </div>
+
+    {/* Right: User Details (replace this with your final enhanced user details section) */}
+    <div className="w-full md:w-2/3 bg-slate-800/60 rounded-lg p-4 border border-gray-700">
+      {/* Mount your user details JSX here */}
+      <UserDetailsView selectedUser={selectedUser} updateUserDetails={updateUserDetails} />
+    </div>
+  </div>
+</div>
+
         );
-      case 'Members':
-        return (<p className="text-gray-600">Integration settings go here...</p>);
       case 'Badges':
         return (
           <div>
             <form className="max-w-md mx-auto">
-  <div className="grid md:grid-cols-2 md:gap-6">
-    <div className="relative z-0 w-full mb-5 group">
-        <input 
-          type="text" 
-          name="id" 
-          id="id" 
-                      className="block py-2.5 px-0 w-full text-sm bg-transparent border-0 border-b-2 appearance-none text-white border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-0 peer" 
-          placeholder=" " required />
-        <label 
-          for="id" 
-                      className="peer-focus:font-medium absolute text-sm text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
-          BadgeId
-          </label>
-    </div>
-    <div className="relative z-0 w-full mb-5 group">
-        <input 
-          type="text" 
-          name="name" 
-          id="name" 
-                      className="block py-2.5 px-0 w-full text-sm bg-transparent border-0 border-b-2 appearance-none text-white border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-0 peer" 
-          placeholder=" " required />
-        <label 
-          for="name" 
-                      className="peer-focus:font-medium absolute text-sm text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
-          Badge Name
-          </label>
-    </div>
-  </div>
-              <div className="relative z-0 w-full mb-5 group">
-            <textarea id="message" rows="4" class="block p-2.5 w-full text-sm text-gray-900 rounded-lg border bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500" placeholder="Description"/>
+              <div className="grid md:grid-cols-2 md:gap-6">
+                <div className="relative z-0 w-full mb-5 group">
+                  <input 
+                    type="text" 
+                    name="id" 
+                    id="id" 
+                    className="block py-2.5 px-0 w-full text-sm bg-transparent border-0 border-b-2 appearance-none text-white border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-0 peer" 
+                    placeholder=" " required
+                  />
+                  <label 
+                    for="id" 
+                    className="peer-focus:font-medium absolute text-sm text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
+                    BadgeId
+                  </label>
+                </div>
+                <div className="relative z-0 w-full mb-5 group">
+                  <input 
+                    type="text" 
+                    name="name" 
+                    id="name" 
+                    className="block py-2.5 px-0 w-full text-sm bg-transparent border-0 border-b-2 appearance-none text-white border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-0 peer" 
+                    placeholder=" " required />
+                  <label 
+                    for="name" 
+                    className="peer-focus:font-medium absolute text-sm text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
+                    Badge Name
+                  </label>
+                </div>
               </div>
-  <div className="grid md:grid-cols-2 md:gap-6">
-    <div className="relative z-0 w-full mb-5 group">
-          <label for="difficulty" className="block mb-2 text-sm font-medium text-white">Select badge difficulty </label>
-  <select id="difficulty" className="border text-sm rounded-lg block w-full p-2.5 bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500">
-
-          { ['Easy', 'Medium', 'Hard', 'Expert', 'Extreme'].map(d => (
-        <option key={d} value={d}>
-          {d}
-          </option>
-          ))}
-          </select>
-    </div>
-    <div className="relative z-0 w-full mb-5 group">
-          <label for="level" className="block mb-2 text-sm font-medium text-white">Select badge level </label>
-  <select id="level" className="border text-sm rounded-lg block w-full p-2.5 bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500">
-
-          { ['Amateur', 'Intermediate', 'Professional'].map(d => (
-        <option key={d} value={d}>
-          {d}
-          </option>
-          ))}
-          </select>
-    </div>
-  </div>
-  <button type="submit" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Submit</button>
-</form>
-          </div>
-        );
+              <div className="relative z-0 w-full mb-5 group">
+                <textarea id="message" rows="4" class="block p-2.5 w-full text-sm text-gray-900 rounded-lg border bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500" placeholder="Description"/>
+              </div>
+              <div className="grid md:grid-cols-2 md:gap-6">
+                <div className="relative z-0 w-full mb-5 group">
+                  <label for="difficulty" className="block mb-2 text-sm font-medium text-white">Select badge difficulty </label>
+                  <select id="difficulty" className="border text-sm rounded-lg block w-full p-2.5 bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500">
+                    { ['Easy', 'Medium', 'Hard', 'Expert', 'Extreme'].map(d => (
+                    <option key={d} value={d}>
+                      {d}
+                      </option>
+                      ))}
+                  </select>
+                </div>
+                <div className="relative z-0 w-full mb-5 group">
+                  <label for="level" className="block mb-2 text-sm font-medium text-white">Select badge level </label>
+                  <select id="level" className="border text-sm rounded-lg block w-full p-2.5 bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500">
+                    { ['Amateur', 'Intermediate', 'Professional'].map(d => (
+                    <option key={d} value={d}>
+                    {d}
+                    </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            <button type="submit" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Submit</button>
+          </form>
+        </div>
+      );
       case 'Import':
         return (
           <div className="flex flex-col lg:flex-row justify-between gap-6 mb-6">
