@@ -97,8 +97,8 @@ function Navbar() {
     router.push("/profile");
   };
 
-  const handleAudit = async (userData) => {
-    router.push("/audit");
+  const handlebadgeadmin = async (userData) => {
+    router.push("/badgeadmin");
   };
 
   const toggleDropdown = () => {
@@ -292,7 +292,7 @@ function Navbar() {
                         onClick={handleAudit}
                         className="block px-2 py-2 w-full text-left hover:bg-gray-400 transition-colors rounded-lg"
                       >
-                        Audit
+                        Badge Admin
                       </button>
                     </li>
                     <li className="bg-slate-200 rounded-lg">
@@ -367,6 +367,13 @@ function Navbar() {
               className="text-gray-400 text-2xl hover:text-white"
             >
               Contact Us
+            </Link>
+            <Link
+              href="/badgeadmin"
+              onClick={() => setIsSidenavOpen(false)}
+              className="text-gray-400 text-2xl hover:text-white"
+            >
+              Badge Admin
             </Link>
           </div>
         </div>
