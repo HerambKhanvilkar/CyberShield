@@ -292,14 +292,16 @@ function Navbar() {
                         Profile
                       </button>
                     </li>
-                    <li className="bg-slate-200 rounded-lg">
-                      <button
-                        onClick={handlebadgeadmin}
-                        className="block px-2 py-2 w-full text-left hover:bg-gray-400 transition-colors rounded-lg"
-                      >
-                        Badge Admin
-                      </button>
-                    </li>
+                    {user.isAdmin && (
+                      <li className="bg-slate-200 rounded-lg">
+                        <button
+                          onClick={handlebadgeadmin}
+                          className="block px-2 py-2 w-full text-left hover:bg-gray-400 transition-colors rounded-lg"
+                        >
+                          Badge Admin
+                        </button>
+                      </li>
+                    )}
                     <li className="bg-slate-200 rounded-lg">
                       <button
                         onClick={handleSignOut}
