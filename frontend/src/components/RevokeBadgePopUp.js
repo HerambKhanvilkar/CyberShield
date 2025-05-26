@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { MinusCircle} from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -90,7 +91,7 @@ const BadgeAssignmentDialog = ({ user, updateUserDetails }) => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <Button className="bg-[#530006] border-[#530006] mx-2" variant="outline" onClick={handleOpen}>
-        Revoke Badge
+        <MinusCircle/>
       </Button>
       {isOpen && (
       <DialogContent className="max-w-md bg-blue-950/30 backdrop-blur-md shadow-lg rounded-md">

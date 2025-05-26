@@ -1,6 +1,7 @@
-// components/UserDetailsView.js
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Pencil } from "lucide-react";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 function EditableField({ label, value, onChange }) {
   const [editing, setEditing] = useState(false);
@@ -11,10 +12,11 @@ function EditableField({ label, value, onChange }) {
       <div className="relative">
         <input
           type="text"
-          className={`w-full p-2 pr-10 rounded bg-[#1A1B2E] text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 ${!editing ? "cursor-not-allowed bg-opacity-70" : ""}`}
+          className={`w-full p-2 pr-10 rounded bg-[#1A1B2E] text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 
+          ${!editing ? "cursor-not-allowed bg-opacity-70" : ""}`}
           value={value}
           disabled={!editing}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => editing && onChange(e.target.value)}
         />
         <Pencil
           className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 cursor-pointer"
@@ -27,18 +29,61 @@ function EditableField({ label, value, onChange }) {
 
 function UserDetailsView({ selectedUser, updateUserDetails }) {
   const [form, setForm] = useState({
-    firstName: selectedUser?.firstName || "",
-    lastName: selectedUser?.lastName || "",
-    email: selectedUser?.email || "",
+    firstName: "",
+    lastName: "",
+    email: "",
     password: "",
   });
+
+  useEffect(() => {
+    if (selectedUser) {
+      setForm({
+        firstName: selectedUser.firstName || "",
+        lastName: selectedUser.lastName || "",
+        email: selectedUser.email || "",
+        password: "",
+      });
+    }
+  }, [selectedUser]);
 
   const handleChange = (key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleSave = () => {
-    updateUserDetails({ ...selectedUser, ...form });
+  const handleSave = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const url = `${process.env.SERVER_URL}/user/info`;
+
+      // Prepare request body with changed fields only
+      const body = { email: form.email };
+      if (form.firstName.trim()) body.firstName = form.firstName;
+      if (form.lastName.trim()) body.lastName = form.lastName;
+      if (form.password.trim()) body.password = form.password;
+
+      const response = await axios.post(url, body, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        timeout: 10000,
+      });
+
+      const updatedUser = response.data.user;
+
+      updateUserDetails(form.email, updatedUser); // Let parent know
+      toast.success(
+        <div>
+          Updated user <strong style={{ color: "#00CBF0" }}>{updatedUser.firstName}</strong>!
+        </div>
+      );
+
+      // Reset password after saving for safety
+      setForm((prev) => ({ ...prev, password: "" }));
+    } catch (error) {
+      console.error("Error updating user:", error);
+      toast.error("Failed to update user.");
+    }
   };
 
   if (!selectedUser) {

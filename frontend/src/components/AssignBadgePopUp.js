@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
+import { PlusCircle } from 'lucide-react';
 import axios from 'axios';
 import {
   Dialog,
@@ -9,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 
 import { Button } from "@/components/ui/button";
+import { LucideAArrowDown } from 'lucide-react';
 
 const BadgeAssignmentDialog = ({ user, updateUserDetails }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -94,7 +96,7 @@ const BadgeAssignmentDialog = ({ user, updateUserDetails }) => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <Button className="mx-2 bg-[#004122] border-[#004122]" variant="outline" onClick={handleOpen}>
-        Assign Badge
+        <PlusCircle/>
       </Button>
       {isOpen && (
       <DialogContent className="max-w-md bg-blue-950/30 backdrop-blur-md shadow-lg rounded-md">

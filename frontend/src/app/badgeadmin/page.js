@@ -38,42 +38,38 @@ export default function SettingsPage() {
   };
 
   
-  const updateUserDetails = (email, newUser) => {
-    console.log("updateUserDetails", email, newUser);
-      setSearchResults((prevUsers) =>
-        prevUsers.map((user) =>
-          user.email === email ? newUser : user
-        )
-      );
-  };
+const updateUserDetails = (email, updatedUser) => {
+  setUsers(prev =>
+    prev.map(user => (user.email === email ? updatedUser : user))
+  );
+};
 
   const handleDownload = async () => {
     const apiUrl = process.env.SERVER_URL + '/users/sample';
+      try {
+        const token = localStorage.getItem("accessToken");
+        const response = await axios.get(apiUrl, {
+              responseType: 'blob', // Important for handling binary data
+              headers: {
+                  Authorization: `Bearer ${token}`, // Add the token to the headers
+              },
+          });
 
-        try {
-          const token = localStorage.getItem("accessToken");
-          const response = await axios.get(apiUrl, {
-                responseType: 'blob', // Important for handling binary data
-                headers: {
-                    Authorization: `Bearer ${token}`, // Add the token to the headers
-                },
-            });
-
-            const url = window.URL.createObjectURL(new Blob([response.data])); // Create a URL for the Blob
-            toast.success("Sample CVS downloaded!");
-            const a = document.createElement('a'); // Create an anchor element
-            a.style.display = 'none';
-            a.href = url;
-            a.download = 'users_sample_data.csv'; // Set the file name
-            document.body.appendChild(a); // Append the anchor to the body
-            a.click(); // Programmatically click the anchor to trigger the download
-            window.URL.revokeObjectURL(url); // Clean up the URL object
-            document.body.removeChild(a); // Remove the anchor from the document
-        } catch (error) {
-            console.error('There was a problem with the download operation:', error);
-            toast.error("Something went wrong!");
-        }
-  }
+          const url = window.URL.createObjectURL(new Blob([response.data])); // Create a URL for the Blob
+          toast.success("Sample CVS downloaded!");
+          const a = document.createElement('a'); // Create an anchor element
+          a.style.display = 'none';
+          a.href = url;
+          a.download = 'users_sample_data.csv'; // Set the file name
+          document.body.appendChild(a); // Append the anchor to the body
+          a.click(); // Programmatically click the anchor to trigger the download
+          window.URL.revokeObjectURL(url); // Clean up the URL object
+          document.body.removeChild(a); // Remove the anchor from the document
+      } catch (error) {
+          console.error('There was a problem with the download operation:', error);
+          toast.error("Something went wrong!");
+      }
+    }
 
   // File Upload Code
   const [file, setFile] = useState(null);
@@ -117,49 +113,49 @@ export default function SettingsPage() {
       case 'Users':
         return (
           <div className="p-4 rounded-xl bg-slate-900/60 backdrop-blur-xl shadow-lg border border-gray-700">
-  {/* Top Row: Search + Pagination */}
-  <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-    <div className="flex-1">
-      <SearchBox onSearch={handleSearch} />
-    </div>
-    <div className="flex-none">
-      <UsersPagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-      />
-    </div>
-  </div>
+          {/* Top Row: Search + Pagination */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+            <div className="flex-1">
+              <SearchBox onSearch={handleSearch} />
+            </div>
+            <div className="flex-none">
+              <UsersPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          </div>
 
-  {/* Main Content: Left = User List | Right = User Details */}
-  <div className="flex flex-col md:flex-row gap-4">
-    {/* Left: User List */}
-    <div className="w-full md:w-1/3 bg-slate-800/60 rounded-lg p-2 border border-gray-700">
-      <h2 className="text-white font-semibold mb-2">User List</h2>
-      <ScrollArea className="h-[350px] pr-2">
-        {Array.isArray(searchResults) && searchResults.length > 0 ? (
-          searchResults.map((user, index) => (
-            <UserBlock
-              key={index}
-              className="block mb-2"
-              data={user}
-              updateUserDetails={updateUserDetails}
-              onSelect={() => setSelectedUser(user)}
-            />
-          ))
-        ) : (
-          <p className="text-gray-400">No data available.</p>
-        )}
-      </ScrollArea>
-    </div>
+          {/* Main Content: Left = User List | Right = User Details */}
+          <div className="flex flex-col md:flex-row gap-4">
+            {/* Left: User List */}
+            <div className="w-full max-w-full md:w-1/3 bg-slate-800/60 rounded-lg p-2 border border-gray-700">
+              <h2 className="text-white font-semibold mb-2">User List</h2>
+              <ScrollArea className="h-[350px] pr-2">
+                {Array.isArray(searchResults) && searchResults.length > 0 ? (
+                  searchResults.map((user, index) => (
+                    <UserBlock
+                      key={index}
+                      className="block w-full mb-2"
+                      data={user}
+                      updateUserDetails={updateUserDetails}
+                      onSelect={() => setSelectedUser(user)}
+                    />
+                  ))
+                ) : (
+                  <p className="text-gray-400">No data available.</p>
+                )}
+              </ScrollArea>
+            </div>
 
-    {/* Right: User Details (replace this with your final enhanced user details section) */}
-    <div className="w-full md:w-2/3 bg-slate-800/60 rounded-lg p-4 border border-gray-700">
-      {/* Mount your user details JSX here */}
-      <UserDetailsView selectedUser={selectedUser} updateUserDetails={updateUserDetails} />
-    </div>
-  </div>
-</div>
+            {/* Right: User Details (replace this with your final enhanced user details section) */}
+            <div className="w-full md:w-2/3 bg-slate-800/60 rounded-lg p-4 border border-gray-700">
+              {/* Mount your user details JSX here */}
+              <UserDetailsView selectedUser={selectedUser} updateUserDetails={updateUserDetails} />
+            </div>
+          </div>
+        </div>
 
         );
       case 'Badges':
