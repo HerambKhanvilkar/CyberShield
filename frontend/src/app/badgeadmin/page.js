@@ -147,7 +147,7 @@ const updateUserDetails = (email, updatedUser) => {
             {/* Left: User List */}
             <div className="w-full md:w-1/3 bg-slate-800/60 rounded-lg p-2 border border-gray-700">
               <h2 className="text-white font-semibold mb-2">User List</h2>
-              <ScrollArea className="h-[350px] pr-2 overflow-y-auto">
+              <ScrollArea className="h-[500px] pr-2 overflow-y-auto">
                 <div className="flex flex-col space-y-2 w-full">
                   {Array.isArray(searchResults) && searchResults.length > 0 ? (
                     searchResults.map((user, index) => (
@@ -489,9 +489,7 @@ const updateUserDetails = (email, updatedUser) => {
     <>
       <Navbar />
       <div className="min-h-full p-6">
-        <h1 className="text-2xl font-bold mb-4">Admin</h1>
-
-        <div className="border-b border-gray-300 mb-6 flex flex-wrap gap-4 text-sm">
+        <div className="border-b border-gray-300 mb-2 flex flex-wrap gap-4 text-sm pt-2">
           {TABS.map((tab) => (
             <button
               key={tab}

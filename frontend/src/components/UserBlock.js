@@ -19,16 +19,9 @@ function UserBlock({ data, updateUserDetails, onSelect }) {
       {/* Left Side */}
       <div className="flex flex-col w-2/3">
         <h1 className="text-base md:text-l font-bold text-white-700">{data?.firstName} {data?.lastName}
-          {/* <span className="px-2 text-base md:text-l font-thin font-mono mt-2 text-gray-400">{"(" + data?.email + ")" }</span> */}
+          <span className="px-2 text-base md:text-l font-thin font-mono mt-2 text-gray-400">{"(" + data?.email + ")" }</span>
         </h1>
         <p className="text-base mt-2 font-mono text-gray-400">Badges: {data?.badges?.length}</p>
-      </div>
-
-      {/* Right Side */}
-      <div className="flex flex-col lg:flex-row justify-between pl-4 w:1/3 space-y-2 mt-4 ">
-        <AssignBadgePopUp user={data} updateUserDetails={updateUserDetails} />
-        <RevokeBadgePopUp user={data} updateUserDetails={updateUserDetails} />
-        <DeleteUserPopUp user={data} updateUserDetails={updateUserDetails} />
       </div>
     </div>
   );
