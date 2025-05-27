@@ -277,11 +277,15 @@ function BadgeCreationForm () {
       <li key={index}>
         <div className="flex items-center ps-2 rounded-sm hover:bg-gray-600">
           <input id="checkbox-item-11"    
-                      name="skillsEarned"
-                      value={skill}
+            name="skillsEarned"
+            value={skill}
             checked={formData.skillsEarned.includes(skill)}
             onChange={handleChange}
-                      type="checkbox" value={skill} className="w-4 h-4 text-blue-600 rounded-sm  ring-offset-gray-700 focus:ring-offset-gray-700 focus:ring-2 bg-gray-600 border-gray-500"/>
+            type="checkbox"
+            className="w-4 h-4 text-blue-600 rounded-sm ring-offset-gray-700 focus:ring-offset-gray-700 focus:ring-2 bg-gray-600 border-gray-500"
+            aria-label={skill}
+            aria-checked={formData.skillsEarned.includes(skill)}
+          />
           <label htmlFor="checkbox-item-11" className="w-full py-2 ms-2 text-sm font-medium rounded-sm text-gray-300">{skill}</label>
         </div>
       </li>
