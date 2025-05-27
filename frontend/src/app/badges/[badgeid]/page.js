@@ -48,44 +48,7 @@ const BadgeId = () => {
         console.error('Error fetching badges:', err);
         setError('Failed to load badges from database. Please try again later.');
         setIsDataLoading(false);
-        setBadges([
-          {
-            id: 1,
-            name: 'Cyber Titan Level I',
-            image: '/images/img1.png',
-            difficulty: 'Easy',
-            description: 'Awarded for completing basic cybersecurity challenges.',
-            category: 'Amateur',
-            skillsEarned: ['Basic Security', 'Web Awareness'],
-          },
-          {
-            id: 2,
-            name: 'Cyber Warrior',
-            image: '/images/img2.png',
-            difficulty: 'Medium',
-            description: 'Earned after passing the second level of security defenses.',
-            category: 'Intermediate',
-            skillsEarned: ['Network Security', 'Threat Identification'],
-          },
-          {
-            id: 3,
-            name: 'Cyber Defender',
-            image: '/images/img3.png',
-            difficulty: 'Medium',
-            description: 'Awarded for identifying and mitigating cyber threats.',
-            category: 'Intermediate',
-            skillsEarned: ['Threat Prevention', 'Security Policy'],
-          },
-          {
-            id: 4,
-            name: 'Cyber Elite',
-            image: '/images/img4.png',
-            difficulty: 'Hard',
-            description: 'For advanced penetration testing and security analysis.',
-            category: 'Professional',
-            skillsEarned: ['Penetration Testing', 'Vulnerability Assessment'],
-          },
-        ]);
+        setBadges([]);
       }
     };
 
@@ -146,69 +109,94 @@ const BadgeId = () => {
     );
   }
 
-  // Badge Actions Component
-  const BadgeActions = () => (
-    <div className="flex flex-col space-y-4">
-      {earnedBadge ? (
-        <>
-          <div className="flex items-center space-x-2 bg-green-700 rounded-md p-3 shadow-md">
-            <Award className="w-6 h-6" />
-            <span>
-              {earnedBadge.earnedDate
-                ? `You earned this badge on ${new Date(earnedBadge.earnedDate).toLocaleDateString()}`
-                : 'Not Earned Yet'}
-            </span>
-          </div>
+  //badge Actions Component
+  const BadgeActions = ({ currentBadge, isAuthenticated }) => {
+    const [earnedBadge, setEarnedBadge] = useState(null);
+    const [showLoginMessage, setShowLoginMessage] = useState(false);
+    const [showShareSuccess, setShowShareSuccess] = useState(false);
+    const [shareUrl, setShareUrl] = useState('');
 
+    useEffect(() => {
+      const userStr = localStorage.getItem('user');
+      if (!userStr) return;
+
+      try {
+        const user = JSON.parse(userStr);
+        const userBadges = user.badges || [];
+
+        const match = userBadges.find((b) => b.id === currentBadge.id);
+        if (match) {
+          setEarnedBadge(match);
+        }
+      } catch (err) {
+        console.error('Failed to parse user from localStorage', err);
+      }
+    }, [currentBadge.id]);
+
+    const handleGenerateShareLink = () => {
+      // if (!isAuthenticated) {
+      //   setShowLoginMessage(true);
+      //   setTimeout(() => setShowLoginMessage(false), 3000);
+      //   return;
+      // }
+
+      const userStr = localStorage.getItem('user');
+      if (!userStr) return;
+
+      const user = JSON.parse(userStr);
+      const shareURL = `${window.location.origin}/badge/shared/${currentBadge.id}/${user.username}/${Math.floor(Date.now() / 1000)}`;
+      setShareUrl(shareURL);
+      setShowShareSuccess(true);
+      setTimeout(() => setShowShareSuccess(false), 3000);
+      navigator.clipboard.writeText(shareURL);
+    };
+
+    return (
+      <div className="flex flex-col space-y-4">
+        {earnedBadge ? (
+          <>
+            <div className="flex items-center space-x-2 bg-green-700 rounded-md p-3 shadow-md">
+              <Award className="w-6 h-6" />
+              <span>
+                {earnedBadge.earnedDate
+                  ? `You earned this badge on ${new Date(earnedBadge.earnedDate).toLocaleDateString()}`
+                  : 'You have earned this badge'}
+              </span>
+            </div>
+
+            <button
+              className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 transition rounded-md p-3 shadow-md"
+              onClick={handleGenerateShareLink}
+            >
+              <Share2 className="w-6 h-6" />
+              <span>Generate Share Link</span>
+            </button>
+          </>
+        ) : (
           <button
-            className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 transition rounded-md p-3 shadow-md"
-            onClick={() => {
-              if (!isAuthenticated) {
-                setShowLoginMessage(true);
-                setTimeout(() => setShowLoginMessage(false), 3000);
-                return;
-              }
-
-              const user = localStorage.getItem('user');
-              const userObject = user ? JSON.parse(user) : null;
-              if (!userObject) return;
-
-              const shareURL = `${window.location.origin}/badge/shared/${currentBadge.id}/${userObject.username}/${Math.floor(
-                Date.now() / 1000
-              )}`;
-              setShareUrl(shareURL);
-              setShowShareSuccess(true);
-              setTimeout(() => setShowShareSuccess(false), 3000);
-              navigator.clipboard.writeText(shareURL);
-            }}
+            className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 transition rounded-md p-3 shadow-md"
+            onClick={() => (window.location.href = 'https://learn.deepcytes.io/')}
           >
-            <Share2 className="w-6 h-6" />
-            <span>Generate Share Link</span>
+            <Award className="w-6 h-6" />
+            <span>Get this Badge</span>
           </button>
-        </>
-      ) : (
-        <button
-          className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 transition rounded-md p-3 shadow-md"
-          onClick={() => (window.location.href = 'https://learn.deepcytes.io/')}
-        >
-          <Award className="w-6 h-6" />
-          <span>Get this Badge</span>
-        </button>
-      )}
+        )}
 
-      {showShareSuccess && (
-        <div className="bg-green-600 text-white p-2 rounded-md text-center animate-pulse">
-          Link generated! Share URL copied to clipboard.
-        </div>
-      )}
+        {showShareSuccess && (
+          <div className="bg-green-600 text-white p-2 rounded-md text-center animate-pulse">
+            Link generated! Share URL copied to clipboard.
+          </div>
+        )}
 
-      {showLoginMessage && (
-        <div className="bg-red-600 text-white p-2 rounded-md text-center animate-pulse">
-          Please log in to generate a share link.
-        </div>
-      )}
-    </div>
-  );
+        {showLoginMessage && (
+          <div className="bg-red-600 text-white p-2 rounded-md text-center animate-pulse">
+            Please log in to generate a share link.
+          </div>
+        )}
+      </div>
+    );
+  };
+
 
   // Badge Metrics Component
   const BadgeMetrics = () => (
@@ -385,7 +373,7 @@ const BadgeId = () => {
 
           <section className="md:w-2/6 space-y-6">
             <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Badge Actions</h2>
-            <BadgeActions />
+            <BadgeActions currentBadge={currentBadge} isAuthenticated={isAuthenticated} />
             <RelatedBadges />
           </section>
         </div>
@@ -397,7 +385,7 @@ const BadgeId = () => {
             <div className="flex flex-col items-center w-1/2 space-y-4">
               <BadgeImage />
               <div className="flex flex-wrap justify-center gap-2">
-                <BadgeActions />
+                <BadgeActions currentBadge={currentBadge} isAuthenticated={isAuthenticated} />
               </div>
             </div>
         &nbsp;
@@ -430,7 +418,7 @@ const BadgeId = () => {
           {/* Badge Actions */}
           <section className="space-y-4">
             <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Badge Actions</h2>
-            <BadgeActions />
+            <BadgeActions currentBadge={currentBadge} isAuthenticated={isAuthenticated} />
           </section>
         &nbsp;
         &nbsp;
