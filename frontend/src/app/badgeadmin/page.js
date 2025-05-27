@@ -1,7 +1,8 @@
 'use client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import React, { useState, useRef } from 'react';
+import React, { useState,useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { FaTrashAlt } from 'react-icons/fa';
 import UsersPagination from '@/components/UsersPagination';
 import UserBlock from '@/components/UserBlock';
@@ -22,6 +23,8 @@ export default function SettingsPage() {
   const [searchResults, setSearchResults] = useState([]); // Initialize as an empty array
   const [selectedUser, setSelectedUser] = useState(null);
   const [activeTab, setActiveTab] = useState('Users');
+  const [redirectCountdown, setRedirectCountdown] = useState(5); // 5-second timer
+  const router = useRouter();
 
   // Page status
   const [currentPage, setCurrentPage] = useState(1);
@@ -133,7 +136,7 @@ const updateUserDetails = (email, updatedUser) => {
             {/* Left: User List */}
             <div className="w-full md:w-1/3 bg-slate-800/60 rounded-lg p-2 border border-gray-700">
               <h2 className="text-white font-semibold mb-2">User List</h2>
-              <ScrollArea className="h-[350px] pr-2 overflow-y-auto">
+              <ScrollArea className="h-[500px] pr-2 overflow-y-auto">
                 <div className="flex flex-col space-y-2 w-full">
                   {Array.isArray(searchResults) && searchResults.length > 0 ? (
                     searchResults.map((user, index) => (
@@ -247,13 +250,54 @@ const updateUserDetails = (email, updatedUser) => {
     }
   };
 
+
+    // Simulate fetching user (replace this with your actual user fetching logic)
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem('user'));
+    setUserInfo(storedUser);
+  }, []);
+
+  // Countdown and redirect logic
+  useEffect(() => {
+    if (userInfo && (!userInfo.isAdmin || !userInfo)) {
+      const timer = setInterval(() => {
+        setRedirectCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            router.push('/');
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [userInfo]);
+
+  // Show timer message if not admin
+  if (userInfo && !userInfo.isAdmin) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white">
+        <h1 className="text-2xl font-semibold mb-4">Access Denied</h1>
+        <p>You will be redirected to the homepage in {redirectCountdown} seconds...</p>
+      </div>
+    );
+  }
+
+  // If still loading or no user yet, show loading
+  if (!userInfo) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
   return (
     <>
       <Navbar />
       <div className="min-h-full p-6">
-        <h1 className="text-2xl font-bold mb-4">Admin</h1>
-
-        <div className="border-b border-gray-300 mb-6 flex flex-wrap gap-4 text-sm">
+        <div className="border-b border-gray-300 mb-2 flex flex-wrap gap-4 text-sm pt-2">
           {TABS.map((tab) => (
             <button
               key={tab}

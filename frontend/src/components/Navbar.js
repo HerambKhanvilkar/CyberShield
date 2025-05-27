@@ -292,14 +292,16 @@ function Navbar() {
                         Profile
                       </button>
                     </li>
-                    <li className="bg-slate-200 rounded-lg">
-                      <button
-                        onClick={handlebadgeadmin}
-                        className="block px-2 py-2 w-full text-left hover:bg-gray-400 transition-colors rounded-lg"
-                      >
-                        Badge Admin
-                      </button>
-                    </li>
+                    {user && user.isAdmin && (
+                      <li className="bg-slate-200 rounded-lg">
+                        <button
+                          onClick={handlebadgeadmin}
+                          className="block px-2 py-2 w-full text-left hover:bg-gray-400 transition-colors rounded-lg"
+                        >
+                          Badge Admin
+                        </button>
+                      </li>
+                    )}
                     <li className="bg-slate-200 rounded-lg">
                       <button
                         onClick={handleSignOut}
@@ -373,13 +375,16 @@ function Navbar() {
             >
               Contact Us
             </Link>
-            <Link
-              href="/badgeadmin"
-              onClick={() => setIsSidenavOpen(false)}
-              className="text-gray-400 text-2xl hover:text-white"
-            >
-              Badge Admin
-            </Link>
+            {user && user.isAdmin && (
+              <li className="bg-slate-200 rounded-lg">
+                <button
+                  onClick={handlebadgeadmin}
+                  className="block px-2 py-2 w-full text-left hover:bg-gray-400 transition-colors rounded-lg"
+                >
+                  Badge Admin
+                </button>
+              </li>
+            )}
           </div>
         </div>
       </nav>
