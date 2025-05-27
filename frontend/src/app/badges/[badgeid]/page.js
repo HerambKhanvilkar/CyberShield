@@ -1,5 +1,5 @@
-"use client"
-import React, { useState, useEffect, useContext } from 'react';
+"use client";
+import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ChevronLeft, ChevronRight, Award, Share2, Shield, Code } from 'lucide-react';
 import axios from 'axios';
@@ -22,22 +22,20 @@ const BadgeId = () => {
 
   const { isAuthenticated, user } = useAuthContext();
 
-
   useEffect(() => {
     const fetchBadges = async () => {
       try {
         setIsDataLoading(true);
-
         const responseBadges = await axios.get(`${process.env.SERVER_URL}/badges`);
         setBadges(responseBadges.data.badges);
 
         if (user?.username) {
           const token = localStorage.getItem('token');
           const responseEarnedBadges = await axios.get(
-            `${process.env.SERVER_URL}api/badges-earned`,
+            `${process.env.SERVER_URL}/badges-earned`,
             {
               headers: {
-                Authorization: Bearer`${token}`,
+                Authorization: `Bearer ${token}`,
                 'Content-Type': 'application/json',
               },
               timeout: 10000,
@@ -134,7 +132,7 @@ const BadgeId = () => {
           skillsEarned: [],
         };
 
-  const earnedBadge = earnedBadges.find((badge) => badge.id === currentBadge.id);
+  const earnedBadge = earnedBadges.find((badge) => badge.badgeId === currentBadge.id);
 
   if (isDataLoading) {
     return (
@@ -157,7 +155,7 @@ const BadgeId = () => {
             <Award className="w-6 h-6" />
             <span>
               {earnedBadge.earnedDate
-                ? `Earned on ${new Date(earnedBadge.earnedDate).toLocaleDateString()}`
+                ? `You earned this badge on ${new Date(earnedBadge.earnedDate).toLocaleDateString()}`
                 : 'Not Earned Yet'}
             </span>
           </div>
@@ -237,9 +235,7 @@ const BadgeId = () => {
     <div className="space-y-2">
       <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Badge Details</h2>
       <p className="text-gray-300 leading-relaxed">
-        This badge recognizes excellence in cybersecurity fundamentals. Earners have
-        demonstrated practical knowledge of core security concepts and have successfully
-        applied these skills in various defensive scenarios.
+        {currentBadge.description}
       </p>
     </div>
   );
@@ -417,7 +413,7 @@ const BadgeId = () => {
                       <Award className="w-4 h-4" />
                       <span>
                         {earnedBadge.earnedDate
-                          ? `Earned on ${new Date(earnedBadge.earnedDate).toLocaleDateString()}`
+                          ? `You earned this badge on ${new Date(earnedBadge.earnedDate).toLocaleDateString()}`
                           : 'Earned'}
                       </span>
                     </button>
