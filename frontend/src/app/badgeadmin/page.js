@@ -1,7 +1,8 @@
 'use client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import React, { useState, useRef } from 'react';
+import React, { useState,useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { FaTrashAlt } from 'react-icons/fa';
 import UsersPagination from '@/components/UsersPagination';
 import UserBlock from '@/components/UserBlock';
@@ -21,6 +22,8 @@ export default function SettingsPage() {
   const [searchResults, setSearchResults] = useState([]); // Initialize as an empty array
   const [selectedUser, setSelectedUser] = useState(null);
   const [activeTab, setActiveTab] = useState('Users');
+  const [redirectCountdown, setRedirectCountdown] = useState(5); // 5-second timer
+  const router = useRouter();
 
   // Page status
   const [currentPage, setCurrentPage] = useState(1);
@@ -438,6 +441,49 @@ const updateUserDetails = (email, updatedUser) => {
         return null;
     }
   };
+
+
+    // Simulate fetching user (replace this with your actual user fetching logic)
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem('user'));
+    setUserInfo(storedUser);
+  }, []);
+
+  // Countdown and redirect logic
+  useEffect(() => {
+    if (userInfo && (!userInfo.isAdmin || !userInfo)) {
+      const timer = setInterval(() => {
+        setRedirectCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            router.push('/');
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [userInfo]);
+
+  // Show timer message if not admin
+  if (userInfo && !userInfo.isAdmin) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white">
+        <h1 className="text-2xl font-semibold mb-4">Access Denied</h1>
+        <p>You will be redirected to the homepage in {redirectCountdown} seconds...</p>
+      </div>
+    );
+  }
+
+  // If still loading or no user yet, show loading
+  if (!userInfo) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white">
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <>
