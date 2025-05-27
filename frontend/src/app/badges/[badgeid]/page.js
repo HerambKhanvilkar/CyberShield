@@ -212,20 +212,26 @@ const BadgeId = () => {
 
   // Badge Metrics Component
   const BadgeMetrics = () => (
-    <div className="w-full flex justify-around mt-4 space-x-4 text-center">
-      <div className="bg-gray-800 rounded-md p-3 flex-1 shadow-md">
-        <div className="text-sm uppercase text-gray-400">Level</div>
-        <div className="text-lg font-semibold">{currentBadge.level || 'N/A'}</div>
-      </div>
-      <div className="bg-gray-800 rounded-md p-3 flex-1 shadow-md">
-        <div className="text-sm uppercase text-gray-400">Branch</div>
-        <div className="text-lg font-semibold">
-          {currentBadge.skillsEarned[0] || 'General'}
+    <div className="w-full flex justify-around mt-4 text-center">
+      <div className="p-2 flex-1 shadow-md">
+        <div className='bg-gray-800 rounded-md p-2'>
+          <div className="text-sm uppercase text-gray-400">Level</div>
+          <div className="text-lg font-semibold">{currentBadge.level || 'N/A'}</div>
         </div>
       </div>
-      <div className="bg-gray-800 rounded-md p-3 flex-1 shadow-md">
-        <div className="text-sm uppercase text-gray-400">Earners</div>
-        <div className="text-lg font-semibold">43</div>
+      <div className=" p-2 flex-1 shadow-md">
+        <div className='bg-gray-800 rounded-md p-2 md:p-4'>
+          <div className="text-sm uppercase text-gray-400">Branch</div>
+          <div className="text-lg font-semibold">
+            {currentBadge.skillsEarned[0] || 'General'}
+          </div>
+        </div>  
+      </div>
+      <div className=" p-2 flex-1 shadow-md">
+        <div className='bg-gray-800 rounded-md p-2 md:p-4'>
+          <div className="text-sm uppercase text-gray-400">Earners</div>
+          <div className="text-lg font-semibold">43</div>
+        </div>
       </div>
     </div>
   );
@@ -244,7 +250,7 @@ const BadgeId = () => {
   const SkillsEarned = () => (
     <div className="space-y-2">
       <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Skills Earned</h2>
-      <div className="grid grid-cols-1 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         {currentBadge.skillsEarned?.map((skill, idx) => (
           <div
             key={idx}
@@ -305,12 +311,12 @@ const BadgeId = () => {
           onClick={() =>
             setCurrentBadgeIndex((prev) => (prev === 0 ? badges.length - 1 : prev - 1))
           }
-          className="absolute left-0 p-2 bg-gray-700 rounded-full hover:bg-gray-600 transition"
+          className="absolute z-100 left-0 p-2 bg-gray-700 rounded-full hover:bg-gray-600 transition"
         >
           <ChevronLeft className="w-6 h-6" />
         </button>
 
-        <div className="w-64 h-64 rounded-xl bg-gradient-to-tr from-indigo-700 via-purple-600 to-pink-600 shadow-lg flex items-center justify-center relative overflow-hidden">
+        <div className="w-64 h-64 rounded-xl z-0 bg-gradient-to-tr from-indigo-700 via-purple-600 to-pink-600 shadow-lg flex items-center justify-center relative overflow-hidden">
           {!isLoading ? (
             <>
               <img
@@ -363,20 +369,21 @@ const BadgeId = () => {
       <main className="flex-grow">
         {/* Desktop Layout */}
         <div className="hidden md:hidden lg:flex md:flex-row max-w-7xl mx-auto p-6 gap-6">
-          {/* Left Column */}
-          <section className="md:w-1/4 space-y-6">
+          <section className="md:w-2/6 space-y-6">
             <SkillsEarned />
             <BadgeDescription />
           </section>
+          &nbsp;
+          &nbsp;
 
-          {/* Center Column */}
-          <section className="md:w-2/4 flex flex-col items-center space-y-6">
+          <section className="md:w-2/6 flex flex-col items-center space-y-6">
             <BadgeImage />
             <BadgeMetrics />
           </section>
+          &nbsp;
+          &nbsp;
 
-          {/* Right Column */}
-          <section className="md:w-1/4 space-y-6">
+          <section className="md:w-2/6 space-y-6">
             <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Badge Actions</h2>
             <BadgeActions />
             <RelatedBadges />
@@ -385,150 +392,80 @@ const BadgeId = () => {
 
         {/* Tablet Layout */}
         <section className="hidden md:flex lg:hidden flex-col w-full gap-6 text-white">
-          {/* Top Row: Badge and Description */}
           <div className="flex w-full gap-6">
             {/* Badge and Badge Actions */}
             <div className="flex flex-col items-center w-1/2 space-y-4">
-              {/* Badge Image */}
-              <div className="w-48 h-48 rounded-xl bg-gradient-to-tr from-indigo-700 via-purple-600 to-pink-600 shadow-lg flex items-center justify-center relative overflow-hidden">
-                {!isLoading ? (
-                  <img
-                    src={currentBadge.image}
-                    alt={currentBadge.name}
-                    className="max-w-full max-h-full object-contain"
-                  />
-                ) : (
-                  <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-300 h-16 w-16 animate-spin"></div>
-                )}
-              </div>
-
-              {/* Badge Actions / Get this Badge as small buttons */}
+              <BadgeImage />
               <div className="flex flex-wrap justify-center gap-2">
-                {earnedBadge ? (
-                  <>
-                    <button
-                      className="flex items-center space-x-1 bg-green-700 hover:bg-green-800 rounded-md px-3 py-1 text-sm shadow"
-                      disabled
-                    >
-                      <Award className="w-4 h-4" />
-                      <span>
-                        {earnedBadge.earnedDate
-                          ? `You earned this badge on ${new Date(earnedBadge.earnedDate).toLocaleDateString()}`
-                          : 'Earned'}
-                      </span>
-                    </button>
-
-                    <button
-                      className="flex items-center space-x-1 bg-blue-600 hover:bg-blue-700 rounded-md px-3 py-1 text-sm shadow"
-                      onClick={() => {
-                        if (!isAuthenticated) {
-                          setShowLoginMessage(true);
-                          setTimeout(() => setShowLoginMessage(false), 3000);
-                          return;
-                        }
-                        const user = localStorage.getItem('user');
-                        const userObject = user ? JSON.parse(user) : null;
-                        if (!userObject) return;
-
-                        const shareURL = `${window.location.origin}/badge/shared/${currentBadge.id}/${userObject.username}/${Math.floor(
-                          Date.now() / 1000
-                        )}`;
-                        setShareUrl(shareURL);
-                        setShowShareSuccess(true);
-                        setTimeout(() => setShowShareSuccess(false), 3000);
-                        navigator.clipboard.writeText(shareURL);
-                      }}
-                    >
-                      <Share2 className="w-4 h-4" />
-                      <span>Share</span>
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    className="flex items-center space-x-1 bg-indigo-600 hover:bg-indigo-700 rounded-md px-3 py-1 text-sm shadow"
-                    onClick={() => (window.location.href = 'https://learn.deepcytes.io/')}
-                  >
-                    <Award className="w-4 h-4" />
-                    <span>Get Badge</span>
-                  </button>
-                )}
+                <BadgeActions />
               </div>
             </div>
+        &nbsp;
+        &nbsp;
 
             {/* Description */}
             <section className="w-1/2">
               <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Badge Details</h2>
               <p className="text-gray-300 leading-relaxed">{currentBadge.description}</p>
+              <SkillsEarned />
             </section>
           </div>
+        &nbsp;
+        &nbsp;
 
           {/* Bottom Row: Stats and Skills Side by Side */}
           <div className="flex w-full gap-6">
-            {/* Stats */}
             <section className="w-1/2 grid grid-cols-3 gap-4">
-              <div className="bg-gray-800 rounded-md p-3 shadow-md text-center">
-                <div className="text-sm uppercase text-gray-400">Level</div>
-                <div className="text-lg font-semibold">{currentBadge.level || 'N/A'}</div>
-              </div>
-              <div className="bg-gray-800 rounded-md p-3 shadow-md text-center">
-                <div className="text-sm uppercase text-gray-400">Branch</div>
-                <div className="text-lg font-semibold">{currentBadge.skillsEarned[0] || 'General'}</div>
-              </div>
-              <div className="bg-gray-800 rounded-md p-3 shadow-md text-center">
-                <div className="text-sm uppercase text-gray-400">Earners</div>
-                <div className="text-lg font-semibold">43</div>
-              </div>
+              <BadgeMetrics />
             </section>
-
-            {/* Skills Earned */}
+            
             <section className="w-1/2">
-              <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Skills Earned</h2>
-              <div className="grid grid-cols-1 gap-3">
-                {currentBadge.skillsEarned?.map((skill, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center bg-gray-800 rounded-md px-3 py-2 shadow-md"
-                  >
-                    {getSkillIcon(skill)}
-                    <span>{skill}</span>
-                  </div>
-                ))}
-              </div>
+              <RelatedBadges />
             </section>
           </div>
         </section>
 
         {/* Mobile Layout */}
-        <div className="flex sm:hidden flex-col max-w-sm mx-auto p-4 gap-6">
+        <div className="flex sm:hidden flex-col max-w-sm mx-auto p-4 gap-4">
           {/* Badge Actions */}
           <section className="space-y-4">
             <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Badge Actions</h2>
             <BadgeActions />
           </section>
-          
+        &nbsp;
+        &nbsp;
+
           {/* Badge Image */}
-          <section>
+          <section className="flex flex-col items-center">
             <BadgeImage />
             <div className="text-center text-sm text-gray-400 mt-2">
               {currentBadgeIndex + 1} of {badges.length} badges
             </div>
           </section>
-          
+        &nbsp;
+        &nbsp;
+
           {/* Badge Metrics */}
           <section>
             <BadgeMetrics />
           </section>
-          
+        &nbsp;
+        &nbsp;
+
           {/* Badge Description */}
           <section>
             <BadgeDescription />
           </section>
-          
+        &nbsp;
+        &nbsp;
+
           {/* Skills Earned */}
           <section>
             <SkillsEarned />
           </section>
-          
+        &nbsp;
+        &nbsp;
+
           {/* Related Badges */}
           <section>
             <RelatedBadges />
