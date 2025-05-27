@@ -10,6 +10,7 @@ const mongoSanitize = require("mongo-sanitize");
 const escapeHtml = require("escape-html");
 const serverRoutes = require("./routes/server");
 const authRoutes = require("./routes/authRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 const slowDown = require('express-slow-down');
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
@@ -102,6 +103,7 @@ app.use((req, res, next) => {
   app.set("server.timeout", 300000);
   app.use("/api/auth", authRoutes);
   app.use("/api", serverRoutes);
+  app.use("/api", adminRoutes);
   // app.use("/api/dashboard", strictLimiter, dashboardRoutes);
   // app.use("/api", strictLimiter, watchlistRoutes);
   // app.use("/api/audit", strictLimiter, auditRoutes);

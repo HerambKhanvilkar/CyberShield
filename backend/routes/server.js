@@ -7,16 +7,13 @@ const csv = require('csv-parser');
 const { Parser } = require('json2csv');
 const fs = require('fs');
 const path = require('path');
-
-
 // Set up multer for file uploads
 const upload = multer({ dest: '../uploads/' });
-
 // Import models from the models directory
 const User = require("../models/User");
 const Badge = require("../models/Badge");
+const BadgeImage = require("../models/BadgeImage");
 const BadgesEarned = require("../models/BadgesEarned");
-
 const { generateToken, authenticateJWT, isAdmin } = require('../middleware/auth');
 
 const getUsername = async (authHeader) => {
@@ -33,7 +30,6 @@ const getUsername = async (authHeader) => {
   return user.email
 }
 
-
 // Get all badges
 router.get("/badges", async (req, res) => {
   try {
@@ -44,6 +40,22 @@ router.get("/badges", async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
+
+// Endpoint to get badge images
+router.get("/badge/images/:id", async (req, res) => {
+    try {
+        const badgeImage = await BadgeImage.findOne({ id: req.params.id });
+        if (!badgeImage) {
+            return res.status(404).json({ message: "Image not found" });
+        }
+        res.set('Content-Type', badgeImage.image.contentType);
+        res.send(badgeImage.image);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+});
+
 
 // Get single badge by ID
 router.get("/badge/:id", async (req, res) => {
@@ -576,30 +588,5 @@ router.get('/users/sample', authenticateJWT, async (req, res) => {
   res.send(csv);
 });
 
-// upload badge
-router.post("/badge/import",authenticateJWT, upload.single('image'), async (req, res) => {
-  try {
-    var obj = {
-        id: req.body.id,
-        name: req.body.name,
-        description: req.body.desc,
-        difficulty: req.body.diff,
-        level: req.body.level,
-        vertical: req.body.vertical,
-        skillsEarned: req.body.skillsEarned,
-        img: {
-            data: fs.readFileSync(path.join(__dirname + '/uploads/' + req.file.filename)),
-            contentType: 'image/png'
-        }
-    };
-    const newBadge = new Badge(obj);
-    newBadge.save();
-    res.status(200).json({ message: 'Badge created successfully', data: newBadge });
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-});
 
 module.exports = router;

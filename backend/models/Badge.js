@@ -39,13 +39,13 @@ const BadgeSchema = new mongoose.Schema({
     required: true
   },
   skillsEarned: [{
-    type: String
+    type: String,
   }],
-  img: imgSchema,
+  /* img: imgSchema,
   createdAt: {
     type: Date,
     default: Date.now 
-  }
+  } */
 });
 
 module.exports = mongoose.model('Badge', BadgeSchema);
