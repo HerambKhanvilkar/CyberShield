@@ -109,7 +109,7 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
         <EditableField label="Email" value={form.email} onChange={(val) => handleChange("email", val)} />
         <EditableField label="Password" value={form.password} onChange={(val) => handleChange("password", val)} />
       </div>
-      <div className="flex mb-6 mr-2">
+      <div className="flex flex-col lg:flex-row mb-6 mr-2">
         <div className="flex w-1/3 items-center justify-start mb-2">
           <AssignBadgePopUp user={selectedUser} updateUserDetails={updateUserDetails} />
           <RevokeBadgePopUp user={selectedUser} updateUserDetails={updateUserDetails} />
