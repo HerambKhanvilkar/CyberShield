@@ -119,7 +119,7 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
           <h3 className="text-lg font-semibold mb-2">Badges</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {selectedUser.badges && selectedUser.badges.length > 0 ? (
-              selectedUser.badges.map((badge, index) => (
+              selectedUser?.badges?.map((badge, index) => (
                 <div key={index} className="flex flex-col items-center bg-[#1A1B2E] p-4 rounded-lg">
                 <img src={`./images/img${badge.badgeId}.png`} alt={`Badge ${badge.badgeId}`} className="w-16 h-16 mb-2" />
                   <span className="text-sm font-medium">{badge.name}</span>
