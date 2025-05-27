@@ -52,6 +52,7 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
         email: selectedUser.email || "",
         password: "",
       });
+      console.log("Selected user:", selectedUser);
     }
   }, [selectedUser]);
 
@@ -108,7 +109,7 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
         <EditableField label="Email" value={form.email} onChange={(val) => handleChange("email", val)} />
         <EditableField label="Password" value={form.password} onChange={(val) => handleChange("password", val)} />
       </div>
-      <div className="flex mb-6">
+      <div className="flex mb-6 mr-2">
         <div className="flex w-1/3 items-center justify-start mb-2">
           <AssignBadgePopUp user={selectedUser} updateUserDetails={updateUserDetails} />
           <RevokeBadgePopUp user={selectedUser} updateUserDetails={updateUserDetails} />
@@ -120,7 +121,7 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
             {selectedUser.badges && selectedUser.badges.length > 0 ? (
               selectedUser.badges.map((badge, index) => (
                 <div key={index} className="flex flex-col items-center bg-[#1A1B2E] p-4 rounded-lg">
-                  <img src={badge.image} alt={badge.name} className="w-16 h-16 mb-2" />
+                <img src={`./images/img${badge.badgeId}.png`} alt={`Badge ${badge.badgeId}`} className="w-16 h-16 mb-2" />
                   <span className="text-sm font-medium">{badge.name}</span>
                 </div>
               ))
