@@ -9,6 +9,7 @@ import { toast } from "react-toastify";
 export default function ProfilePage() {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedBadgeId, setSelectedBadgeId] = useState(null);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -31,17 +32,23 @@ export default function ProfilePage() {
         // Create badgeMap by id (not badgeId)
         const badgeMap = {};
         allBadges.forEach((badge) => {
-          badgeMap[badge.id] = badge;  // use badge.id as key
+          badgeMap[badge.id] = badge;
         });
 
-        // Enrich user badges - assuming user badges use badgeId to match id
+        // Enrich user badges
         const enrichedBadges = (user.badges || []).map((b) => ({
-          ...badgeMap[b.badgeId],  // badgeMap key is badge.id, user badge has badgeId
+          ...badgeMap[b.badgeId],
           badgeId: b.badgeId,
           earnedDate: b.earnedDate,
         }));
 
         setUserData({ ...user, badges: enrichedBadges });
+
+        // Set default selected badge to latest (first in list)
+        if (enrichedBadges.length > 0) {
+          setSelectedBadgeId(enrichedBadges[0].badgeId);
+        }
+
         setLoading(false);
       } catch (err) {
         console.error("Error fetching user data:", err);
@@ -61,6 +68,13 @@ export default function ProfilePage() {
     );
   }
 
+  const selectedBadge = userData.badges.find(
+    (badge) => badge.badgeId === selectedBadgeId
+  );
+
+  // Check if selected badge is the latest (first in userData.badges)
+  const isLatestBadge = userData.badges.length > 0 && selectedBadgeId === userData.badges[0].badgeId;
+
   return (
     <>
       <Navbar />
@@ -69,7 +83,11 @@ export default function ProfilePage() {
           {/* Sidebar */}
           <aside className="md:col-span-1 bg-[#0C0E3C] p-4 rounded-2xl text-center shadow-lg">
             <div className="border-4 border-purple-500 rounded-full w-28 h-28 mx-auto overflow-hidden mb-4">
-              <img src="/images/user.png" alt="User" className="object-cover w-full h-full" />
+              <img
+                src="/images/user.png"
+                alt="User"
+                className="object-cover w-full h-full"
+              />
             </div>
             <h2 className="text-lg font-bold">
               {userData.firstName} {userData.lastName}
@@ -77,7 +95,9 @@ export default function ProfilePage() {
             <p className="text-sm text-gray-400 mt-1">{userData.email}</p>
 
             <div className="mt-6">
-              <h3 className="text-sm font-semibold text-gray-300 mb-2">My Badges</h3>
+              <h3 className="text-sm font-semibold text-gray-300 mb-2">
+                My Badges
+              </h3>
               <div className="grid grid-cols-3 gap-3">
                 {userData.badges?.length > 0 ? (
                   userData.badges.map((badge, i) => (
@@ -85,7 +105,13 @@ export default function ProfilePage() {
                       key={i}
                       src={`./images/img${badge.badgeId}.png`}
                       alt={badge.badgeId}
-                      className="w-12 h-12 rounded-full border-2 border-purple-500"
+                      className={`w-12 h-12 rounded-full border-2 cursor-pointer ${
+                        selectedBadgeId === badge.badgeId
+                          ? "border-purple-500"
+                          : "border-transparent"
+                      }`}
+                      onClick={() => setSelectedBadgeId(badge.badgeId)}
+                      title={badge.name}
                     />
                   ))
                 ) : (
@@ -109,38 +135,37 @@ export default function ProfilePage() {
             </div>
 
             {/* Badge Details */}
-            {userData.badges?.length > 0 && (
+            {selectedBadge && (
               <div className="bg-[#0C0E3C] p-6 rounded-2xl shadow-md">
-                <h3 className="text-xl font-semibold mb-4">Latest Badge</h3>
+                <h3 className="text-xl font-semibold mb-4">
+                  {isLatestBadge ? "Latest Badge" : "Badge Details"}
+                </h3>
                 <div className="grid md:grid-cols-3 gap-6 items-center">
                   <img
-                    src={`/images/img${userData.badges[0].badgeId}.png`}
-                    alt={`Badge ${userData.badges[0].badgeId}`}
+                    src={`/images/img${selectedBadge.badgeId}.png`}
+                    alt={`Badge ${selectedBadge.badgeId}`}
                     className="w-24 h-24 mx-auto md:mx-0"
                   />
 
                   <div className="md:col-span-2 text-sm text-gray-300 space-y-2">
                     <p>
-                      <span className="text-white font-semibold">Badge:</span>{" "}
-                      {userData.badges[0].name}
+                      <span className="text-white font-semibold">Name:</span>{" "}
+                      {selectedBadge.name}
                     </p>
                     <p>
                       <span className="text-white font-semibold">Description:</span>{" "}
-                      {userData.badges[0].description}
+                      {selectedBadge.description}
                     </p>
                     <div className="flex gap-6 mt-2">
                       <div>
                         <p className="text-white font-semibold">Earned</p>
-                        <p>{new Date(userData.badges[0].earnedDate).toLocaleDateString()}</p>
+                        <p>{new Date(selectedBadge.earnedDate).toLocaleDateString()}</p>
                       </div>
                       <div>
                         <p className="text-white font-semibold">Level</p>
-                        <p>{userData.badges[0].level}</p>
+                        <p>{selectedBadge.level}</p>
                       </div>
-                      <div>
-                        <p className="text-white font-semibold">Earners</p>
-                        <p>{userData.badges[0].earners}</p>
-                      </div>
+                      {/* If you have "earners" data, add it here */}
                     </div>
                   </div>
                 </div>
