@@ -10,7 +10,7 @@ import { MinusCircle } from 'lucide-react';
 
 function EditableField({ label, value, onChange }) {
   const [editing, setEditing] = useState(false);
-
+  const [setUsers] = useState(false);
   return (
     <div className="mb-4 group">
       <label className="block text-sm font-medium text-gray-300 mb-1">{label}</label>
@@ -103,7 +103,7 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
   try {
     const token = localStorage.getItem("token");
     const url = `${process.env.SERVER_URL}/revoke-badge`;
-    const [setUsers] = useState(false);
+
 
     const response = await axios.post(
       url,
