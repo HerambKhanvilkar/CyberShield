@@ -1,8 +1,9 @@
 'use client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import React, { useState, useRef } from 'react';
 import { FaTrashAlt } from 'react-icons/fa';
+import React, { useState, useRef, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import UsersPagination from '@/components/UsersPagination';
 import UserBlock from '@/components/UserBlock';
 import SearchBox from '@/components/SearchBox';
