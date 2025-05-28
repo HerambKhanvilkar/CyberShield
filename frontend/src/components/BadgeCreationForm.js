@@ -1,6 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import SearchDropdown from "@/components/adminBadgeForm/SearchDropdown";
+import IdInput from "@/components/adminBadgeForm/IdInput";
+import NameInput from "@/components/adminBadgeForm/NameInput";
+import DescriptionTextArea from "@/components/adminBadgeForm/DescriptionTextArea";
+import LevelSelect from "@/components/adminBadgeForm/LevelSelect";
 
 function BadgeCreationForm () {
 
@@ -10,6 +15,11 @@ function BadgeCreationForm () {
   const [verticals, setVerticals] = useState([]);
   const dropDownInputRef = useRef(null);
   const [preview, setPreview] = useState('');
+  const [newSkill, setNewSkill] = useState('');
+  const [newVertical, setNewVertical] = useState('');
+  const [newSkillModalOpen, setNewSkillModalOpen] = useState(false);
+  const [newVerticalModalOpen, setNewVerticalModalOpen] = useState(false);
+
    const [formData, setFormData] = useState({
     id: '',
     name: '',
@@ -111,9 +121,19 @@ function BadgeCreationForm () {
         setPreview(fileReader.result); // Set the preview to the file's data URL
       };
       fileReader.readAsDataURL(e.target.files[0]); // Read the file as a data URL
+      // drop down closing code
     } else {
       // Handle other inputs
       setFormData({ ...formData, [name]: value });
+    }
+
+    if (type !== 'checkbox' && type !== 'radio'){
+      isSkillsDropDownOpen 
+        ? handleSkillsDropDownToggle()
+        : null
+      isVerticalsDropDownOpen
+        ? handleVerticalsDropDownToggle()
+        : null
     }
   };
 
@@ -121,11 +141,27 @@ function BadgeCreationForm () {
     setFormData({ ...formData, image: null });
     setPreview('');
   };
+
+  function convertToFormData(jsonObject) {
+  const form = new FormData();
+
+  for (const key in jsonObject) {
+    if (Object.hasOwnProperty.call(jsonObject, key)) {
+      console.log("key", key);
+      console.log("jsonObject[key]", jsonObject[key]);
+      form.append(key, jsonObject[key]);
+    }
+  }
+
+  return formData;
+}
   
   const handleBadgeFormSubmit = async (e) => {
       e.preventDefault();
-    // console.log('Form Data:', formData);
-    const apiUrl = process.env.SERVER_URL + '/users/import';
+    console.log('Form Data:', formData);
+    const formDataObject = convertToFormData(formData);
+    console.log('Form Data:', formDataObject);
+    const apiUrl = process.env.SERVER_URL + '/badge/import';
     const token = localStorage.getItem("accessToken");
 
     if (!formData.image) {
@@ -134,7 +170,7 @@ function BadgeCreationForm () {
     }
 
     try {
-      const response = await axios.post(apiUrl, formData, {
+      const response = await axios.post(apiUrl, formDataObject, {
         headers: {
           'Content-Type': 'multipart/form-data', // Set the content type
           Authorization: `Bearer ${token}`, // Add the token to the headers
@@ -148,226 +184,156 @@ function BadgeCreationForm () {
         level: '',
         vertical: '',
         skillsEarned: [],
-        image: null,
+        file: null,
       })
+      setPreview('');
       toast.success(response.data.message); // Success message
     } catch (error) {
+      if (response.status === 400){
+        toast.error(response.data); // Error message
+      }
       console.error('There was a problem with the upload operation:', error);
-      toast.error(response.data.message); // Error message
     }
   }
+
+const handleNewVerticalChange = (e) => {
+  setNewVertical(e.target.value);
+};
+
+const handleNewSkillChange = (e) => {
+  setNewSkill(e.target.value);
+};
+
+const handleAddNewVertical = (e) => {
+  if (newVertical.trim() !== '') {
+    setVerticals([...verticals, newVertical.trim()]);
+    setNewVertical('');
+    handleNewVerticalModalToggle();
+  }
+};
+
+const handleAddNewSkill = (e) => {
+  if (newSkill.trim() !== '') {
+    setSkillsEarned([...skillsEarned, newSkill.trim()]);
+    setNewSkill('');
+    handleNewSkillModalToggle();
+  }
+};
+
+const handleNewVerticalModalToggle = () => {
+  setNewVerticalModalOpen(!newVerticalModalOpen);
+};
+
+const handleNewSkillModalToggle = () => {
+  setNewSkillModalOpen(!newSkillModalOpen);
+};
 
   return (
           <div>
             <form onSubmit={handleBadgeFormSubmit} className="max-w-md mx-auto">
+
   <div className="grid md:grid-cols-2 md:gap-6">
     <div className="relative z-0 w-full mb-5 group">
-        <input 
-    value={formData.id}
-    onChange={handleChange}
-          type="number" 
-          name="id" 
-          id="id" 
-                      className="block py-2.5 px-0 w-full text-sm bg-transparent border-0 border-b-2 appearance-none text-white border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-0 peer" 
-          placeholder=" " required />
-        <label 
-          htmlFor="id" 
-                      className="peer-focus:font-medium absolute text-sm text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
-          Badge ID
-          </label>
+      <IdInput
+        formData={formData}
+        handleChange={handleChange}
+      />
     </div>
+
     <div className="relative z-0 w-full mb-5 group">
-        <input 
-    value={formData.name}
-    onChange={handleChange}
-          type="text" 
-          name="name" 
-          id="name" 
-                      className="block py-2.5 px-0 w-full text-sm bg-transparent border-0 border-b-2 appearance-none text-white border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-0 peer" 
-          placeholder=" " required />
-        <label 
-          htmlFor="name" 
-                      className="peer-focus:font-medium absolute text-sm text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
-          Badge Name
-          </label>
+      <NameInput
+        formData={formData}
+        handleChange={handleChange}
+      />
     </div>
   </div>
-              <div className="relative z-0 w-full mb-5 group">
-            <textarea 
-    id="message" 
-    rows="4" 
-    name="desc"
-    value={formData.desc}
-    onChange={handleChange}
-    required
-    className="block p-2.5 w-full text-sm text-gray-900 rounded-lg border bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500" placeholder="Description"/
-    >
-              </div>
+
+  <div className="relative z-0 w-full mb-5 group">
+    <DescriptionTextArea
+        formData={formData}
+        handleChange={handleChange}
+      />
+  </div>
+
   <div className="grid md:grid-cols-2 md:gap-6">
     <div className="relative z-0 w-full mb-5 group">
-          <label htmlFor="difficulty" className="block mb-2 text-sm font-medium text-white">Select badge difficulty </label>
-  <select id="difficulty" className="border text-sm rounded-lg block w-full p-2.5 bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500">
-
-          { ['Easy', 'Medium', 'Hard', 'Expert', 'Extreme'].map(d => (
-        <option key={d} value={d}>
-          {d}
-          </option>
-          ))}
-          </select>
+      <LevelSelect
+          formData={formData}
+          handleChange={handleChange}
+        />
     </div>
-    <div className="relative z-0 w-full mb-5 group">
-          <label htmlFor="level" className="block mb-2 text-sm font-medium text-white">Select badge level </label>
-  <select 
-    id="level" 
-    name="level"
-    value={formData.level}
-    onChange={handleChange}
-    className="border text-sm rounded-lg block w-full p-2.5 bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500">
 
-    <option value="">Select a level</option>
-          { ['Amateur', 'Intermediate', 'Professional'].map(d => (
-        <option key={d} value={d}>
-          {d}
-          </option>
-          ))}
-          </select>
+    <div className="hidden relative z-0 w-full mb-5 group">
+      <label htmlFor="difficulty" className="block mb-2 text-sm font-medium text-white">Select badge difficulty </label>
+      <select id="difficulty" className="border text-sm rounded-lg block w-full p-2.5 bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500">
+        { ['Easy', 'Medium', 'Hard', 'Expert', 'Extreme'].map(d => ( <option key={d} value={d}> {d} </option>))}
+      </select>
     </div>
   </div>
-  <div className="grid md:grid-cols-2 md:gap-6">
 
+  <div className="grid md:grid-cols-2 md:gap-6">
     <div className="relative z-0 w-full mb-5 group">
-    <button 
-          id="dropdownSearchButton" onClick={handleSkillsDropDownToggle} data-dropdown-toggle="dropdownSearch" data-dropdown-placement="bottom" 
-          className={`${isSkillsDropDownOpen ? 'bg-blue-600' : 'bg-gray-700' } w-full text-white justify-between focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-2.5 py-2.5 text-center inline-flex items-center bg-blue-600 hover:bg-blue-700 focus:ring-blue-800`} 
-          type="button"
-          >
-              Select Skills for Badge
-            <svg
-              className="w-2.5 h-2.5 ms-3"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 10 6"
-             >
-            <path
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="m1 1 4 4 4-4"
-            />
-              </svg>
+      <button id="dropSkilldownSearchButton" 
+        data-dropdown-toggle="dropdownSearch" data-dropdown-placement="bottom" 
+        onClick={handleSkillsDropDownToggle} 
+        className={`${isSkillsDropDownOpen ? 'bg-blue-600' : 'bg-gray-700' } w-full text-white justify-between focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-2.5 py-2.5 text-center inline-flex items-center bg-blue-600 hover:bg-blue-700 focus:ring-blue-800`} 
+        type="button"
+        >
+          Select Skills for Badge
+          <svg className="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6" >
+            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 4 4 4-4" />
+          </svg>
       </button>
     </div>
+
     <div className={`relative z-1 w-full mb-5 group ${isSkillsDropDownOpen ? '' : 'hidden' }`}>
-<div id="dropdownSearch" className={`${isSkillsDropDownOpen ? '' : 'hidden' } z-1 absolute w-full rounded-lg shadow-sm w-60 bg-gray-700`}>
-    <div className="p-3">
-      <label htmlFor="input-group-search" className="sr-only">Search</label>
-      <div className="relative">
-        <div className="absolute inset-y-0 rtl:inset-r-0 start-0 flex items-center ps-3 pointer-events-none">
-          <svg className="w-4 h-4 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-          </svg>
-        </div>
-        <input type="text" id="input-group-search"  ref={dropDownInputRef} className="block w-full p-2 ps-10 text-sm bg-gray-600 border-gray-500 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500" placeholder="Search Skill" />
+      <div id="dropdownSearch" className={`${isSkillsDropDownOpen ? '' : 'hidden' } w-full z-4 absolute rounded-lg shadow-sm w-60 bg-gray-700`}>
+        <SearchDropdown  
+          skillsEarned={skillsEarned} 
+          formData={formData} 
+          handleChange={handleChange}
+        />
+        <a
+          onClick={handleNewSkillModalToggle}
+          className="flex items-center p-3 text-sm font-medium border-gray-600 bg-gray-700 hover:bg-gray-600 text-blue-500 hover:underline"
+        >
+          Add new Skill
+        </a>
       </div>
     </div>
-    <ul className="h-48 px-3 pb-3 overflow-y-auto text-sm text-gray-200" aria-labelledby="dropdownSearchButton">
-    {Array.isArray(skillsEarned) && skillsEarned.length > 0 ? (
-                    skillsEarned.map((skill, index) => (
-      <li key={index}>
-        <div className="flex items-center ps-2 rounded-sm hover:bg-gray-600">
-          <input id="checkbox-item-11"    
-            name="skillsEarned"
-            value={skill}
-            checked={formData.skillsEarned.includes(skill)}
-            onChange={handleChange}
-            type="checkbox"
-            className="w-4 h-4 text-blue-600 rounded-sm ring-offset-gray-700 focus:ring-offset-gray-700 focus:ring-2 bg-gray-600 border-gray-500"
-            aria-label={skill}
-            aria-checked={formData.skillsEarned.includes(skill)}
-          />
-          <label htmlFor="checkbox-item-11" className="w-full py-2 ms-2 text-sm font-medium rounded-sm text-gray-300">{skill}</label>
-        </div>
-      </li>
-                    ))
-                  ) : (
-                    <p className="text-gray-400">No data available.</p>
-      )}
-    </ul>
-          <a
-          className="flex items-center p-3 text-sm font-medium border-gray-600 bg-gray-700 hover:bg-gray-600 text-blue-500 hover:underline"
-          >
-          Add new Skill
-          </a>
-    </div>
+  </div>
 
-  </div>
-  </div>
   <div className="grid md:grid-cols-2 md:gap-6">
-
     <div className="relative z-0 w-full mb-5 group">
-    <button 
-          id="dropdownSearchButton" onClick={handleVerticalsDropDownToggle} data-dropdown-toggle="dropdownSearch" data-dropdown-placement="bottom" 
-          className={`${isVerticalsDropDownOpen ? 'bg-blue-600' : 'bg-gray-700' } w-full text-white justify-between focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-2.5 py-2.5 text-center inline-flex items-center bg-blue-600 hover:bg-blue-700 focus:ring-blue-800`} 
-          type="button"
-          >
-              Select a Vertical for Badge
-            <svg
-              className="w-2.5 h-2.5 ms-3"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 10 6"
-             >
-            <path
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="m1 1 4 4 4-4"
-            />
-              </svg>
+      <button id="dropdownSearchButton" data-dropdown-toggle="dropdownSearch" data-dropdown-placement="bottom" 
+        onClick={handleVerticalsDropDownToggle} 
+        className={`${isVerticalsDropDownOpen ? 'bg-blue-600' : 'bg-gray-700' } w-full text-white justify-between focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-2.5 py-2.5 text-center inline-flex items-center bg-blue-600 hover:bg-blue-700 focus:ring-blue-800`} 
+        type="button"
+        >
+          Select a Vertical for Badge
+            <svg className="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6" >
+              <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 4 4 4-4" />
+            </svg>
       </button>
     </div>
+
     <div className={`relative z-1 w-full mb-5 group ${isVerticalsDropDownOpen ? '' : 'hidden' }`}>
-<div id="dropdownSearch" className={`${isVerticalsDropDownOpen ? '' : 'hidden' } w-full z-4 absolute rounded-lg shadow-sm w-60 bg-gray-700`}>
-    <div className="p-3">
-      <label htmlFor="input-group-search" className="sr-only">Search</label>
-      <div className="relative">
-        <div className="absolute inset-y-0 rtl:inset-r-0 start-0 flex items-center ps-3 pointer-events-none">
-          <svg className="w-4 h-4 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-          </svg>
-        </div>
-        <input type="text" id="input-group-search"  ref={dropDownInputRef} className="block w-full p-2 ps-10 text-sm bg-gray-600 border-gray-500 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500" placeholder="Search vertical"/>
+      <div id="dropdownSearch" className={`${isVerticalsDropDownOpen ? '' : 'hidden' } w-full z-4 absolute rounded-lg shadow-sm w-60 bg-gray-700`}>
+        <SearchDropdown  
+        skillsEarned={verticals} 
+        formData={formData} 
+        handleChange={handleChange}
+        />
+        <a
+      onClick={handleNewVerticalModalToggle}
+        className="flex items-center p-3 text-sm font-medium border-gray-600 bg-gray-700 hover:bg-gray-600 text-blue-500 hover:underline"
+        >
+        Add new Vertical
+        </a>
       </div>
     </div>
-    <ul className="h-48 px-3 pb-3 overflow-y-auto text-sm text-gray-200" aria-labelledby="dropdownSearchButton">
-
-    {Array.isArray(verticals) && verticals.length > 0 ? (
-                    verticals.map((vertical, index) => (
-      <li key={index}>
-        <div className="flex items-center ps-2 rounded-sm hover:bg-gray-600">
-          <input id="checkbox-item-11" name="vertical" type="radio" value={vertical} 
-                      checked={formData.vertical === vertical}
-                      onChange={handleChange}
-                      className="w-4 h-4 text-blue-600 rounded-sm  ring-offset-gray-700 focus:ring-offset-gray-700 focus:ring-2 bg-gray-600 border-gray-500"/>
-          <label htmlFor="checkbox-item-11" className="w-full py-2 ms-2 text-sm font-medium rounded-sm text-gray-300">{vertical}</label>
-        </div>
-      </li>
-                    ))
-                  ) : (
-                    <p className="text-gray-400">No data available.</p>
-      )}
-    </ul>
-          <a
-          className="flex items-center p-3 text-sm font-medium border-gray-600 bg-gray-700 hover:bg-gray-600 text-blue-500 hover:underline"
-          >
-          Add new Vertical
-          </a>
-    </div>
-
   </div>
-  </div>
+
   <div className="grid md:grid-cols-1 pb-2.5 md:gap-6">
       {preview ? (
         <div className="flex flex-col items-center justify-center w-full h-full rounded-lg bg-gray-700 border-gray-600">
@@ -409,7 +375,6 @@ function BadgeCreationForm () {
             id="dropzone-file"
             type="file"
             name="image"
-            value=""
             className="hidden"
             accept="image/*"
             onChange={handleChange}
@@ -425,6 +390,70 @@ function BadgeCreationForm () {
           Submit
           </button>
 </form>
+    { ( newSkillModalOpen || newVerticalModalOpen ) ? (
+<div
+  id="new-modal"
+  tabIndex="-1"
+  className=" bg-gray-900/50  backdrop-blur-md overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 flex justify-center items-center w-full md:inset-0 max-h-full "
+>
+  <div className="relative p-4 w-full max-w-md max-h-full">
+    <div className="relative bg-gray-800 rounded-lg shadow-sm">
+      <div className="flex items-center justify-between p-4 md:p-5 border-b border-gray-600 rounded-t">
+        <h3 className="text-xl font-semibold text-white">
+          Add new { newVerticalModalOpen ? 'Vertical' : 'Skill' }
+        </h3>
+        <button
+          onClick={newVerticalModalOpen ? handleNewVerticalModalToggle : handleNewSkillModalToggle}
+          type="button"
+          className="text-gray-400 bg-transparent hover:bg-gray-700 hover:text-white rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
+          data-modal-hide="authentication-modal"
+        >
+          <svg
+            className="w-3 h-3"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 14 14"
+          >
+            <path
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"
+            />
+          </svg>
+          <span className="sr-only">Close modal</span>
+        </button>
+      </div>
+      <div className="p-4 space-y-4 md:p-5">
+        <div>
+          <input
+            type="text"
+            onChange={newVerticalModalOpen ? handleNewVerticalChange : handleNewSkillChange}
+            name="text"
+            id="text"
+            className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+            placeholder={`new ${newVerticalModalOpen ? 'vertcal' : 'skill'}`}
+            required
+          />
+        </div>
+        <button
+          type="submit"
+          onClick={newVerticalModalOpen ? handleAddNewVertical : handleAddNewSkill}
+          className="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+        >
+          Create new {newVerticalModalOpen ? 'vertcal' : 'skill'}
+        </button>
+        <div className="text-sm font-medium text-gray-400">
+          <i>
+            *NOTE: new {newVerticalModalOpen ? 'vertcal' : 'skill'} is not added to the database unless the badge is created successfully.
+          </i>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+  ): ( null )}
           </div>
   );
 }

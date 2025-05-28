@@ -1,15 +1,16 @@
+const { authenticateJWT } = require('../middleware/auth');
 const express = require("express");
 const router = express.Router();
-const { authenticateJWT } = require('../middleware/auth');
 const multer = require('multer');
-// Set up multer for file uploads
-// const upload = multer({ dest: '../uploads/' });
 const fs = require('fs');
 const path = require('path');
 const Badge = require("../models/Badge");
 const BadgeImage = require("../models/BadgeImage");
 const User = require("../models/User");
 const jwt = require('jsonwebtoken');
+// const { validateMIMEType } = require("validate-image-type");
+
+const upload = multer({ dest: 'uploads/' });
 
 const getUsername = async (authHeader) => {
   const token = authHeader.split(" ")[1];
@@ -20,40 +21,21 @@ const getUsername = async (authHeader) => {
   });
 
   if (!user) {
-    return null
+    return null;
   }
-  return user.email
+  return user.email;
 }
-
-// Middleware to set badge ID in req
-router.use((req, res, next) => {
-    if (req.method === 'POST' && req.path === '/badge/import') {
-      console.log(req.body.id)
-        req.badgeId = req.body.id; // Store badge ID in req.badgeId
-    }
-    next();
-});
-
-
-// Set up multer for file uploads
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-      console.log(req);
-        cb(null, path.join(__dirname, '../badgeImages')); // Save images in badgeImages folder
-    },
-    filename: (req, file, cb) => {
-        cb(null, file.originalname); // Use original file name
-    }
-});
-const upload = multer({ storage: storage });
-
 
 // upload badge
 router.post("/badge/import", authenticateJWT, upload.single('image'), async (req, res) => {
+// router.post("/admin/badge/import", authenticateJWT, async (req, res) => {
   try {
-    const badgeId = req.body.id;
-    const badgeExist = await Badge.findOne({id: badgeId });
-    const badgeImageExist = await BadgeImage.findOne({id: badgeId });
+    console.log("TOP", req.body);
+    const { id, name, desc, level, vertical, skillsEarned } = req.body;
+    if ( !id || !name || !desc || !level || !vertical || !skillsEarned ){
+    }
+    const badgeExist = await Badge.findOne({id});
+    const badgeImageExist = await BadgeImage.findOne({id});
 
     if (badgeExist){
       return res.status(401).json({ message: "Badge already exists" });
@@ -63,6 +45,8 @@ router.post("/badge/import", authenticateJWT, upload.single('image'), async (req
       return res.status(401).json({ message: "Badge Image already exists" });
     }
 
+    console.log(req.body);
+    console.log(req.file);
     const badgeObj = {
         id: req.body.id,
         name: req.body.name,
@@ -70,12 +54,13 @@ router.post("/badge/import", authenticateJWT, upload.single('image'), async (req
         level: req.body.level,
         vertical: req.body.vertical,
         skillsEarned: req.body.skillsEarned,
+        image: ``,
     };
-      console.log("0001", badgeObj);
+
     const badgeImageObj = {
       id: req.body.id,
       name: req.body.name,
-      image: fs.readFileSync(path.join(__dirname, '../badgeImages', req.file.originalname)), // Read image using badge ID as filename
+      image:  fs.readFileSync(path.join(__dirname, '../uploads/', req.file.filename)),
       contentType: req.file.mimetype // Use the uploaded file's mimetype
     };
 
@@ -90,7 +75,7 @@ router.post("/badge/import", authenticateJWT, upload.single('image'), async (req
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
   }
-});
+  });
 
 // Get Skills 
 router.get("/badges/skills", async (req, res) => {

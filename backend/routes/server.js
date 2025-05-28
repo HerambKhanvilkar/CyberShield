@@ -30,6 +30,7 @@ const getUsername = async (authHeader) => {
   return user.email
 }
 
+
 // Get all badges
 router.get("/badges", async (req, res) => {
   try {
@@ -507,6 +508,7 @@ router.post("/users/import",authenticateJWT, upload.single('file'), async (req, 
     const errors = [];
     let count = 0;
      // Validate CSV file
+    console.log(req.file);
     fs.createReadStream(req.file.path)
       .pipe(csv())
       .on('data', (data) => {

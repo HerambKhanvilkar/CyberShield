@@ -115,7 +115,7 @@ useEffect(() => {
                 <div className="bg-[#0A0E2A] rounded-xl p-6 shadow-lg border border-white/5 hover:shadow-cyan-500/20 transition duration-300">
                   <div className="flex justify-center mb-4">
                     <img
-                      src={badge.image || badge.img?.data}
+                      src={`${process.env.SERVER_URL}/badge/images/${badge.id}` || badge.img?.data}
                       alt={badge.name}
                       className="w-24 h-24 object-contain drop-shadow-xl"
                     />

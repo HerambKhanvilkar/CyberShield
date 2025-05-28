@@ -102,8 +102,8 @@ app.use((req, res, next) => {
 
   app.set("server.timeout", 300000);
   app.use("/api/auth", authRoutes);
-  app.use("/api", serverRoutes);
   app.use("/api", adminRoutes);
+  app.use("/api", serverRoutes);
   // app.use("/api/dashboard", strictLimiter, dashboardRoutes);
   // app.use("/api", strictLimiter, watchlistRoutes);
   // app.use("/api/audit", strictLimiter, auditRoutes);
