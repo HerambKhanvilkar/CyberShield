@@ -80,6 +80,10 @@ function Navbar() {
 
       if (response.ok) {
         console.log("Logged out successfully");
+        // 🔐 Clear tokens and user info from localStorage
+        // localStorage.removeItem("token");     // or "accessToken" if that's what you named it
+        // localStorage.removeItem("user");
+        // localStorage.clear(); // Optional: clears all keys
       } else {
         const errorData = await response.json();
         console.error(
@@ -376,15 +380,15 @@ function Navbar() {
               Contact Us
             </Link>
             {user && user.isAdmin && (
-              <li className="bg-slate-200 rounded-lg">
-                <button
-                  onClick={handlebadgeadmin}
-                  className="block px-2 py-2 w-full text-left hover:bg-gray-400 transition-colors rounded-lg"
-                >
-                  Badge Admin
-                </button>
-              </li>
+              <Link
+                href="/badgeadmin"
+                onClick={() => setIsSidenavOpen(false)}
+                className="text-gray-400 text-2xl hover:text-white"
+              >
+                Badge Admin
+              </Link>
             )}
+
           </div>
         </div>
       </nav>

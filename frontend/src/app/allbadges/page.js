@@ -95,15 +95,15 @@ useEffect(() => {
             Complete challenges and earn badges to showcase your cybersecurity skills
           </p>
         </section>
-    <section className="text-center max-w-4xl mx-auto mb-12">
-    </section>
-    <div className="grid max-w-xs grid-cols-2 gap-1 p-1 mx-auto my-4 rounded-lg bg-gray-600" role="group">
-    <button onClick={handleAllBadges} type="button" className={allBadgesClass} >
-    All Badges
-</button>
-    <button onClick={handleMyBadges} type="button" className={myBadgesClass}>
-    My Badges
-</button>
+        <section className="text-center max-w-4xl mx-auto mb-12">
+        </section>
+        <div className="grid max-w-xs grid-cols-2 gap-1 p-1 mx-auto my-4 rounded-lg bg-gray-600" role="group">
+          <button onClick={handleAllBadges} type="button" className={allBadgesClass} >
+          All Badges
+          </button>
+              <button onClick={handleMyBadges} type="button" className={myBadgesClass}>
+              My Badges
+          </button>
         </div>
 
         {loading ? (

@@ -61,10 +61,13 @@ export default function LandingPage() {
                 Earn and showcase badges for your cybersecurity skills and achievements.
               </p>
               <div className="flex justify-center gap-5 flex-wrap">
-                <button className="px-7 py-3 text-base sm:text-lg border border-cyan-400 bg-gradient-to-br from-cyan-300/20 to-cyan-400/20 hover:from-cyan-300/40 hover:to-cyan-400/40 hover:shadow-[0_0_20px_rgba(0,212,255,0.5)] transition rounded">
+                <button
+                className="px-7 py-3 text-base sm:text-lg border border-cyan-400 bg-gradient-to-br from-cyan-300/20 to-cyan-400/20 hover:from-cyan-300/40 hover:to-cyan-400/40 hover:shadow-[0_0_20px_rgba(0,212,255,0.5)] transition rounded">
                   Get Started
                 </button>
-                <button className="px-7 py-3 text-base sm:text-lg border border-white/20 bg-white/10 hover:bg-white/20 transition rounded">
+                <button
+                onClick={() => window.open("https://learn.deepcytes.io/", "_blank")} 
+                className="px-7 py-3 text-base sm:text-lg border border-white/20 bg-white/10 hover:bg-white/20 transition rounded">
                   Learn More
                 </button>
               </div>
@@ -109,7 +112,7 @@ export default function LandingPage() {
           {!loading && badges.length > 0 && (
             <section className="py-20 bg-gradient-to-t from-primary-dark to-transparent">
               <h2 className="text-3xl sm:text-4xl mb-10 text-center">All Badges</h2>
-              <div className="overflow-x-auto no-scrollbar px-5">
+              <div className="overflow-y-hidden overflow-x-auto no-scrollbar px-5">
                 <div
                   className="flex gap-6 justify-start scroll-smooth snap-x snap-mandatory"
                   ref={carouselRef}

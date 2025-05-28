@@ -3,7 +3,6 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import React, { useState,useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { FaTrashAlt } from 'react-icons/fa';
 import UsersPagination from '@/components/UsersPagination';
 import UserBlock from '@/components/UserBlock';
 import SearchBox from '@/components/SearchBox';

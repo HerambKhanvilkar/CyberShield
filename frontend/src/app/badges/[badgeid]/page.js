@@ -1,15 +1,15 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { ChevronLeft, ChevronRight, Award, Share2, Shield, Code } from 'lucide-react';
 import axios from 'axios';
 import Navbar from "@/components/Navbar";
 import Footer from '@/components/Footer';
 import { useAuthContext } from "@/components/AuthContext";
+import { useParams } from 'next/navigation';
 
 const BadgeId = () => {
-  const searchParams = useSearchParams();
-  const badgeId = searchParams.get('id');
+  const params = useParams();
+  const badgeId = params?.badgeid;
   const [badges, setBadges] = useState([]);
   const [shareUrl, setShareUrl] = useState(null);
   const [earnedBadges, setEarnedBadges] = useState([]);
@@ -77,7 +77,9 @@ const BadgeId = () => {
 
   useEffect(() => {
     if (badges.length > 0 && badgeId) {
-      const index = badges.findIndex((b) => b._id === badgeId || b.id === badgeId);
+      const index = badges.findIndex(
+        (b) => String(b._id) === String(badgeId) || String(b.id) === String(badgeId)
+      );
       if (index !== -1) setCurrentBadgeIndex(index);
     }
   }, [badges, badgeId]);
@@ -256,7 +258,7 @@ const BadgeId = () => {
   const RelatedBadges = () => (
     <div>
       <h3 className="text-xl font-semibold border-b border-gray-700 pb-1 mt-6">Related Badges</h3>
-      <div className="flex space-x-4 overflow-x-auto py-2">
+      <div className="flex space-x-4 overflow-auto py-2">
         {badges
           .filter((b) => b.id !== currentBadge.id)
           .slice(0, 3)
@@ -308,8 +310,8 @@ const BadgeId = () => {
           {!isLoading ? (
             <>
               <img
-                src={currentBadge.image}
-                alt={currentBadge.name}
+                src={currentBadge?.image}
+                alt={currentBadge?.name}
                 className="max-w-full max-h-full object-contain"
               />
               <div className="absolute bottom-2 left-0 right-0 text-center text-white text-sm font-medium">
@@ -354,7 +356,7 @@ const BadgeId = () => {
       <Navbar />
       
       {/* Main content with responsive layout */}
-      <main className="flex-grow">
+      <main className="flex-grow" key={badgeId}>
         {/* Desktop Layout */}
         <div className="hidden md:hidden lg:flex md:flex-row max-w-7xl mx-auto p-6 gap-6">
           <section className="md:w-2/6 space-y-6">
