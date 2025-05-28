@@ -2,7 +2,7 @@
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { FaTrashAlt } from 'react-icons/fa';
-import React, { useState, useRef, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import UsersPagination from '@/components/UsersPagination';
 import UserBlock from '@/components/UserBlock';
