@@ -10,34 +10,33 @@ const BadgeAssignmentDropdown = ({ user, updateUserDetails }) => {
   const [loading, setLoading] = useState(true);
   const [setUsers] = useState(false);
 
-  useEffect(() => {
-    const fetchBadges = async () => {
-      try {
-        setLoading(true);
-        const token = localStorage.getItem("token");
-        const url = `${process.env.SERVER_URL}/badges`;
-        const userBadges = user?.badges.map(b => Number(b.badgeId));
-        const response = await axios.get(url, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          timeout: 10000,
-        });
+  const fetchBadges = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      const url = `${process.env.SERVER_URL}/badges`;
+      const userBadges = user?.badges.map(b => Number(b.badgeId));
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        timeout: 10000,
+      });
 
-        if (response) {
-          const revokableBadges = response.data.badges.filter((badge) =>
-            userBadges.includes(badge.id)
-          );
-          setBadges(revokableBadges);
-        }
-      } catch (error) {
-        console.error('Error fetching badges:', error);
-      } finally {
-        setLoading(false);
+      if (response) {
+        const revokableBadges = response.data.badges.filter((badge) =>
+          userBadges.includes(badge.id)
+        );
+        setBadges(revokableBadges);
       }
-    };
-
+    } catch (error) {
+      console.error('Error fetching badges:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
     fetchBadges();
   }, [user]);
 
@@ -67,6 +66,7 @@ const BadgeAssignmentDropdown = ({ user, updateUserDetails }) => {
         </div>
       );
       setSelectedBadge(null); // Reset selection after revocation
+      await fetchBadges(); // refresh dropdown
     } catch (error) {
       console.error("Error revoking badge:", error);
     }
@@ -80,7 +80,7 @@ const BadgeAssignmentDropdown = ({ user, updateUserDetails }) => {
         <select
           className="w-full p-2 rounded bg-white text-black disabled:bg-gray-200"
           value={selectedBadge || ""}
-          onChange={(e) => setSelectedBadge(e.target.value)}
+          onChange={(e) => setSelectedBadge(Number(e.target.value))}
           disabled={loading}
         >
           <option value="">{loading ? "Loading badges..." : "Select a badge"}</option>
@@ -105,6 +105,9 @@ const BadgeAssignmentDropdown = ({ user, updateUserDetails }) => {
           <Check />
         </Button>
       </div>
+      {badges.length === 0 && (
+        <p className="text-sm text-gray-300">This user has no badges assigned to them.</p>
+      )}
     </div>
   );
 };

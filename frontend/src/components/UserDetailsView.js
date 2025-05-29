@@ -8,11 +8,11 @@ import DeleteUserPopUp from "@/components/DeleteUserPopUp";
 import { MinusCircle } from 'lucide-react';
 
 
-function EditableField({ label, value, onChange }) {
+function EditableField({ label, value, onChange, className = "" }) {
   const [editing, setEditing] = useState(false);
   const [setUsers] = useState(false);
   return (
-    <div className="mb-4 group">
+    <div className="`mb-4 group ${className}`">
       <label className="block text-sm font-medium text-gray-300 mb-1">{label}</label>
       <div className="relative">
         <input

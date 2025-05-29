@@ -1,7 +1,6 @@
 'use client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { FaTrashAlt } from 'react-icons/fa';
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import UsersPagination from '@/components/UsersPagination';
@@ -15,6 +14,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import UserDetailsView from '@/components/UserDetailsView';
 import BadgeCreationForm from '@/components/BadgeCreationForm';
+import {UserPlus} from 'lucide-react';
 
 const TABS = ['Users', 'Import', 'Badges'];
 const ITEMS_PER_PAGE = 10;
@@ -117,8 +117,15 @@ const updateUserDetails = (email, updatedUser) => {
           <div className="p-4 rounded-xl bg-slate-900/60 backdrop-blur-xl shadow-lg border border-gray-700">
           {/* Top Row: Search + Pagination */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-            <div className="flex-1">
+            <div className="flex flex-row items-center gap-4">
               <SearchBox onSearch={handleSearch} />
+              <button
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+                // onClick={handleNewUser}
+                
+              >
+                <UserPlus/>
+              </button>
             </div>
             <div className="flex-none">
               <UsersPagination
