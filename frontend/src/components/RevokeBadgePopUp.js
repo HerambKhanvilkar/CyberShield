@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { Button } from "@/components/ui/button";
+import { Check,RotateCcw } from 'lucide-react';
 
 const BadgeAssignmentDropdown = ({ user, updateUserDetails }) => {
   const [badges, setBadges] = useState([]);
@@ -75,7 +76,7 @@ const BadgeAssignmentDropdown = ({ user, updateUserDetails }) => {
     <div className="p-4 bg-blue-950/30 backdrop-blur-md rounded-md shadow-lg space-y-4 max-w-md">
       <h2 className="text-lg font-semibold text-white">Revoke Badge</h2>
 
-      <div>
+      <div className='flex flex-row items-center space-x-2'>
         <select
           className="w-full p-2 rounded bg-white text-black disabled:bg-gray-200"
           value={selectedBadge || ""}
@@ -90,21 +91,18 @@ const BadgeAssignmentDropdown = ({ user, updateUserDetails }) => {
               </option>
             ))}
         </select>
-      </div>
-
-      <div className="flex justify-end space-x-2">
         <Button
           className="text-sm bg-gray-700 text-white hover:bg-gray-600"
           onClick={() => setSelectedBadge(null)}
         >
-          Cancel
+          <RotateCcw />
         </Button>
         <Button
           className={`text-sm ${selectedBadge ? 'text-red-500' : 'text-gray-400'} bg-gray-800 hover:bg-red-700 hover:text-white`}
           onClick={handleRevoke}
           disabled={!selectedBadge}
         >
-          Revoke
+          <Check />
         </Button>
       </div>
     </div>

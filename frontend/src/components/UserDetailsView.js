@@ -144,16 +144,18 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
         <EditableField label="First Name" value={form.firstName} onChange={(val) => handleChange("firstName", val)} />
         <EditableField label="Last Name" value={form.lastName} onChange={(val) => handleChange("lastName", val)} />
         <EditableField label="Email" value={form.email} onChange={(val) => handleChange("email", val)} />
+      </div>
 
-        <div className="flex items-center space-x-2 relative">
-          <EditableField
-            label="Password"
-            value={form.password}
-            onChange={(val) => handleChange("password", val)}
-            className="flex-1"
-          />
+      <div className="flex items-center space-x-2 relative">
+        <EditableField
+          label="Password"
+          value={form.password}
+          onChange={(val) => handleChange("password", val)}
+          className="flex-1"
+        />
 
-          <div className="relative group">
+        <div className="relative group flex flex-row space-x-2">
+          <div>
             <input
               type="checkbox"
               checked={form.sendMail}
@@ -164,50 +166,49 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
               Send mail to user
             </div>
           </div>
+          <AssignBadgePopUp user={selectedUser} updateUserDetails={updateUserDetails} />
+          <RevokeBadgePopUp user={selectedUser} updateUserDetails={updateUserDetails} />
         </div>
       </div>
 
       <div className="flex flex-col lg:flex-row mb-6 mr-2">
-        <div className="flex flex-col w-1/2 items-start justify-start mb-2">
-          <div className="flex flex-row gap-4">
+        {/* <div className="flex flex-col w-1/2 items-start justify-start mb-2">
+          <div className="flex flex-col gap-4">
             <AssignBadgePopUp user={selectedUser} updateUserDetails={updateUserDetails} />
             <RevokeBadgePopUp user={selectedUser} updateUserDetails={updateUserDetails} />
           </div>
-          <div className="flex flex-row mt-2">
-            <DeleteUserPopUp user={selectedUser} updateUserDetails={updateUserDetails} />
-          </div>
-        </div>
+        </div> */}
 
         {/* show badges */}
         <div className="w-1/2 mt-6">
-  <h3 className="text-lg font-semibold mb-2">Badges</h3>
-  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-    {selectedUser.badges && selectedUser.badges.length > 0 ? (
-      selectedUser.badges.map((badge, index) => (
-        <div key={index} className="relative flex flex-col items-center bg-[#1A1B2E] p-4 rounded-lg">
-          {/* Minus button top-right */}
-          <button
-            onClick={() => handleRevokeBadge(badge.badgeId, selectedUser.email, updateUserDetails)}
-            className="absolute top-1 right-1 text-red-500 hover:text-red-700"
-            title="Revoke badge"
-          >
-            <MinusCircle size={18} />
-          </button>
+          <h3 className="text-lg font-semibold mb-2">Badges</h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {selectedUser.badges && selectedUser.badges.length > 0 ? (
+              selectedUser.badges.map((badge, index) => (
+                <div key={index} className="relative flex flex-col items-center p-4 rounded-lg">
+                  {/* Minus button top-right */}
+                  <button
+                    onClick={() => handleRevokeBadge(badge.badgeId, selectedUser.email, updateUserDetails)}
+                    className="absolute top-1 right-1 text-red-500 hover:text-red-700"
+                    title="Revoke badge"
+                  >
+                    <MinusCircle size={18} />
+                  </button>
 
-          {/* Badge image and name */}
-          <img
-            src={`./images/img${badge.badgeId}.png`}
-            alt={`Badge ${badge.badgeId}`}
-            className="w-16 h-16 mb-2"
-          />
-          <span className="text-sm font-medium text-center">{badge.name}</span>
+                  {/* Badge image and name */}
+                  <img
+                    src={`./images/img${badge.badgeId}.png`}
+                    alt={`Badge ${badge.badgeId}`}
+                    className="w-16 h-16 mb-2"
+                  />
+                  <span className="text-sm font-medium text-center">{badge.name}</span>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-400 col-span-full">No badges assigned.</p>
+            )}
+          </div>
         </div>
-      ))
-    ) : (
-      <p className="text-gray-400 col-span-full">No badges assigned.</p>
-    )}
-  </div>
-</div>
 
       </div>
         
@@ -218,6 +219,7 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
       >
         Save Changes
       </button>
+      <DeleteUserPopUp user={selectedUser} updateUserDetails={updateUserDetails} />
     </div>
   );
 }

@@ -22,7 +22,7 @@ const ITEMS_PER_PAGE = 10;
 export default function SettingsPage() {
   const [searchResults, setSearchResults] = useState([]); // Initialize as an empty array
   const [selectedUser, setSelectedUser] = useState(null);
-  const [activeTab, setActiveTab] = useState('Badges');
+  const [activeTab, setActiveTab] = useState('Users');
 
   // Page status
   const [currentPage, setCurrentPage] = useState(1);
@@ -115,7 +115,6 @@ const updateUserDetails = (email, updatedUser) => {
       case 'Users':
         return (
           <div className="p-4 rounded-xl bg-slate-900/60 backdrop-blur-xl shadow-lg border border-gray-700">
-          <img src={`${process.env.SERVER_URL}/badge/images/101`} />
           {/* Top Row: Search + Pagination */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
             <div className="flex-1">
@@ -252,9 +251,7 @@ const updateUserDetails = (email, updatedUser) => {
   return (
     <>
       <Navbar />
-      <div className="min-h-full p-6">
-        <h1 className="text-2xl font-bold mb-4">Admin</h1>
-
+      <div className="min-h-full p-6 pb-0 pt-2">
         <div className="border-b border-gray-300 mb-6 flex flex-wrap gap-4 text-sm">
           {TABS.map((tab) => (
             <button

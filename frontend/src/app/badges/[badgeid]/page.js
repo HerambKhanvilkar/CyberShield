@@ -146,7 +146,7 @@ const BadgeId = () => {
       if (!userStr) return;
 
       const user = JSON.parse(userStr);
-      const shareURL = `${window.location.origin}/badge/shared/${currentBadge.id}/${user.username}/${Math.floor(Date.now() / 1000)}`;
+      const shareURL = `${window.location.origin}/badges/shared/${currentBadge.id}/${user.username}/${Math.floor(Date.now() / 1000)}`;
       setShareUrl(shareURL);
       setShowShareSuccess(true);
       setTimeout(() => setShowShareSuccess(false), 3000);
