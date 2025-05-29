@@ -47,6 +47,9 @@ export default function ProfilePage() {
         // Set default selected badge to latest (first in list)
         if (enrichedBadges.length > 0) {
           setSelectedBadgeId(enrichedBadges[0].badgeId);
+
+          //show all details of the first badge
+          console.log("User badges enriched:", enrichedBadges);
         }
 
         setLoading(false);
@@ -135,8 +138,9 @@ export default function ProfilePage() {
             </div>
 
             {/* Badge Details */}
-            {selectedBadge && (
-              <div className="bg-[#0C0E3C] p-6 rounded-2xl shadow-md">
+            <div className="bg-[#0C0E3C] p-6 rounded-2xl shadow-md">
+            {selectedBadge ? (
+              <>
                 <h3 className="text-xl font-semibold mb-4">
                   {isLatestBadge ? "Latest Badge" : "Badge Details"}
                 </h3>
@@ -146,7 +150,6 @@ export default function ProfilePage() {
                     alt={`Badge ${selectedBadge.badgeId}`}
                     className="w-24 h-24 mx-auto md:mx-0"
                   />
-
                   <div className="md:col-span-2 text-sm text-gray-300 space-y-2">
                     <p>
                       <span className="text-white font-semibold">Name:</span>{" "}
@@ -165,12 +168,34 @@ export default function ProfilePage() {
                         <p className="text-white font-semibold">Level</p>
                         <p>{selectedBadge.level}</p>
                       </div>
-                      {/* If you have "earners" data, add it here */}
+                      <div>
+                        <p className="text-white font-semibold">Skills Earned</p>
+                        <ul className="list-disc list-inside text-gray-300 text-sm">
+                          {selectedBadge.skillsEarned?.map((skill, idx) => (
+                            <li key={idx}>{skill}</li>
+                          ))}
+                        </ul>
+                      </div>
                     </div>
                   </div>
                 </div>
+              </>
+            ) : (
+              <div className="text-center text-gray-300 space-y-4">
+                <h3 className="text-xl font-semibold text-white">No Badges Yet</h3>
+                <p>
+                  You haven’t earned any badges yet. To start earning badges, click the
+                  button below.
+                </p>
+                <button
+                  onClick={() => window.open("https://learn.deepcytes.io/", "_blank")}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-300"
+                >
+                  Start Earning Badges
+                </button>
               </div>
             )}
+          </div>
 
             {/* Courses */}
             <div className="bg-[#0C0E3C] p-6 rounded-2xl shadow-md">
