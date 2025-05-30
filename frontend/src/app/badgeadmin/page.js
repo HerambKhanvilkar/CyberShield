@@ -15,6 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import UserDetailsView from '@/components/UserDetailsView';
 import BadgeCreationForm from '@/components/BadgeCreationForm';
+import ErrorTable from '@/components/badgeAdminComponents/CsvDataTable';
 
 const TABS = ['Users', 'Import', 'Badges'];
 const ITEMS_PER_PAGE = 10;
@@ -22,7 +23,7 @@ const ITEMS_PER_PAGE = 10;
 export default function SettingsPage() {
   const [searchResults, setSearchResults] = useState([]); // Initialize as an empty array
   const [selectedUser, setSelectedUser] = useState(null);
-  const [activeTab, setActiveTab] = useState('Badges');
+  const [activeTab, setActiveTab] = useState('Import');
 
   // Page status
   const [currentPage, setCurrentPage] = useState(1);
@@ -76,7 +77,7 @@ const updateUserDetails = (email, updatedUser) => {
   // File Upload Code
   const [file, setFile] = useState(null);
   const [message, setMessage] = useState('');
-  const [data, setData] = useState([]);
+  const [data, setData] = useState({});
 
   const handleFileChange = (event) => {
     setFile(event.target.files[0]); // Get the selected file
@@ -102,8 +103,36 @@ const updateUserDetails = (email, updatedUser) => {
         },
       });
 
-      setData(response.data.data);
+      setData(response.data);
       toast.success('File uploaded successfully!'); // Success message
+    } catch (error) {
+      console.error('There was a problem with the upload operation:', error);
+      toast.error('Error uploading file.'); // Error message
+    }
+  };
+
+  const handlePreviewCSV = async () => {
+    const apiUrl = process.env.SERVER_URL + '/users/import/preview';
+    const token = localStorage.getItem("accessToken");
+
+    if (!file) {
+      setMessage('Please select a file to upload.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file); // Append the file to the FormData object
+
+    try {
+      const response = await axios.post(apiUrl, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data', // Set the content type
+          Authorization: `Bearer ${token}`, // Add the token to the headers
+        },
+      });
+
+      setData(response.data);
+      toast.success('Preview Loaded successfully!'); // Success message
     } catch (error) {
       console.error('There was a problem with the upload operation:', error);
       toast.error('Error uploading file.'); // Error message
@@ -186,13 +215,6 @@ const updateUserDetails = (email, updatedUser) => {
 
               </div>
               <div className="space-x-2">
-                  { file ? ( 
-                    <button  onClick={handleUpload} className="bg-blue-500 text-white text-sm px-4 py-1 rounded">
-                      Upload CSV                    
-                    </button>
-                  ) : ( 
-                    null
-                  )}
                 <button className="bg-green-700 text-white text-sm px-4 py-1 rounded"
                   onClick={handleDownload}
                 >
@@ -209,38 +231,20 @@ const updateUserDetails = (email, updatedUser) => {
               </div>
           ) : (
               <div className="relative scrollable shadow-md sm:rounded-lg h-full border-green-50 border-solid rounded-lg bg-white/5 flex items-center justify-center text-gray-400">
-             {data.length > 0 && (
-                <table className="w-full text-sm text-left rtl:text-right text-gray-400 ">
-                    <thead className="text-xs uppercase bg-gray-700 text-gray-400">
-                        <tr>
-                            <th scope="col" className="px-6 py-3">ID</th>
-                            <th scope="col" className="px-6 py-3">Email</th>
-                            <th scope="col" className="px-6 py-3">First Name</th>
-                            <th scope="col" className="px-6 py-3">Last Name</th>
-                            <th scope="col" className="px-6 py-3">Badge IDs</th>
-                            <th scope="col" className="sr-only">Edit</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {data.map((item) => (
-                            <tr className="odd:bg-gray-900 even:bg-gray-800 border-b border-gray-700" key={item._id}>
-                                <td className="px-6 py-3">{item._id}</td>
-                                <td className="px-6 py-3">{item.email}</td>
-                                <td className="px-6 py-3">{item.firstName}</td>
-                                <td className="px-6 py-3">{item.lastName}</td>
-                                <td className="px-6 py-3">{item.badgeIds}</td>
-                                <td className="px-6 py-3">
-                                  <button className="font-medium text-blue-500 hover:underline">
-                                    Edit
-                                  </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+             {data.errors && (
+               <ErrorTable data={data} />
             )}
               </div>
           )}
+          <div >
+                  { file ? ( 
+                    <button  onClick={handlePreviewCSV} className="bg-blue-500 text-white text-sm px-4 py-1 rounded">
+                      Preview CSV                    
+                    </button>
+                  ) : ( 
+                    null
+                  )}
+          </div>
             </div>
           </div>
         );

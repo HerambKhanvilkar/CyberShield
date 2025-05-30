@@ -117,6 +117,7 @@ useEffect(() => {
                     <img
                       src={`${process.env.SERVER_URL}/badge/images/${badge.id}` || badge.img?.data}
                       alt={badge.name}
+                      crossorigin="anonymous"
                       className="w-24 h-24 object-contain drop-shadow-xl"
                     />
                   </div>
