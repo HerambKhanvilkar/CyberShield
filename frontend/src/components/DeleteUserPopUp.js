@@ -55,14 +55,9 @@ const DeleteUserDialog = ({ user, updateUserDetails }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <div className="p-4 flex flex-row bg-blue-950/30 backdrop-blur-md rounded-md shadow-lg space-y-4 max-w-md">
-      <h2 className="text-lg font-semibold text-gray-200">
-        Delete User
-      </h2>
         <Button className="mx-2 bg-[#530006] border-[#530006]" variant="outline" onClick={handleOpen}>
           <Trash2 />
         </Button>
-      </div>
 
       {isOpen && (
         <DialogContent className="max-w-md bg-blue-950/30 backdrop-blur-md shadow-lg rounded-md">

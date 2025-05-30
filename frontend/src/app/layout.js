@@ -13,7 +13,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body style={{ backgroundColor: "#00011e" }}>
+      <body className="bg-[#00011e]">
         <SessionProviderWrapper>
           <AuthProvider>
             <WatchlistProvider>

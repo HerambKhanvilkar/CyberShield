@@ -329,5 +329,3 @@
 .front,
 .back { backface-visibility: hidden;}
 .back{ transform: rotateY(.5turn);}
-
-

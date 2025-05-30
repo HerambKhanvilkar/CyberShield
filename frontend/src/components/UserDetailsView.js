@@ -4,15 +4,17 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import AssignBadgePopUp from "@/components/AssignBadgePopUp";
 import RevokeBadgePopUp from "@/components/RevokeBadgePopUp";
+import Achievements from "@/components/Achievements";
+import Courses from "@/components/Courses";
 import DeleteUserPopUp from "@/components/DeleteUserPopUp";
 import { MinusCircle } from 'lucide-react';
 
 
-function EditableField({ label, value, onChange }) {
+function EditableField({ label, value, onChange, className = "" }) {
   const [editing, setEditing] = useState(false);
   const [setUsers] = useState(false);
   return (
-    <div className="mb-4 group">
+    <div className="`mb-4 group ${className}`">
       <label className="block text-sm font-medium text-gray-300 mb-1">{label}</label>
       <div className="relative">
         <input
@@ -144,71 +146,76 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
         <EditableField label="First Name" value={form.firstName} onChange={(val) => handleChange("firstName", val)} />
         <EditableField label="Last Name" value={form.lastName} onChange={(val) => handleChange("lastName", val)} />
         <EditableField label="Email" value={form.email} onChange={(val) => handleChange("email", val)} />
+      </div>
 
-        <div className="flex items-center space-x-2 relative">
-          <EditableField
-            label="Password"
-            value={form.password}
-            onChange={(val) => handleChange("password", val)}
-            className="flex-1"
-          />
+      <div className="flex items-center space-x-2 relative">
+        <EditableField
+          label="Password"
+          value={form.password}
+          onChange={(val) => handleChange("password", val)}
+          className="flex-1"
+        />
 
-          <div className="relative group">
+        <div className="relative group flex flex-row items-center justify-between space-x-2">
+          <div>
             <input
               type="checkbox"
               checked={form.sendMail}
               onChange={(e) => handleChange("sendMail", e.target.checked)}
               className="form-checkbox text-blue-500"
             />
-            <div className="absolute -top-8 left-1/2 -translate-x-1/2 scale-0 group-hover:scale-100 transition-transform bg-black text-white text-xs px-2 py-1 rounded shadow-md z-10">
+            <div className="absolute scale-0 group-hover:scale-100 transition-transform bg-black text-white text-xs px-2 py-1 rounded shadow-md z-10">
               Send mail to user
             </div>
           </div>
+          <AssignBadgePopUp user={selectedUser} updateUserDetails={updateUserDetails} />
+          <RevokeBadgePopUp user={selectedUser} updateUserDetails={updateUserDetails} />
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row mb-6 mr-2">
+      <div className="w-full flex flex-col lg:flex-row mr-2">
         <div className="flex flex-col w-1/2 items-start justify-start mb-2">
-          <div className="flex flex-row gap-4">
-            <AssignBadgePopUp user={selectedUser} updateUserDetails={updateUserDetails} />
-            <RevokeBadgePopUp user={selectedUser} updateUserDetails={updateUserDetails} />
-          </div>
-          <div className="flex flex-row mt-2">
-            <DeleteUserPopUp user={selectedUser} updateUserDetails={updateUserDetails} />
+          <div className="flex flex-col gap-4">
+            <Achievements user={selectedUser} updateUserDetails={updateUserDetails} />
+            <Courses user={selectedUser} updateUserDetails={updateUserDetails} />
           </div>
         </div>
 
         {/* show badges */}
-        <div className="w-1/2 mt-6">
-  <h3 className="text-lg font-semibold mb-2">Badges</h3>
-  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-    {selectedUser.badges && selectedUser.badges.length > 0 ? (
-      selectedUser.badges.map((badge, index) => (
-        <div key={index} className="relative flex flex-col items-center bg-[#1A1B2E] p-4 rounded-lg">
-          {/* Minus button top-right */}
-          <button
-            onClick={() => handleRevokeBadge(badge.badgeId, selectedUser.email, updateUserDetails)}
-            className="absolute top-1 right-1 text-red-500 hover:text-red-700"
-            title="Revoke badge"
-          >
-            <MinusCircle size={18} />
-          </button>
+        <div className="flex flex-col w-full md:w-1/2 items-start justify-start mb-6">
+          <h3 className="text-xl font-bold text-white mb-4 border-b border-blue-500 pb-1 tracking-wide">
+            Assigned Badges
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-6 w-full">
+            {selectedUser.badges && selectedUser.badges.length > 0 ? (
+              selectedUser.badges.map((badge, index) => (
+                <div
+                  key={index}
+                  className="relative flex flex-col items-center justify-center bg-gradient-to-br from-[#1f2937]/70 to-[#111827]/70 border border-blue-500/20 p-4 rounded-2xl shadow-xl transition-transform hover:scale-105 hover:shadow-blue-500/30"
+                >
+                  <button
+                    onClick={() => handleRevokeBadge(badge.badgeId, selectedUser.email, updateUserDetails)}
+                    className="absolute top-2 right-2 text-red-400 hover:text-red-600 transition-colors"
+                    title="Revoke badge"
+                  >
+                    <MinusCircle size={18} />
+                  </button>
 
-          {/* Badge image and name */}
-          <img
-            src={`./images/img${badge.badgeId}.png`}
-            alt={`Badge ${badge.badgeId}`}
-            className="w-16 h-16 mb-2"
-          />
-          <span className="text-sm font-medium text-center">{badge.name}</span>
+                  <img
+                    src={`./images/img${badge.badgeId}.png`}
+                    alt={`Badge ${badge.name || badge.badgeId}`}
+                    className="w-16 h-16 mb-3 drop-shadow-lg"
+                  />
+                  <span className="text-sm font-semibold text-center text-gray-100">
+                    {badge.name || "Unnamed Badge"}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-400 col-span-full text-center text-sm italic">No badges assigned.</p>
+            )}
+          </div>
         </div>
-      ))
-    ) : (
-      <p className="text-gray-400 col-span-full">No badges assigned.</p>
-    )}
-  </div>
-</div>
-
       </div>
         
       <br/>
@@ -218,6 +225,7 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
       >
         Save Changes
       </button>
+      <DeleteUserPopUp user={selectedUser} updateUserDetails={updateUserDetails} />
     </div>
   );
 }

@@ -2,6 +2,8 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import React, { useEffect, useRef, useState } from "react";
+import ParticleBackground from "@/components/ParticleBackground";
+import CountUp from "@/components/countup";
 
 export default function LandingPage() {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -44,8 +46,12 @@ export default function LandingPage() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen overflow-x-hidden bg-gradient-to-br from-primary-dark to-primary-medium text-text-light font-sans">
-        <div className="max-w-[1200px] mx-auto px-5">
+      <div className="relative min-h-screen text-white font-sans">
+        <ParticleBackground />
+        <div className="relative max-w-[1200px] z-10 mx-auto px-5">
+
+      {/* <div className="min-h-screen overflow-x-hidden bg-gradient-to-br from-primary-dark to-primary-medium text-text-light font-sans">
+        <div className="max-w-[1200px] mx-auto px-5"></div> */}
           {/* Hero */}
           <section className="min-h-[calc(100vh-70px)] flex items-center justify-center text-center px-5 py-12 relative">
             <div className="max-w-[800px] animate-fadeIn">
@@ -76,7 +82,7 @@ export default function LandingPage() {
 
           {/* Featured Badge */}
           {!loading && badges.length > 0 && (
-            <section className="py-20">
+            <section className="py-20 relative">
               <h2 className="text-3xl sm:text-4xl mb-10 text-center">Featured Badge</h2>
               <div className="flex items-center gap-10 flex-wrap md:flex-nowrap text-text-light">
                 <div className="flex-1 text-center md:text-left">
@@ -88,11 +94,13 @@ export default function LandingPage() {
                   </p>
                   <div className="flex gap-8 flex-wrap justify-center md:justify-start">
                     <div className="bg-white/5 rounded-lg p-4 text-center flex-1 min-w-[150px]">
-                      <p className="text-xl font-bold text-cyan-400 mb-1">150+</p>
+                      {/* <p className="text-xl font-bold text-cyan-400 mb-1">150+</p> */}
+                      <CountUp endValue={12345} duration={1500} />
                       <p className="text-sm text-text-medium">Holders</p>
                     </div>
                     <div className="bg-white/5 rounded-lg p-4 text-center flex-1 min-w-[150px]">
-                      <p className="text-xl font-bold text-cyan-400 mb-1">2024</p>
+                      {/* <p className="text-xl font-bold text-cyan-400 mb-1">2024</p> */}
+                      <CountUp endValue={2024} duration={1500} />
                       <p className="text-sm text-text-medium">Year Launched</p>
                     </div>
                   </div>
@@ -110,7 +118,7 @@ export default function LandingPage() {
 
           {/* Badge Carousel */}
           {!loading && badges.length > 0 && (
-            <section className="py-20 bg-gradient-to-t from-primary-dark to-transparent">
+            <section className="relative py-20 bg-gradient-to-t from-primary-dark to-transparent">
               <h2 className="text-3xl sm:text-4xl mb-10 text-center">All Badges</h2>
               <div className="overflow-y-hidden overflow-x-auto no-scrollbar px-5">
                 <div
@@ -140,7 +148,7 @@ export default function LandingPage() {
           )}
 
           {/* Why Earn Badges */}
-          <section className="py-20">
+          <section className="py-20 relative">
             <h2 className="text-3xl sm:text-4xl text-center text-white mb-10">
               Why Earn Badges?
             </h2>
@@ -152,7 +160,8 @@ export default function LandingPage() {
                 { emoji: "🌐", title: "Join Community", text: "Connect with other cybersecurity professionals in a growing community." },
               ].map((item, index) => (
                 <div key={index} className="p-8 flex flex-col items-center text-center transition-transform duration-300 hover:-translate-y-2 hover:shadow-xl bg-white/5 rounded-lg">
-                  <div className="text-5xl mb-5 bg-gradient-to-br from-cyan-400 to-teal-400 bg-clip-text text-transparent">
+                  {/* <div className="text-5xl mb-5 bg-gradient-to-br from-cyan-400 to-teal-400 bg-clip-text text-transparent"> */}
+                  <div className="text-5xl mb-5 bg-gradient-to-br from-green-800 to-green-400 bg-clip-text text-transparent">
                     {item.emoji}
                   </div>
                   <h3 className="text-lg sm:text-xl text-white mb-3 font-semibold">
