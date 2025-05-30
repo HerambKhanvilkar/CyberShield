@@ -12,6 +12,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 function BadgeCreationForm () {
   const [searchResults, setSearchResults] = useState([]); // Initialize as an empty array
   const [selectedBadge, setSelectedBadge] = useState(null);
+  const [isLevelsDropDownOpen, setIsLevelsDropDownOpen] = useState(false);
+  const [isCoursesDropDownOpen, setIsCoursesDropDownOpen] = useState(false);
   const [isSkillsDropDownOpen, setIsSkillsDropDownOpen] = useState(false);
   const [isVerticalsDropDownOpen, setIsVerticalsDropDownOpen] = useState(false);
   const [skillsEarned, setSkillsEarned] = useState([]);
@@ -91,6 +93,21 @@ function BadgeCreationForm () {
 
   }, []);
 
+  const handleLevelsDropDownToggle = () => {
+    if (!isLevelsDropDownOpen && isSkillsDropDownOpen) {
+      handleSkillsDropDownToggle();
+    }
+    if (!isLevelsDropDownOpen && isVerticalsDropDownOpen) {
+      handleVerticalsDropDownToggle();
+    }
+    setIsLevelsDropDownOpen(!isLevelsDropDownOpen);
+  };
+  const [newLevelModalOpen, setNewLevelModalOpen] = useState(false);
+
+  const handleNewLevelModalToggle = () => {
+    setNewLevelModalOpen(!newLevelModalOpen);
+  };
+
   const handleSkillsDropDownToggle = () => {
     if ( !isSkillsDropDownOpen && isVerticalsDropDownOpen){
       handleVerticalsDropDownToggle();
@@ -104,6 +121,21 @@ function BadgeCreationForm () {
     }
     setIsVerticalsDropDownOpen(!isVerticalsDropDownOpen);
   }
+
+  const handleCoursesDropDownToggle = () => {
+    if (!isLevelsDropDownOpen && isSkillsDropDownOpen) {
+      handleSkillsDropDownToggle();
+    }
+    if (!isLevelsDropDownOpen && isVerticalsDropDownOpen) {
+      handleVerticalsDropDownToggle();
+    }
+    setIsCoursesDropDownOpen(!isLevelsDropDownOpen);
+  };
+  const [newCoursesModalOpen, setNewCoursesModalOpen] = useState(false);
+
+  const handleNewCoursesModalToggle = () => {
+    setNewLevelModalOpen(!newLevelModalOpen);
+  };
 
   const handleChange = (e) => {
    const { name, value, type, checked } = e.target;
@@ -292,6 +324,7 @@ useEffect(() => {
           </ScrollArea>
         </div>
         <div className="w-1/3 mr-2">
+          {/* Badge Id */}
           <div className="grid md:grid-cols-2 md:gap-6">
             <div className="relative z-0 w-full mb-5 group">
               <IdInput
@@ -299,7 +332,7 @@ useEffect(() => {
                 handleChange={handleChange}
               />
             </div>
-
+            {/* Badge Name */}
             <div className="relative z-0 w-full mb-5 group">
               <NameInput
                 formData={formData}
@@ -309,6 +342,7 @@ useEffect(() => {
           </div>
 
           <div className="relative z-0 w-full mb-5 group">
+            {/* Badge Description */}
             <DescriptionTextArea
                 formData={formData}
                 handleChange={handleChange}
@@ -317,29 +351,71 @@ useEffect(() => {
 
           <div className="grid md:grid-cols-2 md:gap-6">
             <div className="relative z-0 w-full mb-5 group">
-              <LevelSelect
-                  formData={formData}
-                  handleChange={handleChange}
-                />
-            </div>
-
-            <div className="hidden relative z-0 w-full mb-5 group">
-              <label htmlFor="difficulty" className="block mb-2 text-sm font-medium text-white">Select badge difficulty </label>
-              <select id="difficulty" className="border text-sm rounded-lg block w-full p-2.5 bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500">
-                { ['Easy', 'Medium', 'Hard', 'Expert', 'Extreme'].map(d => ( <option key={d} value={d}> {d} </option>))}
-              </select>
+              
             </div>
           </div>
 
+          {/* Badge Level */}
+              <div className="grid md:grid-cols-2 md:gap-6">
+                <div className="relative z-0 w-full mb-5 group">
+                  <button
+                    id="dropLeveldownSearchButton"
+                    data-dropdown-toggle="dropdownSearch"
+                    data-dropdown-placement="bottom"
+                    onClick={handleLevelsDropDownToggle}
+                    className={`${isLevelsDropDownOpen ? 'bg-blue-600' : 'bg-gray-700'} w-full text-white justify-between focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-2.5 py-2.5 text-center inline-flex items-center hover:bg-blue-700 focus:ring-blue-800`}
+                    type="button"
+                  >
+                    Select Level
+                    <svg
+                      className="w-2.5 h-2.5 ms-3"
+                      aria-hidden="true"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 10 6"
+                    >
+                      <path
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="m1 1 4 4 4-4"
+                      />
+                    </svg>
+                  </button>
+                </div>
+
+                <div className={`relative z-1 w-full mb-5 group ${isLevelsDropDownOpen ? '' : 'hidden'}`}>
+                  <div
+                    id="dropdownSearch"
+                    className={`w-full z-4 absolute rounded-lg shadow-sm bg-gray-700`}
+                  >
+                    <SearchDropdown
+                      levelsList={['Noob','Amateur', 'Intermediate','Expert','Professional','Specialist']} // You must pass this prop for level options
+                      formData={formData}
+                      handleChange={handleChange}
+                      isLevelDropdown // Optional prop to let SearchDropdown know which mode it's in
+                    />
+                    <a
+                      onClick={handleNewLevelModalToggle}
+                      className="flex items-center p-3 text-sm font-medium border-gray-600 bg-gray-700 hover:bg-gray-600 text-blue-500 hover:underline"
+                    >
+                      Add new Level
+                    </a>
+                  </div>
+                </div>
+              </div>
+
           <div className="grid md:grid-cols-2 md:gap-6">
             <div className="relative z-0 w-full mb-5 group">
-              <button id="dropSkilldownSearchButton" 
+              {/* Badge Skills */}
+              <button id="dropSkilldownSearchButton"  
                 data-dropdown-toggle="dropdownSearch" data-dropdown-placement="bottom" 
                 onClick={handleSkillsDropDownToggle} 
                 className={`${isSkillsDropDownOpen ? 'bg-blue-600' : 'bg-gray-700' } w-full text-white justify-between focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-2.5 py-2.5 text-center inline-flex items-center bg-blue-600 hover:bg-blue-700 focus:ring-blue-800`} 
                 type="button"
                 >
-                  Select Skills for Badge
+                  Select Skills
                   <svg className="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6" >
                     <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 4 4 4-4" />
                   </svg>
@@ -367,26 +443,26 @@ useEffect(() => {
           <div className="grid md:grid-cols-2 md:gap-6">
             <div className="relative z-0 w-full mb-5 group">
               <button id="dropdownSearchButton" data-dropdown-toggle="dropdownSearch" data-dropdown-placement="bottom" 
-                onClick={handleVerticalsDropDownToggle} 
-                className={`${isVerticalsDropDownOpen ? 'bg-blue-600' : 'bg-gray-700' } w-full text-white justify-between focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-2.5 py-2.5 text-center inline-flex items-center bg-blue-600 hover:bg-blue-700 focus:ring-blue-800`} 
+                onClick={handleCoursesDropDownToggle} 
+                className={`${isCoursesDropDownOpen ? 'bg-blue-600' : 'bg-gray-700' } w-full text-white justify-between focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-2.5 py-2.5 text-center inline-flex items-center bg-blue-600 hover:bg-blue-700 focus:ring-blue-800`} 
                 type="button"
                 >
-                  Select a Course for Badge
+                  Select a Course
                     <svg className="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6" >
                       <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 4 4 4-4" />
                     </svg>
               </button>
             </div>
 
-            <div className={`relative z-1 w-full mb-5 group ${isVerticalsDropDownOpen ? '' : 'hidden' }`}>
-              <div id="dropdownSearch" className={`${isVerticalsDropDownOpen ? '' : 'hidden' } w-full z-4 absolute rounded-lg shadow-sm w-60 bg-gray-700`}>
+            <div className={`relative z-1 w-full mb-5 group ${isCoursesDropDownOpen ? '' : 'hidden' }`}>
+              <div id="dropdownSearch" className={`${isCoursesDropDownOpen ? '' : 'hidden' } w-full z-4 absolute rounded-lg shadow-sm w-60 bg-gray-700`}>
                 <SearchDropdown  
                 skillsEarned={verticals} 
                 formData={formData} 
                 handleChange={handleChange}
                 />
                 <a
-              onClick={handleNewVerticalModalToggle}
+              onClick={handleNewCoursesModalToggle}
                 className="flex items-center p-3 text-sm font-medium border-gray-600 bg-gray-700 hover:bg-gray-600 text-blue-500 hover:underline"
                 >
                 Add new Course
@@ -394,7 +470,8 @@ useEffect(() => {
               </div>
             </div>
           </div>
-
+          
+          {/* Vertical */}
           <div className="grid md:grid-cols-2 md:gap-6">
             <div className="relative z-0 w-full mb-5 group">
               <button id="dropdownSearchButton" data-dropdown-toggle="dropdownSearch" data-dropdown-placement="bottom" 
@@ -402,7 +479,7 @@ useEffect(() => {
                 className={`${isVerticalsDropDownOpen ? 'bg-blue-600' : 'bg-gray-700' } w-full text-white justify-between focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-2.5 py-2.5 text-center inline-flex items-center bg-blue-600 hover:bg-blue-700 focus:ring-blue-800`} 
                 type="button"
                 >
-                  Select a Vertical for Badge
+                  Select a Vertical
                     <svg className="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6" >
                       <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 4 4 4-4" />
                     </svg>
@@ -430,7 +507,7 @@ useEffect(() => {
         <div className="w-1/3 ml-2">
           <div className="grid md:grid-cols-1 pb-2.5 md:gap-6">
               {preview ? (
-                <div className="flex flex-col items-center justify-center w-full h-full rounded-lg bg-gray-700 border-gray-600">
+                <div className="flex flex-col items-center justify-center w-full max-h-[400px] rounded-lg bg-gray-700 border-gray-600">
                   <img src={preview} alt="Preview" className="w-full h-full object-cover p-2.5 rounded-lg" />
                 <button 
                 type="button" 
