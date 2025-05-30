@@ -110,7 +110,7 @@ const SharedBadgePage = () => {
   return (
     <div className="min-h-screen bg-[#00011E] text-white px-4">
       <Navbar />
-      <div className="max-w-5xl mx-auto mt-10 space-y-6">
+      <div className="max-w-5xl mx-auto mt-2 space-y-6">
         {/* Verification Header */}
         <div className="glass-card p-5 rounded-xl flex justify-between items-center">
           <div className="flex items-center gap-4">
@@ -135,28 +135,46 @@ const SharedBadgePage = () => {
 
           {/* Badge Details */}
           <div>
-            <p className="text-white/60 mb-4">
+            {/* <p className="text-white/60 mb-4">
               Badge issued to <strong>{user}</strong> on {formatDate(timestamp)}
-            </p>
+            </p> */}
             <h1 className="text-3xl font-bold text-cyan-400 mb-4">{badge.name}</h1>
-            <p className="mb-4">
+            {/* <p className="mb-4">
               Issued by{' '}
               <a href={issuerData.website} target="_blank" className="text-cyan-400 hover:underline" rel="noreferrer">
                 {issuerData.name}
               </a>
-            </p>
+            </p> */}
             <p className="mb-6">{badge.description}</p>
+
+            <div className="flex flex-row gap-4 mb-6">
+              <div className="flex-1 w-1/2">
+                <h2 className="text-xl font-semibold text-cyan-400 mb-2">Difficulty</h2>
+                <p>{badge.difficulty}</p>
+              </div>
+              <div className="flex-1 w-1/2">
+                <h2 className="text-xl font-semibold text-cyan-400 mb-2">Level</h2>
+                <p>{badge.level}</p>
+              </div>
+            </div>
+
+            <h2 className="text-xl font-semibold text-cyan-400 mb-2">Vertical</h2>
+            <p>{badge.vertical}</p>
 
             <h2 className="text-xl font-semibold text-cyan-400 mb-2">Skills</h2>
             <div className="flex flex-wrap gap-2 mb-6">
-              {badge.skillsEarned?.map((skill, i) => (
-                <span
-                  key={i}
-                  className="bg-white/10 text-sm px-3 py-1 rounded-full text-white backdrop-blur-sm"
-                >
-                  {skill}
-                </span>
-              ))}
+              {badge.skillsEarned && badge.skillsEarned.length > 0 ? (
+                badge.skillsEarned.map((skill, i) => (
+                  <span
+                    key={i}
+                    className="bg-white/10 text-sm px-3 py-1 rounded-full text-white backdrop-blur-sm"
+                  >
+                    {skill}
+                  </span>
+                ))
+              ) : (
+                <p className="text-sm text-white/70">No skills found for this badge</p>
+              )}
             </div>
 
             <h2 className="text-xl font-semibold text-cyan-400 mb-2">Earning Criteria</h2>
@@ -170,7 +188,7 @@ const SharedBadgePage = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-center gap-4">
+        <div className="flex justify-center mb-2 gap-4">
           <Link
             href="/badges"
             className="px-5 py-2 rounded-lg bg-white/10 text-white hover:bg-white/20 transition"
