@@ -86,7 +86,7 @@ router.get("/verify-badge/:id/:username/:timestamp", async (req, res) => {
     
     // Check if user has this specific badge
     const badgeEarned = user.badges.find(
-      b => b.badgeId === parseInt(id)
+      b => b.badgeId == id
     );
     
     if (!badgeEarned) {
@@ -495,75 +495,6 @@ router.post("/revoke-badge", authenticateJWT, async (req, res) => {
         badges: user.badges
       } 
     });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-});
-
-//file upload
-router.post("/users/import",authenticateJWT, upload.single('file'), async (req, res) => {
-  try {
-    const results = [];
-    const errors = [];
-    let count = 0;
-     // Validate CSV file
-    console.log(req.file);
-    fs.createReadStream(req.file.path)
-      .pipe(csv())
-      .on('data', (data) => {
-        count++;
-        // Example validation: Check if required fields are present
-        if (!data._id || !data.email || !data.firstName || !data.lastName  || !data.badgeIds) {
-          errors.push(`${count} Missing required fields in row: ` + JSON.stringify(data));
-        } else {
-          results.push(data);
-          // console.log(JSON.parse("["+ data.badgeIds +"]"));
-        }
-      })
-      .on('end', async () => {
-          // Clean up uploaded file
-          fs.unlinkSync(req.file.path);
-
-          if (errors.length > 0) {
-            return res.status(400).json({ errors });
-          }
-
-          for( user of results){
-
-            const password = 'Pass@123';
-
-            // Hash the password before storing
-            const hashedPassword = await bcrypt.hash(password, 10);
-            // console.log(user);
-            
-            const badgesIds = JSON.parse("["+ user.badgeIds +"]");
-            const badges = badgesIds.map(b => {
-             return { 
-               badgeIds: b,
-               earnedDate: new Date()
-             }
-            });
-
-            // Save new user
-            const newUser = new User({
-              email: user.email, 
-              firstName: user.firstName, 
-              lastName: user.lastName, 
-              badges,
-              password: hashedPassword,
-              isAdmin: false // Default to non-admin
-            });
-            await newUser.save();
-
-          }
-
-          res.status(200).json({ message: 'CSV file processed successfully', data: results });
-        })
-      .on('error', (error) => {
-        res.status(500).json({ error: 'Error processing CSV file' }, { invalidRows: errors});
-      });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });

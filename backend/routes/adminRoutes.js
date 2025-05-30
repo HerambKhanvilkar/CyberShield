@@ -7,7 +7,13 @@ const path = require('path');
 const Badge = require("../models/Badge");
 const BadgeImage = require("../models/BadgeImage");
 const User = require("../models/User");
+const JobResult = require("../models/JobResult");
 const jwt = require('jsonwebtoken');
+const csv = require('csv-parser');
+const bcrypt = require("bcrypt");
+const { Parser } = require('json2csv');
+const agenda = require('../worker.js'); // path to your agenda initialization module
+
 // const { validateMIMEType } = require("validate-image-type");
 
 const upload = multer({ dest: 'uploads/' });
@@ -26,6 +32,59 @@ const getUsername = async (authHeader) => {
   return user.email;
 }
 
+// Dummy functions simulating DB look-up. Replace with your DB logic.
+const checkDuplicateUser = (email, usersArray) => {
+  // Returns true if user exists
+  return usersArray.some(u => email === u);
+};
+
+const checkBadgeExists = (badgeId, badgesArray) => {
+  return badgesArray.some(b => b == badgeId);
+};
+
+const nameRegex = /^[A-Za-z]+$/; // Allow only letters for names (adjust the regex as needed)
+
+router.put("/badge/import", authenticateJWT, upload.single('image'), async (req, res) => {
+  try {
+
+    const { id, name, desc, level, vertical, skillsEarned } = req.body;
+    var existingBadge = null;
+    var existingBadgeImage = null;
+    if (!id){
+      return res.status(401).json({ message: "Badge Id required" });
+    }
+    existingBadge = await Badge.findOne({id});
+    existingBadgeImage = await BadgeImage.findOne({id});
+
+    if (!existingBadge){
+      return res.status(401).json({ message: "Badge yet to be created" });
+    }
+
+
+    if (skillsEarned && skillsEarned !== []) { existingBadge["skillsEarned"] = skillsEarned } 
+    if (vertical) { existingBadge["vertical"] = vertical } 
+    if (level) { existingBadge["level"] = level } 
+    if (desc) { existingBadge["desc"] = desc } 
+    if (name) { existingBadge["name"] = name } 
+
+    if (req.file){
+        existingBadgeImage["image"] = fs.readFileSync(
+          path.join(__dirname, '../uploads/', req.file.filename)
+        );
+        existingBadge["contentType"]= req.file.mimetype;
+    }
+
+    existingBadge.save();
+    existingBadgeImage.save();
+    res.status(200).json({ message: 'Badge Modified successfully', data: existingBadge });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+  });
+
+
 // upload badge
 router.post("/badge/import", authenticateJWT, upload.single('image'), async (req, res) => {
 // router.post("/admin/badge/import", authenticateJWT, async (req, res) => {
@@ -33,6 +92,7 @@ router.post("/badge/import", authenticateJWT, upload.single('image'), async (req
     console.log("TOP", req.body);
     const { id, name, desc, level, vertical, skillsEarned } = req.body;
     if ( !id || !name || !desc || !level || !vertical || !skillsEarned ){
+      return res.status(401).json({ message: "Missing Fields!" });
     }
     const badgeExist = await Badge.findOne({id});
     const badgeImageExist = await BadgeImage.findOne({id});
@@ -139,5 +199,146 @@ router.post("/user/delete", authenticateJWT, async (req, res) => {
   }
 });
 
+router.post("/user/create", authenticateJWT, async (req, res) => {
+  try {
+    const { email, firstName, lastName, password } = req.body;
+
+    const authHeader = req.headers.authorization;
+
+    const adminUsername = await getUsername(authHeader);
+
+    const adminUser = await User.findOne({ email: adminUsername });
+    
+    if (!adminUser || !adminUser.isAdmin) {
+      return res.status(403).json({ message: "Unauthorized. Admin access required." });
+    }
+    
+    // Check if user exists
+    const user = await User.findOne({ email });
+    if (user) {
+      return res.status(404).json({ message: "User already exists" });
+    }
+
+    // Hash the password before storing
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Save new user
+    const newUser = new User({ 
+      email, 
+      firstName, 
+      lastName, 
+      password: hashedPassword,
+      isAdmin: false // Default to non-admin
+    });
+    await newUser.save();
+
+    res.status(200).json({ message: 'User created Successfly', email});
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+//file upload
+router.post("/users/import/preview", authenticateJWT, upload.single('file'), async (req, res) => {
+  try {
+    // Ensure file exists
+    if (!req.file || !req.file.path) {
+      return res.status(400).json({ message: "No file uploaded." });
+    }
+    
+    const authHeader = req.headers.authorization;
+    const email = await getUsername(authHeader);
+
+    // Enqueue the CSV processing job, passing the file path.
+    const job = await agenda.schedule('now', 'process csv file', { filePath: req.file.path, userId: email });
+
+    // Create initial job status record
+    await JobResult.create({
+      jobId: job.attrs._id,
+      userId: email,
+      status: 'pending'
+    });
+
+
+    return res.status(202).json({
+      message: "CSV file successfully queued for processing.",
+      jobId: job.attrs._id
+    });
+
+  } catch (error) {
+    console.error("Internal Server Error:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+//file upload
+router.post("/users/import",authenticateJWT, upload.single('file'), async (req, res) => {
+  try {
+    const results = [];
+    const errors = [];
+    let count = 0;
+     // Validate CSV file
+    console.log(req.file);
+    fs.createReadStream(req.file.path)
+      .pipe(csv())
+      .on('data', (data) => {
+        count++;
+        // Example validation: Check if required fields are present
+        if (!data._id || !data.email || !data.firstName || !data.lastName  || !data.badgeIds) {
+          errors.push(`${count} Missing required fields in row: ` + JSON.stringify(data));
+        } else {
+          results.push(data);
+          // console.log(JSON.parse("["+ data.badgeIds +"]"));
+        }
+      })
+      .on('end', async () => {
+          // Clean up uploaded file
+          fs.unlinkSync(req.file.path);
+
+          if (errors.length > 0) {
+            return res.status(400).json({ errors });
+          }
+
+          for( user of results){
+
+            const password = 'Pass@123';
+
+            // Hash the password before storing
+            const hashedPassword = await bcrypt.hash(password, 10);
+            // console.log(user);
+            
+            const badgesIds = JSON.parse("["+ user.badgeIds +"]");
+            const badges = badgesIds.map(b => {
+             return { 
+               badgeIds: b,
+               earnedDate: new Date()
+             }
+            });
+
+            // Save new user
+            const newUser = new User({ email: user.email,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              badges,
+              password: hashedPassword,
+              isAdmin: false // Default to non-admin 
+            });
+            // await newUser.save();
+
+          }
+
+          res.status(200).json({ message: 'CSV file processed successfully', data: results });
+        })
+      .on('error', (error) => {
+        res.status(500).json({ error: 'Error processing CSV file' }, { invalidRows: errors});
+      });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
 
 module.exports = router;

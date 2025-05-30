@@ -22,11 +22,19 @@ const UserSchema = new mongoose.Schema({
   },
   badges: {
     type: Array,
-    default: []
+    default: [],
   },
   isAdmin: {
     type: Boolean,
     default: false
+  },
+  achievements: {
+    type: Array,
+    default: []
+  },
+  courses: {
+    type: Array,
+    default: []
   },
   refreshToken: {
     type: String,

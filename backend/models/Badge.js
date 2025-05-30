@@ -1,10 +1,5 @@
 const mongoose = require('mongoose');
 
-const imgSchema = new mongoose.Schema({
-  data: { type: Buffer, required: true, },
-  contentType: { type: String, default: 'image/png', required: true, }
-},  { _id: false });
-
 const BadgeSchema = new mongoose.Schema({
   id: {
     type: Number,
@@ -19,11 +14,11 @@ const BadgeSchema = new mongoose.Schema({
     type: String,
     required: false
   },
-  difficulty: {
-    type: String,
-    enum: ['Easy', 'Medium', 'Hard', 'Expert', 'Extreme'],
-    default: 'Medium'
-  },
+ //  difficulty: {
+ //    type: String,
+ //    enum: ['Easy', 'Medium', 'Hard', 'Expert', 'Extreme'],
+ //    default: 'Medium'
+ //  },
   description: {
     type: String,
     required: true
@@ -41,11 +36,10 @@ const BadgeSchema = new mongoose.Schema({
   skillsEarned: [{
     type: String,
   }],
-  /* img: imgSchema,
-  createdAt: {
-    type: Date,
-    default: Date.now 
-  } */
+  course: {
+    type: String,
+    default: ''
+  },
 });
 
 module.exports = mongoose.model('Badge', BadgeSchema);
