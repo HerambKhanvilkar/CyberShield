@@ -137,7 +137,6 @@ function BadgeCreationForm () {
     setIsCoursesDropDownOpen(nextState);
   };
 
-
   const handleChange = (e) => {
    const { name, value, type, checked } = e.target;
 

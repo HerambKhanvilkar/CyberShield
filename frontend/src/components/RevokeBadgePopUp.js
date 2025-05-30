@@ -73,9 +73,8 @@ const BadgeAssignmentDropdown = ({ user, updateUserDetails }) => {
   };
 
   return (
-    <div className="p-4 bg-blue-950/30 backdrop-blur-md rounded-md shadow-lg space-y-4 max-w-md">
+    <div className="p-4 space-y-4 max-w-md">
       <h2 className="text-lg font-semibold text-white">Revoke Badge</h2>
-
       <div className='flex flex-row items-center space-x-2'>
         <select
           className="w-full p-2 rounded bg-white text-black disabled:bg-gray-200"
