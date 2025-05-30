@@ -46,12 +46,12 @@ export default function LandingPage() {
   return (
     <>
       <Navbar />
-      {/* <div className="relative min-h-screen text-white font-sans"> */}
-        {/* <ParticleBackground /> */}
-        {/* <div className="relative max-w-[1200px] z-10 mx-auto px-5"> */}
+      <div className="relative min-h-screen text-white font-sans">
+        <ParticleBackground />
+        <div className="relative max-w-[1200px] z-10 mx-auto px-5">
 
-      <div className="min-h-screen overflow-x-hidden bg-gradient-to-br from-primary-dark to-primary-medium text-text-light font-sans">
-        <div className="max-w-[1200px] mx-auto px-5"></div>
+      {/* <div className="min-h-screen overflow-x-hidden bg-gradient-to-br from-primary-dark to-primary-medium text-text-light font-sans">
+        <div className="max-w-[1200px] mx-auto px-5"></div> */}
           {/* Hero */}
           <section className="min-h-[calc(100vh-70px)] flex items-center justify-center text-center px-5 py-12 relative">
             <div className="max-w-[800px] animate-fadeIn">
@@ -160,7 +160,8 @@ export default function LandingPage() {
                 { emoji: "🌐", title: "Join Community", text: "Connect with other cybersecurity professionals in a growing community." },
               ].map((item, index) => (
                 <div key={index} className="p-8 flex flex-col items-center text-center transition-transform duration-300 hover:-translate-y-2 hover:shadow-xl bg-white/5 rounded-lg">
-                  <div className="text-5xl mb-5 bg-gradient-to-br from-cyan-400 to-teal-400 bg-clip-text text-transparent">
+                  {/* <div className="text-5xl mb-5 bg-gradient-to-br from-cyan-400 to-teal-400 bg-clip-text text-transparent"> */}
+                  <div className="text-5xl mb-5 bg-gradient-to-br from-green-800 to-green-400 bg-clip-text text-transparent">
                     {item.emoji}
                   </div>
                   <h3 className="text-lg sm:text-xl text-white mb-3 font-semibold">
@@ -174,7 +175,7 @@ export default function LandingPage() {
             </div>
           </section>
         </div>
-      {/* </div> */}
+      </div>
       <Footer />
     </>
   );

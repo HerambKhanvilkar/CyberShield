@@ -1,7 +1,8 @@
 import React from "react";
 import Link from "next/link";
 
-function UserBlock({ data, updateUserDetails, onSelect }) {
+
+function BadgesBlock({ data, updateBadgeDetails, onSelect }) {
 
   const truncateText = (text, maxLength) => {
     if (text.length > maxLength) {
@@ -15,13 +16,13 @@ function UserBlock({ data, updateUserDetails, onSelect }) {
       
       {/* Left Side */}
       <div className="flex flex-col w-2/3">
-        <h1 className="text-base md:text-l font-bold text-white-700">{data?.firstName}</h1>
-        <h1 className="text-base md:text-l font-bold text-white-700">{data?.lastName}</h1>
-        <span className="text-base md:text-l font-thin font-mono mt-2 text-gray-400">{"(" + data?.email + ")" }</span>
-        <p className="text-base mt-2 font-mono text-gray-400">Badges: {data?.badges?.length}</p>
+        <h1 className="text-base md:text-l font-bold text-white">{data?.name}</h1>
+        <h1 className="text-base md:text-l font-bold text-white-200">{data?.description && `${truncateText(data?.description, 30)}`}</h1>
+
+          <span className="text-base md:text-l font-thin font-mono mt-2 text-gray-400">{data?.difficulty}</span>
       </div>
     </div>
   );
 }
 
-export default UserBlock;
+export default BadgesBlock;

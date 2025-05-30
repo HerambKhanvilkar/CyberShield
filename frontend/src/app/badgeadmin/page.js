@@ -23,6 +23,7 @@ export default function SettingsPage() {
   const [searchResults, setSearchResults] = useState([]); // Initialize as an empty array
   const [selectedUser, setSelectedUser] = useState(null);
   const [activeTab, setActiveTab] = useState('Users');
+  const [usersData, setUsersData] = useState(users);
 
   // Page status
   const [currentPage, setCurrentPage] = useState(1);

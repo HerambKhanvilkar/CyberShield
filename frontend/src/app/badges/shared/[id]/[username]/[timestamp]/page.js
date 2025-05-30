@@ -172,12 +172,6 @@ const SharedBadgePage = () => {
         {/* Action Buttons */}
         <div className="flex justify-center gap-4">
           <Link
-            href={`/badge-view/${badge.id}`}
-            className="px-5 py-2 rounded-lg bg-cyan-600 text-white hover:bg-cyan-700 transition"
-          >
-            View in 3D Gallery
-          </Link>
-          <Link
             href="/badges"
             className="px-5 py-2 rounded-lg bg-white/10 text-white hover:bg-white/20 transition"
           >
