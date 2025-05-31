@@ -281,7 +281,7 @@ const BadgeId = () => {
               }}
             >
               <img
-                src={relatedBadge.image}
+                src={`${process.env.SERVER_URL}/badge/images/${relatedBadge?.id}` || relatedBadge.image?.data}
                 alt={relatedBadge.name}
                 className="rounded-lg shadow-md w-20 h-20 object-cover"
               />
@@ -467,7 +467,7 @@ const BadgeId = () => {
           {badges.map((badge, index) => (
             <img
               key={badge.id}
-              src={badge.image}
+              src={`${process.env.SERVER_URL}/badge/images/${badge?.id}` || badge.image?.data}
               alt={badge.name}
               className={`w-14 h-14 object-cover rounded-md cursor-pointer shadow-md transition-transform ${
                 index === currentBadgeIndex ? 'ring-4 ring-indigo-400 scale-110' : 'opacity-70'
