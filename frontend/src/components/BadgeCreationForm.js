@@ -276,6 +276,8 @@ const updateBadgeDetails = (email, updatedBadge) => {
 
 useEffect(() => {
   if (selectedBadge) {
+    const badgeImageUrl = `${process.env.SERVER_URL}/badge/images/${selectedBadge.id}`;
+
     setFormData({
       id: selectedBadge.id || '',
       name: selectedBadge.name || '',
@@ -283,15 +285,11 @@ useEffect(() => {
       level: selectedBadge.level || '',
       vertical: selectedBadge.vertical || '',
       skillsEarned: selectedBadge.skillsEarned || [],
-      image: null, // Don’t populate image directly – no File object
+      image: selectedBadge.image || null,
     });
 
-    // Optional: If your badge has an image URL you want to preview
-    if (selectedBadge.image) {
-      setPreview(`${process.env.SERVER_URL}/${selectedBadge.image}`);
-    } else {
-      setPreview('');
-    }
+    // Always show preview from badge ID
+    setPreview(badgeImageUrl);
   }
 }, [selectedBadge]);
 
