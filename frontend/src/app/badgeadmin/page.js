@@ -226,7 +226,7 @@ export default function SettingsPage() {
               className={`pb-2 ${
                 activeTab === tab
                   ? 'border-b-2 border-black font-semibold'
-                  : 'text-gray-500 hover:text-black'
+                  : 'text-gray-500 hover:text-cyan-600'
               }`}
               onClick={() => setActiveTab(tab)}
             >
@@ -241,7 +241,7 @@ export default function SettingsPage() {
         {showCreateUserModal && (
           <>
             {/* Backdrop with blur */}
-            <div className="fixed inset-0 z-50 bg-black bg-opacity-40 backdrop-blur-sm"></div>
+            <div className="fixed inset-0 z-50 bg-opacity-40 backdrop-blur-md"></div>
 
             {/* Modal box */}
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

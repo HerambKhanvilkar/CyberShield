@@ -73,8 +73,8 @@ const BadgeAssignmentDropdown = ({ user, updateUserDetails }) => {
   };
 
   return (
-    <div className="p-4 space-y-4 max-w-md">
-      <h2 className="text-lg font-semibold text-white">Revoke Badge</h2>
+    <div className="p-4 max-w-md">
+      <h2 className="text-base text-gray-300">Revoke Badge</h2>
       <div className='flex flex-row items-center space-x-2'>
         <select
           className="w-full p-2 rounded bg-white text-black disabled:bg-gray-200"
@@ -105,7 +105,7 @@ const BadgeAssignmentDropdown = ({ user, updateUserDetails }) => {
         </Button>
       </div>
       {badges.length === 0 && (
-        <p className="text-sm text-gray-300">This user has no badges assigned to them.</p>
+        <p className="text-sm mt-2 text-gray-300">This user has no badges assigned to them.</p>
       )}
     </div>
   );

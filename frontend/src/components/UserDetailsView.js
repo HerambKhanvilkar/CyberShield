@@ -149,25 +149,26 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
       </div>
 
       <div className="flex items-center space-x-2 relative">
-        <EditableField
-          label="Password"
-          value={form.password}
-          onChange={(val) => handleChange("password", val)}
-          className="flex-1"
-        />
-
-        <div className="relative group flex flex-row items-center justify-between space-x-2">
-          <div>
+        <div className="flex flex-col">
+          <EditableField
+            label="Password"
+            value={form.password}
+            onChange={(val) => handleChange("password", val)}
+            className="flex-1"
+          />
+          <label className="inline-flex items-center space-x-2 mt-2 cursor-pointer">
             <input
               type="checkbox"
               checked={form.sendMail}
               onChange={(e) => handleChange("sendMail", e.target.checked)}
               className="form-checkbox text-blue-500"
+              name="sendMail"
             />
-            <div className="absolute scale-0 group-hover:scale-100 transition-transform bg-black text-white text-xs px-2 py-1 rounded shadow-md z-10">
-              Send mail to user
-            </div>
-          </div>
+            <span>send mail to user</span>
+          </label>
+        </div>
+
+        <div className="relative group flex flex-row items-center justify-between space-x-2">
           <AssignBadgePopUp user={selectedUser} updateUserDetails={updateUserDetails} />
           <RevokeBadgePopUp user={selectedUser} updateUserDetails={updateUserDetails} />
         </div>
@@ -191,7 +192,7 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
               selectedUser.badges.map((badge, index) => (
                 <div
                   key={index}
-                  className="relative flex flex-col items-center justify-center bg-gradient-to-br from-[#1f2937]/70 to-[#111827]/70 border border-blue-500/20 p-4 rounded-2xl shadow-xl transition-transform hover:scale-105 hover:shadow-blue-500/30"
+                  className="relative flex flex-col items-center justify-center border border-blue-500/20 p-4 rounded-2xl shadow-xl transition-transform hover:scale-105 hover:shadow-blue-500/30"
                 >
                   <button
                     onClick={() => handleRevokeBadge(badge.badgeId, selectedUser.email, updateUserDetails)}

@@ -276,6 +276,8 @@ const updateBadgeDetails = (email, updatedBadge) => {
 
 useEffect(() => {
   if (selectedBadge) {
+    const badgeImageUrl = `${process.env.SERVER_URL}/badge/images/${selectedBadge.id}`;
+
     setFormData({
       id: selectedBadge.id || '',
       name: selectedBadge.name || '',
@@ -283,26 +285,21 @@ useEffect(() => {
       level: selectedBadge.level || '',
       vertical: selectedBadge.vertical || '',
       skillsEarned: selectedBadge.skillsEarned || [],
-      image: null, // Don’t populate image directly – no File object
+      image: selectedBadge.image || null,
     });
 
-    // Optional: If your badge has an image URL you want to preview
-    if (selectedBadge.image) {
-      setPreview(`${process.env.SERVER_URL}/${selectedBadge.image}`);
-    } else {
-      setPreview('');
-    }
+    // Always show preview from badge ID
+    setPreview(badgeImageUrl);
   }
 }, [selectedBadge]);
 
 
   return (
     <div className='w-full'>
-      <form onSubmit={handleBadgeFormSubmit} className="flex flex-col w-5/6 mx-auto">
-      <div className="flex flex-row">
-
+      <form onSubmit={handleBadgeFormSubmit} className="flex flex-col w-full mx-auto">
+      <div className="flex flex-col md:flex-row">
         {/* Left: Badges List */}
-        <div className="w-1/3 mr-2 bg-slate-800/60 rounded-lg p-2 border border-gray-700">
+        <div className="w-full md:w-1/3 mx-4 bg-slate-800/60 rounded-lg p-2 border border-gray-700">
           <h2 className="text-white font-semibold mb-2">Badges List</h2>
           <ScrollArea className="h-[350px] pr-2 overflow-y-auto">
             <div className="flex flex-col space-y-2 w-full">
@@ -323,7 +320,7 @@ useEffect(() => {
             </div>
           </ScrollArea>
         </div>
-        <div className="w-1/3 mr-2">
+        <div className="w-full md:w-1/3 mx-4">
           {/* Badge Id */}
           <div className="grid md:grid-cols-2 md:gap-6">
             <div className="relative z-0 w-full mb-5 group">
@@ -348,176 +345,195 @@ useEffect(() => {
                 handleChange={handleChange}
               />
           </div>
-
-          {/* Badge Level */}
-          <div className="grid md:grid-cols-2 md:gap-6">
-            <div className="relative z-0 w-full mb-5 group">
-              <button
-                id="dropLeveldownSearchButton"
-                data-dropdown-toggle="dropdownSearch"
-                data-dropdown-placement="bottom"
-                onClick={handleLevelsDropDownToggle}
-                className={`${isLevelsDropDownOpen ? 'bg-blue-600' : 'bg-gray-700'} w-full text-white justify-between focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-2.5 py-2.5 text-center inline-flex items-center hover:bg-blue-700 focus:ring-blue-800`}
-                type="button"
-              >
-                Select Level
-                <svg
-                  className="w-2.5 h-2.5 ms-3"
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 10 6"
+          <div className="grid grid-cols-1 md:grid-cols-2 space-y-4">
+            {/* Levels */}
+            <div className="grid md:grid-cols-2 md:gap-6">
+              <div className="relative z-0 w-full mb-5 group">
+                <button
+                  id="dropLeveldownSearchButton"
+                  data-dropdown-toggle="dropdownSearch"
+                  data-dropdown-placement="bottom"
+                  onClick={handleLevelsDropDownToggle}
+                  className={`${isLevelsDropDownOpen ? 'bg-blue-600' : 'bg-gray-700'} w-full text-white justify-between focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-2.5 py-2.5 text-center inline-flex items-center hover:bg-blue-700 focus:ring-blue-800`}
+                  type="button"
                 >
-                  <path
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="m1 1 4 4 4-4"
+                  Select Level
+                  <svg
+                    className="w-2.5 h-2.5 ms-3"
+                    aria-hidden="true"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 10 6"
+                  >
+                    <path
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="m1 1 4 4 4-4"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <div className={`relative z-1 w-full mb-5 group ${isLevelsDropDownOpen ? '' : 'hidden'}`}>
+                <div
+                  id="dropdownSearch"
+                  className={`w-full z-4 absolute rounded-lg shadow-sm bg-gray-700`}
+                >
+                  <SearchDropdown
+                    levelsList={['Noob','Amateur', 'Intermediate','Expert','Professional','Specialist']} // You must pass this prop for level options
+                    formData={formData}
+                    handleChange={handleChange}
+                    isLevelsDropdown // Optional prop to let SearchDropdown know which mode it's in
                   />
-                </svg>
-              </button>
-            </div>
-
-            <div className={`relative z-1 w-full mb-5 group ${isLevelsDropDownOpen ? '' : 'hidden'}`}>
-              <div
-                id="dropdownSearch"
-                className={`w-full z-4 absolute rounded-lg shadow-sm bg-gray-700`}
-              >
-                <SearchDropdown
-                  levelsList={['Noob','Amateur', 'Intermediate','Expert','Professional','Specialist']} // You must pass this prop for level options
-                  formData={formData}
-                  handleChange={handleChange}
-                  isLevelDropdown // Optional prop to let SearchDropdown know which mode it's in
-                />
-                <a
-                  onClick={handleNewLevelModalToggle}
-                  className="flex items-center p-3 text-sm font-medium border-gray-600 bg-gray-700 hover:bg-gray-600 text-blue-500 hover:underline"
-                >
-                  Add new Level
-                </a>
+                  <a
+                    onClick={handleNewLevelModalToggle}
+                    className="flex items-center p-3 text-sm font-medium border-gray-600 bg-gray-700 hover:bg-gray-600 text-blue-500 hover:underline"
+                  >
+                    Add new Levels
+                  </a>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="grid md:grid-cols-2 md:gap-6">
-            <div className="relative z-0 w-full mb-5 group">
-              {/* Badge Skills */}
-              <button id="dropSkilldownSearchButton"  
-                data-dropdown-toggle="dropdownSearch" data-dropdown-placement="bottom" 
-                onClick={handleSkillsDropDownToggle} 
-                className={`${isSkillsDropDownOpen ? 'bg-blue-600' : 'bg-gray-700' } w-full text-white justify-between focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-2.5 py-2.5 text-center inline-flex items-center bg-blue-600 hover:bg-blue-700 focus:ring-blue-800`} 
-                type="button"
+            {/* Skills */}
+            <div className="grid md:grid-cols-2 md:gap-6">
+              <div className="relative z-0 w-full mb-5 group">
+                <button
+                  id="dropLeveldownSearchButton"
+                  data-dropdown-toggle="dropdownSearch"
+                  data-dropdown-placement="bottom"
+                  onClick={handleSkillsDropDownToggle}
+                  className={`${isSkillsDropDownOpen ? 'bg-blue-600' : 'bg-gray-700'} w-full text-white justify-between focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-2.5 py-2.5 text-center inline-flex items-center hover:bg-blue-700 focus:ring-blue-800`}
+                  type="button"
                 >
                   Select Skills
-                  <svg className="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6" >
-                    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 4 4 4-4" />
+                  <svg
+                    className="w-2.5 h-2.5 ms-3"
+                    aria-hidden="true"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 10 6"
+                  >
+                    <path
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="m1 1 4 4 4-4"
+                    />
                   </svg>
-              </button>
+                </button>
+              </div>
+
+              <div className={`relative z-1 w-full mb-5 group ${isSkillsDropDownOpen ? '' : 'hidden'}`}>
+                <div
+                  id="dropdownSearch"
+                  className={`w-full z-4 absolute rounded-lg shadow-sm bg-gray-700`}
+                >
+                  <SearchDropdown
+                    //levelsList={['Noob','Amateur', 'Intermediate','Expert','Professional','Specialist']} // You must pass this prop for level options
+                    formData={formData}
+                    handleChange={handleChange}
+                    isSkillsDropdown // Optional prop to let SearchDropdown know which mode it's in
+                  />
+                  <a
+                    onClick={handleNewSkillModalToggle}
+                    className="flex items-center p-3 text-sm font-medium border-gray-600 bg-gray-700 hover:bg-gray-600 text-blue-500 hover:underline"
+                  >
+                    Add new Skill
+                  </a>
+                </div>
+              </div>
             </div>
 
-            <div className={`relative z-1 w-full mb-5 group ${isSkillsDropDownOpen ? '' : 'hidden' }`}>
-              <div id="dropdownSearch" className={`${isSkillsDropDownOpen ? '' : 'hidden' } w-full z-4 absolute rounded-lg shadow-sm w-60 bg-gray-700`}>
-                <SearchDropdown  
-                  skillsEarned={skillsEarned} 
+            {/* Courses */}
+            <div className="grid md:grid-cols-2 md:gap-6">
+              <div className="relative z-0 w-full mb-5 group">
+                <button
+                  id="dropLeveldownSearchButton"
+                  data-dropdown-toggle="dropdownSearch"
+                  data-dropdown-placement="bottom"
+                  onClick={handleCoursesDropDownToggle}
+                  className={`${isCoursesDropDownOpen ? 'bg-blue-600' : 'bg-gray-700'} w-full text-white justify-between focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-2.5 py-2.5 text-center inline-flex items-center hover:bg-blue-700 focus:ring-blue-800`}
+                  type="button"
+                >
+                  Select a Course
+                  <svg
+                    className="w-2.5 h-2.5 ms-3"
+                    aria-hidden="true"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 10 6"
+                  >
+                    <path
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="m1 1 4 4 4-4"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <div className={`relative z-1 w-full mb-5 group ${isCoursesDropDownOpen ? '' : 'hidden'}`}>
+                <div
+                  id="dropdownSearch"
+                  className={`w-full z-4 absolute rounded-lg shadow-sm bg-gray-700`}
+                >
+                  <SearchDropdown
+                    //levelsList={['Noob','Amateur', 'Intermediate','Expert','Professional','Specialist']} // You must pass this prop for level options
+                    formData={formData}
+                    handleChange={handleChange}
+                    isCourseDropdown // Optional prop to let SearchDropdown know which mode it's in
+                  />
+                  <a
+                    onClick={handleNewCoursesModalToggle}
+                    className="flex items-center p-3 text-sm font-medium border-gray-600 bg-gray-700 hover:bg-gray-600 text-blue-500 hover:underline"
+                  >
+                    Add new Course
+                  </a>
+                </div>
+              </div>
+            </div>
+            
+            {/* Vertical */}
+            <div className="grid md:grid-cols-2 md:gap-6">
+              <div className="relative z-0 w-full mb-5 group">
+                <button id="dropdownSearchButton" data-dropdown-toggle="dropdownSearch" data-dropdown-placement="bottom" 
+                  onClick={handleVerticalsDropDownToggle} 
+                  className={`${isVerticalsDropDownOpen ? 'bg-blue-600' : 'bg-gray-700' } w-full text-white justify-between focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-2.5 py-2.5 text-center inline-flex items-center bg-blue-600 hover:bg-blue-700 focus:ring-blue-800`} 
+                  type="button"
+                  >
+                    Select a Vertical
+                      <svg className="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6" >
+                        <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 4 4 4-4" />
+                      </svg>
+                </button>
+              </div>
+
+              <div className={`relative z-1 w-full mb-5 group ${isVerticalsDropDownOpen ? '' : 'hidden' }`}>
+                <div id="dropdownSearch" className={`${isVerticalsDropDownOpen ? '' : 'hidden' } w-full z-4 absolute rounded-lg shadow-sm w-60 bg-gray-700`}>
+                  <SearchDropdown  
+                  skillsEarned={verticals} 
                   formData={formData} 
                   handleChange={handleChange}
-                />
-                <a
-                  onClick={handleNewSkillModalToggle}
-                  className="flex items-center p-3 text-sm font-medium border-gray-600 bg-gray-700 hover:bg-gray-600 text-blue-500 hover:underline"
-                >
-                  Add new Skill
-                </a>
-              </div>
-            </div>
-          </div>
-
-          {/* Courses */}
-          <div className="grid md:grid-cols-2 md:gap-6">
-            <div className="relative z-0 w-full mb-5 group">
-              <button
-                id="dropLeveldownSearchButton"
-                data-dropdown-toggle="dropdownSearch"
-                data-dropdown-placement="bottom"
-                onClick={handleCoursesDropDownToggle}
-                className={`${isCoursesDropDownOpen ? 'bg-blue-600' : 'bg-gray-700'} w-full text-white justify-between focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-2.5 py-2.5 text-center inline-flex items-center hover:bg-blue-700 focus:ring-blue-800`}
-                type="button"
-              >
-                Select a Card
-                <svg
-                  className="w-2.5 h-2.5 ms-3"
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 10 6"
-                >
-                  <path
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="m1 1 4 4 4-4"
                   />
-                </svg>
-              </button>
-            </div>
-
-            <div className={`relative z-1 w-full mb-5 group ${isCoursesDropDownOpen ? '' : 'hidden'}`}>
-              <div
-                id="dropdownSearch"
-                className={`w-full z-4 absolute rounded-lg shadow-sm bg-gray-700`}
-              >
-                <SearchDropdown
-                  //levelsList={['Noob','Amateur', 'Intermediate','Expert','Professional','Specialist']} // You must pass this prop for level options
-                  formData={formData}
-                  handleChange={handleChange}
-                  isCourseDropdown // Optional prop to let SearchDropdown know which mode it's in
-                />
-                <a
-                  onClick={handleNewCoursesModalToggle}
+                  <a
+                onClick={handleNewVerticalModalToggle}
                   className="flex items-center p-3 text-sm font-medium border-gray-600 bg-gray-700 hover:bg-gray-600 text-blue-500 hover:underline"
-                >
-                  Add new Course
-                </a>
-              </div>
-            </div>
-          </div>
-          
-          {/* Vertical */}
-          <div className="grid md:grid-cols-2 md:gap-6">
-            <div className="relative z-0 w-full mb-5 group">
-              <button id="dropdownSearchButton" data-dropdown-toggle="dropdownSearch" data-dropdown-placement="bottom" 
-                onClick={handleVerticalsDropDownToggle} 
-                className={`${isVerticalsDropDownOpen ? 'bg-blue-600' : 'bg-gray-700' } w-full text-white justify-between focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-2.5 py-2.5 text-center inline-flex items-center bg-blue-600 hover:bg-blue-700 focus:ring-blue-800`} 
-                type="button"
-                >
-                  Select a Vertical
-                    <svg className="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6" >
-                      <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 4 4 4-4" />
-                    </svg>
-              </button>
-            </div>
-
-            <div className={`relative z-1 w-full mb-5 group ${isVerticalsDropDownOpen ? '' : 'hidden' }`}>
-              <div id="dropdownSearch" className={`${isVerticalsDropDownOpen ? '' : 'hidden' } w-full z-4 absolute rounded-lg shadow-sm w-60 bg-gray-700`}>
-                <SearchDropdown  
-                skillsEarned={verticals} 
-                formData={formData} 
-                handleChange={handleChange}
-                />
-                <a
-              onClick={handleNewVerticalModalToggle}
-                className="flex items-center p-3 text-sm font-medium border-gray-600 bg-gray-700 hover:bg-gray-600 text-blue-500 hover:underline"
-                >
-                Add new Vertical
-                </a>
+                  >
+                  Add new Vertical
+                  </a>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="w-1/3 ml-2">
+        <div className="w-full md:w-1/3 mx-4">
           <div className="grid md:grid-cols-1 pb-2.5 md:gap-6">
               {preview ? (
                 <div className="flex flex-col items-center justify-center w-full max-h-[400px] rounded-lg bg-gray-700 border-gray-600">
@@ -573,74 +589,72 @@ useEffect(() => {
               </button>
           </div>
         </div>
+      </div> 
+    </form>
+      { ( newSkillModalOpen || newVerticalModalOpen ) ? (
+      <div
+      id="new-modal"
+      tabIndex="-1"
+      className=" bg-gray-900/50  backdrop-blur-md overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 flex justify-center items-center w-full md:inset-0 max-h-full "
+      >
+      <div className="relative p-4 w-full max-w-md max-h-full">
+      <div className="relative bg-gray-800 rounded-lg shadow-sm">
+      <div className="flex items-center justify-between p-4 md:p-5 border-b border-gray-600 rounded-t">
+      <h3 className="text-xl font-semibold text-white">
+        Add new { newVerticalModalOpen ? 'Vertical' : 'Skill' }
+      </h3>
+      <button
+        onClick={newVerticalModalOpen ? handleNewVerticalModalToggle : handleNewSkillModalToggle}
+        type="button"
+        className="text-gray-400 bg-transparent hover:bg-gray-700 hover:text-white rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
+        data-modal-hide="authentication-modal"
+      >
+        <svg
+          className="w-3 h-3"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 14 14"
+        >
+          <path
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"
+          />
+        </svg>
+        <span className="sr-only">Close modal</span>
+      </button>
       </div>
-
-    
-  </form>
-  { ( newSkillModalOpen || newVerticalModalOpen ) ? (
-  <div
-  id="new-modal"
-  tabIndex="-1"
-  className=" bg-gray-900/50  backdrop-blur-md overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 flex justify-center items-center w-full md:inset-0 max-h-full "
-  >
-  <div className="relative p-4 w-full max-w-md max-h-full">
-  <div className="relative bg-gray-800 rounded-lg shadow-sm">
-  <div className="flex items-center justify-between p-4 md:p-5 border-b border-gray-600 rounded-t">
-  <h3 className="text-xl font-semibold text-white">
-    Add new { newVerticalModalOpen ? 'Vertical' : 'Skill' }
-  </h3>
-  <button
-    onClick={newVerticalModalOpen ? handleNewVerticalModalToggle : handleNewSkillModalToggle}
-    type="button"
-    className="text-gray-400 bg-transparent hover:bg-gray-700 hover:text-white rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
-    data-modal-hide="authentication-modal"
-  >
-    <svg
-      className="w-3 h-3"
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 14 14"
-    >
-      <path
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-        d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"
-      />
-    </svg>
-    <span className="sr-only">Close modal</span>
-  </button>
-  </div>
-  <div className="p-4 space-y-4 md:p-5">
-  <div>
-    <input
-      type="text"
-      onChange={newVerticalModalOpen ? handleNewVerticalChange : handleNewSkillChange}
-      name="text"
-      id="text"
-      className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-      placeholder={`new ${newVerticalModalOpen ? 'vertcal' : 'skill'}`}
-      required
-    />
-  </div>
-  <button
-    type="submit"
-    onClick={newVerticalModalOpen ? handleAddNewVertical : handleAddNewSkill}
-    className="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
-  >
-    Create new {newVerticalModalOpen ? 'vertcal' : 'skill'}
-  </button>
-  <div className="text-sm font-medium text-gray-400">
-    <i>
-      *NOTE: new {newVerticalModalOpen ? 'vertcal' : 'skill'} is not added to the database unless the badge is created successfully.
-    </i>
-  </div>
-  </div>
-  </div>
-  </div>
-  </div>
-  ): ( null )}
+      <div className="p-4 space-y-4 md:p-5">
+      <div>
+        <input
+          type="text"
+          onChange={newVerticalModalOpen ? handleNewVerticalChange : handleNewSkillChange}
+          name="text"
+          id="text"
+          className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+          placeholder={`new ${newVerticalModalOpen ? 'vertcal' : 'skill'}`}
+          required
+        />
+      </div>
+      <button
+        type="submit"
+        onClick={newVerticalModalOpen ? handleAddNewVertical : handleAddNewSkill}
+        className="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+      >
+        Create new {newVerticalModalOpen ? 'vertical' : 'skill'}
+      </button>
+      <div className="text-sm font-medium text-gray-400">
+        <i>
+          *NOTE: new {newVerticalModalOpen ? 'vertical' : 'skill'} is not added to the database unless the badge is created successfully.
+        </i>
+      </div>
+      </div>
+      </div>
+      </div>
+      </div>
+      ): ( null )}
     </div>
   );
 }

@@ -281,7 +281,7 @@ const BadgeId = () => {
               }}
             >
               <img
-                src={relatedBadge.image}
+                src={`${process.env.SERVER_URL}/badge/images/${relatedBadge?.id}` || relatedBadge.image?.data}
                 alt={relatedBadge.name}
                 className="rounded-lg shadow-md w-20 h-20 object-cover"
               />
@@ -311,7 +311,7 @@ const BadgeId = () => {
           {!isLoading ? (
             <>
               <img
-                src={currentBadge?.image}
+                src={`${process.env.SERVER_URL}/badge/images/${currentBadge?.id}` || currentBadge.image?.data}
                 alt={currentBadge?.name}
                 className="max-w-full max-h-full object-contain"
               />
@@ -333,13 +333,6 @@ const BadgeId = () => {
         >
           <ChevronRight className="w-6 h-6" />
         </button>
-      </div>
-
-      {/* Hologram Base Rings */}
-      <div className="relative w-64 h-12 mt-[-1rem]">
-        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-48 h-4 border-t-4 border-indigo-400 rounded-full opacity-70 animate-pulse"></div>
-        <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-40 h-3 border-t-4 border-purple-400 rounded-full opacity-60 animate-pulse delay-150"></div>
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 w-32 h-2 border-t-4 border-pink-400 rounded-full opacity-50 animate-pulse delay-300"></div>
       </div>
 
       <h1 className="text-3xl font-bold text-center mt-2">{currentBadge.name}</h1>
@@ -474,7 +467,7 @@ const BadgeId = () => {
           {badges.map((badge, index) => (
             <img
               key={badge.id}
-              src={badge.image}
+              src={`${process.env.SERVER_URL}/badge/images/${badge?.id}` || badge.image?.data}
               alt={badge.name}
               className={`w-14 h-14 object-cover rounded-md cursor-pointer shadow-md transition-transform ${
                 index === currentBadgeIndex ? 'ring-4 ring-indigo-400 scale-110' : 'opacity-70'
