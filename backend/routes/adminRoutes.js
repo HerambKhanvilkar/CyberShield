@@ -274,67 +274,113 @@ router.post("/users/import/preview", authenticateJWT, upload.single('file'), asy
 });
 
 //file upload
-router.post("/users/import",authenticateJWT, upload.single('file'), async (req, res) => {
+router.post("/users/import/:jobId",authenticateJWT, async (req, res) => {
   try {
-    const results = [];
-    const errors = [];
-    let count = 0;
-     // Validate CSV file
-    console.log(req.file);
-    fs.createReadStream(req.file.path)
-      .pipe(csv())
-      .on('data', (data) => {
-        count++;
-        // Example validation: Check if required fields are present
-        if (!data._id || !data.email || !data.firstName || !data.lastName  || !data.badgeIds) {
-          errors.push(`${count} Missing required fields in row: ` + JSON.stringify(data));
-        } else {
-          results.push(data);
-          // console.log(JSON.parse("["+ data.badgeIds +"]"));
-        }
-      })
-      .on('end', async () => {
-          // Clean up uploaded file
-          fs.unlinkSync(req.file.path);
+    const { jobId } = req.params;
+    const  { rows, upsert }  = req.body;
+    if (!rows) {
+      return res.status(400).json({ message: "Rows required." });
+    }
 
-          if (errors.length > 0) {
-            return res.status(400).json({ errors });
+    if (!Array.isArray(rows)) {
+      return res.status(400).json({ message: "Rows must a Array." });
+    }
+
+    const authHeader = req.headers.authorization;
+    const userId = await getUsername(authHeader);
+    const jobStatusDoc = await JobResult.findOne({ jobId, userId});
+
+    const users = jobStatusDoc.result.validUsers
+      .filter( u => rows.some(r => r == u.row));
+
+    const hashedPassword = await bcrypt.hash('Pass@123', 10);
+
+    const usersToBeInserted = users.map(u => {
+      return {
+        email: u.email,
+        firstName: u.firstName,
+        lastName: u.lastName,
+        badgeIds: JSON.parse("[" + u.badgeIds + "]"),
+        password: hashedPassword
+      };
+    });
+
+    let usersToBeUpdated = []
+
+    if ( upsert ) { 
+      const invalidUsers = jobStatusDoc.result.invalidUsers
+        .filter( u => 
+          u.error ? 
+            u.error.includes('User Already Exist') || 
+            u.error.includes('User already exist')
+          : false);
+
+      usersToBeUpdated = invalidUsers.map(u => {
+        return {
+          updateOne: {
+            filter: { email: u.email },
+            update: { 
+              '$set': {
+                email: u.email, 
+                firstName: u.firstName, 
+                lastName: u.lastName,
+              },
+              '$push': { 
+                // Use $each to add multiple elements at once
+                badgeIds: { 
+                  $each: JSON.parse("[" + u.badgeIds + "]"),
+                }
+              },
+            },
+            upsert: false,
           }
-
-          for( user of results){
-
-            const password = 'Pass@123';
-
-            // Hash the password before storing
-            const hashedPassword = await bcrypt.hash(password, 10);
-            // console.log(user);
-            
-            const badgesIds = JSON.parse("["+ user.badgeIds +"]");
-            const badges = badgesIds.map(b => {
-             return { 
-               badgeIds: b,
-               earnedDate: new Date()
-             }
-            });
-
-            // Save new user
-            const newUser = new User({ email: user.email,
-              firstName: user.firstName,
-              lastName: user.lastName,
-              badges,
-              password: hashedPassword,
-              isAdmin: false // Default to non-admin 
-            });
-            // await newUser.save();
-
-          }
-
-          res.status(200).json({ message: 'CSV file processed successfully', data: results });
-        })
-      .on('error', (error) => {
-        res.status(500).json({ error: 'Error processing CSV file' }, { invalidRows: errors});
+        };
       });
+    }
 
+    if ( usersToBeInserted.length > 0){
+      await User.insertMany(usersToBeInserted);
+      consle.log("insert");
+    }
+    if ( usersToBeUpdated.length > 0){
+      await User.blukWrite(usersToBeInserted);
+      consle.log("update");
+    }
+
+    
+    jobStatusDoc.result.validUsers = jobStatusDoc.result.validUsers
+      .filter(user => 
+        !usersToBeInserted.some( u => 
+          user.email == u.email
+        ) ||
+        !usersToBeUpdated.some( u => 
+          user.email == u.email
+        )
+      );
+
+    jobStatusDoc.result.invalidUsers = jobStatusDoc.result.invalidUsers
+      .filter(user => 
+        !usersToBeInserted.some( u => 
+          user.email == u.email
+        ) ||
+        !usersToBeUpdated.some( u => 
+          user.email == u.email
+        )
+      );
+
+    await jobStatusDoc.save();
+
+
+
+    return res.status(200).json({usersToBeInserted, usersToBeUpdated });
+    
+    // const userId = (await User.findOne({ email: userMail })).email;
+    if (!jobStatusDoc) {
+      return res.status(404).json({ message: "Job not found." });
+    }
+    if (jobStatusDoc.status !== 'completed') {
+      return res.status(404).json({ message: "Job not found." });
+    }
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });

@@ -60,24 +60,24 @@ app.use(
 );
 
 // Sanitize & Escape All Inputs Middleware
-app.use((req, res, next) => {
-  if (req.body) {
-    for (let key in req.body) {
-      req.body[key] = escapeHtml(mongoSanitize(req.body[key]));
-    }
-  }
-  if (req.query) {
-    for (let key in req.query) {
-      req.query[key] = escapeHtml(mongoSanitize(req.query[key]));
-    }
-  }
-  if (req.params) {
-    for (let key in req.params) {
-      req.params[key] = escapeHtml(mongoSanitize(req.params[key]));
-    }
-  }
-  next();
-});
+// app.use((req, res, next) => {
+//   if (req.body) {
+//     for (let key in req.body) {
+//       req.body[key] = escapeHtml(mongoSanitize(req.body[key]));
+//     }
+//   }
+//   if (req.query) {
+//     for (let key in req.query) {
+//       req.query[key] = escapeHtml(mongoSanitize(req.query[key]));
+//     }
+//   }
+//   if (req.params) {
+//     for (let key in req.params) {
+//       req.params[key] = escapeHtml(mongoSanitize(req.params[key]));
+//     }
+//   }
+//   next();
+// });
 
 
 (async () => {
@@ -103,9 +103,9 @@ app.use((req, res, next) => {
 
   app.set("server.timeout", 300000);
   app.use("/api/auth", authRoutes);
+  app.use("/api", jobRoutes);
   app.use("/api", adminRoutes);
   app.use("/api", serverRoutes);
-  app.use("/api", jobRoutes);
   // app.use("/api/dashboard", strictLimiter, dashboardRoutes);
   // app.use("/api", strictLimiter, watchlistRoutes);
   // app.use("/api/audit", strictLimiter, auditRoutes);

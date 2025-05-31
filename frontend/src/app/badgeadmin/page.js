@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import UserDetailsView from '@/components/UserDetailsView';
 import BadgeCreationForm from '@/components/BadgeCreationForm';
 import ErrorTable from '@/components/badgeAdminComponents/CsvDataTable';
+import ImportPage from '@/components/ImportData/ImportPage';
 import {UserPlus} from 'lucide-react';
 
 const TABS = ['Users', 'Import', 'Badges'];
@@ -23,7 +24,7 @@ const ITEMS_PER_PAGE = 10;
 export default function SettingsPage() {
   const [searchResults, setSearchResults] = useState([]); // Initialize as an empty array
   const [selectedUser, setSelectedUser] = useState(null);
-  const [activeTab, setActiveTab] = useState('Users');
+  const [activeTab, setActiveTab] = useState('Import');
   const [usersData, setUsersData] = useState(users);
 
   // Page status
@@ -111,98 +112,6 @@ export default function SettingsPage() {
     setUsers(prev =>
       prev.map(user => (user.email === email ? updatedUser : user))
     );
-  };
-
-  const handleDownload = async () => {
-    const apiUrl = process.env.SERVER_URL + '/users/sample';
-      try {
-        const token = localStorage.getItem("accessToken");
-        const response = await axios.get(apiUrl, {
-              responseType: 'blob', // Important for handling binary data
-              headers: {
-                  Authorization: `Bearer ${token}`, // Add the token to the headers
-              },
-          });
-
-          const url = window.URL.createObjectURL(new Blob([response.data])); // Create a URL for the Blob
-          toast.success("Sample CVS downloaded!");
-          const a = document.createElement('a'); // Create an anchor element
-          a.style.display = 'none';
-          a.href = url;
-          a.download = 'users_sample_data.csv'; // Set the file name
-          document.body.appendChild(a); // Append the anchor to the body
-          a.click(); // Programmatically click the anchor to trigger the download
-          window.URL.revokeObjectURL(url); // Clean up the URL object
-          document.body.removeChild(a); // Remove the anchor from the document
-      } catch (error) {
-          console.error('There was a problem with the download operation:', error);
-          toast.error("Something went wrong!");
-      }
-    }
-
-  // File Upload Code
-  const [file, setFile] = useState(null);
-  const [message, setMessage] = useState('');
-  const [data, setData] = useState({});
-
-  const handleFileChange = (event) => {
-    setFile(event.target.files[0]); // Get the selected file
-  };
-
-  const handleUpload = async () => {
-    const apiUrl = process.env.SERVER_URL + '/users/import';
-    const token = localStorage.getItem("accessToken");
-
-    if (!file) {
-      setMessage('Please select a file to upload.');
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('file', file); // Append the file to the FormData object
-
-    try {
-      const response = await axios.post(apiUrl, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data', // Set the content type
-          Authorization: `Bearer ${token}`, // Add the token to the headers
-        },
-      });
-
-      setData(response.data);
-      toast.success('File uploaded successfully!'); // Success message
-    } catch (error) {
-      console.error('There was a problem with the upload operation:', error);
-      toast.error('Error uploading file.'); // Error message
-    }
-  };
-
-  const handlePreviewCSV = async () => {
-    const apiUrl = process.env.SERVER_URL + '/users/import/preview';
-    const token = localStorage.getItem("accessToken");
-
-    if (!file) {
-      setMessage('Please select a file to upload.');
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('file', file); // Append the file to the FormData object
-
-    try {
-      const response = await axios.post(apiUrl, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data', // Set the content type
-          Authorization: `Bearer ${token}`, // Add the token to the headers
-        },
-      });
-
-      setData(response.data);
-      toast.success('Preview Loaded successfully!'); // Success message
-    } catch (error) {
-      console.error('There was a problem with the upload operation:', error);
-      toast.error('Error uploading file.'); // Error message
-    }
   };
 
   const renderTabContent = () => {
@@ -299,54 +208,7 @@ export default function SettingsPage() {
         );
       case 'Import':
         return (
-          <div className="flex flex-col lg:flex-row justify-between gap-6 mb-6">
-            {/* Left side - Description and buttons */}
-            <div className="flex flex-col justify-between space-y-4 lg:max-w-sm">
-              <div>
-
-          <label className="block mb-2 text-sm font-medium text-white-900" for="file_input">Select file</label>
-          <Input
-          aria-describedby="file_input_help" 
-          placeholder="foobar"
-          type="file" 
-          accept=".csv" 
-          id="file_input"
-          onChange={handleFileChange} />
-          <p className="mt-1 text-sm text-gray-300" id="file_input_help">CSV (MAX. 10MB).</p>
-              </div>
-              <div className="space-x-2">
-                <button className="bg-green-700 text-white text-sm px-4 py-1 rounded"
-                  onClick={handleDownload}
-                >
-                  Download Template
-                </button>
-              </div>
-            </div>
-
-            {/* Right side - CSV Preview Card */}
-            <div className="flex-1">
-          { !file ? (
-              <div className="w-full h-64 border border-dashed border-gray-400 rounded-lg bg-white/5 flex items-center justify-center text-gray-400">
-                Select a File to preview.
-              </div>
-          ) : (
-              <div className="relative scrollable shadow-md sm:rounded-lg h-full border-green-50 border-solid rounded-lg bg-white/5 flex items-center justify-center text-gray-400">
-             {data.errors && (
-               <ErrorTable data={data} />
-            )}
-              </div>
-          )}
-          <div >
-                  { file ? ( 
-                    <button  onClick={handlePreviewCSV} className="bg-blue-500 text-white text-sm px-4 py-1 rounded">
-                      Preview CSV                    
-                    </button>
-                  ) : ( 
-                    null
-                  )}
-          </div>
-            </div>
-          </div>
+          <ImportPage />
         );
       default:
         return null;

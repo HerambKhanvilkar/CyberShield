@@ -1,6 +1,4 @@
 const fs = require('fs');
-const csv = require('csv-parser');
-const bcrypt = require('bcrypt');
 const User = require('../models/User');  // adjust path to your User model
 const Badge = require('../models/Badge'); // adjust path to your Badge model
 const JobResult = require('../models/JobResult'); // a simple Mongoose model for job results
@@ -21,40 +19,64 @@ const checkBadgeExists = (badgeId, badgesArray) => {
 const nameRegex = /^[A-Za-z]+$/; // Allow only letters for names (adjust the regex as needed)
 
 module.exports = function (agenda) {
-  agenda.define('process csv file', async job => {
+  agenda.define('reprocess revision', async job => {
     try {
+      const { jobId, revision, userId } = job.attrs.data;
+      console.log(" jobId, revision, userId ",  jobId, Object.keys(revision), userId );
       // Store the result in the database
+      // Fetch the JobResult document; ensure the user is the owner.
+      const JobResultDoc = await JobResult.findOne({ jobId, userId });
+      if (!JobResultDoc) {
+        throw new Error('JobResult document not found for the given user and jobId.');
+      }
+
       await JobResult.findOneAndUpdate(
         { jobId: job.attrs._id },
-        { status: 'processing', updatedAt: new Date() }
+        { revisionStatus: 'processing', updatedAt: new Date() }
       );
 
-      // Get data from job attributes:
-      const { filePath, userId } = job.attrs.data;
-      const validRows = [];
+      const revisionRows = [];
       const emails = [];
-      const invalidUsers = [];
+      const validRevisionRows = [];
+      const invalidRevisionUsers = [];
       let rowCount = 0;
 
-      await new Promise((resolve, reject) => {
-        fs.createReadStream(filePath)
-          .pipe(csv())
-          .on('data', data => {
-            rowCount++;
-            // Basic required field validation
-            if (!data.email || !data.firstName || !data.lastName || !data.badgeIds) {
-              invalidUsers.push({ row: rowCount, error: "Missing required fields",... data  });
-            } else {
-              emails.push(data.email);
-              validRows.push({ row: rowCount, ... data });
-            }
-          })
-          .on('end', () => resolve())
-          .on('error', error => reject(error));
-      });
+      if (revision && Array.isArray(revision) && revision.length > 0) {
+          console.log("inside revision data");
+        // Basic required field validation
+        revision.forEach( data => {
+          console.log("further inside inside revision data");
 
-      // Clean up file after processing
-      fs.unlinkSync(filePath);
+          if(data.row){
+          console.log("row argument passed");
+            revisionRows.push(data.row);
+            if (!data.email || !data.firstName || !data.lastName || !data.badgeIds) {
+          console.log("all !!NOT!! props passed for the object");
+              invalidRevisionUsers.push({ 
+                row: rowCount, error: "Missing required fields", data 
+              });
+            } else {
+          console.log("all props passed for the object");
+              emails.push(data.email);
+              validRevisionRows.push({ row: rowCount, ...data });
+            }
+          }
+
+        });
+      }
+      JobResultDoc.result.validUsers = JobResultDoc.result.validUsers
+        .filter(user => 
+          !revisionRows.some( row => 
+            user.row == row 
+          )
+        );
+
+      JobResultDoc.result.invalidUsers = JobResultDoc.result.invalidUsers
+        .filter(user => 
+          !revisionRows.some( row => 
+            user.row === row 
+          )
+        );
 
       // Arrays to track processing errors
       let validUsers = [];
@@ -64,7 +86,7 @@ module.exports = function (agenda) {
       let badgesArray = (await Badge.find({}, { id: 1, _id: 0 }))
         .map(b => b.id);
 
-      await Promise.all(validRows.map(async (user) => {
+      await Promise.all(validRevisionRows.map(async (user) => {
         const { email, firstName, lastName, badgeIds } = user;
         let userErrors = [];
 
@@ -75,7 +97,7 @@ module.exports = function (agenda) {
           userErrors.push(`Invalid lastName: ${lastName}`);
         }
         if (userErrors.length > 0) {
-          invalidUsers.push({... user, errors: userErrors });
+          invalidRevisionUsers.push({... user, errors: userErrors });
           return;
         }
 
@@ -83,10 +105,11 @@ module.exports = function (agenda) {
         try {
           badgeIdsArray = JSON.parse("[" + badgeIds + "]");
         } catch (err) {
-          invalidUsers.push({... user, error: `Invalid badgeIds format` });
+          invalidRevisionUsers.push({... user, error: `Invalid badgeIds format` });
           return;
         }
 
+          console.log("badge format passed");
         const badges = [];
         for (const id of badgeIdsArray) {
           if (!checkBadgeExists(id, badgesArray)) {
@@ -94,9 +117,10 @@ module.exports = function (agenda) {
           }
         }
         if ( badges.length > 0){
-          invalidUsers.push({... user, error: `${String(badges)} Badge does not exist` });
+          invalidRevisionUsers.push({... user, error: `${String(badges)} Badge does not exist` });
           return;
         }
+          console.log("badge existence passed");
         
         if (checkDuplicateUser(email, usersExist)) {
           const existingUser = alreadyUsersExist
@@ -112,43 +136,64 @@ module.exports = function (agenda) {
           }
 
           if (nameError.length > 0){
-            invalidUsers.push({... user,  error: String(nameError) })
+            invalidRevisionUsers.push({... user,  error: String(nameError) })
             return;
           }
 
-          invalidUsers.push({... user,  error: "User already exist." });
+          invalidRevisionUsers.push({... user,  error: "User already exist." });
           return;
         }
 
+          console.log("name missmatch and duplicate passed");
 
         // const password = 'Pass@123';
         // const hashedPassword = await bcrypt.hash(password, 10);
 
         validUsers.push({... user, error: null});
+          console.log("bro is valid now");
       }));
 
       // Optionally, you can now insert validUsers into the DB.
       // await User.insertMany(validUsers);
 
       // Logging the result. In real application you might want to write the summary in a DB or send an email.
+      console.log("JobResultDoc.result.validUsers", JobResultDoc.result.validUsers);
+      if (invalidRevisionUsers.length > 0){
+      JobResultDoc.result.invalidUsers = 
+        [... JobResultDoc.result.invalidUsers, ... invalidRevisionUsers]
+      }
+
+      console.log("JobResultDoc.result.validUsers", JobResultDoc.result.validUsers);
+      if (validUsers.length > 0){
+      JobResultDoc.result.validUsers = 
+        [... JobResultDoc.result.validUsers, ...validUsers]
+      }
+      console.log("JobResultDoc.result.validUsers", JobResultDoc.result.validUsers);
+
       const resultData = {
-        message: "CSV file processed with preview",
-        invalidUsers,
+        message: "CSV file reprocessed with preview",
+        invalidRevisionUsers,
         validUsers
       };
 
-      // Update JobStatus to "completed" with result details
-      await JobResult.findOneAndUpdate(
-        { jobId: job.attrs._id },
-        { status: 'completed', result: resultData, updatedAt: new Date() }
-      );
+      console.log(JobResultDoc.result);
 
+      // Update JobResult to "completed" with result details
+      await JobResult.findOneAndUpdate(
+        { jobId},
+        { 
+          revisionStatus: 'completed', 
+          revision: resultData,  updatedAt: new Date() ,
+          "result.validUsers": JobResultDoc.result.validUsers,
+          "result.invalidUsers": JobResultDoc.result.invalidUsers,
+        }
+      );
 
     } catch (error) {
       console.error("Error in CSV processing job:", error);
       // Optionally update job metadata or retry later.
       await JobResult.findOneAndUpdate(
-        { jobId: job.attrs._id },
+        { jobId},
         { status: 'failed', updatedAt: new Date(), result: { error: error.message } }
       );
 

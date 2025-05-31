@@ -8,6 +8,7 @@ const agenda = new Agenda({
 
 // Load all job definitions.
 require('./jobs/csvProcessing')(agenda);
+require('./jobs/reprocessRevision')(agenda);
 
 agenda.on('ready', () => {
   console.log("Agenda started!");

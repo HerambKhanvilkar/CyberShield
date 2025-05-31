@@ -10,10 +10,22 @@ const JobResultSchema = new mongoose.Schema({
     required: true, 
   },
   result: {
-    type: Object,
+    type: mongoose.Schema.Types.Mixed, // Field where frontend can send updated error data for processing
+    default: null
+  },
+  revision: {
+    type: mongoose.Schema.Types.Mixed, // Field where frontend can send updated error data for processing
+    default: null
   },
   status: { 
     type: String,
+    enum: ['pending', 'processing', 'completed', 'failed'],
+    default: 'pending'
+  },
+  revisionStatus: {
+    type: String,
+    enum: ['pending', 'processing', 'completed', 'failed'],
+    default: 'pending'
   },
   processedAt: {
     type: Date,
