@@ -199,32 +199,25 @@ const BadgeId = () => {
     );
   };
 
+//Badge Metrics Component
+const BadgeMetrics = () => (
+  <div className="w-full flex flex-col md:flex-row justify-between gap-4 mt-4">
+    {[ // wrapping in an array to simplify repetition
+      { label: "Level", value: currentBadge.level || "N/A" },
+      { label: "Vertical", value: currentBadge.vertical || "General" },
+      { label: "Earners", value: "43" },
+    ].map(({ label, value }, index) => (
+      <div
+        key={index}
+        className="flex-1 bg-gray-800 rounded-md shadow-md p-4 flex flex-col justify-between text-center min-h-[120px]"
+      >
+        <div className="text-sm uppercase text-gray-400">{label}</div>
+        <div className="text-lg font-semibold">{value}</div>
+      </div>
+    ))}
+  </div>
+);
 
-  // Badge Metrics Component
-  const BadgeMetrics = () => (
-    <div className="w-full flex justify-around mt-4 text-center">
-      <div className="p-2 flex-1 shadow-md">
-        <div className='bg-gray-800 rounded-md p-2'>
-          <div className="text-sm uppercase text-gray-400">Level</div>
-          <div className="text-lg font-semibold">{currentBadge.level || 'N/A'}</div>
-        </div>
-      </div>
-      <div className=" p-2 flex-1 shadow-md">
-        <div className='bg-gray-800 rounded-md p-2 md:p-4'>
-          <div className="text-sm uppercase text-gray-400">Vertical</div>
-          <div className="text-lg font-semibold">
-            {currentBadge.vertical || 'General'}
-          </div>
-        </div>  
-      </div>
-      <div className=" p-2 flex-1 shadow-md">
-        <div className='bg-gray-800 rounded-md p-2 md:p-4'>
-          <div className="text-sm uppercase text-gray-400">Earners</div>
-          <div className="text-lg font-semibold">43</div>
-        </div>
-      </div>
-    </div>
-  );
 
   // Badge Description Component
   const BadgeDescription = () => (
@@ -384,18 +377,19 @@ const BadgeId = () => {
                 <BadgeActions currentBadge={currentBadge} isAuthenticated={isAuthenticated} />
               </div>
             </div>
-        &nbsp;
-        &nbsp;
+            &nbsp;
+            &nbsp;
 
             {/* Description */}
             <section className="w-1/2">
               <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Badge Details</h2>
               <p className="text-gray-300 leading-relaxed">{currentBadge.description}</p>
               <SkillsEarned />
+              <RelatedBadges />
             </section>
           </div>
-        &nbsp;
-        &nbsp;
+          &nbsp;
+          &nbsp;
 
           {/* Bottom Row: Stats and Skills Side by Side */}
           <div className="flex w-full gap-6">
@@ -404,7 +398,7 @@ const BadgeId = () => {
             </section>
             
             <section className="w-1/2">
-              <RelatedBadges />
+              {/* <RelatedBadges /> */}
             </section>
           </div>
         </section>
@@ -463,14 +457,14 @@ const BadgeId = () => {
           {badges.length} Badges — Showing {currentBadgeIndex + 1} of {badges.length}
         </div>
 
-        <div className="flex space-x-2 overflow-x-auto max-w-[60vw] md:max-w-none mx-auto md:mx-0">
+        <div className="flex space-x-2 overflow-x-hidden overflow-y-hidden max-w-full mx-auto">
           {badges.map((badge, index) => (
             <img
               key={badge.id}
               src={`${process.env.SERVER_URL}/badge/images/${badge?.id}` || badge.image?.data}
               alt={badge.name}
               className={`w-14 h-14 object-cover rounded-md cursor-pointer shadow-md transition-transform ${
-                index === currentBadgeIndex ? 'ring-4 ring-indigo-400 scale-110' : 'opacity-70'
+                index === currentBadgeIndex ? 'border-2 border-indigo-400 scale-110' : 'opacity-70'
               }`}
               onClick={() => setCurrentBadgeIndex(index)}
               tabIndex={0}
