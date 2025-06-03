@@ -69,10 +69,10 @@ const BadgeAssignmentDropdown = ({ user, updateUserDetails }) => {
 
   return (
     <div className="p-4 max-w-md">
-      <h2 className="text-base text-gray-300">Assign Badge</h2>
+      <label className="text-sm font-medium text-gray-300 mb-1">Assign Badge</label>
       <div className='flex flex-row items-center space-x-2'>
         <select
-          className="w-full p-2 rounded bg-white text-black"
+          className="w-full p-2 rounded bg-[#1A1B2E]/60 text-gray-400 border-gray-600 focus:border-cyan-500 focus:ring-cyan-500"
           value={selectedBadge || ""}
           onChange={(e) => setSelectedBadge(Number(e.target.value))}
           disabled={badges.length === 0}

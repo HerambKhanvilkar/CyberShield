@@ -129,8 +129,8 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
         timeout: 10000,
       }
     );
-
-    updateUserDetails(userEmail, response.data.user);
+    // Update user details in parent component
+    // updateUserDetails(userEmail, response.data.user);
 
     toast.success(
       <div>

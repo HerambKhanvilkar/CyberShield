@@ -351,7 +351,8 @@ useEffect(() => {
         <li key={index}>
                 <div onClick={() => setSelectedBadge(badge)} className="flex items-center">
                     <div className="shrink-0">
-                        <img 
+                        <img
+                        crossOrigin='anonymous'
                         className="w-8 h-8 rounded-full" 
                         src={`${process.env.SERVER_URL}/badge/images/${badge.id}` || badge.img?.data} 
                         alt={badge.name}
@@ -560,7 +561,7 @@ useEffect(() => {
           <div className="grid md:grid-cols-1 pb-2.5 md:gap-6">
               {preview ? (
                 <div className="flex flex-col items-center justify-center w-full max-h-[400px] rounded-lg bg-gray-700 border-gray-600">
-                <img className="rounded-full w-60 h-60" src={preview}  alt="badge-image-preview"/>
+                <img crossOrigin='anonymous' className="rounded-full w-60 h-60" src={preview}  alt="badge-image-preview"/>
 
                 <button 
                 type="button" 

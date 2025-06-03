@@ -60,11 +60,12 @@ const BadgeAssignmentDropdown = ({ user, updateUserDetails }) => {
       );
 
       updateUserDetails(user.email, response.data.user);
-      toast.success(
-        <div>
-          Badge revoked from <strong style={{ color: '#00CBF0' }}>{response.data.user.firstName}</strong>!
-        </div>
-      );
+      toast.success("Badge revoked successfully!");
+      // toast.success(
+      //   <div>
+      //     Badge revoked from <strong style={{ color: '#00CBF0' }}>{response.data.user.firstName}</strong>!
+      //   </div>
+      // );
       setSelectedBadge(null); // Reset selection after revocation
       await fetchBadges(); // refresh dropdown
     } catch (error) {
@@ -74,10 +75,10 @@ const BadgeAssignmentDropdown = ({ user, updateUserDetails }) => {
 
   return (
     <div className="p-4 max-w-md">
-      <h2 className="text-base text-gray-300">Revoke Badge</h2>
+      <label className="text-sm font-medium text-gray-300 mb-1">Revoke Badge</label>
       <div className='flex flex-row items-center space-x-2'>
         <select
-          className="w-full p-2 rounded bg-white text-black disabled:bg-gray-200"
+          className="w-full p-2 rounded bg-[#1A1B2E]/60 text-gray-400 border-gray-600 focus:border-cyan-500 focus:ring-cyan-500"
           value={selectedBadge || ""}
           onChange={(e) => setSelectedBadge(Number(e.target.value))}
           disabled={loading}
