@@ -44,6 +44,68 @@ const checkBadgeExists = (badgeId, badgesArray) => {
 
 const nameRegex = /^[A-Za-z]+$/; // Allow only letters for names (adjust the regex as needed)
 
+
+
+// Add achievement
+router.post('/users/achievements', authenticateJWT, async (req, res) => {
+    const { email, achievement } = req.body;
+
+    try {
+        const user = await User.findOne({email});
+        if (!user) return res.status(404).send('User not found');
+
+        user.achievements.push(achievement);
+        await user.save();
+        res.status(201).send(user);
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+});
+
+// Update achievement
+router.put('/users/achievements/:achievementIndex', authenticateJWT, async (req, res) => {
+    const { achievementIndex } = req.params;
+    const { email, achievement } = req.body;
+
+    try {
+        const user = await User.findOne({email});
+        if (!user) return res.status(404).send('User not found');
+
+        if (user.achievements[achievementIndex] === undefined) {
+            return res.status(404).send('Achievement not found');
+        }
+
+        user.achievements[achievementIndex] = achievement;
+        await user.save();
+        res.send(user);
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+});
+
+// Delete achievement
+router.delete('/users/achievements/:achievementIndex', authenticateJWT, async (req, res) => {
+    const { achievementIndex } = req.params;
+    const { email } = req.body;
+
+    try {
+        const user = await User.findOne({email});
+        if (!user) return res.status(404).send('User not found');
+
+        if (user.achievements[achievementIndex] === undefined) {
+            return res.status(404).send('Achievement not found');
+        }
+
+        user.achievements.splice(achievementIndex, 1);
+        await user.save();
+        res.send(user);
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+});
+
+
+
 router.put("/badge/import", authenticateJWT, upload.single('image'), async (req, res) => {
   try {
 
