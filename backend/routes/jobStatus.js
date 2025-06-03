@@ -5,6 +5,7 @@ const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const { authenticateJWT } = require('../middleware/auth');
 const agenda = require('../worker.js'); // path to your agenda initialization module
+const  { revisionCsvData } = require('../controllers/usersImportController');
 
 const getUsername = async (authHeader) => {
   const token = authHeader.split(" ")[1];
@@ -41,23 +42,20 @@ router.put("/job-status/:jobId", authenticateJWT, async (req, res) => {
     if (jobStatusDoc.status !== 'completed') {
       return res.status(404).json({ message: "Job not found." });
     }
-    // Update the jobStatus document with the new revision data.
-    // Optionally, you might want to re-run some validations or merge the revisions.
-    jobStatusDoc.revision = revision;
-    jobStatusDoc.updatedAt = new Date();
-    jobStatusDoc.revisionStatus = "pending"
 
-    await jobStatusDoc.save()
-
-    console.log("jobId, revision, userId");
-    console.log(jobId, revision, userId);
-
-    await agenda.now('reprocess revision', { jobId, revision, userId });
+    // returned updated job object from the controller.
+    const newjobStatusDoc = await revisionCsvData({
+        jobId,
+        revision,
+        userId,
+        JobResultDoc: jobStatusDoc 
+      });
 
     return res.status(200).json({
       message: "Revision data updated successfully.",
-      jobStatus: jobStatusDoc
+      result: newjobStatusDoc.result.revision
     });
+
   } catch (error) {
     console.error("Error fetching job status:", error);
     return res.status(500).json({ message: "Internal Server Error" });

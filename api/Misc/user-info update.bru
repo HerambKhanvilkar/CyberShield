@@ -1,0 +1,24 @@
+meta {
+  name: user-info update
+  type: http
+  seq: 4
+}
+
+post {
+  url: http://172.16.209.143/api/user/info
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwt_token}}
+}
+
+body:json {
+  {
+    "email": "test123@gmail.com",
+    "password": "foobar",
+      "firstName": "foobar",
+    "lastName": "foobar"
+  }
+}

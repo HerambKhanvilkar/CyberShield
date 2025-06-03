@@ -1,0 +1,21 @@
+meta {
+  name: Remove User
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{ADDRESS}}/user/delete
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwt_token}}
+}
+
+body:json {
+  {
+    "email": "foobar2@example.com"
+  }
+}

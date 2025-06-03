@@ -24,7 +24,7 @@ const ITEMS_PER_PAGE = 10;
 export default function SettingsPage() {
   const [searchResults, setSearchResults] = useState([]); // Initialize as an empty array
   const [selectedUser, setSelectedUser] = useState(null);
-  const [activeTab, setActiveTab] = useState('Import');
+  const [activeTab, setActiveTab] = useState('Badges');
   const [usersData, setUsersData] = useState(users);
 
   // Page status
@@ -125,17 +125,18 @@ export default function SettingsPage() {
               <SearchBox onSearch={handleSearch} />
               <button
                 className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
-                onClick={handleOpenModal}
+                onClick={() => setSelectedUser('new')}
               >
                 <UserPlus/>
               </button>
             </div>
             <div className="flex-none">
-              <UsersPagination
+          { /* <UsersPagination
                 currentPage={currentPage}
                 totalPages={totalPages}
                 onPageChange={setCurrentPage}
               />
+              */}
             </div>
           </div>
 
@@ -219,20 +220,24 @@ export default function SettingsPage() {
     <>
       <Navbar />
       <div className="min-h-full p-6 pb-0 pt-2">
-        <div className="border-b border-gray-300 mb-6 flex flex-wrap gap-4 text-sm">
-          {TABS.map((tab) => (
+        <div className="mb-4 border-b border-gray-700">
+    <ul className="flex flex-wrap -mb-px text-sm font-medium text-center">
+          {TABS.map((tab, index) => (
+            <li key={index} className="me-2 inline-block px-4 rounded-lg">
             <button
               key={tab}
-              className={`pb-2 ${
+            className={`inline-block p-4 rounded-t-lg ${
                 activeTab === tab
-                  ? 'border-b-2 border-black font-semibold'
-                  : 'text-gray-500 hover:text-cyan-600'
+                  ? 'text-[#ADFF2F] border-b-2 border-[#ADFF2F]'
+                  : 'text-gray-400 hover:border-gray-300 hover:text-gray-300'
               }`}
               onClick={() => setActiveTab(tab)}
             >
               {tab}
             </button>
+            </li>
           ))}
+    </ul>
         </div>
 
         <div>{renderTabContent()}</div>

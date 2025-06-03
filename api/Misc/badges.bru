@@ -1,0 +1,15 @@
+meta {
+  name: badges
+  type: http
+  seq: 6
+}
+
+get {
+  url: http://172.16.209.149/api/badges
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwt_token}}
+}

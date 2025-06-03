@@ -44,6 +44,68 @@ const checkBadgeExists = (badgeId, badgesArray) => {
 
 const nameRegex = /^[A-Za-z]+$/; // Allow only letters for names (adjust the regex as needed)
 
+
+
+// Add achievement
+router.post('/users/achievements', authenticateJWT, async (req, res) => {
+    const { email, achievement } = req.body;
+
+    try {
+        const user = await User.findOne({email});
+        if (!user) return res.status(404).send('User not found');
+
+        user.achievements.push(achievement);
+        await user.save();
+        res.status(201).send(user);
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+});
+
+// Update achievement
+router.put('/users/achievements/:achievementIndex', authenticateJWT, async (req, res) => {
+    const { achievementIndex } = req.params;
+    const { email, achievement } = req.body;
+
+    try {
+        const user = await User.findOne({email});
+        if (!user) return res.status(404).send('User not found');
+
+        if (user.achievements[achievementIndex] === undefined) {
+            return res.status(404).send('Achievement not found');
+        }
+
+        user.achievements[achievementIndex] = achievement;
+        await user.save();
+        res.send(user);
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+});
+
+// Delete achievement
+router.delete('/users/achievements/:achievementIndex', authenticateJWT, async (req, res) => {
+    const { achievementIndex } = req.params;
+    const { email } = req.body;
+
+    try {
+        const user = await User.findOne({email});
+        if (!user) return res.status(404).send('User not found');
+
+        if (user.achievements[achievementIndex] === undefined) {
+            return res.status(404).send('Achievement not found');
+        }
+
+        user.achievements.splice(achievementIndex, 1);
+        await user.save();
+        res.send(user);
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+});
+
+
+
 router.put("/badge/import", authenticateJWT, upload.single('image'), async (req, res) => {
   try {
 
@@ -68,11 +130,25 @@ router.put("/badge/import", authenticateJWT, upload.single('image'), async (req,
     if (name) { existingBadge["name"] = name } 
 
     if (req.file){
+      const badgeImageObj = {
+        id: req.body.id,
+        name: req.body.name || existingBadge["name"],
+        image:  fs.readFileSync(path.join(__dirname, '../uploads/', req.file.filename)),
+        contentType: req.file.mimetype // Use the uploaded file's mimetype
+      };
+
+      if (!existingBadgeImage){
+        existingBadgeImage =  new BadgeImage(badgeImageObj);
+      } else {
         existingBadgeImage["image"] = fs.readFileSync(
           path.join(__dirname, '../uploads/', req.file.filename)
         );
         existingBadge["contentType"]= req.file.mimetype;
+      }
+    console.log('badeImageObj', badgeImageObj);
     }
+
+    
 
     existingBadge.save();
     existingBadgeImage.save();
@@ -277,30 +353,27 @@ router.post("/users/import/preview", authenticateJWT, upload.single('file'), asy
 router.post("/users/import/:jobId",authenticateJWT, async (req, res) => {
   try {
     const { jobId } = req.params;
-    const  { rows, upsert }  = req.body;
-    if (!rows) {
-      return res.status(400).json({ message: "Rows required." });
-    }
-
-    if (!Array.isArray(rows)) {
-      return res.status(400).json({ message: "Rows must a Array." });
-    }
-
+    const  { upsert }  = req.body;
     const authHeader = req.headers.authorization;
     const userId = await getUsername(authHeader);
     const jobStatusDoc = await JobResult.findOne({ jobId, userId});
 
-    const users = jobStatusDoc.result.validUsers
-      .filter( u => rows.some(r => r == u.row));
-
+    if (!jobStatusDoc) {
+      return res.status(404).json({ message: "Job not found." });
+    }
+    
     const hashedPassword = await bcrypt.hash('Pass@123', 10);
 
-    const usersToBeInserted = users.map(u => {
+    const usersToBeInserted = jobStatusDoc.result.validUsers.map(u => {
+      const badges = (JSON.parse("[" + u.badgeIds + "]")).map(b => {
+        return { badgeId: b, earnedDate: new Date() }
+      });
+
       return {
         email: u.email,
         firstName: u.firstName,
         lastName: u.lastName,
-        badgeIds: JSON.parse("[" + u.badgeIds + "]"),
+        badges: badges,
         password: hashedPassword
       };
     });
@@ -308,79 +381,50 @@ router.post("/users/import/:jobId",authenticateJWT, async (req, res) => {
     let usersToBeUpdated = []
 
     if ( upsert ) { 
-      const invalidUsers = jobStatusDoc.result.invalidUsers
-        .filter( u => 
-          u.error ? 
-            u.error.includes('User Already Exist') || 
-            u.error.includes('User already exist')
-          : false);
-
-      usersToBeUpdated = invalidUsers.map(u => {
-        return {
-          updateOne: {
-            filter: { email: u.email },
-            update: { 
-              '$set': {
-                email: u.email, 
-                firstName: u.firstName, 
-                lastName: u.lastName,
-              },
-              '$push': { 
-                // Use $each to add multiple elements at once
-                badgeIds: { 
-                  $each: JSON.parse("[" + u.badgeIds + "]"),
-                }
-              },
-            },
-            upsert: false,
+      for ( u of jobStatusDoc.result.invalidUsers){
+          if (u.error.includes('Badge')){
+            return res.status(401)
+              .json({message: 'Badge related Errors need resolution.'});
           }
+          const { email, firstName, lastName, badgeIds } = u;
+
+          const newBadges = ( JSON.parse("[" + badgeIds + "]") )
+              .map(b => {return { badgeId: b, earnedDate: new Date() }});
+          usersToBeUpdated.push({
+            updateOne: {
+              filter: { email },
+              update: { 
+                '$set': { email, firstName, lastName, },
+                '$push': { badges: { $each: newBadges } },
+              },
+              upsert: false,
+            }
+          });
         };
-      });
     }
+
 
     if ( usersToBeInserted.length > 0){
       await User.insertMany(usersToBeInserted);
-      consle.log("insert");
+      console.log("insert");
     }
     if ( usersToBeUpdated.length > 0){
-      await User.blukWrite(usersToBeInserted);
-      consle.log("update");
+      await User.bulkWrite(usersToBeInserted);
+      console.log("update");
     }
 
-    
-    jobStatusDoc.result.validUsers = jobStatusDoc.result.validUsers
-      .filter(user => 
-        !usersToBeInserted.some( u => 
-          user.email == u.email
-        ) ||
-        !usersToBeUpdated.some( u => 
-          user.email == u.email
-        )
-      );
+    jobStatusDoc.importedUsers = [
+      ...jobStatusDoc.result.validUsers,
+      ...jobStatusDoc.result.invalidUsers
+    ]
 
-    jobStatusDoc.result.invalidUsers = jobStatusDoc.result.invalidUsers
-      .filter(user => 
-        !usersToBeInserted.some( u => 
-          user.email == u.email
-        ) ||
-        !usersToBeUpdated.some( u => 
-          user.email == u.email
-        )
-      );
+    jobStatusDoc.result.validUsers = [];
+
+    jobStatusDoc.result.invalidUsers = [];
 
     await jobStatusDoc.save();
-
-
-
-    return res.status(200).json({usersToBeInserted, usersToBeUpdated });
+    return res.status(200).json({result: jobStatusDoc.importedUsers});
     
-    // const userId = (await User.findOne({ email: userMail })).email;
-    if (!jobStatusDoc) {
-      return res.status(404).json({ message: "Job not found." });
-    }
-    if (jobStatusDoc.status !== 'completed') {
-      return res.status(404).json({ message: "Job not found." });
-    }
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });

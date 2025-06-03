@@ -49,7 +49,15 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
   });
 
   useEffect(() => {
-    if (selectedUser) {
+    if (typeof(selectedUser) == typeof('new')){
+      setForm({
+        firstName: "",
+        lastName: "",
+        email: "",
+        password: "",
+        sendMail: false, // Default to false
+      });
+    } else if (selectedUser) {
       setForm({
         firstName: selectedUser.firstName || "",
         lastName: selectedUser.lastName || "",
@@ -57,7 +65,7 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
         password: "",
         sendMail: false, // Default to false
       });
-      console.log("Selected user:", selectedUser);
+    } else {
     }
   }, [selectedUser]);
 

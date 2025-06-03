@@ -1,0 +1,28 @@
+meta {
+  name: login
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{ADDRESS}}{{authRoutes}}/login
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "email": "ayon02mondal@gmail.com",
+    "password": "Pass@123"
+  }
+  
+  // {
+  //   "email": "vikas@foobar.in",
+  //   "password": "foobar"
+  // }
+}
+
+script:post-response {
+  bru.setEnvVar("jwt_token", res.body.token)
+  
+}
