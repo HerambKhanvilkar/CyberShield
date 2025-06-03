@@ -495,7 +495,6 @@ const BadgeMetrics = () => (
             ))}
           </div>
         </div>
-
         <div className="text-gray-300 mt-2 text-sm">
           {badges.length} Badges — Showing {currentBadgeIndex + 1} of {badges.length}
         </div>

@@ -217,68 +217,77 @@ const SharedBadgePage = () => {
   const BadgeDescription = ({ badge }) => (
     <div className="space-y-2 text-green-300">
       <h2 className="text-2xl font-bold">{badge.name}</h2>
-      <p className="italic text-green-400">{badge.vertical}</p>
+      <p className="italic text-green-400">{badge.course}</p>
       <p>{badge.description}</p>
     </div>
   );
 
-  const BadgeSkillsList = ({ skills }) => (
-    <div className="mt-4">
-      <h3 className="text-green-400 font-semibold mb-2">Skills Earned</h3>
-      <ul className="list-disc list-inside space-y-1 text-green-300">
-        {skills?.map((skill, idx) => (
-          <li key={idx} className="flex items-center space-x-1" title={skill}>
-            <span>{skill}</span>
-          </li>
+const BadgeSkillsList = ({ skills }) => (
+  <div>
+    <h3 className="text-green-400 font-semibold mb-2">Skills Earned</h3>
+    {skills && skills.length > 0 ? (
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+        {skills.map((skill, idx) => (
+          <div
+            key={idx}
+            title={skill}
+            className="bg-black/60 text-green-300 border border-green-700 rounded-md px-3 py-2 text-sm shadow-md hover:shadow-lg transition-all duration-200"
+          >
+            {skill}
+          </div>
         ))}
-      </ul>
-    </div>
-  );
+      </div>
+    ) : (
+      <div className="text-sm text-gray-400 italic">No skills listed.</div>
+    )}
+  </div>
+);
 
-  const BadgeMetrics = ({ badge }) => (
-    <div className="w-full flex justify-around mt-4 text-center text-green-300">
-      <div className="p-2 flex-1 shadow-md border border-green-700 rounded-md bg-black/60">
+const BadgeMetrics = ({ badge }) => (
+  <div className="w-full mt-4 text-center text-green-300 flex flex-col gap-2">
+    {/* Row: Level & Earners side by side */}
+    <div className="flex gap-2">
+      {/* Level */}
+      <div className="flex-1 p-2 shadow-md border border-green-700 rounded-md bg-black/60">
         <div className="text-sm uppercase text-green-400">Level</div>
         <div className="text-lg font-semibold">{badge.level || 'N/A'}</div>
       </div>
-      <div className="p-2 flex-1 shadow-md border border-green-700 rounded-md bg-black/60">
-        <div className="text-sm uppercase text-green-400">Branch</div>
-        <div className="text-lg font-semibold">{badge.skillsEarned?.[0] || 'General'}</div>
-      </div>
-      <div className="p-2 flex-1 shadow-md border border-green-700 rounded-md bg-black/60">
+
+      {/* Earners */}
+      <div className="flex-1 p-2 shadow-md border border-green-700 rounded-md bg-black/60">
         <div className="text-sm uppercase text-green-400">Earners</div>
         <div className="text-lg font-semibold">43</div>
       </div>
     </div>
-  );
 
-  const BadgeActions = ({ badge }) => {
-    const [earned, setEarned] = useState(null);
-
-    useEffect(() => {
-      const userStr = localStorage.getItem('user');
-      if (!userStr) return;
-
-      try {
-        const user = JSON.parse(userStr);
-        const found = user.badges?.find((b) => b.id === badge.id);
-        if (found) setEarned(found);
-      } catch (err) {
-        console.error('Failed to parse user', err);
-      }
-    }, [badge?.id]);
-
-    return (
-      <div className="mt-4 text-sm text-green-500">
-        {/* Placeholder for share options */}
-        Share options here
-      </div>
-    );
-  };
+    {/* Row: Vertical full-width below */}
+    <div className="p-2 shadow-md border border-green-700 rounded-md bg-black/60">
+      <div className="text-sm uppercase text-green-400">Vertical</div>
+      <div className="text-lg font-semibold">{badge.vertical || 'General'}</div>
+    </div>
+  </div>
+);
 
   return (
     <div className="min-h-screen flex flex-col bg-black text-green-300 font-sans selection:bg-green-600 selection:text-black">
       <Navbar />
+      <div className="mt-4 mx-auto text-sm flex items-center gap-2">
+        {verificationStatus ? (
+          <>
+            <CheckCircle className="w-4 h-4 text-green-400" />
+            <span className="text-green-400">
+              This badge was <strong>verified</strong> and awarded to {user} on {formatDate(timestamp)}.
+            </span>
+          </>
+        ) : (
+          <>
+            <Shield className="w-4 h-4 text-red-500" />
+            <span className="text-red-400">
+              This badge is <strong>not verified</strong>.
+            </span>
+          </>
+        )}
+      </div>
       <main className="container mx-auto px-4 py-6 flex-grow">
         {error && (
           <div className="bg-red-900 text-red-400 p-4 mb-4 rounded-md border border-red-600">
@@ -288,29 +297,32 @@ const SharedBadgePage = () => {
 
         <div className="max-w-4xl mx-auto bg-black/80 rounded-lg p-6 shadow-lg border border-green-800">
           <div className="flex flex-col md:flex-row md:space-x-8">
-            <div className="flex-shrink-0 mb-6 md:mb-0">
+            {/* Left side: Image + Metrics */}
+            <div className="flex-shrink-0 mb-6 md:mb-0 md:w-1/3">
               <img
+                crossOrigin="anonymous"
                 src={`${process.env.SERVER_URL}/badge/images/${badge?.id}` || badge.image?.data}
                 alt={badge.name}
-                className="w-48 h-48 object-contain rounded-md border border-green-600 shadow-md"
+                className="w-48 h-48 object-contain rounded-md border border-green-600 shadow-md mx-auto"
               />
-              <div className="mt-3 text-center text-sm font-semibold text-black px-3 py-1 rounded-full bg-green-700">
-                {badge.difficulty}
+              <div className="mt-4">
+                <BadgeMetrics badge={badge} />
               </div>
             </div>
 
-            <div className="flex flex-col flex-grow justify-between">
+            {/* Right side (or full stack on mobile): Description & Skills */}
+            <div className="flex flex-col flex-grow gap-4 md:w-2/3">
+              {/* On mobile, description appears after image + metrics naturally */}
               <BadgeDescription badge={badge} />
               <BadgeSkillsList skills={badge.skillsEarned} />
-              <BadgeMetrics badge={badge} />
-              <BadgeActions badge={badge} />
-              <div className="mt-4 text-green-400">
-                Verified for: {user}{' '}
-                {verificationStatus ? (
-                  <CheckCircle className="inline w-4 h-4" />
-                ) : (
-                  <Shield className="inline w-4 h-4 text-red-500" />
-                )}
+              {/* Passing Criteria */}
+              <div className="bg-black/60 border border-green-700 rounded-md p-4 shadow text-sm text-green-300">
+                <strong>Passing Criteria:</strong> has scored at least 70% in their assessment and completed all mandatory tasks to earn this badge.
+              </div>
+
+              {/* Authorized Byline */}
+              <div className="text-xs text-gray-400 italic text-right pr-1">
+                Authorized and issued by <span className="text-green-400 not-italic">DeepCytes.</span>
               </div>
             </div>
           </div>
