@@ -3,60 +3,44 @@ import axios from 'axios';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { toast } from 'react-toastify';
-import ErrorTable from '@/components/badgeAdminComponents/CsvDataTable';
+import CsvDataTable from '@/components/badgeAdminComponents/CsvDataTable';
 
 function MyComponent() {
   // File Upload Code
   const [file, setFile] = useState(null);
   const [message, setMessage] = useState('');
-  const [data, setData] = useState({});
+  const [data, setData] = useState([]);
+  const [modifyAndUpdateButton, setModifyAndUpdateButton] = useState(false);
+  const [importButton, setImportButton] = useState(false);
   const [jobId, setJobId] = useState('');
   const [status, setStatus] = useState('');
   const [revision, setRevision] = useState(null);
   const [revisionStatus, setRevisionStatus] = useState('');
   const [refresh, setRefresh] = useState(false);
-  const [updatedRows, setUpdatedRows] = useState([]); // Format: { [email]: { ...changedData } }
+  const [csvUploadtoastId, setCsvUploadtoastId] = useState('');
 
   // Create a ref to store the latest jobId
   const jobIdRef = useRef(jobId);
-  const revisionRef = useRef(revision);
+  const csvUploadtoastIdRef = useRef(csvUploadtoastId);
   const intervalRef = useRef(null);
 
   // Update jobIdRef whenever jobId changes
   useEffect(() => {
+    setModifyAndUpdateButton(!data?.some( u => (u.error !== null && u.error?.includes('Badge'))) || false);
+    if (data.length === 0 ){
+      setModifyAndUpdateButton(false);
+    }
+    setImportButton(data?.length === data?.filter(u => u.error === null).lenght || false);
+  }, [data]);
+
+  // Update jobIdRef whenever jobId changes
+  useEffect(() => {
     jobIdRef.current = jobId;
-    revisionRef.current = revision;
+    csvUploadtoastIdRef.current = csvUploadtoastId;
   }, [jobId]);
 
-  const handleUpload = async () => {
-    const apiUrl = process.env.SERVER_URL + '/users/import';
-    const token = localStorage.getItem("accessToken");
 
-    if (!file) {
-      setMessage('Please select a file to upload.');
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('file', file); // Append the file to the FormData object
-
-    try {
-      const response = await axios.post(apiUrl, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data', // Set the content type
-          Authorization: `Bearer ${token}`, // Add the token to the headers
-        },
-      });
-
-      setData(response.data);
-      toast.success('File uploaded successfully!'); // Success message
-    } catch (error) {
-      console.error('There was a problem with the upload operation:', error);
-      toast.error('Error uploading file.'); // Error message
-    }
-  };
-
-  const getJobStatus = async (rev) => {
+  const getJobStatus = async () => {
     try {
       if(!jobIdRef.current){ 
         console.log('tick, but no jobId available yet.');
@@ -73,24 +57,17 @@ function MyComponent() {
 
       // When API returns a status of "completed"
       if (response.data.status === 'completed') {
-        if (rev){
-          if (response.data.revisionStatus === 'completed') {
-            setData(response.data.result);
-            toast.success("Revision completed!");
-            setRevision(null);
-            // Clear the interval to stop polling
-            if (intervalRef.current) {
-              clearInterval(intervalRef.current);
-              intervalRef.current = null;
-            }
-            return;
-          }
-        }
         // Optionally display a toast
-        toast.success("Job completed!");
+      toast.update(csvUploadtoastIdRef.current, {
+        render:response.data.result.message,
+        type: "success",
+        isLoading: false,
+        autoClose: 3000,
+      });
         // Update your data as needed from the API result
-        setData(response.data.result);
-        console.log(response.data.result);
+        const invalidUsers = response.data.result.invalidUsers || [];
+        const validUsers = response.data.result.validUsers || [];
+        setData([...invalidUsers, ...validUsers]);
 
         // Clear the interval to stop polling
         if (intervalRef.current) {
@@ -118,11 +95,11 @@ function MyComponent() {
 
       // Poll every 3 seconds (adjust time as needed)
       intervalRef.current = setInterval(() => {
-        getJobStatus(revisionRef.current);
+        getJobStatus();
       }, 1000);
 
       // Optionally, start an immediate check so user doesn't have to wait the full interval
-      getJobStatus(revisionRef.current);
+      getJobStatus();
     }
 
     // Clean up the interval when component unmounts or jobId changes
@@ -133,50 +110,6 @@ function MyComponent() {
       }
     };
   }, [jobId]);
-
-  const handleDebug = () => {
-    console.log(data);
-    console.log(updatedRows);
-  }
-
-  const handleRevision = async() => {
-    try {
-      const job_id = jobId;
-      setJobId(null);
-      const changes = new Set(updatedRows);
-      const changedUsers = [];
-      for ( const row of changes){
-        const user = data
-          .invalidUsers.find(u => u.row == row ) ||
-          data.validUsers.find(u => u.row == row)
-
-        if (user){
-          changedUsers.push(user);
-        }
-      }
-      const token = localStorage.getItem("accessToken");
-      const JobRevisionUrl = process.env.SERVER_URL + '/job-status/' + jobIdRef.current;
-      const response = await axios.put(JobRevisionUrl, 
-        {
-          'revision': changedUsers
-        },
-        {
-        headers: {
-          Authorization: `Bearer ${token}`, // Add the token to the headers
-        },
-      });
-
-      setJobId(response.data.jobStatus.jobId);
-      setRevision(true);
-      console.log("put", response.data);
-      toast.success(response.data.message); // Success message
-
-    } catch (e){
-      toast.error("Something went wrong");
-      console.log(e);
-    }
-  }
-
 
   const handleDownload = async () => {
     const apiUrl = process.env.SERVER_URL + '/users/sample';
@@ -207,24 +140,23 @@ function MyComponent() {
 
   const handleFileChange = (event) => {
     setFile(event.target.files[0]); // Get the selected file
+    
+    handlePreviewCSV(event.target.files[0]);
   };
 
-  const handleJobIdChange = (job_id) => {
-    setJobId(job_id); // Get the selected file
-  };
-
-
-  const handlePreviewCSV = async () => {
+  const handlePreviewCSV = async (csv_file) => {
     const previewURL = process.env.SERVER_URL + '/users/import/preview';
     const token = localStorage.getItem("accessToken");
+    const toastId = toast.loading("uploading csv ...");
+    setCsvUploadtoastId(toastId);
 
-    if (!file) {
+    if (!csv_file) {
       toast.warning('Please select a file to upload.');
       return;
     }
 
     const formData = new FormData();
-    formData.append('file', file); // Append the file to the FormData object
+    formData.append('file', csv_file); // Append the file to the FormData object
 
     try {
       const response = await axios.post(previewURL, formData, {
@@ -235,31 +167,93 @@ function MyComponent() {
       });
 
       setJobId(response.data.jobId);
-      toast.success(response.data.message); // Success message
     } catch (error) {
       console.error('There was a problem with the upload operation:', error);
       toast.error('Error uploading file.'); // Error message
     }
-
-    
   };
+  
+  const handleRevision = async (toastId, updatedUser) => {
+    const token = localStorage.getItem("accessToken");
+    const JobUrl = process.env.SERVER_URL + '/job-status/' + jobIdRef.current;
+
+    try {
+      const response = await axios.put(JobUrl, { revision: updatedUser },{
+          headers: {
+            Authorization: `Bearer ${token}`, // Add the token to the headers
+          },
+        });
+
+      // Update your data as needed from the API result
+      const error = response.data.result.error;
+      console.log("error", error);
+      setData(prevData =>
+        prevData.map(item =>
+          item.row == response.data.result.row ? 
+          { ...response.data.result } : item
+        )
+      );
+
+      const config = { isLoading: false, autoClose: 5000, }
+      if(!error){
+          config.render='User ready for import';
+          config.type= "success";
+      } else {
+        config.render= error;
+        if (error.includes('User')){
+          config.type= "warning";
+        }else{
+          config.type= "error";
+        }
+      }
+
+      toast.update(toastId, config);
+    } catch (error) {
+      console.error('There was a problem with the update operation', error);
+      toast.error('Something went wrong during update'); // Error message
+    }
+  }
+
+  const handleUserImport = async (upsert) => {
+    const token = localStorage.getItem("accessToken");
+    const JobUrl = process.env.SERVER_URL + '/users/import/' + jobIdRef.current;
+    const toastId = toast.loading("Importing Users ...");
+    try {
+      const response = await axios.post(JobUrl, { upsert },{
+          headers: {
+            Authorization: `Bearer ${token}`, // Add the token to the headers
+          },
+        });
+
+      toast.update(toastId,{
+        isLoading: false, 
+        render:`${response.data.result.length} users imported`,
+        type: "success",
+        autoClose: 5000, 
+      });
+
+      await getJobStatus();
+    } catch (error) {
+      console.error('There was a problem with the Import operation', error);
+      toast.update(toastId, {
+        isLoading: false, 
+        render:'Something went wrong during Import',
+        type: "error",
+        autoClose: 5000, 
+      });
+    }
+  }
 
   // Handler to update a user with changes from the child
   const updateUser = (updatedUser) => {
     console.log(updatedUser);
-    setData((prevData) => ({
-      ...prevData,
-      invalidUsers: prevData.invalidUsers.map((user) =>
-        user.row === updatedUser.row ? updatedUser : user
-      ),
-      validUsers: prevData.validUsers.map((user) =>
-        user.row === updatedUser.row ? updatedUser : user
-      ),
-    }));
-    // Here you can also perform API calls to update the server
-    setUpdatedRows([...updatedRows, updatedUser.row]);
+    const toastId = toast.loading("uploading csv ...");
+    handleRevision(toastId, updatedUser);
   };
 
+  function handleDebug () {
+    console.log("data", data);
+  }
 
 
   return (
@@ -297,9 +291,7 @@ function MyComponent() {
           <ScrollArea >
             {data && (
               <div>
-              <button type="button" onClick={handlePreviewCSV} className="text-white bg-gradient-to-r from-cyan-400 via-cyan-500 to-cyan-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-cyan-800 shadow-lg shadow-cyan-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Refresh</button>
-
-              <ErrorTable data={data} onUpdateUser={updateUser}/>
+              <CsvDataTable users={data} onUpdateUser={updateUser}/>
               </div>
             )}
           </ScrollArea>
@@ -307,15 +299,18 @@ function MyComponent() {
       <div className="inline-flex rounded-md shadow-xs py-2">
       { file ? ( 
         <div className="space-x-2 space-y-2">
-        <button  onClick={handlePreviewCSV} className="bg-blue-500 text-white text-sm px-4 py-1 rounded">
-        Preview CSV                    
-        </button>
-        <button  onClick={handleDebug} className="bg-blue-500 text-white text-sm px-4 py-1 rounded">
-        Debug                    
-        </button>
-        <button  onClick={handleRevision} className="bg-blue-500 text-white text-sm px-4 py-1 rounded">
-        Revision                    
-        </button>
+        <>
+        { modifyAndUpdateButton ? (
+          <button  onClick={() => handleUserImport(true)} className="bg-blue-500 text-white text-sm px-4 py-1 rounded">
+          Modify and Update                    
+          </button>
+        ): ( null )}
+        </>
+        <>
+        { importButton ? (
+          <button  onClick={() => handleUserImport()} className="bg-blue-500 text-white text-sm px-4 py-1 rounded">Import</button>
+        ): ( null )}
+        </>
         </div>
       ) : ( 
         null

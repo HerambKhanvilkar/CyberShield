@@ -29,7 +29,11 @@ const JobResultSchema = new mongoose.Schema({
   },
   processedAt: {
     type: Date,
-  }
+  },
+  importedUsers: {
+    type: mongoose.Schema.Types.Mixed, // Field where frontend can send updated error data for processing
+    default: null,
+  },
 }, { timestamps: { } });
 
 module.exports = mongoose.model('JobResult', JobResultSchema);

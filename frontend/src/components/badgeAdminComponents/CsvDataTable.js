@@ -1,14 +1,10 @@
 import React, { useState} from 'react';
 
-const ErrorTable = ({ data,  onUpdateUser }) => {
-  const invalidUsers = data?.invalidUsers || [];
-  const validUsers = data?.validUsers || [];
-  const users = [...invalidUsers, ...validUsers]
-
+const ErrorTable = ({ users,  onUpdateUser }) => {
   // State to track which row is in edit mode, based on user email (or any unique identifier)
   const [editRows, setEditRows] = useState({}); // Format: { [email]: { ...editedValues } }
   // State to track final changed rows
-  const [changedRows, setChangedRows] = useState({}); // Format: { [email]: { ...changedData } }
+  // const [changedRows, setChangedRows] = useState({}); // Format: { [email]: { ...changedData } }
     
   // Handler for starting editing a row.
   const handleEditClick = (user) => {
@@ -46,10 +42,10 @@ const ErrorTable = ({ data,  onUpdateUser }) => {
   const handleSaveClick = (user) => {
      const updatedUserData = editRows[user.row];
     // Save updated data locally
-    setChangedRows((prev) => ({
-      ...prev,
-      [user.row]: { ...updatedUserData },
-    }));
+    // setChangedRows((prev) => ({
+    //   ...prev,
+    //   [user.row]: { ...updatedUserData },
+    // }));
 
     // Call the parent's update function to update the main data
     if (onUpdateUser) {
@@ -209,7 +205,7 @@ const ErrorTable = ({ data,  onUpdateUser }) => {
      {/* Displaying changed rows for debug/information purposes */}
       <div className="mt-6 p-4 bg-gray-800 text-white">
         <h3 className="mb-2">Changed Rows:</h3>
-        <pre>{JSON.stringify(changedRows, null, 2)}</pre>
+     {/* <pre>{JSON.stringify(changedRows, null, 2)}</pre> */}
       </div>
     </div>
   );
