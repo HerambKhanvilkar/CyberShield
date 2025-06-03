@@ -69,11 +69,6 @@ const SkillsDropdown = ({ type, skillsEarned, formData, handleChange }) => {
                   type={type === 'vertical' ? 'radio' : 'checkbox'}
                   className="w-4 h-4 text-blue-600 rounded-sm ring-offset-gray-700 focus:ring-offset-gray-700 focus:ring-2 bg-gray-600 border-gray-500"
                   aria-label={skill}
-                  aria-checked={
-                    type === 'vertical' ? 
-                    formData.level === skill :
-                    formData.skillsEarned.includes(skill)
-                  }
                 />
                 <label
                   htmlFor={`checkbox-item-${index}`}

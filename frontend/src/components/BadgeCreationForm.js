@@ -348,7 +348,7 @@ useEffect(() => {
         <ul role="list" className="divide-y divide-gray-700">
     {Array.isArray(searchResults) && searchResults.length > 0 ? (
       searchResults.map((badge , index) => (
-        <li>
+        <li key={index}>
                 <div onClick={() => setSelectedBadge(badge)} className="flex items-center">
                     <div className="shrink-0">
                         <img 

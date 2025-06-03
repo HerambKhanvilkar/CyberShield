@@ -9,8 +9,8 @@ const LevelRadio = ({ formData, handleChange }) => {
 
   return (
 <div className="flex flex-wrap">
-    { levels.map(level => (
-      <div className="flex items-center me-4">
+    { levels.map((level, index) => (
+      <div key={index} className="flex items-center me-4">
         <input 
           onChange={handleChange}
           checked={formData.level === level}
