@@ -3,6 +3,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import React, { useEffect, useRef, useState } from "react";
 import ParticleBackground from "@/components/ParticleBackground";
+import SplineScene from "@/components/SplineScene";
 import CountUp from "@/components/countup";
 
 export default function LandingPage() {
@@ -47,7 +48,8 @@ export default function LandingPage() {
     <>
       <Navbar />
       <div className="relative min-h-screen text-white font-sans">
-        <ParticleBackground />
+        {/* <ParticleBackground /> */}
+        <SplineScene/>
         <div className="relative max-w-[1200px] z-10 mx-auto px-5">
 
       {/* <div className="min-h-screen overflow-x-hidden bg-gradient-to-br from-primary-dark to-primary-medium text-text-light font-sans">
@@ -87,7 +89,7 @@ export default function LandingPage() {
               <div className="flex items-center gap-10 flex-wrap md:flex-nowrap text-text-light">
                 <div className="flex-1 text-center md:text-left">
                   <h3 className="text-xl sm:text-2xl mb-5 font-semibold">
-                    {badges[activeIndex].title}
+                    {badges[activeIndex].name}
                   </h3>
                   <p className="text-text-medium text-base sm:text-lg leading-relaxed mb-8 max-w-lg mx-auto md:mx-0">
                     {badges[activeIndex].description}

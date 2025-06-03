@@ -1,58 +1,191 @@
+// 'use client';
+
+// import { useParams } from 'next/navigation';
+// import { useEffect, useState } from 'react';
+// import axios from 'axios';
+// import { CheckCircle, Shield } from 'lucide-react';
+// import Navbar from '@/components/Navbar';
+// import Footer from '@/components/Footer';
+// import Link from 'next/link';
+
+// const SharedBadgePage = () => {
+//   const params = useParams();
+//   const { id, username, timestamp } = params;
+
+//   const [badge, setBadge] = useState(null);
+//   const [verificationStatus, setVerificationStatus] = useState(null);
+//   const [user, setUser] = useState('');
+//   const [isLoading, setIsLoading] = useState(true);
+//   const [error, setError] = useState('');
+
+//   useEffect(() => {
+//     const fetchBadgeData = async () => {
+//       if (!id || !username || !timestamp) return;
+
+//       try {
+//         setIsLoading(true);
+//         const badgeResponse = await axios.get(`${process.env.SERVER_URL}/badge/${id}`);
+//         setBadge(badgeResponse.data);
+
+//         try {
+//           const verifyResponse = await axios.get(
+//             `${process.env.SERVER_URL}/verify-badge/${id}/${username}/${timestamp}`
+//           );
+//           setVerificationStatus(verifyResponse.data.verified);
+//           setUser(verifyResponse.data.firstName + " " + verifyResponse.data.lastName);
+//         } catch (verifyError) {
+//           console.error("Verification error:", verifyError);
+//           setVerificationStatus(false);
+//         }
+
+//         setIsLoading(false);
+//       } catch (err) {
+//         console.error("Error fetching badge:", err);
+//         setError("Failed to load badge information. Please try again later.");
+//         setIsLoading(false);
+//       }
+//     };
+
+//     fetchBadgeData();
+//   }, [id, username, timestamp]);
+
+//   const formatDate = (ts) => {
+//     const date = new Date(parseInt(ts) * 1000);
+//     return date.toLocaleDateString('en-US', {
+//       year: 'numeric',
+//       month: 'long',
+//       day: 'numeric',
+//     });
+//   };
+
+//   return (
+//     <div className="min-h-screen bg-[#00011E] text-white">
+//       <Navbar />
+//       <div className="max-w-4xl mx-auto py-10 px-4">
+//         {isLoading ? (
+//           <div className="text-center py-20">
+//             <div className="animate-spin h-12 w-12 border-4 border-cyan-400 border-t-transparent rounded-full mx-auto mb-4"></div>
+//             <p>Loading badge data...</p>
+//           </div>
+//         ) : error ? (
+//           <div className="bg-white/5 p-6 rounded-xl text-center">
+//             <h2 className="text-2xl font-bold text-red-400 mb-4">Error</h2>
+//             <p>{error}</p>
+//           </div>
+//         ) : (
+//           <div className="space-y-6">
+//             <div className="flex flex-col md:flex-row gap-8 items-start">
+//               <img src={`${process.env.SERVER_URL}/badge/images/${badge?.id}` || badge.image?.data} alt={badge.name} className="w-full max-w-sm rounded-xl shadow-lg" />
+//               <div className="flex-1 space-y-4">
+//                 <h1 className="text-3xl font-bold text-cyan-400">{badge.name}</h1>
+//                 <p className="text-white/80">{badge.description}</p>
+//                 <p className="text-white/60">Issued to <span className="font-medium text-white">{user}</span> on {formatDate(timestamp)}</p>
+//                 <div className="mt-2">
+//                   {verificationStatus === null ? (
+//                     <p className="text-yellow-400 italic">Verifying badge...</p>
+//                   ) : verificationStatus ? (
+//                     <p className="flex items-center gap-2 text-green-400"><CheckCircle size={18} /> Badge Verified</p>
+//                   ) : (
+//                     <p className="flex items-center gap-2 text-red-400"><Shield size={18} /> Unable to Verify Badge</p>
+//                   )}
+//                 </div>
+//               </div>
+//             </div>
+
+//             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+//               <div>
+//                 <h2 className="text-xl font-semibold text-cyan-400 mb-2">Level</h2>
+//                 <p>{badge.level}</p>
+//               </div>
+//               <div>
+//                 <h2 className="text-xl font-semibold text-cyan-400 mb-2">Difficulty</h2>
+//                 <p>{badge.difficulty}</p>
+//               </div>
+//               <div className="md:col-span-2">
+//                 <h2 className="text-xl font-semibold text-cyan-400 mb-2">Vertical</h2>
+//                 <p>{badge.vertical}</p>
+//               </div>
+//             </div>
+
+//             <div>
+//               <h2 className="text-xl font-semibold text-cyan-400 mb-2">Skills</h2>
+//               <div className="flex flex-wrap gap-2">
+//                 {badge.skillsEarned && badge.skillsEarned.length > 0 ? (
+//                   badge.skillsEarned.map((skill, i) => (
+//                     <span
+//                       key={i}
+//                       className="bg-white/10 px-3 py-1 rounded-full text-sm text-white"
+//                     >
+//                       {skill}
+//                     </span>
+//                   ))
+//                 ) : (
+//                   <p className="text-white/70">No skills listed</p>
+//                 )}
+//               </div>
+//             </div>
+
+//             <div>
+//               <h2 className="text-xl font-semibold text-cyan-400 mb-2">Earning Criteria</h2>
+//               <div className="bg-white/5 rounded-lg p-4">
+//                 <p>Passing score on {badge.category} level assessment in cybersecurity challenges.</p>
+//               </div>
+//             </div>
+
+//             <div className="text-center">
+//               <Link href="/badges" className="inline-block px-5 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition text-white">
+//                 Explore All Badges
+//               </Link>
+//             </div>
+//           </div>
+//         )}
+//       </div>
+//       <Footer />
+//     </div>
+//   );
+// };
+
+// export default SharedBadgePage;
+
+
+
+
 'use client';
 
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Award, CheckCircle, Shield } from 'lucide-react';
-import Link from 'next/link';
+import { CheckCircle, Shield } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import Link from 'next/link';
 
 const SharedBadgePage = () => {
-  const params = useParams();
-  const { id, username, timestamp } = params;
-
+  const { id, username, timestamp } = useParams();
+  const [isLoading, setIsLoading] = useState(true);
   const [badge, setBadge] = useState(null);
-  const [issuerData, setIssuerData] = useState({
-    name: '',
-    logo: '',
-    website: '',
-  });
   const [verificationStatus, setVerificationStatus] = useState(null);
   const [user, setUser] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchBadgeData = async () => {
-      if (!id || !username || !timestamp) return;
-
       try {
-        setIsLoading(true);
-        const badgeResponse = await axios.get(`${process.env.SERVER_URL}/badge/${id}`);
-        setBadge(badgeResponse.data);
-
-        setIssuerData({
-          name: "CyberBadge Academy",
-          logo: "/logo.png",
-          website: "https://cyberbadge.example.com",
-        });
+        const badgeRes = await axios.get(`${process.env.SERVER_URL}/badge/${id}`);
+        setBadge(badgeRes.data);
 
         try {
-          const verifyResponse = await axios.get(
+          const verifyRes = await axios.get(
             `${process.env.SERVER_URL}/verify-badge/${id}/${username}/${timestamp}`
           );
-          setVerificationStatus(verifyResponse.data.verified);
-          setUser(verifyResponse.data.firstName + " " + verifyResponse.data.lastName);
-        } catch (verifyError) {
-          console.error("Verification error:", verifyError);
+          setVerificationStatus(verifyRes.data.verified);
+          setUser(`${verifyRes.data.firstName} ${verifyRes.data.lastName}`);
+        } catch {
           setVerificationStatus(false);
         }
-
-        setIsLoading(false);
       } catch (err) {
-        console.error("Error fetching badge:", err);
-        setError("Failed to load badge information. Please try again later.");
+        setError('Failed to load badge information. Please try again later.');
+      } finally {
         setIsLoading(false);
       }
     };
@@ -69,135 +202,133 @@ const SharedBadgePage = () => {
     });
   };
 
-  const renderVerificationStatus = () => {
-    if (verificationStatus === null) {
-      return <div className="text-white/70 italic">Verifying badge...</div>;
-    }
-
+  if (isLoading || !badge) {
     return (
-      <div className={`flex items-center gap-2 ${verificationStatus ? 'text-green-400' : 'text-red-400'}`}>
-        {verificationStatus ? <CheckCircle size={20} /> : <Shield size={20} />}
-        <span>{verificationStatus ? 'Badge Verified' : 'Unable to Verify Badge'}</span>
-      </div>
-    );
-  };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-black text-white">
-        <div className="text-center">
-          <div className="animate-spin border-4 border-t-transparent border-cyan-500 rounded-full h-12 w-12 mx-auto mb-4"></div>
-          <p>Loading verification details...</p>
+      <div className="min-h-screen flex flex-col bg-black text-green-400">
+        <Navbar />
+        <div className="flex-grow flex flex-col items-center justify-center">
+          <div className="loader border-8 border-t-8 border-green-700 h-16 w-16 animate-spin rounded-full mb-4" />
+          <p className="text-green-500 text-lg">Loading Badge Gallery...</p>
         </div>
       </div>
     );
   }
 
-  if (error || !badge) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-black text-white px-4">
-        <div className="glass-card max-w-xl mx-auto p-6 text-center space-y-4 rounded-xl shadow-lg">
-          <h2 className="text-3xl font-bold text-cyan-400">Badge Not Found</h2>
-          <p>{error || 'The shared badge could not be found or verified.'}</p>
-          <Link href="/badges" className="px-4 py-2 bg-cyan-600 text-white rounded hover:bg-cyan-700 transition">
-            Explore All Badges
-          </Link>
-        </div>
+  const BadgeDescription = ({ badge }) => (
+    <div className="space-y-2 text-green-300">
+      <h2 className="text-2xl font-bold">{badge.name}</h2>
+      <p className="italic text-green-400">{badge.course}</p>
+      <p>{badge.description}</p>
+    </div>
+  );
+
+const BadgeSkillsList = ({ skills }) => (
+  <div>
+    <h3 className="text-green-400 font-semibold mb-2">Skills Earned</h3>
+    {skills && skills.length > 0 ? (
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+        {skills.map((skill, idx) => (
+          <div
+            key={idx}
+            title={skill}
+            className="bg-black/60 text-green-300 border border-green-700 rounded-md px-3 py-2 text-sm shadow-md hover:shadow-lg transition-all duration-200"
+          >
+            {skill}
+          </div>
+        ))}
       </div>
-    );
-  }
+    ) : (
+      <div className="text-sm text-gray-400 italic">No skills listed.</div>
+    )}
+  </div>
+);
+
+const BadgeMetrics = ({ badge }) => (
+  <div className="w-full mt-4 text-center text-green-300 flex flex-col gap-2">
+    {/* Row: Level & Earners side by side */}
+    <div className="flex gap-2">
+      {/* Level */}
+      <div className="flex-1 p-2 shadow-md border border-green-700 rounded-md bg-black/60">
+        <div className="text-sm uppercase text-green-400">Level</div>
+        <div className="text-lg font-semibold">{badge.level || 'N/A'}</div>
+      </div>
+
+      {/* Earners */}
+      <div className="flex-1 p-2 shadow-md border border-green-700 rounded-md bg-black/60">
+        <div className="text-sm uppercase text-green-400">Earners</div>
+        <div className="text-lg font-semibold">43</div>
+      </div>
+    </div>
+
+    {/* Row: Vertical full-width below */}
+    <div className="p-2 shadow-md border border-green-700 rounded-md bg-black/60">
+      <div className="text-sm uppercase text-green-400">Vertical</div>
+      <div className="text-lg font-semibold">{badge.vertical || 'General'}</div>
+    </div>
+  </div>
+);
 
   return (
-    <div className="min-h-screen bg-[#00011E] text-white px-4">
+    <div className="min-h-screen flex flex-col bg-black text-green-300 font-sans selection:bg-green-600 selection:text-black">
       <Navbar />
-      <div className="max-w-5xl mx-auto mt-2 space-y-6">
-        {/* Verification Header */}
-        <div className="glass-card p-5 rounded-xl flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
-              <Award size={24} />
-            </div>
-            <p>
-              This badge was issued to <strong>{user}</strong> on {formatDate(timestamp)}
-            </p>
-          </div>
-          {renderVerificationStatus()}
-        </div>
-
-        {/* Badge Content */}
-        <div className="glass-card rounded-xl p-8 grid md:grid-cols-[350px_1fr] gap-8">
-          {/* Badge Image */}
-          <div className="flex justify-center">
-            <div className="max-w-xs rounded-xl overflow-hidden shadow-[0_0_30px_#00d4ff40]">
-              <img src={badge.image} alt={badge.name} className="w-full" />
-            </div>
-          </div>
-
-          {/* Badge Details */}
-          <div>
-            {/* <p className="text-white/60 mb-4">
-              Badge issued to <strong>{user}</strong> on {formatDate(timestamp)}
-            </p> */}
-            <h1 className="text-3xl font-bold text-cyan-400 mb-4">{badge.name}</h1>
-            {/* <p className="mb-4">
-              Issued by{' '}
-              <a href={issuerData.website} target="_blank" className="text-cyan-400 hover:underline" rel="noreferrer">
-                {issuerData.name}
-              </a>
-            </p> */}
-            <p className="mb-6">{badge.description}</p>
-
-            <div className="flex flex-row gap-4 mb-6">
-              <div className="flex-1 w-1/2">
-                <h2 className="text-xl font-semibold text-cyan-400 mb-2">Difficulty</h2>
-                <p>{badge.difficulty}</p>
-              </div>
-              <div className="flex-1 w-1/2">
-                <h2 className="text-xl font-semibold text-cyan-400 mb-2">Level</h2>
-                <p>{badge.level}</p>
-              </div>
-            </div>
-
-            <h2 className="text-xl font-semibold text-cyan-400 mb-2">Vertical</h2>
-            <p>{badge.vertical}</p>
-
-            <h2 className="text-xl font-semibold text-cyan-400 mb-2">Skills</h2>
-            <div className="flex flex-wrap gap-2 mb-6">
-              {badge.skillsEarned && badge.skillsEarned.length > 0 ? (
-                badge.skillsEarned.map((skill, i) => (
-                  <span
-                    key={i}
-                    className="bg-white/10 text-sm px-3 py-1 rounded-full text-white backdrop-blur-sm"
-                  >
-                    {skill}
-                  </span>
-                ))
-              ) : (
-                <p className="text-sm text-white/70">No skills found for this badge</p>
-              )}
-            </div>
-
-            <h2 className="text-xl font-semibold text-cyan-400 mb-2">Earning Criteria</h2>
-            <div className="bg-white/5 rounded-lg p-4 flex items-center gap-3">
-              <CheckCircle className="text-cyan-400" size={20} />
-              <span>
-                Passing score on {badge.category} level assessment in cybersecurity challenges.
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex justify-center mb-2 gap-4">
-          <Link
-            href="/badges"
-            className="px-5 py-2 rounded-lg bg-white/10 text-white hover:bg-white/20 transition"
-          >
-            Explore All Badges
-          </Link>
-        </div>
+      <div className="mt-4 mx-auto text-sm flex items-center gap-2">
+        {verificationStatus ? (
+          <>
+            <CheckCircle className="w-4 h-4 text-green-400" />
+            <span className="text-green-400">
+              This badge was <strong>verified</strong> and awarded to {user} on {formatDate(timestamp)}.
+            </span>
+          </>
+        ) : (
+          <>
+            <Shield className="w-4 h-4 text-red-500" />
+            <span className="text-red-400">
+              This badge is <strong>not verified</strong>.
+            </span>
+          </>
+        )}
       </div>
-      <Footer/>
+      <main className="container mx-auto px-4 py-6 flex-grow">
+        {error && (
+          <div className="bg-red-900 text-red-400 p-4 mb-4 rounded-md border border-red-600">
+            {error}
+          </div>
+        )}
+
+        <div className="max-w-4xl mx-auto bg-black/80 rounded-lg p-6 shadow-lg border border-green-800">
+          <div className="flex flex-col md:flex-row md:space-x-8">
+            {/* Left side: Image + Metrics */}
+            <div className="flex-shrink-0 mb-6 md:mb-0 md:w-1/3">
+              <img
+                crossOrigin="anonymous"
+                src={`${process.env.SERVER_URL}/badge/images/${badge?.id}` || badge.image?.data}
+                alt={badge.name}
+                className="w-48 h-48 object-contain rounded-md border border-green-600 shadow-md mx-auto"
+              />
+              <div className="mt-4">
+                <BadgeMetrics badge={badge} />
+              </div>
+            </div>
+
+            {/* Right side (or full stack on mobile): Description & Skills */}
+            <div className="flex flex-col flex-grow gap-4 md:w-2/3">
+              {/* On mobile, description appears after image + metrics naturally */}
+              <BadgeDescription badge={badge} />
+              <BadgeSkillsList skills={badge.skillsEarned} />
+              {/* Passing Criteria */}
+              <div className="bg-black/60 border border-green-700 rounded-md p-4 shadow text-sm text-green-300">
+                <strong>Passing Criteria:</strong> has scored at least 70% in their assessment and completed all mandatory tasks to earn this badge.
+              </div>
+
+              {/* Authorized Byline */}
+              <div className="text-xs text-gray-400 italic text-right pr-1">
+                Authorized and issued by <span className="text-green-400 not-italic">DeepCytes.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+      <Footer />
     </div>
   );
 };
