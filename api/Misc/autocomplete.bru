@@ -1,0 +1,19 @@
+meta {
+  name: autocomplete
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://172.16.209.143/api/users/autocomplete?q=tesa
+  body: json
+  auth: bearer
+}
+
+params:query {
+  q: tesa
+}
+
+auth:bearer {
+  token: {{jwt_token}}
+}

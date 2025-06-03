@@ -1,0 +1,19 @@
+meta {
+  name: users
+  type: http
+  seq: 1
+}
+
+get {
+  url: http://172.16.209.149/api/users
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwt_token}}
+}
+
+body:json {
+  {"email": "vikas@foobar.in"}
+}
