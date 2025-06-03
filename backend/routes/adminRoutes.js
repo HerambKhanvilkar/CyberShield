@@ -44,6 +44,65 @@ const checkBadgeExists = (badgeId, badgesArray) => {
 
 const nameRegex = /^[A-Za-z]+$/; // Allow only letters for names (adjust the regex as needed)
 
+// Add Course
+router.post('/users/courses', authenticateJWT, async (req, res) => {
+    const { email, course } = req.body;
+
+    try {
+        const user = await User.findOne({email});
+        if (!user) return res.status(404).send('User not found');
+
+        user.courses.push(course);
+        await user.save();
+        res.status(201).send(user);
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+});
+
+// Update course
+router.put('/users/courses/:courseIndex', authenticateJWT, async (req, res) => {
+    const { courseIndex } = req.params;
+    const { email, course } = req.body;
+
+    try {
+        const user = await User.findOne({email});
+        if (!user) return res.status(404).send('User not found');
+
+        if (user.courses[courseIndex] === undefined) {
+            return res.status(404).send('Course not found');
+        }
+
+        user.courses[courseIndex] = course;
+        await user.save();
+        res.send(user);
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+});
+
+// Delete course
+router.delete('/users/courses/:courseIndex', authenticateJWT, async (req, res) => {
+    const { courseIndex } = req.params;
+    const { email } = req.body;
+
+    try {
+        const user = await User.findOne({email});
+        if (!user) return res.status(404).send('User not found');
+
+        if (user.courses[courseIndex] === undefined) {
+            return res.status(404).send('Course not found');
+        }
+
+        user.courses.splice(courseIndex, 1);
+        await user.save();
+        res.send(user);
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+});
+
+
 
 
 // Add achievement
