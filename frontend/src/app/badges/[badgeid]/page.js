@@ -21,6 +21,15 @@ const BadgeId = () => {
   const [showLoginMessage, setShowLoginMessage] = useState(false);
 
   const { isAuthenticated, user } = useAuthContext();
+    const truncateText = (text, maxLength) => {
+  if (text === null || text === undefined) {
+    return '';
+  }
+  if (text.length > maxLength) {
+    return text.substring(0, maxLength) + '...';
+  }
+  return text;
+};
 
   useEffect(() => {
     const fetchBadges = async () => {
@@ -256,7 +265,7 @@ const BadgeMetrics = () => (
     <div className="space-y-2">
       <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Badge Details</h2>
       <p className="text-gray-300 leading-relaxed">
-        {currentBadge.description}
+        {truncateText(currentBadge.description,200)}
       </p>
     </div>
   );
@@ -482,7 +491,7 @@ const BadgeMetrics = () => (
                 src={`${process.env.SERVER_URL}/badge/images/${badge?.id}` || badge.image?.data}
                 alt={badge.name}
                 className={`w-14 h-14 object-cover rounded-md cursor-pointer shadow-md transition-transform ${
-                  index === currentBadgeIndex ? ' scale-100' : 'opacity-70'
+                  index === currentBadgeIndex ? 'border-2 border-cyan-500 scale-100' : 'opacity-70'
                 }`}
                 onClick={() => setCurrentBadgeIndex(index)}
                 tabIndex={0}

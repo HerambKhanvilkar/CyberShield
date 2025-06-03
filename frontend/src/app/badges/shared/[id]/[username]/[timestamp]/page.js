@@ -1,155 +1,3 @@
-// 'use client';
-
-// import { useParams } from 'next/navigation';
-// import { useEffect, useState } from 'react';
-// import axios from 'axios';
-// import { CheckCircle, Shield } from 'lucide-react';
-// import Navbar from '@/components/Navbar';
-// import Footer from '@/components/Footer';
-// import Link from 'next/link';
-
-// const SharedBadgePage = () => {
-//   const params = useParams();
-//   const { id, username, timestamp } = params;
-
-//   const [badge, setBadge] = useState(null);
-//   const [verificationStatus, setVerificationStatus] = useState(null);
-//   const [user, setUser] = useState('');
-//   const [isLoading, setIsLoading] = useState(true);
-//   const [error, setError] = useState('');
-
-//   useEffect(() => {
-//     const fetchBadgeData = async () => {
-//       if (!id || !username || !timestamp) return;
-
-//       try {
-//         setIsLoading(true);
-//         const badgeResponse = await axios.get(`${process.env.SERVER_URL}/badge/${id}`);
-//         setBadge(badgeResponse.data);
-
-//         try {
-//           const verifyResponse = await axios.get(
-//             `${process.env.SERVER_URL}/verify-badge/${id}/${username}/${timestamp}`
-//           );
-//           setVerificationStatus(verifyResponse.data.verified);
-//           setUser(verifyResponse.data.firstName + " " + verifyResponse.data.lastName);
-//         } catch (verifyError) {
-//           console.error("Verification error:", verifyError);
-//           setVerificationStatus(false);
-//         }
-
-//         setIsLoading(false);
-//       } catch (err) {
-//         console.error("Error fetching badge:", err);
-//         setError("Failed to load badge information. Please try again later.");
-//         setIsLoading(false);
-//       }
-//     };
-
-//     fetchBadgeData();
-//   }, [id, username, timestamp]);
-
-//   const formatDate = (ts) => {
-//     const date = new Date(parseInt(ts) * 1000);
-//     return date.toLocaleDateString('en-US', {
-//       year: 'numeric',
-//       month: 'long',
-//       day: 'numeric',
-//     });
-//   };
-
-//   return (
-//     <div className="min-h-screen bg-[#00011E] text-white">
-//       <Navbar />
-//       <div className="max-w-4xl mx-auto py-10 px-4">
-//         {isLoading ? (
-//           <div className="text-center py-20">
-//             <div className="animate-spin h-12 w-12 border-4 border-cyan-400 border-t-transparent rounded-full mx-auto mb-4"></div>
-//             <p>Loading badge data...</p>
-//           </div>
-//         ) : error ? (
-//           <div className="bg-white/5 p-6 rounded-xl text-center">
-//             <h2 className="text-2xl font-bold text-red-400 mb-4">Error</h2>
-//             <p>{error}</p>
-//           </div>
-//         ) : (
-//           <div className="space-y-6">
-//             <div className="flex flex-col md:flex-row gap-8 items-start">
-//               <img src={`${process.env.SERVER_URL}/badge/images/${badge?.id}` || badge.image?.data} alt={badge.name} className="w-full max-w-sm rounded-xl shadow-lg" />
-//               <div className="flex-1 space-y-4">
-//                 <h1 className="text-3xl font-bold text-cyan-400">{badge.name}</h1>
-//                 <p className="text-white/80">{badge.description}</p>
-//                 <p className="text-white/60">Issued to <span className="font-medium text-white">{user}</span> on {formatDate(timestamp)}</p>
-//                 <div className="mt-2">
-//                   {verificationStatus === null ? (
-//                     <p className="text-yellow-400 italic">Verifying badge...</p>
-//                   ) : verificationStatus ? (
-//                     <p className="flex items-center gap-2 text-green-400"><CheckCircle size={18} /> Badge Verified</p>
-//                   ) : (
-//                     <p className="flex items-center gap-2 text-red-400"><Shield size={18} /> Unable to Verify Badge</p>
-//                   )}
-//                 </div>
-//               </div>
-//             </div>
-
-//             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-//               <div>
-//                 <h2 className="text-xl font-semibold text-cyan-400 mb-2">Level</h2>
-//                 <p>{badge.level}</p>
-//               </div>
-//               <div>
-//                 <h2 className="text-xl font-semibold text-cyan-400 mb-2">Difficulty</h2>
-//                 <p>{badge.difficulty}</p>
-//               </div>
-//               <div className="md:col-span-2">
-//                 <h2 className="text-xl font-semibold text-cyan-400 mb-2">Vertical</h2>
-//                 <p>{badge.vertical}</p>
-//               </div>
-//             </div>
-
-//             <div>
-//               <h2 className="text-xl font-semibold text-cyan-400 mb-2">Skills</h2>
-//               <div className="flex flex-wrap gap-2">
-//                 {badge.skillsEarned && badge.skillsEarned.length > 0 ? (
-//                   badge.skillsEarned.map((skill, i) => (
-//                     <span
-//                       key={i}
-//                       className="bg-white/10 px-3 py-1 rounded-full text-sm text-white"
-//                     >
-//                       {skill}
-//                     </span>
-//                   ))
-//                 ) : (
-//                   <p className="text-white/70">No skills listed</p>
-//                 )}
-//               </div>
-//             </div>
-
-//             <div>
-//               <h2 className="text-xl font-semibold text-cyan-400 mb-2">Earning Criteria</h2>
-//               <div className="bg-white/5 rounded-lg p-4">
-//                 <p>Passing score on {badge.category} level assessment in cybersecurity challenges.</p>
-//               </div>
-//             </div>
-
-//             <div className="text-center">
-//               <Link href="/badges" className="inline-block px-5 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition text-white">
-//                 Explore All Badges
-//               </Link>
-//             </div>
-//           </div>
-//         )}
-//       </div>
-//       <Footer />
-//     </div>
-//   );
-// };
-
-// export default SharedBadgePage;
-
-
-
-
 'use client';
 
 import { useParams } from 'next/navigation';
@@ -164,15 +12,30 @@ const SharedBadgePage = () => {
   const { id, username, timestamp } = useParams();
   const [isLoading, setIsLoading] = useState(true);
   const [badge, setBadge] = useState(null);
+  const [allBadges, setAllBadges] = useState([]);
+
   const [verificationStatus, setVerificationStatus] = useState(null);
   const [user, setUser] = useState('');
   const [error, setError] = useState('');
+
+  const truncateText = (text, maxLength) => {
+  if (text === null || text === undefined) {
+    return '';
+  }
+  if (text.length > maxLength) {
+    return text.substring(0, maxLength) + '...';
+  }
+  return text;
+};
 
   useEffect(() => {
     const fetchBadgeData = async () => {
       try {
         const badgeRes = await axios.get(`${process.env.SERVER_URL}/badge/${id}`);
         setBadge(badgeRes.data);
+        const allBadgesRes = await axios.get(`${process.env.SERVER_URL}/badges`);
+        setAllBadges(allBadgesRes.data);
+
 
         try {
           const verifyRes = await axios.get(
@@ -192,7 +55,7 @@ const SharedBadgePage = () => {
 
     fetchBadgeData();
   }, [id, username, timestamp]);
-
+  
   const formatDate = (ts) => {
     const date = new Date(parseInt(ts) * 1000);
     return date.toLocaleDateString('en-US', {
@@ -218,7 +81,7 @@ const SharedBadgePage = () => {
     <div className="space-y-2 text-green-300">
       <h2 className="text-2xl font-bold">{badge.name}</h2>
       <p className="italic text-green-400">{badge.course}</p>
-      <p>{badge.description}</p>
+      <p>{truncateText(badge.description,200)}</p>
     </div>
   );
 
@@ -226,20 +89,20 @@ const BadgeSkillsList = ({ skills }) => (
   <div>
     <h3 className="text-green-400 font-semibold mb-2">Skills Earned</h3>
     {skills && skills.length > 0 ? (
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-        {skills.map((skill, idx) => (
-          <div
-            key={idx}
-            title={skill}
-            className="bg-black/60 text-green-300 border border-green-700 rounded-md px-3 py-2 text-sm shadow-md hover:shadow-lg transition-all duration-200"
-          >
-            {skill}
-          </div>
-        ))}
-      </div>
-    ) : (
-      <div className="text-sm text-gray-400 italic">No skills listed.</div>
-    )}
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+      {skills.slice(0, 8).map((skill, idx) => (
+        <div
+          key={idx}
+          title={skill}
+          className="bg-black/60 text-green-300 border border-green-700 rounded-md px-3 py-2 text-sm shadow-md hover:shadow-lg transition-all duration-200"
+        >
+          {skill}
+        </div>
+      ))}
+    </div>
+  ) : (
+    <div className="text-sm text-gray-400 italic">No skills listed.</div>
+  )}
   </div>
 );
 
@@ -268,10 +131,69 @@ const BadgeMetrics = ({ badge }) => (
   </div>
 );
 
+const RelatedBadges = () => {
+  const [relatedBadges, setRelatedBadges] = useState([]);
+  useEffect(() => {
+  const fetchBadges = async () => {
+    try {
+      const res = await axios.get(`${process.env.SERVER_URL}/badges`);
+      const allBadges = res.data.badges;
+
+      // Shuffle and pick 3 random badges
+      const shuffled = [...allBadges].sort(() => 0.5 - Math.random());
+      const picked = shuffled.slice(0, 3);
+
+      // Fetch details for these 3 badges
+      const details = await Promise.all(
+        picked.map(badge =>
+          axios.get(`${process.env.SERVER_URL}/badge/${badge.id}`)
+        )
+      );
+
+      setRelatedBadges(details.map(d => d.data));
+    } catch (error) {
+      console.error('Error fetching related badges:', error);
+    }
+  };
+
+  fetchBadges();
+}, []);
+  if (relatedBadges.length === 0) {
+    return (
+      <div className="text-center text-gray-400 mt-6">
+        No related badges available.
+      </div>
+    );
+  }
+
+  return (
+  <div className="mt-8">
+    <h3 className="text-green-400 font-semibold mb-4 text-left">Related Badges</h3>
+    <div className="flex gap-4 justify-center">
+      {relatedBadges.map(badge => (
+        <div
+          key={badge.id}
+          className="w-24 h-24 rounded-lg overflow-hidden shadow-lg border border-green-700"
+        >
+          <img
+            crossOrigin="anonymous"
+            src={`${process.env.SERVER_URL}/badge/images/${badge.id}`}
+            alt={badge.name}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+};
+
+
   return (
     <div className="min-h-screen flex flex-col bg-black text-green-300 font-sans selection:bg-green-600 selection:text-black">
       <Navbar />
-      <div className="mt-4 mx-auto text-sm flex items-center gap-2">
+      <div className="mt-4 mx-auto text-lg flex items-center gap-2">
         {verificationStatus ? (
           <>
             <CheckCircle className="w-4 h-4 text-green-400" />
@@ -303,11 +225,13 @@ const BadgeMetrics = ({ badge }) => (
                 crossOrigin="anonymous"
                 src={`${process.env.SERVER_URL}/badge/images/${badge?.id}` || badge.image?.data}
                 alt={badge.name}
-                className="w-48 h-48 object-contain rounded-md border border-green-600 shadow-md mx-auto"
+                className="w-48 h-48 object-contain rounded-full border border-green-600 shadow-md mx-auto"
               />
               <div className="mt-4">
                 <BadgeMetrics badge={badge} />
               </div>
+              {/* Related Badges */}
+              <RelatedBadges/>
             </div>
 
             {/* Right side (or full stack on mobile): Description & Skills */}
@@ -319,7 +243,6 @@ const BadgeMetrics = ({ badge }) => (
               <div className="bg-black/60 border border-green-700 rounded-md p-4 shadow text-sm text-green-300">
                 <strong>Passing Criteria:</strong> has scored at least 70% in their assessment and completed all mandatory tasks to earn this badge.
               </div>
-
               {/* Authorized Byline */}
               <div className="text-xs text-gray-400 italic text-right pr-1">
                 Authorized and issued by <span className="text-green-400 not-italic">DeepCytes.</span>

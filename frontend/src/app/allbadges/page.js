@@ -11,6 +11,15 @@ export default function AllBadgesPage() {
   const [badges, setBadges] = useState([]);
   const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(true);
+  const truncateText = (text, maxLength) => {
+  if (text === null || text === undefined) {
+    return '';
+  }
+  if (text.length > maxLength) {
+    return text.substring(0, maxLength) + '...';
+  }
+  return text;
+};
 
 useEffect(() => {
   const fetchAllBadges = async () => {
@@ -125,10 +134,10 @@ useEffect(() => {
                     {badge.name}
                   </h3>
                   <p className="text-gray-400 text-sm text-center mb-4">
-                    {badge.description}
+                    {truncateText(badge.description,200)}
                   </p>
                   <div className="flex flex-wrap justify-center gap-2">
-                    {badge.skillsEarned?.map((skill, i) => (
+                    {badge.skillsEarned?.slice(0, 8).map((skill, i) => (
                       <span
                         key={i}
                         className="text-xs px-3 py-1 bg-cyan-500/20 text-cyan-300 rounded-full border border-cyan-400/30"
