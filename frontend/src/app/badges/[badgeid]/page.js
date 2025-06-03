@@ -42,6 +42,11 @@ const BadgeId = () => {
             }
           );
           setEarnedBadges(responseEarnedBadges.data.badges || []);
+          console.log('Earned Badges:', responseEarnedBadges.data.badges);
+          earnedBadges.forEach((badge) => {
+            console.log(`Badge ID: ${badge.badgeId}, Earned Date: ${badge.earnedDate}`);
+          }
+          );
         }
         setIsDataLoading(false);
       } catch (err) {
@@ -153,70 +158,97 @@ const BadgeId = () => {
       navigator.clipboard.writeText(shareURL);
     };
 
-    return (
-      <div className="flex flex-col space-y-4">
-        {earnedBadge ? (
-          <>
-            <div className="flex items-center space-x-2 bg-green-700 rounded-md p-3 shadow-md">
-              <Award className="w-6 h-6" />
-              <span>
-                {earnedBadge.earnedDate
-                  ? `You earned this badge on ${new Date(earnedBadge.earnedDate).toLocaleDateString()}`
-                  : 'You have earned this badge'}
-              </span>
-            </div>
+return (
+  <div className="flex flex-row flex-wrap gap-2 md:flex-col md:space-y-4">
+    {earnedBadge ? (
+      <>
+        {/* Earned Info Pill */}
+        <div className="bg-green-700 rounded-full mx-auto p-2 px-3 shadow-md flex items-center space-x-2 md:rounded-md md:p-3">
+          <Award className="w-5 h-5 md:w-6 md:h-6" />
+          <span className="text-sm md:text-base whitespace-nowrap">
+            <span className="block md:hidden">
+              {earnedBadge.earnedDate
+                ? new Date(earnedBadge.earnedDate).toLocaleDateString()
+                : 'Earned'}
+            </span>
+            <span className="hidden md:block">
+              {earnedBadge.earnedDate
+                ? `You earned this badge on ${new Date(earnedBadge.earnedDate).toLocaleDateString()}`
+                : 'You have earned this badge'}
+            </span>
+          </span>
+        </div>
 
-            <button
-              className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 transition rounded-md p-3 shadow-md"
-              onClick={handleGenerateShareLink}
-            >
-              <Share2 className="w-6 h-6" />
-              <span>Generate Share Link</span>
-            </button>
-          </>
-        ) : (
-          <button
-            className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 transition rounded-md p-3 shadow-md"
-            onClick={() => (window.location.href = 'https://learn.deepcytes.io/')}
-          >
-            <Award className="w-6 h-6" />
-            <span>Get this Badge</span>
-          </button>
-        )}
-
-        {showShareSuccess && (
-          <div className="bg-green-600 text-white p-2 rounded-md text-center animate-pulse">
-            Link generated! Share URL copied to clipboard.
-          </div>
-        )}
-
-        {showLoginMessage && (
-          <div className="bg-red-600 text-white p-2 rounded-md text-center animate-pulse">
-            Please log in to generate a share link.
-          </div>
-        )}
-      </div>
-    );
-  };
-
-//Badge Metrics Component
-const BadgeMetrics = () => (
-  <div className="w-full flex flex-col md:flex-row justify-between gap-4 mt-4">
-    {[ // wrapping in an array to simplify repetition
-      { label: "Level", value: currentBadge.level || "N/A" },
-      { label: "Vertical", value: currentBadge.vertical || "General" },
-      { label: "Earners", value: "43" },
-    ].map(({ label, value }, index) => (
-      <div
-        key={index}
-        className="flex-1 bg-gray-800 rounded-md shadow-md p-4 flex flex-col justify-between text-center min-h-[120px]"
+        {/* Share Link Pill */}
+        <button
+          className="bg-blue-600 hover:bg-blue-700 mx-auto transition rounded-full p-2 px-3 shadow-md flex items-center space-x-2 md:rounded-md md:p-3"
+          onClick={handleGenerateShareLink}
+        >
+          <Share2 className="w-5 h-5 md:w-6 md:h-6" />
+          <span className="text-sm md:text-base whitespace-nowrap">
+            <span className="block md:hidden">Share</span>
+            <span className="hidden md:block">Generate Share Link</span>
+          </span>
+        </button>
+      </>
+    ) : (
+      <button
+        className="bg-indigo-600 mx-auto hover:bg-indigo-700 transition rounded-full p-2 px-3 shadow-md flex items-center space-x-2 md:rounded-md md:p-3"
+        onClick={() => (window.location.href = 'https://learn.deepcytes.io/')}
       >
-        <div className="text-sm uppercase text-gray-400">{label}</div>
-        <div className="text-lg font-semibold">{value}</div>
+        <Award className="w-5 h-5 md:w-6 md:h-6" />
+        <span className="text-sm md:text-base whitespace-nowrap">
+          <span className="block md:hidden">Get</span>
+          <span className="hidden md:block">Get this Badge</span>
+        </span>
+      </button>
+    )}
+
+    {/* Feedback messages – keep as is */}
+    {showShareSuccess && (
+      <div className="bg-green-600 text-white p-2 rounded-md text-center animate-pulse text-sm md:text-base w-full">
+        Link generated! Share URL copied to clipboard.
       </div>
-    ))}
+    )}
+
+    {showLoginMessage && (
+      <div className="bg-red-600 text-white p-2 rounded-md text-center animate-pulse text-sm md:text-base w-full">
+        Please log in to generate a share link.
+      </div>
+    )}
   </div>
 );
+  }
+
+// Badge Metrics Component
+const BadgeMetrics = () => (
+  <div className="w-full flex flex-col gap-2 md:flex-row md:justify-between mt-4">
+    {/* Mobile: Level + Earners side by side */}
+    <div className="flex flex-row gap-2 md:flex-1">
+      {[ 
+        { label: "Level", value: currentBadge.level || "N/A" },
+        { label: "Earners", value: "43" },
+      ].map(({ label, value }, index) => (
+        <div
+          key={index}
+          className="flex-1 bg-gray-800 rounded-md shadow-md p-4 flex flex-col justify-between text-center min-h-[50px]"
+        >
+          <div className="text-sm uppercase text-gray-400">{label}</div>
+          <div className="text-lg font-semibold">{value}</div>
+        </div>
+      ))}
+    </div>
+
+    {/* Mobile: Vertical goes below, but aligns normally in row on md+ */}
+    <div className="flex md:flex-1">
+      <div className="flex-1 bg-gray-800 rounded-md shadow-md p-4 flex flex-col justify-between text-center min-h-[50px]">
+        <div className="text-sm uppercase text-gray-400">Vertical</div>
+        <div className="text-lg font-semibold">{currentBadge.vertical || "General"}</div>
+      </div>
+    </div>
+  </div>
+);
+
 
 
   // Badge Description Component
@@ -274,6 +306,7 @@ const BadgeMetrics = () => (
               }}
             >
               <img
+                crossorigin="anonymous"
                 src={`${process.env.SERVER_URL}/badge/images/${relatedBadge?.id}` || relatedBadge.image?.data}
                 alt={relatedBadge.name}
                 className="rounded-lg shadow-md w-20 h-20 object-cover"
@@ -304,6 +337,7 @@ const BadgeMetrics = () => (
           {!isLoading ? (
             <>
               <img
+                crossorigin="anonymous"
                 src={`${process.env.SERVER_URL}/badge/images/${currentBadge?.id}` || currentBadge.image?.data}
                 alt={currentBadge?.name}
                 className="max-w-full max-h-full object-contain"
@@ -330,11 +364,11 @@ const BadgeMetrics = () => (
 
       <h1 className="text-3xl font-bold text-center mt-2">{currentBadge.name}</h1>
 
-      <div
+      {/* <div
         className={`inline-block px-4 py-1 rounded-full text-white font-semibold ${difficultyColors[currentBadge.difficulty]} mt-2`}
       >
         {currentBadge.difficulty}
-      </div>
+      </div> */}
     </div>
   );
 
@@ -376,49 +410,33 @@ const BadgeMetrics = () => (
               <div className="flex flex-wrap justify-center gap-2">
                 <BadgeActions currentBadge={currentBadge} isAuthenticated={isAuthenticated} />
               </div>
+              <BadgeMetrics />
             </div>
             &nbsp;
             &nbsp;
 
             {/* Description */}
-            <section className="w-1/2">
+            <section className="w-1/2 mt-20">
               <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Badge Details</h2>
               <p className="text-gray-300 leading-relaxed">{currentBadge.description}</p>
               <SkillsEarned />
               <RelatedBadges />
             </section>
           </div>
-          &nbsp;
-          &nbsp;
-
-          {/* Bottom Row: Stats and Skills Side by Side */}
-          <div className="flex w-full gap-6">
-            <section className="w-1/2 grid grid-cols-3 gap-4">
-              <BadgeMetrics />
-            </section>
-            
-            <section className="w-1/2">
-              {/* <RelatedBadges /> */}
-            </section>
-          </div>
         </section>
 
         {/* Mobile Layout */}
         <div className="flex sm:hidden flex-col max-w-sm mx-auto p-4 gap-4">
-          {/* Badge Actions */}
-          <section className="space-y-4">
-            <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Badge Actions</h2>
-            <BadgeActions currentBadge={currentBadge} isAuthenticated={isAuthenticated} />
-          </section>
-        &nbsp;
-        &nbsp;
-
           {/* Badge Image */}
           <section className="flex flex-col items-center">
             <BadgeImage />
             <div className="text-center text-sm text-gray-400 mt-2">
               {currentBadgeIndex + 1} of {badges.length} badges
             </div>
+          </section>
+          {/* Badge Actions */}
+          <section className="space-y-4">
+            <BadgeActions currentBadge={currentBadge} isAuthenticated={isAuthenticated} />
           </section>
         &nbsp;
         &nbsp;
@@ -452,32 +470,36 @@ const BadgeMetrics = () => (
       </main>
 
       {/* Badge Collection Thumbnails */}
-      <div className="bg-gray-800 p-4 flex items-center justify-between max-w-7xl mx-auto">
-        <div className="text-gray-300 text-sm hidden md:block">
+      <div className="bg-gray-800 p-4 flex flex-col items-center justify-between w-full max-w-7xl mt-4 mx-auto">
+        {/* Scrollable row container */}
+        <div className="w-full overflow-x-auto overflow-y-hidden">
+          {/* Row of badges — make width as wide as needed */}
+          <div className="flex space-x-2 w-max px-1 mx-auto">
+            {badges.map((badge, index) => (
+              <img
+                key={badge.id}
+                crossOrigin="anonymous"
+                src={`${process.env.SERVER_URL}/badge/images/${badge?.id}` || badge.image?.data}
+                alt={badge.name}
+                className={`w-14 h-14 object-cover rounded-md cursor-pointer shadow-md transition-transform ${
+                  index === currentBadgeIndex ? ' scale-100' : 'opacity-70'
+                }`}
+                onClick={() => setCurrentBadgeIndex(index)}
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    setCurrentBadgeIndex(index);
+                  }
+                }}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="text-gray-300 mt-2 text-sm">
           {badges.length} Badges — Showing {currentBadgeIndex + 1} of {badges.length}
         </div>
-
-        <div className="flex space-x-2 overflow-x-hidden overflow-y-hidden max-w-full mx-auto">
-          {badges.map((badge, index) => (
-            <img
-              key={badge.id}
-              src={`${process.env.SERVER_URL}/badge/images/${badge?.id}` || badge.image?.data}
-              alt={badge.name}
-              className={`w-14 h-14 object-cover rounded-md cursor-pointer shadow-md transition-transform ${
-                index === currentBadgeIndex ? 'border-2 border-indigo-400 scale-110' : 'opacity-70'
-              }`}
-              onClick={() => setCurrentBadgeIndex(index)}
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  setCurrentBadgeIndex(index);
-                }
-              }}
-            />
-          ))}
-        </div>
       </div>
-
       <Footer />
     </div>
   );
@@ -799,6 +821,7 @@ export default BadgeId;
 //             {/* Badge Image */}
 //             <div className="flex-shrink-0 mb-6 md:mb-0">
 //               <img
+                  //crossorigin="anonymous"
 //                 src={currentBadge.image || "/default-badge.png"}
 //                 alt={currentBadge.name}
 //                 className="w-48 h-48 object-contain rounded-md border border-green-600 shadow-md"
