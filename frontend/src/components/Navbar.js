@@ -173,7 +173,7 @@ function Navbar() {
 
   return (
     <>
-      <nav className="bg-[#00011E] border-b-2 border-[#38C8F8] border-opacity-70 flex flex-wrap items-center">
+      <nav className="bg-[#00011E] relative z-30 border-b-2 border-[#38C8F8] border-opacity-70 flex flex-wrap items-center">
         <div className="mx-auto flex flex-nowrap sm:flex-nowrap items-center justify-between">
           <div className="flex items-center justify-between w-full sm:w-auto">
             <div className="sm:hidden md:block lg:hidden">

@@ -10,7 +10,7 @@ export default function SplineScene() {
           left: 0,
           width: '100%',
           height: '120%',
-          zIndex: -1
+          zIndex: 0
         }}
         scene="https://prod.spline.design/PYop-g4IX840opNh/scene.splinecode"
       />
