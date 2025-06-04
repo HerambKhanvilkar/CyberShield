@@ -5,6 +5,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
+  Save,
+  X,
+  Edit,
   CheckCircle,
   XCircle,
   AlertTriangle,
@@ -75,17 +78,18 @@ const ErrorTable = ({ users,  onUpdateUser }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const filteredCodes = statusCodes.filter(
-    (code) =>
-      code.statusCode.toString().includes(searchTerm) ||
-      code.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      code.description.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredUsers = users.filter(
+    (user) =>
+      user.badgeIds.toString().includes(searchTerm) ||
+      user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const totalPages = Math.ceil(filteredCodes.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredCodes.slice(indexOfFirstItem, indexOfLastItem);
+  const currentItems = filteredUsers.slice(indexOfFirstItem, indexOfLastItem);
 
 
   // State to track which row is in edit mode, based on user email (or any unique identifier)
@@ -150,7 +154,8 @@ const ErrorTable = ({ users,  onUpdateUser }) => {
 
 
   return (
-    <div className="w-full overflow-x-auto">
+    <div className="w-full">
+    {/*
         <table className="w-full text-sm text-left rtl:text-right text-gray-400 ">
           <thead className="text-xs uppercase bg-gray-700 text-gray-400">
             <tr>
@@ -288,8 +293,8 @@ const ErrorTable = ({ users,  onUpdateUser }) => {
           </tbody>
       )}
         </table>
+        */}
 
-    {/*
     <Card className="w-full max-w-4xl mx-auto backdrop-blur-md  border border-white/20 shadow-xl">
       <CardContent className="p-6">
         <Input
@@ -299,26 +304,93 @@ const ErrorTable = ({ users,  onUpdateUser }) => {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="mb-4"
         />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="font-semibold">Status Code</div>
-          <div className="font-semibold">Category</div>
-          <div className="font-semibold">Description</div>
-          {currentItems.map((item) => (
-            <>
-              <div
-                className={`flex items-center justify-center ${
-                  categoryColors[item.category]
-                } rounded-3xl w-28 `}
-              >
-                {item.statusCode}
-              </div>
-              <div className="flex items-center capitalize">
-                {categoryIcons[item.category]}
-                <span className="ml-2">{item.category}</span>
-              </div>
-              <div>{item.description}</div>
-            </>
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
+          <div className="font-semibold">Email</div>
+          <div className="font-semibold">First Name</div>
+          <div className="font-semibold">Last Name</div>
+          <div className="font-semibold">Badges</div>
+          <div className="font-semibold">Error</div>
+          <div className="font-semibold border-b-2 border-gray-500 md:border-b-0">Actions</div>
+          {currentItems.map((user, index) => {
+              const inEditMode = editRows.hasOwnProperty(user.row);
+              const rowData = inEditMode ? editRows[user.row] : user;
+              return (
+                <>
+              <div className="flex items-center truncate"> 
+                    {inEditMode ? (
+                      <Input 
+                        type="text"
+                        name="email"
+                        value={rowData.email}
+                        onChange={(e) => handleInputChange(e, user.row)}
+                      />
+                    ) : (
+                      rowData.email
+                    )}
+                  </div>
+              <div className="flex items-center capitalize"> 
+                    {inEditMode ? (
+                      <Input
+                        type="text"
+                        name="firstName"
+                        value={rowData.firstName}
+                        onChange={(e) => handleInputChange(e, user.row)}
+                      />
+                    ) : (
+                      rowData.firstName
+                    )}
+                  </div>
+              <div className="flex items-center capitalize"> 
+                    {inEditMode ? (
+                      <Input
+                        type="text"
+                        name="lastName"
+                        value={rowData.lastName}
+                        onChange={(e) => handleInputChange(e, user.row)}
+                      />
+                    ) : (
+                      rowData.lastName
+                    )}
+                  </div>
+              <div className="flex items-center capitalize"> 
+                    {inEditMode ? (
+                      <Input
+                        type="text"
+                        name="badgeIds"
+                        value={rowData.badgeIds}
+                        onChange={(e) => handleInputChange(e, user.row)}
+                      />
+                    ) : (
+                      rowData.badgeIds
+                    )}
+                  </div>
+
+              <div className="flex items-center capitalize"> 
+                      <span
+                        className={`h-2.5 w-2.5 rounded-full ${ 
+                          !user.error 
+                            ? 'bg-green-500'
+                            : user.error.includes('User already exist')
+                            ? 'bg-yellow-500'
+                            : 'bg-red-500'
+                        } me-2`}
+                      ></span>
+                      {rowData.error || 'User Ready for import'}
+                 </div>
+
+              <div className="flex capitalize border-b-2 border-gray-500 md:border-b-0"> 
+                    {inEditMode ? (
+                      <span >
+                      <Button className="hover:bg-green-500" variant="outline"  onClick={() => handleSaveClick(user)} ><Save className="mr-2 h-4 w-4" /></Button>
+                      <Button className="hover:bg-red-500" onClick={() => handleCancelClick(user)} variant="outline"><X className="mr-2 h-4 w-4" /></Button>
+                      </span>
+                    ) : (
+                      <Button className="hover:bg-blue-500" variant="outline" onClick={() => handleEditClick(user)} ><Edit className="mr-2 h-4 w-4" /></Button>
+                    )}
+                  </div>
+                </>
+              );
+          })}
         </div>
         <div className="flex justify-between items-center mt-4">
           <Button
@@ -341,7 +413,6 @@ const ErrorTable = ({ users,  onUpdateUser }) => {
         </div>
       </CardContent>
     </Card>
-    */}
     </div>
   );
 };
