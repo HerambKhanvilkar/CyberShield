@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Badge-viewer-api",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

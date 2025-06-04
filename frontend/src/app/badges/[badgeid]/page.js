@@ -21,6 +21,15 @@ const BadgeId = () => {
   const [showLoginMessage, setShowLoginMessage] = useState(false);
 
   const { isAuthenticated, user } = useAuthContext();
+    const truncateText = (text, maxLength) => {
+  if (text === null || text === undefined) {
+    return '';
+  }
+  if (text.length > maxLength) {
+    return text.substring(0, maxLength) + '...';
+  }
+  return text;
+};
 
   useEffect(() => {
     const fetchBadges = async () => {
@@ -249,14 +258,13 @@ const BadgeMetrics = () => (
   </div>
 );
 
-
-
   // Badge Description Component
   const BadgeDescription = () => (
     <div className="space-y-2">
       <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Badge Details</h2>
+      <p>Course: {currentBadge.course}</p>
       <p className="text-gray-300 leading-relaxed">
-        {currentBadge.description}
+        {currentBadge.description || 'No description available for this badge.'}
       </p>
     </div>
   );
@@ -381,8 +389,8 @@ const BadgeMetrics = () => (
         {/* Desktop Layout */}
         <div className="hidden md:hidden lg:flex md:flex-row max-w-7xl mx-auto p-6 gap-6">
           <section className="md:w-2/6 my-auto space-y-6">
-            <SkillsEarned />
             <BadgeDescription />
+            <RelatedBadges />
           </section>
           &nbsp;
           &nbsp;
@@ -395,9 +403,9 @@ const BadgeMetrics = () => (
           &nbsp;
 
           <section className="md:w-2/6 my-auto space-y-6">
+            <SkillsEarned />
             <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Badge Actions</h2>
             <BadgeActions currentBadge={currentBadge} isAuthenticated={isAuthenticated} />
-            <RelatedBadges />
           </section>
         </div>
 
@@ -482,7 +490,7 @@ const BadgeMetrics = () => (
                 src={`${process.env.SERVER_URL}/badge/images/${badge?.id}` || badge.image?.data}
                 alt={badge.name}
                 className={`w-14 h-14 object-cover rounded-md cursor-pointer shadow-md transition-transform ${
-                  index === currentBadgeIndex ? ' scale-100' : 'opacity-70'
+                  index === currentBadgeIndex ? 'border-2 border-cyan-500 scale-100' : 'opacity-70'
                 }`}
                 onClick={() => setCurrentBadgeIndex(index)}
                 tabIndex={0}

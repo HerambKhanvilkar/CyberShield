@@ -4,7 +4,7 @@ import Footer from "@/components/Footer";
 import React, { useEffect, useRef, useState } from "react";
 import ParticleBackground from "@/components/ParticleBackground";
 import SplineScene from "@/components/SplineScene";
-import CountUp from "@/components/countup";
+import Count from "@/components/count";
 
 export default function LandingPage() {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -12,6 +12,15 @@ export default function LandingPage() {
   const [badges, setBadges] = useState([]);
   const [loading, setLoading] = useState(true);
   const selectBadge = (i) => setActiveIndex(i);
+  const truncateText = (text, maxLength) => {
+  if (text === null || text === undefined) {
+    return '';
+  }
+  if (text.length > maxLength) {
+    return text.substring(0, maxLength) + '...';
+  }
+  return text;
+};
 
   useEffect(() => {
     const fetchBadges = async () => {
@@ -56,7 +65,7 @@ export default function LandingPage() {
         <div className="max-w-[1200px] mx-auto px-5"></div> */}
           {/* Hero */}
           <section className="min-h-[calc(100vh-70px)] flex items-center justify-center text-center px-5 py-12 relative">
-            <div className="max-w-[800px] animate-fadeIn">
+            <div className="max-w-[800px] mr-auto animate-fadeIn">
               <img
                 src="https://static.wixstatic.com/media/e48a18_c949f6282e6a4c8e9568f40916a0c704~mv2.png/v1/crop/x_0,y_151,w_1920,h_746/fill/w_203,h_79,fp_0.50_0.50,q_85,usm_0.66_1.00_0.01,enc_auto/For%20Dark%20Theme.png"
                 alt="Logo"
@@ -92,24 +101,25 @@ export default function LandingPage() {
                     {badges[activeIndex].name}
                   </h3>
                   <p className="text-text-medium text-base sm:text-lg leading-relaxed mb-8 max-w-lg mx-auto md:mx-0">
-                    {badges[activeIndex].description}
+                    {truncateText(badges[activeIndex].description,200)}
                   </p>
                   <div className="flex gap-8 flex-wrap justify-center md:justify-start">
                     <div className="bg-white/5 rounded-lg p-4 text-center flex-1 min-w-[150px]">
                       {/* <p className="text-xl font-bold text-cyan-400 mb-1">150+</p> */}
-                      <CountUp endValue={12345} duration={1500} />
+                      <Count endValue={12345} format='number' direction="up" />
                       <p className="text-sm text-text-medium">Holders</p>
                     </div>
                     <div className="bg-white/5 rounded-lg p-4 text-center flex-1 min-w-[150px]">
                       {/* <p className="text-xl font-bold text-cyan-400 mb-1">2024</p> */}
-                      <CountUp endValue={2024} duration={1500} />
+                      <Count endValue={2024} format='year' direction="up" />
                       <p className="text-sm text-text-medium">Year Launched</p>
                     </div>
                   </div>
                 </div>
                 <div className="w-[250px] h-[250px] rounded-full bg-gradient-radial from-cyan-400/10 to-transparent flex items-center justify-center mx-auto md:mx-0">
                   <img
-                    src={badges[activeIndex].image || badges[activeIndex].img?.data}
+                    crossOrigin="anonymous"
+                    src={`${process.env.SERVER_URL}/badge/images/${badges[activeIndex].id}` || badges[activeIndex].img?.data}
                     alt={badges[activeIndex].title}
                     className="max-w-[80%] max-h-[80%] object-contain drop-shadow-md animate-float"
                   />
@@ -122,7 +132,7 @@ export default function LandingPage() {
           {!loading && badges.length > 0 && (
             <section className="relative py-20 bg-gradient-to-t from-primary-dark to-transparent">
               <h2 className="text-3xl sm:text-4xl mb-10 text-center">All Badges</h2>
-              <div className="overflow-y-hidden overflow-x-auto no-scrollbar px-5">
+              <div className="overflow-y-hidden scrollbar overflow-x-auto no-scrollbar px-5">
                 <div
                   className="flex gap-6 justify-start scroll-smooth snap-x snap-mandatory"
                   ref={carouselRef}
@@ -138,7 +148,8 @@ export default function LandingPage() {
                       }`}
                     >
                       <img
-                        src={badge.image || badge.img?.data}
+                        crossOrigin="anonymous"
+                        src={`${process.env.SERVER_URL}/badge/images/${badge.id}` || badge.image || badge.img?.data}
                         alt={badge.title}
                         className="max-w-[80%] max-h-[80%] object-contain"
                       />
@@ -162,8 +173,7 @@ export default function LandingPage() {
                 { emoji: "🌐", title: "Join Community", text: "Connect with other cybersecurity professionals in a growing community." },
               ].map((item, index) => (
                 <div key={index} className="p-8 flex flex-col items-center text-center transition-transform duration-300 hover:-translate-y-2 hover:shadow-xl bg-white/5 rounded-lg">
-                  {/* <div className="text-5xl mb-5 bg-gradient-to-br from-cyan-400 to-teal-400 bg-clip-text text-transparent"> */}
-                  <div className="text-5xl mb-5 bg-gradient-to-br from-green-800 to-green-400 bg-clip-text text-transparent">
+                  <div className="text-5xl mb-5 bg-gradient-to-br from-cyan-400 to-teal-400 bg-clip-text text-transparent">
                     {item.emoji}
                   </div>
                   <h3 className="text-lg sm:text-xl text-white mb-3 font-semibold">

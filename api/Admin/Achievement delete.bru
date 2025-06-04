@@ -1,0 +1,22 @@
+meta {
+  name: Achievement delete
+  type: http
+  seq: 9
+}
+
+delete {
+  url: {{ADDRESS}}/users/achievements/1
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwt_token}}
+}
+
+body:json {
+  {
+    "email": "vikas@foobar.in",
+    "achievement": "129 days completed in the Cyberspace journey of learning."
+  }
+}

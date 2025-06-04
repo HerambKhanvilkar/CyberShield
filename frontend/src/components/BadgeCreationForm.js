@@ -358,7 +358,8 @@ useEffect(() => {
         <li key={index}>
                 <div onClick={() => setSelectedBadge(badge)} className="flex items-center">
                     <div className="shrink-0">
-                        <img 
+                        <img
+                        crossOrigin='anonymous'
                         className="w-8 h-8 rounded-full" 
                         src={`${process.env.SERVER_URL}/badge/images/${badge.id}` || badge.img?.data} 
                         alt={badge.name}

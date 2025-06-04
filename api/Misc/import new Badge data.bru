@@ -1,0 +1,26 @@
+meta {
+  name: import new Badge data
+  type: http
+  seq: 8
+}
+
+post {
+  url: http://172.16.209.149/api/badge/import
+  body: multipartForm
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwt_token}}
+}
+
+body:multipart-form {
+  name: test
+  desc: foobar
+  diff: Medium
+  level: Amateur
+  vertical: Cybersecurity
+  skillsEarned: ['foo','bar']
+  id: 103
+  ~image: @file(/Users/prateekshasharma/Documents/Queen/Screenshot 2023-02-28 at 16.32.35.png) @contentType(File)
+}

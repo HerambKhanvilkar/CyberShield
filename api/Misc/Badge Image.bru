@@ -1,0 +1,19 @@
+meta {
+  name: Badge Image
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{ADDRESS}}/badge/images/103
+  body: multipartForm
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwt_token}}
+}
+
+body:multipart-form {
+  file: @file(/Users/prateekshasharma/test.csv) @contentType(File)
+}

@@ -1,0 +1,22 @@
+meta {
+  name: Achievement post
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{ADDRESS}}/users/achievements
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwt_token}}
+}
+
+body:json {
+  {
+    "email": "vikas@foobar.in",
+    "achievement": "120 days completed in the Cyberspace journey of learning."
+  }
+}

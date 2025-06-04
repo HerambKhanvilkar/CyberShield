@@ -1,0 +1,19 @@
+meta {
+  name: import users data
+  type: http
+  seq: 7
+}
+
+get {
+  url: 
+  body: multipartForm
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwt_token}}
+}
+
+body:multipart-form {
+  file: @file(/Users/prateekshasharma/test.csv) @contentType(File)
+}

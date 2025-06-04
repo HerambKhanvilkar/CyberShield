@@ -1,0 +1,30 @@
+meta {
+  name: Register
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{ADDRESS}}{{authRoutes}}/register
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwt_token}}
+}
+
+body:json {
+  { 
+    "email": "vikas@example.in",
+    "firstName": "vikas",
+      "lastName": "2",
+    "otp": 960517,
+    "password": "foobar"
+  } 
+}
+
+script:post-response {
+  bru.setEnvVar("jwt_token", res.body.token)
+  
+}
