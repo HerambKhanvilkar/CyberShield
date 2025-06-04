@@ -57,15 +57,16 @@ export default function LandingPage() {
     <>
       <Navbar />
       <div className="relative min-h-screen text-white font-sans">
-        {/* <ParticleBackground /> */}
-        <SplineScene/>
-        <div className="relative max-w-[1200px] z-10 mx-auto px-5">
+        {/* Interactive Background */}
+        <div className="absolute inset-0 z-0 pointer-events-auto">
+          <SplineScene />
+        </div>
 
-      {/* <div className="min-h-screen overflow-x-hidden bg-gradient-to-br from-primary-dark to-primary-medium text-text-light font-sans">
-        <div className="max-w-[1200px] mx-auto px-5"></div> */}
-          {/* Hero */}
-          <section className="min-h-[calc(100vh-70px)] flex items-center justify-center text-center px-5 py-12 relative">
-            <div className="max-w-[800px] mr-auto animate-fadeIn">
+        {/* Foreground Content */}
+        <div className="relative z-10 max-w-[1200px] mx-auto px-5 pointer-events-none">
+          {/* Hero Section */}
+          <section className="min-h-[calc(100vh-70px)] mr-auto flex items-center justify-center text-center px-5 py-12 relative">
+            <div className="max-w-[800px] mr-auto animate-fadeIn pointer-events-auto">
               <img
                 src="https://static.wixstatic.com/media/e48a18_c949f6282e6a4c8e9568f40916a0c704~mv2.png/v1/crop/x_0,y_151,w_1920,h_746/fill/w_203,h_79,fp_0.50_0.50,q_85,usm_0.66_1.00_0.01,enc_auto/For%20Dark%20Theme.png"
                 alt="Logo"
@@ -77,14 +78,14 @@ export default function LandingPage() {
               <p className="text-lg sm:text-xl max-w-[600px] mx-auto mb-10 text-text-medium">
                 Earn and showcase badges for your cybersecurity skills and achievements.
               </p>
-              <div className="flex justify-center gap-5 flex-wrap">
-                <button
-                className="px-7 py-3 text-base sm:text-lg border border-cyan-400 bg-gradient-to-br from-cyan-300/20 to-cyan-400/20 hover:from-cyan-300/40 hover:to-cyan-400/40 hover:shadow-[0_0_20px_rgba(0,212,255,0.5)] transition rounded">
+              <div className="flex justify-center gap-5 flex-wrap pointer-events-auto">
+                <button className="px-7 py-3 text-base sm:text-lg border border-cyan-400 bg-gradient-to-br from-cyan-300/20 to-cyan-400/20 hover:from-cyan-300/40 hover:to-cyan-400/40 hover:shadow-[0_0_20px_rgba(0,212,255,0.5)] transition rounded">
                   Get Started
                 </button>
                 <button
-                onClick={() => window.open("https://learn.deepcytes.io/", "_blank")} 
-                className="px-7 py-3 text-base sm:text-lg border border-white/20 bg-white/10 hover:bg-white/20 transition rounded">
+                  onClick={() => window.open("https://learn.deepcytes.io/", "_blank")}
+                  className="px-7 py-3 text-base sm:text-lg border border-white/20 bg-white/10 hover:bg-white/20 transition rounded"
+                >
                   Learn More
                 </button>
               </div>
