@@ -73,6 +73,7 @@ const VerticalsDropDown = ({ verticals, formData, handleChange }) => {
         {filteredSkills.length > 0 ? (
           filteredSkills.map((vertical, index) => (
               <div 
+            key={index}
             onClick={() => handleChange({ target: { name: "vertical", value: vertical, type: 'radio', checked: true} })} 
             className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-[selected='true']:bg-accent aria-[selected='true']:text-accent-foreground data-[disabled='true']:pointer-events-none data-[disabled='true']:opacity-50">
                   {vertical}

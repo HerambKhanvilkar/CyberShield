@@ -52,8 +52,8 @@ const SkillsDropdown = ({ skillsEarned, formData, handleChange }) => {
     <div ref={dropdownRef}>
     <div id="dropLeveldownSearchButton" data-dropdown-toggle="dropdownSearch" data-dropdown-placement="bottom" className="min-h-10 rounded-md border border-input text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2" type="text" >
     <div className="relative flex flex-wrap gap-1" >
-      {formData.skillsEarned.length > 0 ? formData.skillsEarned.map(s => (
-                <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80 data-[disabled]:bg-muted-foreground data-[disabled]:text-muted data-[disabled]:hover:bg-muted-foreground data-[fixed]:bg-muted-foreground data-[fixed]:text-muted data-[fixed]:hover:bg-muted-foreground" onClick={() => handleChange({ target: { name: "skillsEarned", value: s, type: 'checkbox' } })} >
+      {formData.skillsEarned.length > 0 ? formData.skillsEarned.map((s, index) => (
+                <div key={index} className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80 data-[disabled]:bg-muted-foreground data-[disabled]:text-muted data-[disabled]:hover:bg-muted-foreground data-[fixed]:bg-muted-foreground data-[fixed]:text-muted data-[fixed]:hover:bg-muted-foreground" onClick={() => handleChange({ target: { name: "skillsEarned", value: s, type: 'checkbox' } })} >
       {s}
       <button id="bordered-checkbox-1" name="bordered-checkbox" className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="lucide lucide-x h-3 w-3 text-muted-foreground hover:text-foreground" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
@@ -72,7 +72,7 @@ const SkillsDropdown = ({ skillsEarned, formData, handleChange }) => {
     <div role="group">
         {filteredSkills.length > 0 ? (
           filteredSkills.map((skill, index) => (
-            <div>
+            <div key={index}>
             { !formData.skillsEarned.includes(skill) ? (
               <div 
             onClick={() => handleChange({ target: { name: "skillsEarned", value: skill, type: 'checkbox', checked: true} })} 
