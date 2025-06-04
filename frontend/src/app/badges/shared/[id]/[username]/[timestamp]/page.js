@@ -67,20 +67,20 @@ const SharedBadgePage = () => {
 
   if (isLoading || !badge) {
     return (
-      <div className="min-h-screen flex flex-col bg-black text-[#38C8F8]">
+      <div className="min-h-screen flex flex-col bg-black text-white">
         <Navbar />
         <div className="flex-grow flex flex-col items-center justify-center">
           <div className="loader border-8 border-t-8 border-[#38C8F8] h-16 w-16 animate-spin rounded-full mb-4" />
-          <p className="text-[#38C8F8] text-lg">Loading Badge Gallery...</p>
+          <p className="text-white text-lg">Loading Badge Gallery...</p>
         </div>
       </div>
     );
   }
 
   const BadgeDescription = ({ badge }) => (
-    <div className="space-y-2 text-[#38C8F8]">
-      <h2 className="text-2xl font-bold">{badge.name}</h2>
-      <p className="italic text-[#38C8F8]">{badge.course}</p>
+    <div className="space-y-2 text-white">
+      <h2 className="text-2xl text-[#38C8F8] font-bold">{badge.name}</h2>
+      <p className="italic text-[#32b4df]">Course: {badge.course}</p>
       <p>{truncateText(badge.description,200)}</p>
     </div>
   );
@@ -90,11 +90,11 @@ const BadgeSkillsList = ({ skills }) => (
     <h3 className="text-[#38C8F8] font-semibold mb-2">Skills Earned</h3>
     {skills && skills.length > 0 ? (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-      {skills.slice(0, 8).map((skill, idx) => (
+      {skills.map((skill, idx) => (
         <div
           key={idx}
           title={skill}
-          className="bg-black/60 text-[#38C8F8] border border-[#38C8F8] rounded-md px-3 py-2 text-sm shadow-md hover:shadow-lg transition-all duration-200"
+          className="bg-black/60 text-white border border-[#38C8F8] rounded-md px-3 py-2 text-sm shadow-md hover:shadow-lg transition-all duration-200"
         >
           {skill}
         </div>
@@ -107,26 +107,26 @@ const BadgeSkillsList = ({ skills }) => (
 );
 
 const BadgeMetrics = ({ badge }) => (
-  <div className="w-full mt-4 text-center text-[#38C8F8] flex flex-col gap-2">
+  <div className="w-full mt-4 text-center text-green-300 flex flex-col gap-2">
     {/* Row: Level & Earners side by side */}
     <div className="flex gap-2">
       {/* Level */}
       <div className="flex-1 p-2 shadow-md border border-[#38C8F8] rounded-md bg-black/60">
         <div className="text-sm uppercase text-[#38C8F8]">Level</div>
-        <div className="text-lg font-semibold">{badge.level || 'N/A'}</div>
+        <div className="text-lg text-[#32b4df] font-semibold">{badge.level || 'N/A'}</div>
       </div>
 
       {/* Earners */}
       <div className="flex-1 p-2 shadow-md border border-[#38C8F8] rounded-md bg-black/60">
         <div className="text-sm uppercase text-[#38C8F8]">Earners</div>
-        <div className="text-lg font-semibold">43</div>
+        <div className="text-lg text-[#32b4df] font-semibold">43</div>
       </div>
     </div>
 
     {/* Row: Vertical full-width below */}
     <div className="p-2 shadow-md border border-[#38C8F8] rounded-md bg-black/60">
       <div className="text-sm uppercase text-[#38C8F8]">Vertical</div>
-      <div className="text-lg font-semibold">{badge.vertical || 'General'}</div>
+      <div className="text-lg text-[#32b4df] font-semibold">{badge.vertical || 'General'}</div>
     </div>
   </div>
 );
@@ -160,7 +160,7 @@ const RelatedBadges = () => {
 }, []);
   if (relatedBadges.length === 0) {
     return (
-      <div className="text-center text-gray-400 mt-6">
+      <div className="text-center text-white mt-6">
         No related badges available.
       </div>
     );
@@ -191,23 +191,21 @@ const RelatedBadges = () => {
 
 
   return (
-    <div className="min-h-screen flex flex-col bg-black text-[#38C8F8] font-sans selection:bg-[#38C8F8] selection:text-black">
+    <div className="min-h-screen flex flex-col bg-black text-white font-sans selection:bg-[#38C8F8] selection:text-black">
       <Navbar />
-      <div className="mt-4 mx-auto text-lg flex items-center gap-2">
+      <div className="mt-4 px-4 mx-auto text-lg text-green-400">
         {verificationStatus ? (
-          <>
-            <CheckCircle className="w-4 h-4 text-[#38C8F8]" />
-            <span className="text-[#38C8F8]">
-              This badge was <strong>verified</strong> and awarded to {user} on {formatDate(timestamp)}.
-            </span>
-          </>
+          <p>
+            <CheckCircle className="inline-block w-4 h-4 mr-1 align-text-bottom" />
+            This badge was <strong>verified</strong> and awarded to {user} on {formatDate(timestamp)}.
+          </p>
         ) : (
-          <>
-            <Shield className="w-4 h-4 text-red-500" />
+          <p>
+            <Shield className="inline-block w-4 h-4 mr-1 align-text-bottom text-red-500" />
             <span className="text-red-400">
               This badge is <strong>not verified</strong>.
             </span>
-          </>
+          </p>
         )}
       </div>
       <main className="container mx-auto px-4 py-6 flex-grow">
@@ -240,11 +238,16 @@ const RelatedBadges = () => {
               <BadgeDescription badge={badge} />
               <BadgeSkillsList skills={badge.skillsEarned} />
               {/* Passing Criteria */}
-              <div className="bg-black/60 border border-[#38C8F8] rounded-md p-4 shadow text-sm text-[#38C8F8]">
-                <strong>Passing Criteria:</strong> has scored at least 70% in their assessment and completed all mandatory tasks to earn this badge.
+              <div className="bg-black/60 border border-[#38C8F8] rounded-md p-4 shadow text-sm text-white">
+                <strong className='text-[#38C8F8]'>Passing Criteria:</strong> has scored at least 70% in their assessment and completed all mandatory tasks to earn this badge.
               </div>
               {/* Authorized Byline */}
               <div className="text-xs text-gray-400 italic text-right pr-1">
+                <img
+                  src="https://static.wixstatic.com/media/e48a18_c949f6282e6a4c8e9568f40916a0c704~mv2.png/v1/crop/x_0,y_151,w_1920,h_746/fill/w_203,h_79,fp_0.50_0.50,q_85,usm_0.66_1.00_0.01,enc_auto/For%20Dark%20Theme.png"
+                  alt="Authorized Badge"
+                  className="ml-auto w-20 mb-2 mr-1"
+                />
                 Authorized and issued by <span className="text-[#38C8F8] not-italic">DeepCytes.</span>
               </div>
             </div>
