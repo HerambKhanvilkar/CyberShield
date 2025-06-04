@@ -288,13 +288,13 @@ function MyComponent() {
           Select a File to preview.
           </div>
       ) : (
-          <ScrollArea >
+          <div >
             {data && (
               <div>
               <CsvDataTable users={data} onUpdateUser={updateUser}/>
               </div>
             )}
-          </ScrollArea>
+          </div>
       )}
       <div className="inline-flex rounded-md shadow-xs py-2">
       { file ? ( 
