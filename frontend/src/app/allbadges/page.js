@@ -134,10 +134,10 @@ useEffect(() => {
                     {badge.name}
                   </h3>
                   <p className="text-gray-400 text-sm text-center mb-4">
-                    {truncateText(badge.description,200)}
+                    {truncateText(badge.description,100)}
                   </p>
                   <div className="flex flex-wrap justify-center gap-2">
-                    {badge.skillsEarned?.slice(0, 8).map((skill, i) => (
+                    {badge.skillsEarned?.slice(0, 3).map((skill, i) => (
                       <span
                         key={i}
                         className="text-xs px-3 py-1 bg-cyan-500/20 text-cyan-300 rounded-full border border-cyan-400/30"
@@ -145,6 +145,11 @@ useEffect(() => {
                         {skill}
                       </span>
                     ))}
+                    {badge.skillsEarned && badge.skillsEarned.length > 4 && (
+                      <span className="text-xs px-3 py-1 bg-cyan-500/20 text-cyan-300 rounded-full border border-cyan-400/30">
+                        +{badge.skillsEarned.length - 3} more
+                      </span>
+                    )}
                   </div>
                 </div>
               </Link>

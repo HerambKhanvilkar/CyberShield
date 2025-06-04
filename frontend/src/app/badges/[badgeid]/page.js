@@ -258,14 +258,13 @@ const BadgeMetrics = () => (
   </div>
 );
 
-
-
   // Badge Description Component
   const BadgeDescription = () => (
     <div className="space-y-2">
       <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Badge Details</h2>
+      <p>Course: {currentBadge.course}</p>
       <p className="text-gray-300 leading-relaxed">
-        {truncateText(currentBadge.description,200)}
+        {currentBadge.description || 'No description available for this badge.'}
       </p>
     </div>
   );
@@ -390,8 +389,8 @@ const BadgeMetrics = () => (
         {/* Desktop Layout */}
         <div className="hidden md:hidden lg:flex md:flex-row max-w-7xl mx-auto p-6 gap-6">
           <section className="md:w-2/6 my-auto space-y-6">
-            <SkillsEarned />
             <BadgeDescription />
+            <RelatedBadges />
           </section>
           &nbsp;
           &nbsp;
@@ -404,9 +403,9 @@ const BadgeMetrics = () => (
           &nbsp;
 
           <section className="md:w-2/6 my-auto space-y-6">
+            <SkillsEarned />
             <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Badge Actions</h2>
             <BadgeActions currentBadge={currentBadge} isAuthenticated={isAuthenticated} />
-            <RelatedBadges />
           </section>
         </div>
 
