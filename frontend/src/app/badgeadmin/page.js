@@ -219,16 +219,16 @@ export default function SettingsPage() {
   return (
     <>
       <Navbar />
-      <div className="min-h-full p-6 pb-0 pt-2">
+      <div className="min-h-full p-3 pb-0 pt-2">
         <div className="mb-4 border-b border-gray-700">
     <ul className="flex flex-wrap -mb-px text-sm font-medium text-center">
           {TABS.map((tab, index) => (
-            <li key={index} className="me-2 inline-block px-4 rounded-lg">
+            <li key={index} className="me-2 inline-block px-2 md:px-4 rounded-lg">
             <button
               key={tab}
-            className={`inline-block p-4 rounded-t-lg ${
+            className={`inline-block p-2 md:px-4 rounded-t-lg ${
                 activeTab === tab
-                  ? 'text-[#ADFF2F] border-b-2 border-[#ADFF2F]'
+                  ? 'text-[#B9D9EB] border-b-2 border-[#B9D9EB]'
                   : 'text-gray-400 hover:border-gray-300 hover:text-gray-300'
               }`}
               onClick={() => setActiveTab(tab)}

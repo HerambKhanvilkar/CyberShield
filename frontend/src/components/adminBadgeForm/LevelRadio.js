@@ -1,33 +1,27 @@
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+
+
 const LevelRadio = ({ formData, handleChange }) => {
   const levels = ['Amateur', 'Experienced', 'Professional', 'Expert'];
-  const colors = {
-'Amateur': 'yellow',
-    'Experienced': 'blue',
-    'Professional': 'red',
-    'Expert': 'orange'
-  }
 
   return (
-<div className="flex flex-wrap">
+<div className="flex flex-col lg:flex-row flex-wrap justify-evenly space-y-2">
+          <RadioGroup defaultValue="option1" className="flex flex-col sm:flex-row flex-wrap justify-evenly space-y-2">
     { levels.map((level, index) => (
-      <div key={index} className="flex items-center me-4">
-        <input 
-          onChange={handleChange}
-          checked={formData.level === level}
-          name="level"
-          id={level + "-radio"} 
-          type="radio" 
-          value={level} 
-          className={`w-4 h-4 text-${colors[level]}-100 focus:ring-${colors[level]}-100 ring-offset-gray-800 focus:ring-2 bg-gray-700 border-gray-600`}
-        />
-        <label 
-          htmlFor="red-radio" 
-          className="ms-2 text-sm font-medium"
-        >
-        {level}
-      </label>
+            <div key={index} className="flex items-center space-x-2">
+              <RadioGroupItem 
+                value={level} 
+                type="radio" 
+                name="level"
+                onClick={() => handleChange({ target: { name: "level", value:level, type: 'radio', checked:true } })}
+                checked={formData.level === level}
+                id={"option" + index} 
+            />
+              <Label htmlFor={"option" + index}>{level}</Label>
     </div>
     ))}
+          </RadioGroup>
 </div>
   );
 };

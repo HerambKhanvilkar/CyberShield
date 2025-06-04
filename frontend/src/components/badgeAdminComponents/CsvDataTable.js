@@ -63,7 +63,7 @@ const ErrorTable = ({ users,  onUpdateUser }) => {
 
 
   return (
-    <div>
+    <div className="overflow-x-auto">
       <h2>Error Summary</h2>
         <table className="w-full text-sm text-left rtl:text-right text-gray-400 ">
           <thead className="text-xs uppercase bg-gray-700 text-gray-400">

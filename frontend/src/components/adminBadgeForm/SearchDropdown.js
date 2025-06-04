@@ -1,91 +1,98 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const SkillsDropdown = ({ type, skillsEarned, formData, handleChange }) => {
+const SkillsDropdown = ({ skillsEarned, formData, handleChange }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const dropDownInputRef = useRef(null);
+  const dropdownRef = useRef(null);
+  const [isSkillsDropDownOpen, setIsSkillsDropDownOpen] = useState(false);
 
+  const handleFocus = () => {
+    setIsSkillsDropDownOpen(true);
+  };
+
+  const handleClickOutside = (event) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      setIsSkillsDropDownOpen(false); // Close dropdown if clicked outside
+    }
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.key === 'Escape') {
+      setIsSkillsDropDownOpen(false); // Close dropdown on 'Esc' key press
+    }
+  };
+
+  useEffect(() => {
+    // Add event listener for clicks outside
+    document.addEventListener('mousedown', handleClickOutside);
+      // Add event listener for keydown
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      // Cleanup the event listener on component unmount
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+
+    };
+  }, []);
+
+  const handleSearchChange = (event) => {
+    console.log('aksdflajsd');
+    setSearchTerm(event.target.value)
+  };
 
 
   // Filter skills based on the search term (case-insensitive)
   const filteredSkills = Array.isArray(skillsEarned)
     ? skillsEarned.filter((skill) =>
-        (skill.toLowerCase()).includes(searchTerm.toLowerCase())
+        skill.toLowerCase().includes(searchTerm.toLowerCase())
       )
     : [];
 
+
   return (
-    <>
-      <div className="p-3 z-5">
-        <label htmlFor="skill-input-group-search" className="sr-only">
-          Search
-        </label>
-        <div className="relative">
-          <div className="absolute inset-y-0 rtl:inset-r-0 start-0 flex items-center ps-3 pointer-events-none">
-            <svg
-              className="w-4 h-4 text-gray-400"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 20 20"
-            >
-              <path
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M8.5 14a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zm4.7 2.3a8 8 0 1 1 1.4-1.4l3.2 3.2-1.4 1.4-3.2-3.2z"
-              />
-            </svg>
-          </div>
-          <input
-            type="text"
-            id="skill-input-group-search"
-            ref={dropDownInputRef}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder={type === 'vertical' ? 'Search vertical' :'Search Skill'}
-            className="block w-full p-2 ps-10 text-sm bg-gray-600 border-gray-500 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
-      </div>
-      <ul
-        className="h-48 px-3 pb-3 overflow-y-auto text-sm text-gray-200"
-        aria-labelledby="dropdownSearchButton"
-      >
+    <div ref={dropdownRef}>
+    <div id="dropLeveldownSearchButton" data-dropdown-toggle="dropdownSearch" data-dropdown-placement="bottom" className="min-h-10 rounded-md border border-input text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2" type="text" >
+    <div className="relative flex flex-wrap gap-1" >
+      {formData.skillsEarned.length > 0 ? formData.skillsEarned.map(s => (
+                <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80 data-[disabled]:bg-muted-foreground data-[disabled]:text-muted data-[disabled]:hover:bg-muted-foreground data-[fixed]:bg-muted-foreground data-[fixed]:text-muted data-[fixed]:hover:bg-muted-foreground" onClick={() => handleChange({ target: { name: "skillsEarned", value: s, type: 'checkbox' } })} >
+      {s}
+      <button id="bordered-checkbox-1" name="bordered-checkbox" className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="lucide lucide-x h-3 w-3 text-muted-foreground hover:text-foreground" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+        </button>
+                </div>
+                )) : null }
+              <input type="text" value={searchTerm} onFocus={handleFocus} onChange={handleSearchChange} className="flex-1 bg-transparent outline-none placeholder:text-muted-foreground px-3 py-2" placeholder="Search skills" />
+              <button onClick={() => { formData.skillsEarned.forEach( s => handleChange({ target: { name: "skillsEarned", value: s, type: 'checkbox' } }) )} } type="button" className={ (formData.skillsEarned.length > 0 ? 'display' : 'hidden' ) + " relative right-0 h-6 w-6 p-0"}><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+    </div> 
+    </div> 
+
+
+    <div className="relative"> 
+      <div className={(isSkillsDropDownOpen ? "display" : "hidden" ) + " relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-[selected='true']:bg-accent aria-[selected='true']:text-accent-foreground data-[disabled='true']:pointer-events-none data-[disabled='true']:opacity-50"}>
+      <div className="p-1 text-foreground h-full overflow-auto" aria-labelledby="dropdownSearchButton" >
+    <div role="group">
         {filteredSkills.length > 0 ? (
           filteredSkills.map((skill, index) => (
-            <li key={index}>
-              <div className="flex items-center ps-2 rounded-sm hover:bg-gray-600">
-                <input
-                  id={`checkbox-item-${index}`}
-                  name={type === 'vertical' ? 'vertical' : 'skillsEarned'}
-                  value={skill}
-                  checked={
-                    type === 'vertical' ? 
-                    formData.level === skill :
-                    formData.skillsEarned.includes(skill)
-                  }
-                  onChange={handleChange}
-                  type={type === 'vertical' ? 'radio' : 'checkbox'}
-                  className="w-4 h-4 text-blue-600 rounded-sm ring-offset-gray-700 focus:ring-offset-gray-700 focus:ring-2 bg-gray-600 border-gray-500"
-                  aria-label={skill}
-                />
-                <label
-                  htmlFor={`checkbox-item-${index}`}
-                  className="w-full py-2 ms-2 text-sm font-medium rounded-sm text-gray-300"
-                >
+            <div>
+            { !formData.skillsEarned.includes(skill) ? (
+              <div 
+            onClick={() => handleChange({ target: { name: "skillsEarned", value: skill, type: 'checkbox', checked: true} })} 
+            className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-[selected='true']:bg-accent aria-[selected='true']:text-accent-foreground data-[disabled='true']:pointer-events-none data-[disabled='true']:opacity-50" data={skill}>
                   {skill}
-                </label>
               </div>
-            </li>
+            ) : null }
+            </div>
           ))
         ) : (
-          <p className="text-gray-400">No data available.</p>
+          <p className="text-gray-400">No skills available.</p>
         )}
-      </ul>
-    </>
-  );
+      <div>
+        <div onClick={() => { handleChange({ target: { name: "skillsEarned", value: searchTerm, type: 'checkbox', checked: true} }); setSearchTerm('')} } className={(searchTerm !== '' ? 'display' : 'hidden') + " relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-[selected='true']:bg-accent aria-[selected='true']:text-accent-foreground data-[disabled='true']:pointer-events-none data-[disabled='true']:opacity-50"} id="radix-:rvr:" cmdk-item="" role="option" aria-disabled="false" aria-selected="false" data-disabled="false" data-selected="false" data-value="n">Create {'"' + searchTerm + '"' }</div> </div>
+      </div>
+    </div>
+    </div>
+    </div>
+    </div>
+    )
 };
-
 export default SkillsDropdown;
 
