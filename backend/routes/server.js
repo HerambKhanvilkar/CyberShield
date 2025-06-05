@@ -282,7 +282,7 @@ router.get("/check-admin",authenticateJWT, async (req, res) => {
 router.get("/users", authenticateJWT, async (req, res) => {
   try {
     // dummy approach, as the variable is modifiable
-    const { email } = req.query || null;
+    const { email } = req.body || null;
 
     const authHeader = req.headers.authorization;
 
@@ -308,16 +308,10 @@ router.get("/users", authenticateJWT, async (req, res) => {
       filter["email"] = email;
     }
 
-    const users = await User.find(filter);
+    const users = await User.find(filter).select("-_id");
     
-    res.json(users.map( (user) => {
-      return { 
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        badges: user.badges,
-      }
-    }));
+    res.status(200).json(users);
+
   } catch (error) {
     console.error("Error fetching user:", error);
     res.status(500).json({ message: "Internal Server Error" });
