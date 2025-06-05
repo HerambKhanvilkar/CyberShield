@@ -6,11 +6,22 @@ import Navbar from "@/components/Navbar";
 import Footer from '@/components/Footer';
 import { useAuthContext } from "@/components/AuthContext";
 import { useParams } from 'next/navigation';
+import { Button } from "@/components/ui/button"
 
 const BadgeId = () => {
   const params = useParams();
   const badgeId = params?.badgeid;
+  const activeButtonCss = "bg-primary text-primary-foreground p-5 w-max rounded-full";
+  const buttonVariant = "secondary";
   const [badges, setBadges] = useState([]);
+  const [allBadges, setAllBadges] = useState([]);
+  const [filter, setFilter] = useState('all');
+  const [filterCss, setFilterCss] = useState({
+        "allCss": activeButtonCss,
+        "myCss": activeButtonCss.split(" ").splice(2).join(" "),
+        "myVariant": buttonVariant,
+        "allVariant": 'ghost' 
+  });
   const [shareUrl, setShareUrl] = useState(null);
   const [earnedBadges, setEarnedBadges] = useState([]);
   const [currentBadgeIndex, setCurrentBadgeIndex] = useState(0);
@@ -31,12 +42,48 @@ const BadgeId = () => {
   return text;
 };
 
+function handleBadgeFilter(filter){
+    if (filter === 'all'){
+      setBadges(allBadges) 
+      setFilterCss({
+        "allCss": activeButtonCss,
+        "myCss": activeButtonCss.split(" ").splice(2).join(" "),
+        "myVariant": buttonVariant,
+        "allVariant": 'ghost'
+      })
+    } else {
+      setBadges(earnedBadges);
+      setFilterCss({
+        "myCss": activeButtonCss,
+        "allCss": activeButtonCss.split(" ").splice(2).join(" "),
+        "myVariant": "ghost",
+        "allVariant": buttonVariant
+      })
+    }
+}
+
+function AllBadgeMyBadgeFilter() {
+  return (
+    // add fixed  to the nav class name to make the navbar stick to the bottom of the screen
+      <div className={(earnedBadges.length > 0 ? "display" : "hidden") + " container mx-auto flex items-center justify-end space-x-5 "}>
+        <Button onClick={() => handleBadgeFilter('all')} size="icon" className={filterCss['allCss']} variant={filterCss['allVariant']}>
+          All Badges
+        </Button>
+        <Button onClick={() => handleBadgeFilter('my')} size="icon" className={filterCss['myCss']} variant={filterCss['myVariant']}>
+          My Badges
+        </Button>
+      </div>
+  )
+}
+
+
   useEffect(() => {
-    const fetchBadges = async () => {
+    const fetchAllBadges = async () => {
       try {
         setIsDataLoading(true);
         const responseBadges = await axios.get(`${process.env.SERVER_URL}/badges`);
         setBadges(responseBadges.data.badges);
+        setAllBadges(responseBadges.data.badges);
 
         if (user?.username) {
           const token = localStorage.getItem('token');
@@ -53,7 +100,7 @@ const BadgeId = () => {
           setEarnedBadges(responseEarnedBadges.data.badges || []);
           console.log('Earned Badges:', responseEarnedBadges.data.badges);
           earnedBadges.forEach((badge) => {
-            console.log(`Badge ID: ${badge.badgeId}, Earned Date: ${badge.earnedDate}`);
+            console.log(`Badge ID: ${badge.id}, Earned Date: ${badge.earnedDate}`);
           }
           );
         }
@@ -66,7 +113,7 @@ const BadgeId = () => {
       }
     };
 
-    fetchBadges();
+    fetchAllBadges();
   }, [user]);
 
   const difficultyColors = {
@@ -92,9 +139,10 @@ const BadgeId = () => {
   useEffect(() => {
     if (badges.length > 0 && badgeId) {
       const index = badges.findIndex(
-        (b) => String(b._id) === String(badgeId) || String(b.id) === String(badgeId)
+        (b) => String(b.id) === String(badgeId)
       );
-      if (index !== -1) setCurrentBadgeIndex(index);
+      if (index !== -1) setCurrentBadgeIndex(index)
+      else setCurrentBadgeIndex(0);
     }
   }, [badges, badgeId]);
 
@@ -111,7 +159,7 @@ const BadgeId = () => {
           skillsEarned: [],
         };
 
-  const earnedBadge = earnedBadges.find((badge) => badge.badgeId === currentBadge.id);
+  const earnedBadge = earnedBadges.find((badge) => badge.id === currentBadge?.id);
 
   if (isDataLoading) {
     return (
@@ -140,14 +188,14 @@ const BadgeId = () => {
         const user = JSON.parse(userStr);
         const userBadges = user.badges || [];
 
-        const match = userBadges.find((b) => b.id === currentBadge.id);
+        const match = userBadges.find((b) => b.id === currentBadge?.id);
         if (match) {
           setEarnedBadge(match);
         }
       } catch (err) {
         console.error('Failed to parse user from localStorage', err);
       }
-    }, [currentBadge.id]);
+    }, [currentBadge?.id]);
 
     const handleGenerateShareLink = () => {
       // if (!isAuthenticated) {
@@ -160,7 +208,7 @@ const BadgeId = () => {
       if (!userStr) return;
 
       const user = JSON.parse(userStr);
-      const shareURL = `${window.location.origin}/badges/shared/${currentBadge.id}/${user.username}/${Math.floor(Date.now() / 1000)}`;
+      const shareURL = `${window.location.origin}/badges/shared/${currentBadge?.id}/${user.username}/${Math.floor(Date.now() / 1000)}`;
       setShareUrl(shareURL);
       setShowShareSuccess(true);
       setTimeout(() => setShowShareSuccess(false), 3000);
@@ -235,7 +283,7 @@ const BadgeMetrics = () => (
     {/* Mobile: Level + Earners side by side */}
     <div className="flex flex-row gap-2 md:flex-1">
       {[ 
-        { label: "Level", value: currentBadge.level || "N/A" },
+        { label: "Level", value: currentBadge?.level || "N/A" },
         { label: "Earners", value: "43" },
       ].map(({ label, value }, index) => (
         <div
@@ -252,7 +300,7 @@ const BadgeMetrics = () => (
     <div className="flex md:flex-1">
       <div className="flex-1 bg-gray-800 rounded-md shadow-md p-4 flex flex-col justify-between text-center min-h-[50px]">
         <div className="text-sm uppercase text-gray-400">Vertical</div>
-        <div className="text-lg font-semibold">{currentBadge.vertical || "General"}</div>
+        <div className="text-lg font-semibold">{currentBadge?.vertical || "General"}</div>
       </div>
     </div>
   </div>
@@ -262,9 +310,9 @@ const BadgeMetrics = () => (
   const BadgeDescription = () => (
     <div className="space-y-2">
       <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Badge Details</h2>
-      <p>Course: {currentBadge.course}</p>
+      <p>Course: {currentBadge?.course}</p>
       <p className="text-gray-300 leading-relaxed">
-        {currentBadge.description || 'No description available for this badge.'}
+        {currentBadge?.description || 'No description available for this badge.'}
       </p>
     </div>
   );
@@ -274,7 +322,7 @@ const BadgeMetrics = () => (
     <div className="space-y-2">
       <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Skills Earned</h2>
       <div className="grid grid-cols-2 gap-3">
-        {currentBadge.skillsEarned?.map((skill, idx) => (
+        {currentBadge?.skillsEarned?.map((skill, idx) => (
           <div
             key={idx}
             className="flex items-center bg-gray-800 rounded-md px-3 py-2 shadow-md"
@@ -292,8 +340,8 @@ const BadgeMetrics = () => (
     <div>
       <h3 className="text-xl font-semibold border-b border-gray-700 pb-1 mt-6">Related Badges</h3>
       <div className="flex space-x-4 overflow-auto py-2">
-        {badges
-          .filter((b) => b.id !== currentBadge.id)
+        {allBadges
+          .filter((b) => b.id !== currentBadge?.id)
           .slice(0, 3)
           .map((relatedBadge) => (
             <div
@@ -314,7 +362,7 @@ const BadgeMetrics = () => (
               }}
             >
               <img
-                crossorigin="anonymous"
+                crossOrigin="anonymous"
                 src={`${process.env.SERVER_URL}/badge/images/${relatedBadge?.id}` || relatedBadge.image?.data}
                 alt={relatedBadge.name}
                 className="rounded-lg shadow-md w-20 h-20 object-cover"
@@ -345,7 +393,7 @@ const BadgeMetrics = () => (
           {!isLoading ? (
             <>
               <img
-                crossorigin="anonymous"
+                crossOrigin="anonymous"
                 src={`${process.env.SERVER_URL}/badge/images/${currentBadge?.id}` || currentBadge.image?.data}
                 alt={currentBadge?.name}
                 className="max-w-full max-h-full object-contain"
@@ -370,7 +418,7 @@ const BadgeMetrics = () => (
         </button>
       </div>
 
-      <h1 className="text-3xl font-bold text-center mt-2">{currentBadge.name}</h1>
+      <h1 className="text-3xl font-bold text-center mt-2">{currentBadge?.name}</h1>
 
       {/* <div
         className={`inline-block px-4 py-1 rounded-full text-white font-semibold ${difficultyColors[currentBadge.difficulty]} mt-2`}
@@ -383,6 +431,8 @@ const BadgeMetrics = () => (
   return (
     <div className="min-h-screen flex flex-col bg-gray-900 text-white">
       <Navbar />
+
+      <AllBadgeMyBadgeFilter />
       
       {/* Main content with responsive layout */}
       <main className="flex-grow" key={badgeId}>
@@ -426,7 +476,7 @@ const BadgeMetrics = () => (
             {/* Description */}
             <section className="w-1/2 mt-20">
               <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Badge Details</h2>
-              <p className="text-gray-300 leading-relaxed">{currentBadge.description}</p>
+              <p className="text-gray-300 leading-relaxed">{currentBadge?.description}</p>
               <SkillsEarned />
               <RelatedBadges />
             </section>
