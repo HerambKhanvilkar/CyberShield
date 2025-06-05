@@ -176,17 +176,21 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
           </label>
         </div>
 
-        <div className="relative group flex flex-row items-center justify-between space-x-2">
+        <div className="relative group flex flex-column w-full items-center justify-between space-x-2">
           <AssignBadgePopUp user={selectedUser} updateUserDetails={updateUserDetails} />
           <RevokeBadgePopUp user={selectedUser} updateUserDetails={updateUserDetails} />
         </div>
       </div>
 
       <div className="w-full flex flex-col lg:flex-row mr-2">
-        <div className="flex flex-col w-1/2 items-start justify-start mb-2">
+        <div className="flex flex-col w-1/2 items-start justify-start mr-2 mb-2">
           <div className="flex flex-col gap-4">
-            <Achievements user={selectedUser} updateUserDetails={updateUserDetails} />
-            <Courses user={selectedUser} updateUserDetails={updateUserDetails} />
+            <Achievements
+              achievements={selectedUser.achievements}
+              user={selectedUser}
+              updateUserDetails={updateUserDetails}
+            />
+            <Courses courses={selectedUser.courses} user={selectedUser} updateUserDetails={updateUserDetails} />
           </div>
         </div>
 

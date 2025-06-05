@@ -27,6 +27,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "cors": "^2.8.5",
+    "framer-motion": "^12.16.0",
     "frontend": "file:",
     "input-otp": "^1.4.1",
     "lucide-react": "^0.453.0",
