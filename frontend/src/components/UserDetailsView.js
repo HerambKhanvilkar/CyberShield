@@ -150,14 +150,15 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
   return (
     <div className="text-white">
       <h2 className="text-xl font-bold mb-4">User Details</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg-grid-cols-3 gap-4 mb-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
         <EditableField label="First Name" value={form.firstName} onChange={(val) => handleChange("firstName", val)} />
         <EditableField label="Last Name" value={form.lastName} onChange={(val) => handleChange("lastName", val)} />
         <EditableField label="Email" value={form.email} onChange={(val) => handleChange("email", val)} />
       </div>
 
-      <div className="flex items-center space-x-2 relative">
-        <div className="flex flex-col">
+      <div className="flex flex-col md:flex-row gap-4 w-full items-start md:items-center">
+        {/* Password field with checkbox */}
+        <div className="flex flex-col w-full md:w-1/3">
           <EditableField
             label="Password"
             value={form.password}
@@ -176,21 +177,25 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
           </label>
         </div>
 
-        <div className="relative group flex flex-column w-full items-center justify-between space-x-2">
+        {/* Badge actions */}
+        <div className="flex flex-col md:flex-row gap-2 mt-0 w-full md:w-auto">
           <AssignBadgePopUp user={selectedUser} updateUserDetails={updateUserDetails} />
           <RevokeBadgePopUp user={selectedUser} updateUserDetails={updateUserDetails} />
         </div>
       </div>
 
-      <div className="w-full flex flex-col lg:flex-row mr-2">
-        <div className="flex flex-col w-1/2 items-start justify-start mr-2 mb-2">
-          <div className="flex flex-col gap-4">
+      <div className="w-full flex flex-col lg:flex-row mt-2">
+        <div className="flex flex-col items-start justify-start mr-2 mb-2">
+          <div className="flex flex-col w-full gap-4">
             <Achievements
               achievements={selectedUser.achievements}
               user={selectedUser}
               updateUserDetails={updateUserDetails}
             />
-            <Courses courses={selectedUser.courses} user={selectedUser} updateUserDetails={updateUserDetails} />
+            <Courses
+            courses={selectedUser.courses}
+            user={selectedUser}
+            updateUserDetails={updateUserDetails} />
           </div>
         </div>
 
@@ -199,12 +204,12 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
           <h3 className="text-xl font-bold text-white mb-4 border-b border-blue-500 pb-1 tracking-wide">
             Assigned Badges
           </h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-6 w-full">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 w-full">
             {selectedUser.badges && selectedUser.badges.length > 0 ? (
               selectedUser.badges.map((badge, index) => (
                 <div
                   key={index}
-                  className="relative flex flex-col items-center justify-center border border-blue-500/20 p-4 rounded-2xl shadow-xl transition-transform hover:scale-105 hover:shadow-blue-500/30"
+                  className="relative flex flex-col items-center justify-center border border-blue-500/20 p-2 rounded-2xl shadow-xl transition-transform hover:scale-105 hover:shadow-blue-500/30"
                 >
                   <button
                     onClick={() => handleRevokeBadge(badge.badgeId, selectedUser.email, updateUserDetails)}
@@ -217,7 +222,7 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
                   <img
                     src={`./images/img${badge.badgeId}.png`}
                     alt={`Badge ${badge.name || badge.badgeId}`}
-                    className="w-16 h-16 mb-3 drop-shadow-lg"
+                    className="w-10 h-10 mb-3 drop-shadow-lg"
                   />
                   <span className="text-sm font-semibold text-center text-gray-100">
                     {badge.name || "Unnamed Badge"}

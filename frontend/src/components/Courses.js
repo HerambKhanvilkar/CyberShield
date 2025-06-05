@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { Pencil, Trash2, X, Loader2 } from "lucide-react";
+import { Plus, Check, Pencil, Trash2, X, Loader2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 const CompletedCoursesSection = ({ courses = [], user, updateUserDetails }) => {
@@ -13,7 +13,6 @@ const CompletedCoursesSection = ({ courses = [], user, updateUserDetails }) => {
   const [currentText, setCurrentText] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Normalize courses to array of objects with { name: string }
   useEffect(() => {
     const normalized = courses.map((c) => (typeof c === "string" ? { name: c } : c));
     setCourseList(normalized);
@@ -32,28 +31,52 @@ const CompletedCoursesSection = ({ courses = [], user, updateUserDetails }) => {
     setModalOpen(true);
   };
 
-  const handleDeleteEntry = (index) => {
-    const updated = [...courseList];
-    updated.splice(index, 1);
-    setCourseList(updated);
-    // Optionally call API to sync deletion
+  const handleDeleteEntry = async (index) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`${process.env.SERVER_URL}/users/courses/${index}`, {
+        data: {
+          email: user.email,
+        },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const updated = [...courseList];
+      updated.splice(index, 1);
+      setCourseList(updated);
+    } catch (error) {
+      console.error("Error deleting course:", error);
+    }
   };
 
   const handleModalSubmit = async () => {
     if (!currentText.trim()) return;
     setLoading(true);
+    const token = localStorage.getItem("token");
 
     try {
       if (isEditing) {
-        // Edit locally
+        await axios.put(
+          `${process.env.SERVER_URL}/users/courses/${editingIndex}`,
+          {
+            email: user.email,
+            course: currentText,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
         const updated = [...courseList];
         updated[editingIndex].name = currentText;
         setCourseList(updated);
-
-        // Optionally call API to update course info here
       } else {
-        // Add new course via API
-        const token = localStorage.getItem("token");
         await axios.post(
           `${process.env.SERVER_URL}/users/courses`,
           {
@@ -70,6 +93,7 @@ const CompletedCoursesSection = ({ courses = [], user, updateUserDetails }) => {
 
         setCourseList((prev) => [...prev, { name: currentText }]);
       }
+
       setModalOpen(false);
     } catch (err) {
       console.error("Error submitting course:", err);
@@ -82,7 +106,7 @@ const CompletedCoursesSection = ({ courses = [], user, updateUserDetails }) => {
     <div className="w-full bg-gray backdrop-blur-md border border-white/10 rounded-lg p-4 text-white">
       <h2 className="text-xl font-bold mb-2 text-white">Completed Courses</h2>
 
-      <div className="h-56 overflow-y-auto bg-white/5 border border-white/10 rounded-md p-3 space-y-2">
+      <div className="h-auto overflow-y-auto bg-white/5 border border-white/10 rounded-md p-3 space-y-2">
         {courseList.length > 0 ? (
           courseList.map((course, index) => (
             <div
@@ -114,31 +138,46 @@ const CompletedCoursesSection = ({ courses = [], user, updateUserDetails }) => {
       <div className="mt-4 flex justify-end gap-3">
         <button
           onClick={openAddModal}
-          className="bg-green-600/80 hover:bg-green-500 px-4 py-2 rounded text-sm"
+          className="bg-green-600/80 hover:bg-green-500 px-4 py-2 rounded text-sm flex items-center justify-center"
         >
-          Add
+          {/* Text on md+ */}
+          <span className="hidden md:inline">Add</span>
+          {/* Icon on mobile */}
+          <Plus className="w-5 h-5 text-white md:hidden" />
         </button>
+
         <button
           onClick={() => {
             setEditMode(!editMode);
             setDeleteMode(false);
           }}
-          className={`px-4 py-2 rounded text-sm ${
+          className={`px-4 py-2 rounded text-sm flex items-center justify-center ${
             editMode ? "bg-yellow-700" : "bg-yellow-600/80 hover:bg-yellow-500"
           }`}
         >
-          {editMode ? "Done" : "Edit"}
+          <span className="hidden md:inline">{editMode ? "Done" : "Edit"}</span>
+          {editMode ? (
+            <Check className="w-5 h-5 text-white md:hidden" />
+          ) : (
+            <Pencil className="w-5 h-5 text-white md:hidden" />
+          )}
         </button>
+
         <button
           onClick={() => {
             setDeleteMode(!deleteMode);
             setEditMode(false);
           }}
-          className={`px-4 py-2 rounded text-sm ${
+          className={`px-4 py-2 rounded text-sm flex items-center justify-center ${
             deleteMode ? "bg-red-700" : "bg-red-600/80 hover:bg-red-500"
           }`}
         >
-          {deleteMode ? "Done" : "Delete"}
+          <span className="hidden md:inline">{deleteMode ? "Done" : "Delete"}</span>
+          {deleteMode ? (
+            <Check className="w-5 h-5 text-white md:hidden" />
+          ) : (
+            <Trash2 className="w-5 h-5 text-white md:hidden" />
+          )}
         </button>
       </div>
 

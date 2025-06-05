@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { Pencil, Trash2, X, Loader2 } from "lucide-react";
+import { Plus, Check, Pencil, Trash2, X, Loader2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
-const Achievements = ({ achievements = [], user, updateUserDetails }) => {
+const Achievements = ({ achievements = [], user }) => {
   const [achievementList, setAchievementList] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -13,7 +13,6 @@ const Achievements = ({ achievements = [], user, updateUserDetails }) => {
   const [currentText, setCurrentText] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Initialize from prop
   useEffect(() => {
     if (achievements && Array.isArray(achievements)) {
       const formatted = achievements.map((ach) =>
@@ -30,39 +29,71 @@ const Achievements = ({ achievements = [], user, updateUserDetails }) => {
   };
 
   const handleEditEntry = (index) => {
-    setCurrentText(achievementList[index].name);
+    setCurrentText(achievementList[index]?.name);
     setEditingIndex(index);
     setIsEditing(true);
     setModalOpen(true);
   };
 
   const handleDeleteEntry = async (index) => {
-    const updated = [...achievementList];
-    updated.splice(index, 1);
-    setAchievementList(updated);
-    // Optionally send delete to backend if supported
+    const token = localStorage.getItem("token");
+    try {
+      await axios.delete(`${process.env.SERVER_URL}/users/achievements/${index}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        data: {
+          email: user.email,
+        },
+      });
+
+      const updated = [...achievementList];
+      updated.splice(index, 1);
+      setAchievementList(updated);
+    } catch (err) {
+      console.error("Error deleting achievement:", err);
+    }
   };
 
   const handleModalSubmit = async () => {
     if (!currentText.trim()) return;
     setLoading(true);
+    const token = localStorage.getItem("token");
 
     try {
       if (isEditing) {
+        await axios.put(
+          `${process.env.SERVER_URL}/users/achievements/${editingIndex}`,
+          {
+            email: user.email,
+            achievement: currentText,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
         const updated = [...achievementList];
         updated[editingIndex].name = currentText;
         setAchievementList(updated);
       } else {
-        const token = localStorage.getItem("token");
-        await axios.post(`${process.env.SERVER_URL}/users/achievements`, {
-          email: user.email,
-          achievment: currentText,
-        }, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
+        await axios.post(
+          `${process.env.SERVER_URL}/users/achievements`,
+          {
+            email: user.email,
+            achievement: currentText,
           },
-        });
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
         setAchievementList([...achievementList, { name: currentText }]);
       }
@@ -79,14 +110,14 @@ const Achievements = ({ achievements = [], user, updateUserDetails }) => {
     <div className="w-full bg-gray backdrop-blur-md border border-white/10 rounded-lg p-4 text-white">
       <h2 className="text-xl font-bold mb-2 text-white">Achievements</h2>
 
-      <div className="h-56 overflow-y-auto bg-white/5 border border-white/10 rounded-md p-3 space-y-2">
+      <div className="h-auto overflow-y-auto bg-white/5 border border-white/10 rounded-md p-3 space-y-2">
         {achievementList.length > 0 ? (
           achievementList.map((achievement, index) => (
             <div
               key={index}
               className="flex justify-between items-center bg-white/10 hover:bg-white/20 transition-colors px-4 py-2 rounded-lg"
             >
-              <span>{achievement.name}</span>
+              <span>{achievement?.name}</span>
               <div className="flex items-center gap-2">
                 {editMode && (
                   <Pencil
@@ -111,35 +142,47 @@ const Achievements = ({ achievements = [], user, updateUserDetails }) => {
       <div className="mt-4 flex justify-end gap-3">
         <button
           onClick={openAddModal}
-          className="bg-green-600/80 hover:bg-green-500 px-4 py-2 rounded text-sm"
+          className="bg-green-600/80 hover:bg-green-500 px-4 py-2 rounded text-sm flex items-center justify-center"
         >
-          Add
+          <span className="hidden md:inline">Add</span>
+          <Plus className="w-5 h-5 text-white md:hidden" />
         </button>
+
         <button
           onClick={() => {
             setEditMode(!editMode);
             setDeleteMode(false);
           }}
-          className={`px-4 py-2 rounded text-sm ${
+          className={`px-4 py-2 rounded text-sm flex items-center justify-center ${
             editMode ? "bg-yellow-700" : "bg-yellow-600/80 hover:bg-yellow-500"
           }`}
         >
-          {editMode ? "Done" : "Edit"}
+          <span className="hidden md:inline">{editMode ? "Done" : "Edit"}</span>
+          {editMode ? (
+            <Check className="w-5 h-5 text-white md:hidden" />
+          ) : (
+            <Pencil className="w-5 h-5 text-white md:hidden" />
+          )}
         </button>
+
         <button
           onClick={() => {
             setDeleteMode(!deleteMode);
             setEditMode(false);
           }}
-          className={`px-4 py-2 rounded text-sm ${
+          className={`px-4 py-2 rounded text-sm flex items-center justify-center ${
             deleteMode ? "bg-red-700" : "bg-red-600/80 hover:bg-red-500"
           }`}
         >
-          {deleteMode ? "Done" : "Delete"}
+          <span className="hidden md:inline">{deleteMode ? "Done" : "Delete"}</span>
+          {deleteMode ? (
+            <Check className="w-5 h-5 text-white md:hidden" />
+          ) : (
+            <Trash2 className="w-5 h-5 text-white md:hidden" />
+          )}
         </button>
       </div>
 
-      {/* Modal */}
       <AnimatePresence>
         {modalOpen && (
           <motion.div
