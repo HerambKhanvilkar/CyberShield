@@ -79,30 +79,34 @@ const SharedBadgePage = () => {
 
   const BadgeDescription = ({ badge }) => (
     <div className="space-y-2 text-white">
-      <h2 className="text-2xl text-[#38C8F8] font-bold">{badge.name}</h2>
-      <p className="italic text-[#32b4df]">Course: {badge.course}</p>
-      <p>{truncateText(badge.description,200)}</p>
+      <h2 className="text-2xl font-bold">
+        <span className="text-[#38C8F8]">{badge.name}</span> -{" "}
+        <span className="text-gray-400 text-3xl uppercase">{user}</span>
+      </h2>
+      <p className="italic text-gray-500 hover:text-[#38C8F8]">Course: {badge.course}</p>
+      <p className='text-white hover:text-[#38C8F8]'>{truncateText(badge.description,200)}</p>
     </div>
   );
 
 const BadgeSkillsList = ({ skills }) => (
   <div>
-    <h3 className="text-[#38C8F8] font-semibold mb-2">Skills Earned</h3>
+    <h3 className="text-gray-500 hover:text-[#38C8F8] font-semibold mb-2 transition-colors duration-200">Skills Earned</h3>
     {skills && skills.length > 0 ? (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-      {skills.map((skill, idx) => (
-        <div
-          key={idx}
-          title={skill}
-          className="bg-black/60 text-white border border-[#38C8F8] rounded-md px-3 py-2 text-sm shadow-md hover:shadow-lg transition-all duration-200"
-        >
-          {skill}
-        </div>
-      ))}
-    </div>
-  ) : (
-    <div className="text-sm text-gray-400 italic">No skills listed.</div>
-  )}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+        {skills.map((skill, idx) => (
+          <div
+            key={idx}
+            title={skill}
+            className="bg-black/60 text-white border border-[#38C8F8] rounded-md px-3 py-2 text-sm shadow-md transition-all duration-200 
+                       hover:border-cyan-400 hover:text-[#38C8F8] hover:shadow-[0_0_8px_2px_#38C8F8]"
+          >
+            {skill}
+          </div>
+        ))}
+      </div>
+    ) : (
+      <div className="text-sm text-gray-400 italic">No skills listed.</div>
+    )}
   </div>
 );
 
@@ -112,83 +116,24 @@ const BadgeMetrics = ({ badge }) => (
     <div className="flex gap-2">
       {/* Level */}
       <div className="flex-1 p-2 shadow-md border border-[#38C8F8] rounded-md bg-black/60">
-        <div className="text-sm uppercase text-[#38C8F8]">Level</div>
-        <div className="text-lg text-[#32b4df] font-semibold">{badge.level || 'N/A'}</div>
+        <div className="text-sm uppercase text-gray-500 hover:text-[#38C8F8]">Level</div>
+        <div className="text-lg text-white hover:text-[#38C8F8] font-semibold">{badge.level || 'N/A'}</div>
       </div>
 
       {/* Earners */}
       <div className="flex-1 p-2 shadow-md border border-[#38C8F8] rounded-md bg-black/60">
-        <div className="text-sm uppercase text-[#38C8F8]">Earners</div>
-        <div className="text-lg text-[#32b4df] font-semibold">43</div>
+        <div className="text-sm uppercase text-gray-500 hover:text-[#38C8F8]">Earners</div>
+        <div className="text-lg text-white hover:text-[#38C8F8] font-semibold">43</div>
       </div>
     </div>
 
     {/* Row: Vertical full-width below */}
     <div className="p-2 shadow-md border border-[#38C8F8] rounded-md bg-black/60">
-      <div className="text-sm uppercase text-[#38C8F8]">Vertical</div>
-      <div className="text-lg text-[#32b4df] font-semibold">{badge.vertical || 'General'}</div>
+      <div className="text-sm uppercase text-gray-500 hover:text-[#38C8F8]">Vertical</div>
+      <div className="text-lg text-white hover:text-[#38C8F8] font-semibold">{badge.vertical || 'General'}</div>
     </div>
   </div>
 );
-
-const RelatedBadges = () => {
-  const [relatedBadges, setRelatedBadges] = useState([]);
-  useEffect(() => {
-  const fetchBadges = async () => {
-    try {
-      const res = await axios.get(`${process.env.SERVER_URL}/badges`);
-      const allBadges = res.data.badges;
-
-      // Shuffle and pick 3 random badges
-      const shuffled = [...allBadges].sort(() => 0.5 - Math.random());
-      const picked = shuffled.slice(0, 3);
-
-      // Fetch details for these 3 badges
-      const details = await Promise.all(
-        picked.map(badge =>
-          axios.get(`${process.env.SERVER_URL}/badge/${badge.id}`)
-        )
-      );
-
-      setRelatedBadges(details.map(d => d.data));
-    } catch (error) {
-      console.error('Error fetching related badges:', error);
-    }
-  };
-
-  fetchBadges();
-}, []);
-  if (relatedBadges.length === 0) {
-    return (
-      <div className="text-center text-white mt-6">
-        No related badges available.
-      </div>
-    );
-  }
-
-  return (
-  <div className="mt-8">
-    <h3 className="text-[#38C8F8] font-semibold mb-4 text-left">Related Badges</h3>
-    <div className="flex gap-4 justify-center">
-      {relatedBadges.map(badge => (
-        <div
-          key={badge.id}
-          className="w-24 h-24 rounded-lg overflow-hidden shadow-lg border border-[#38C8F8]"
-        >
-          <img
-            crossOrigin="anonymous"
-            src={`${process.env.SERVER_URL}/badge/images/${badge.id}`}
-            alt={badge.name}
-            className="w-full h-full object-cover"
-          />
-        </div>
-      ))}
-    </div>
-  </div>
-);
-
-};
-
 
   return (
     <div className="min-h-screen flex flex-col bg-black text-white font-sans selection:bg-[#38C8F8] selection:text-black">
@@ -214,8 +159,8 @@ const RelatedBadges = () => {
             {error}
           </div>
         )}
-
-        <div className="max-w-4xl mx-auto bg-black/80 rounded-lg p-6 shadow-lg border border-[#38C8F8]">
+{/* bg-gradient-to-b from-[#1E3A8A] to-[#00011E] */}
+        <div className="max-w-4xl mx-auto  background:blur-md rounded-lg p-6 shadow-lg border border-[#38C8F8]">
           <div className="flex flex-col md:flex-row md:space-x-8">
             {/* Left side: Image + Metrics */}
             <div className="flex-shrink-0 mb-6 md:mb-0 md:w-1/3">
@@ -228,8 +173,6 @@ const RelatedBadges = () => {
               <div className="mt-4">
                 <BadgeMetrics badge={badge} />
               </div>
-              {/* Related Badges */}
-              <RelatedBadges/>
             </div>
 
             {/* Right side (or full stack on mobile): Description & Skills */}
@@ -238,8 +181,8 @@ const RelatedBadges = () => {
               <BadgeDescription badge={badge} />
               <BadgeSkillsList skills={badge.skillsEarned} />
               {/* Passing Criteria */}
-              <div className="bg-black/60 border border-[#38C8F8] rounded-md p-4 shadow text-sm text-white">
-                <strong className='text-[#38C8F8]'>Passing Criteria:</strong> has scored at least 70% in their assessment and completed all mandatory tasks to earn this badge.
+              <div className="bg-black/60 border border-[#38C8F8] rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
+                <strong className='text-gray-500 hover:text-white'>Passing Criteria:</strong> has scored at least 70% in their assessment and completed all mandatory tasks to earn this badge.
               </div>
               {/* Authorized Byline */}
               <div className="text-xs text-gray-400 italic text-right pr-1">
