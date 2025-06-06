@@ -70,7 +70,7 @@ const BadgeAssignmentDropdown = ({ user, updateUserDetails }) => {
   };
 
   return (
-    <div className="max-w-md mt-0 md:-mt-8">
+    <div className="max-w-md mt-0 sm:-mt-8">
       <label className="text-sm font-medium text-gray-300 mb-1">Assign Badge</label>
       <div className='flex flex-row items-center space-x-2'>
         <div className="relative w-full border rounded-md border-gray-600">

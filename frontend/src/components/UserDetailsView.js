@@ -150,7 +150,7 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
   return (
     <div className="overflow-y-auto scrollbar text-white">
       <h2 className="text-xl font-bold mb-4">User Details</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-8 mb-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-2 md:gap-8 mb-3">
         <EditableField label="First Name" value={form.firstName} onChange={(val) => handleChange("firstName", val)} />
         <EditableField label="Last Name" value={form.lastName} onChange={(val) => handleChange("lastName", val)} />
         <EditableField label="Email" value={form.email} onChange={(val) => handleChange("email", val)} />
