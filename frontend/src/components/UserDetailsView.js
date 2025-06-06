@@ -221,7 +221,7 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
                   <div className="group relative">
                     <img
                       crossOrigin="anonymous"
-                      src={`${process.env.SERVER_URL}/badge/images/${badge.badgeIdid}` || badge.img?.data}
+                      src={`${process.env.SERVER_URL}/badge/images/${badge.badgeId}` || badge.img?.data}
                       alt={`Badge ${badge.name || badge.badgeId}`}
                       className="w-16 h-16 rounded-full transition-all duration-300 drop-shadow-md group-hover:drop-shadow-[0_0_10px_rgba(56,200,248,0.8)]"
                     />
