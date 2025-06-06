@@ -41,7 +41,8 @@ function UserBlock({ data, updateUserDetails, onSelect }) {
               {data?.badges?.slice(0, 5).map((badge, index) => (
                 <img
                   key={index}
-                  src={`./images/img${badge.badgeId}.png`}
+                  crossOrigin="anonymous"
+                  src={`${process.env.SERVER_URL}/badge/images/${badge.badgeId}` || badge.img?.data}
                   alt={badge.name || `Badge ${badge.badgeId}`}
                   title={badge.name || "Unnamed Badge"}
                   className="w-5 h-5 rounded-sm drop-shadow-md"

@@ -65,7 +65,7 @@ function handleBadgeFilter(filter){
 function AllBadgeMyBadgeFilter() {
   return (
     // add fixed  to the nav class name to make the navbar stick to the bottom of the screen
-      <div className={(earnedBadges.length > 0 ? "display" : "hidden") + " container mx-auto flex items-center justify-end space-x-5 "}>
+      <div className={(earnedBadges.length > 0 ? "display" : "hidden") + " container mx-auto mt-2 flex items-center justify-end space-x-5 "}>
         <Button onClick={() => handleBadgeFilter('all')} size="icon" className={filterCss['allCss']} variant={filterCss['allVariant']}>
           All Badges
         </Button>
@@ -432,7 +432,7 @@ const BadgeMetrics = () => (
     <div className="min-h-screen flex flex-col bg-gray-900 text-white">
       <Navbar />
 
-      <AllBadgeMyBadgeFilter />
+      <AllBadgeMyBadgeFilter/>
       
       {/* Main content with responsive layout */}
       <main className="flex-grow" key={badgeId}>
@@ -528,7 +528,7 @@ const BadgeMetrics = () => (
       </main>
 
       {/* Badge Collection Thumbnails */}
-      <div className="bg-gray-800 p-4 flex flex-col items-center justify-between w-full mt-4 mx-auto">
+      <div className="bg-gray-800 p-2 flex flex-col items-center justify-between w-full mt-4 mx-auto">
         {/* Scrollable row container */}
         <div className="w-full overflow-x-auto overflow-y-hidden">
           {/* Row of badges — make width as wide as needed */}
@@ -540,7 +540,7 @@ const BadgeMetrics = () => (
               }
               className="p-2 bg-gray-700 rounded-full hover:bg-gray-600 transition"
             >
-              <ChevronLeft className="w-6 h-6" />
+              <ChevronLeft className="w-3 h-3" />
             </button>
             {badges.map((badge, index) => (
               <img
@@ -548,7 +548,7 @@ const BadgeMetrics = () => (
                 crossOrigin="anonymous"
                 src={`${process.env.SERVER_URL}/badge/images/${badge?.id}` || badge.image?.data}
                 alt={badge.name}
-                className={`w-14 h-14 object-cover rounded-md cursor-pointer shadow-md transition-transform ${
+                className={`w-7 h-7 object-cover rounded-md cursor-pointer shadow-md transition-transform ${
                   index === currentBadgeIndex ? 'border-2 border-cyan-500 scale-100' : 'opacity-70'
                 }`}
                 onClick={() => setCurrentBadgeIndex(index)}
@@ -567,11 +567,11 @@ const BadgeMetrics = () => (
               }
               className="p-2 bg-gray-700 rounded-full hover:bg-gray-600 transition"
             >
-              <ChevronRight className="w-6 h-6" />
+              <ChevronRight className="w-3 h-3" />
             </button>
           </div>
         </div>
-        <div className="text-gray-300 mt-2 text-sm">
+        <div className="text-gray-300 mt-1 text-xs">
           {badges.length} Badges — Showing {currentBadgeIndex + 1} of {badges.length}
         </div>
       </div>
