@@ -14,7 +14,7 @@ function UserBlock({ data, updateUserDetails, onSelect }) {
   return (
     <div
       onClick={onSelect}
-      className="w-full flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-gray-600 bg-slate-950/75 backdrop-blur-md rounded-lg border-2 border-gray-600 border-opacity-50 p-4 justify-between gap-4 hover:border-[#00CBF0]"
+      className="w-full flex flex-col md:flex-row bg-slate-950/75 backdrop-blur-md rounded-lg border-2 border-gray-600 border-opacity-50 p-4 justify-between gap-4 hover:border-[#00CBF0]"
     >
       {/* Left Side */}
       <div className="flex flex-col w-2/3">
@@ -37,15 +37,23 @@ function UserBlock({ data, updateUserDetails, onSelect }) {
         <div className="mt-2 flex items-center gap-2 text-gray-400 font-mono text-sm">
           <span>Badges: {data?.badges?.length || 0}</span>
           <div className="flex gap-1">
-            {data?.badges?.map((badge, index) => (
-              <img
-                key={index}
-                src={`./images/img${badge.badgeId}.png`}
-                alt={badge.name || `Badge ${badge.badgeId}`}
-                title={badge.name || "Unnamed Badge"}
-                className="w-5 h-5 rounded-sm drop-shadow-md"
-              />
-            ))}
+            <div className="flex items-center space-x-1">
+              {data?.badges?.slice(0, 5).map((badge, index) => (
+                <img
+                  key={index}
+                  src={`./images/img${badge.badgeId}.png`}
+                  alt={badge.name || `Badge ${badge.badgeId}`}
+                  title={badge.name || "Unnamed Badge"}
+                  className="w-5 h-5 rounded-sm drop-shadow-md"
+                />
+              ))}
+
+              {data?.badges?.length > 5 && (
+                <span className="text-sm text-gray-400 font-semibold">
+                  +{data.badges.length - 5} more
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -7,6 +7,8 @@ import { Check,RotateCcw } from 'lucide-react';
 const BadgeAssignmentDropdown = ({ user, updateUserDetails }) => {
   const [badges, setBadges] = useState([]);
   const [selectedBadge, setSelectedBadge] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [setUsers] = useState(false);
 
   const fetchBadges = async () => {
     try {
@@ -68,22 +70,52 @@ const BadgeAssignmentDropdown = ({ user, updateUserDetails }) => {
   };
 
   return (
-    <div className="p-4 max-w-md">
+    <div className="max-w-md">
       <label className="text-sm font-medium text-gray-300 mb-1">Assign Badge</label>
       <div className='flex flex-row items-center space-x-2'>
-        <select
-          className="w-full p-2 rounded bg-[#1A1B2E]/60 text-gray-400 border-gray-600 focus:border-cyan-500 focus:ring-cyan-500"
-          value={selectedBadge || ""}
-          onChange={(e) => setSelectedBadge(Number(e.target.value))}
-          disabled={badges.length === 0}
-        >
-          <option value="">Select a badge</option>
-          {badges.map((badge) => (
-            <option key={badge.id} value={badge.id}>
-              {badge.name}
-            </option>
-          ))}
-        </select>
+        {/* <div className="relative w-full">
+          <div className="relative w-full">
+            <select
+              className="w-full p-3 pr-10 rounded-xl bg-white/10 backdrop-blur-md text-white border border-gray-600 focus:border-cyan-400 focus:ring-cyan-400 transition-all duration-200 appearance-none"
+              value={selectedBadge || ""}
+              onChange={(e) => setSelectedBadge(Number(e.target.value))}
+              disabled={badges.length === 0}
+            >
+              <option value="" className="bg-slate-800 text-white">Select a badge</option>
+              {badges.map((badge) => (
+                <option key={badge.id} value={badge.id} className="bg-slate-800 text-white">
+                  {badge.name}
+                </option>
+              ))}
+            </select>
+
+            {/* Custom arrow */}
+            {/*<div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-white">
+              ▼
+            </div>
+          </div>
+        </div> */}
+
+        <div className="relative w-full">
+          <select
+            className="w-full p-2 pr-10 rounded bg-[#1A1B2E]/60 text-gray-400 border-gray-600 focus:border-cyan-500 focus:ring-cyan-500 appearance-none"
+            value={selectedBadge || ""}
+            onChange={(e) => setSelectedBadge(Number(e.target.value))}
+            disabled={badges.length === 0}
+          >
+            <option value="" className="bg-slate-800 text-white">Select a badge</option>
+            {badges.map((badge) => (
+                <option key={badge.id} value={badge.id} className="bg-slate-800 text-white">
+                  {badge.name}
+                </option>
+              ))}
+          </select>
+
+          {/* Custom arrow */}
+          <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
+            ▼
+          </div>
+        </div>
         <Button
           className="text-sm bg-gray-800 text-white"
           onClick={() => setSelectedBadge(null)}
