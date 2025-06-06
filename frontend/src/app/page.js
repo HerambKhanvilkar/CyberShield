@@ -4,6 +4,7 @@ import Footer from "@/components/Footer";
 import React, { useEffect, useRef, useState } from "react";
 import ParticleBackground from "@/components/ParticleBackground";
 import SplineScene from "@/components/SplineScene";
+import SplineScene2 from "@/components/SplineScene2";
 import Count from "@/components/count";
 
 export default function LandingPage() {
@@ -56,14 +57,17 @@ export default function LandingPage() {
   return (
     <>
       <Navbar />
-      <div className="relative min-h-screen text-white font-sans">
+      <div className="relative min-h-screen bg-[#00040A] text-white font-sans">
         {/* Interactive Background */}
-        <div className="absolute inset-0 z-0 pointer-events-auto">
+        <div className="hidden md:block absolute inset-0 z-0 pointer-events-auto">
           <SplineScene />
+        </div>
+        <div className="block md:hidden absolute inset-0 z-0 pointer-events-auto">
+          <SplineScene2 />
         </div>
 
         {/* Foreground Content */}
-        <div className="relative z-10 max-w-[1200px] mx-auto px-5 pointer-events-none">
+        <div className="relative z-10 mx-auto pointer-events-none">
           {/* Hero Section */}
           <section className="min-h-[calc(100vh-70px)] mr-auto flex items-center justify-center text-center px-5 py-12 relative">
             <div className="max-w-[800px] mr-auto animate-fadeIn pointer-events-auto">
@@ -94,9 +98,9 @@ export default function LandingPage() {
 
           {/* Featured Badge */}
           {!loading && badges.length > 0 && (
-            <section className="py-20 relative">
+            <section className="py-20 z-50 bg-[#00040A] pointer-events-auto">
               <h2 className="text-3xl sm:text-4xl mb-10 text-center">Featured Badge</h2>
-              <div className="flex items-center gap-10 flex-wrap md:flex-nowrap text-text-light">
+              <div className="flex w-5/6 mx-auto items-center gap-10 flex-wrap md:flex-nowrap text-text-light">
                 <div className="flex-1 text-center md:text-left">
                   <h3 className="text-xl sm:text-2xl mb-5 font-semibold">
                     {badges[activeIndex].name}
@@ -131,9 +135,9 @@ export default function LandingPage() {
 
           {/* Badge Carousel */}
           {!loading && badges.length > 0 && (
-            <section className="relative py-20 bg-gradient-to-t from-primary-dark to-transparent">
+            <section className="pointer-events-auto z-50 bg-[#00040A] py-20 bg-gradient-to-t from-primary-dark to-transparent">
               <h2 className="text-3xl sm:text-4xl mb-10 text-center">All Badges</h2>
-              <div className="overflow-y-hidden scrollbar overflow-x-auto no-scrollbar px-5">
+              <div className="overflow-y-hidden scrollbar w-5/6 mx-auto overflow-x-auto no-scrollbar px-5">
                 <div
                   className="flex gap-6 justify-start scroll-smooth snap-x snap-mandatory"
                   ref={carouselRef}
@@ -162,11 +166,11 @@ export default function LandingPage() {
           )}
 
           {/* Why Earn Badges */}
-          <section className="py-20 relative">
+          <section className="pointer-events-auto py-20 z-50 bg-[#00040A]">
             <h2 className="text-3xl sm:text-4xl text-center text-white mb-10">
               Why Earn Badges?
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 w-5/6 mx-auto sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {[
                 { emoji: "🏆", title: "Showcase Skills", text: "Display your verified cybersecurity skills and knowledge to employers and peers." },
                 { emoji: "🚀", title: "Career Growth", text: "Advance your career by earning increasingly advanced badges in your field." },
