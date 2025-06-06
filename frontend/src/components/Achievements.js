@@ -107,8 +107,8 @@ const Achievements = ({ achievements = [], user }) => {
   };
 
   return (
-    <div className="w-full bg-gray backdrop-blur-md border border-white/10 rounded-lg p-4 text-white">
-      <h2 className="text-xl font-bold mb-2 text-white">Achievements</h2>
+    <div className="w-full bg-gray backdrop-blur-md border border-white/10 rounded-lg p-2 md:p-4 text-white">
+      <h2 className="text-xl font-bold mb-2 text-white border-b border-blue-500">Achievements</h2>
 
       <div className="h-auto overflow-y-auto bg-white/5 border border-white/10 rounded-md p-3 space-y-2">
         {achievementList.length > 0 ? (

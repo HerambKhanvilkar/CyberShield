@@ -118,7 +118,7 @@ export default function SettingsPage() {
     switch (activeTab) {
       case 'Users':
         return (
-          <div className="p-4 rounded-xl bg-slate-900/60 backdrop-blur-xl shadow-lg border border-gray-700">
+          <div className="p-2 md:p-4 rounded-xl bg-slate-900/60 backdrop-blur-xl shadow-lg border border-gray-700">
           {/* Top Row: Search + Pagination */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-2 gap-4">
             <div className="flex items-center gap-4">
@@ -196,7 +196,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Right: User Details */}
-            <div className="w-full md:w-2/3 bg-slate-800/60 rounded-lg p-4 border border-gray-700 overflow-auto ">
+            <div className="w-full md:w-2/3 bg-slate-800/60 rounded-lg p-2 md:p-4 border border-gray-700 overflow-auto ">
               <UserDetailsView selectedUser={selectedUser} updateUserDetails={updateUserDetails} />
             </div>
           </div>
