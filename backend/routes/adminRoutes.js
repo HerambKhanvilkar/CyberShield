@@ -13,15 +13,45 @@ const csv = require('csv-parser');
 const bcrypt = require("bcrypt");
 const { Parser } = require('json2csv');
 const agenda = require('../worker.js'); // path to your agenda initialization module
+const { validateMIMEType } = require("validate-image-type");
+const sharp = require('sharp');
 
-// const { validateMIMEType } = require("validate-image-type");
+const uploadImage = multer({ 
+  limits: { fileSize: 5 * 1000 * 1000 }, // 5MB max file size
+  fileFilter: function(req, file, callback) {
+    let fileExtension = (file.originalname.split('.')[file.originalname.split('.').length-1]).toLowerCase(); // convert extension to lower case
+    if (["png", "jpg", "jpeg"].indexOf(fileExtension) === -1) {
+      return callback('Wrong file type', false);
+    }
+    file.extension = fileExtension.replace(/jpeg/i, 'jpg'); // all jpeg images to end .jpg
+    callback(null, true);
+  },
+  dest: 'badges/' 
+});
 
-const upload = multer({ dest: 'uploads/' });
+const uploadCsv = multer({ 
+  limits: { fileSize: 5 * 1000 * 1000 }, // 5MB max file size
+  fileFilter: function(req, file, callback) {
+    let fileExtension = (file.originalname.split('.')[file.originalname.split('.').length-1]).toLowerCase(); // convert extension to lower case
+    if (["csv", "xlsx"].indexOf(fileExtension) === -1) {
+      return callback('Wrong file type', false);
+    }
+    file.extension = fileExtension.replace(/jpeg/i, 'jpg'); // all jpeg images to end .jpg
+    callback(null, true);
+  },
+  dest: 'csv-files/' 
+});
+
+const asyncWrapper = fn => {
+    return (req, res, next) => {
+        return fn(req, res, next).catch(next);
+    }
+};
 
 const getUsername = async (authHeader) => {
   const token = authHeader.split(" ")[1];
   const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
+ 
   const user = await User.findOne({
     _id: decoded.id,
   });
@@ -165,10 +195,14 @@ router.delete('/users/achievements/:achievementIndex', authenticateJWT, async (r
 
 
 
-router.put("/badge/import", authenticateJWT, upload.single('image'), async (req, res) => {
+router.put(
+  "/badge/import", 
+  authenticateJWT, 
+  uploadImage.single('image'), 
+  asyncWrapper(async (req, res, next) => {
   try {
 
-    const { id, name, desc, level, vertical, skillsEarned } = req.body;
+    const { id, course, name, description, level, vertical, skillsEarned } = req.body;
     var existingBadge = null;
     var existingBadgeImage = null;
     if (!id){
@@ -185,92 +219,133 @@ router.put("/badge/import", authenticateJWT, upload.single('image'), async (req,
     if (skillsEarned && skillsEarned !== []) { existingBadge["skillsEarned"] = skillsEarned } 
     if (vertical) { existingBadge["vertical"] = vertical } 
     if (level) { existingBadge["level"] = level } 
-    if (desc) { existingBadge["desc"] = desc } 
+    if (description) { existingBadge["description"] = description } 
     if (name) { existingBadge["name"] = name } 
+    if (course) { existingBadge["course"] = course } 
 
     if (req.file){
-      const badgeImageObj = {
-        id: req.body.id,
-        name: req.body.name || existingBadge["name"],
-        image:  fs.readFileSync(path.join(__dirname, '../uploads/', req.file.filename)),
-        contentType: req.file.mimetype // Use the uploaded file's mimetype
-      };
+    console.log("resizing");
+    console.log(existingBadge);
 
-      if (!existingBadgeImage){
-        existingBadgeImage =  new BadgeImage(badgeImageObj);
-      } else {
-        existingBadgeImage["image"] = fs.readFileSync(
-          path.join(__dirname, '../uploads/', req.file.filename)
-        );
-        existingBadge["contentType"]= req.file.mimetype;
-      }
-    console.log('badeImageObj', badgeImageObj);
+      const image = sharp(req.file.path);
+      image.metadata() // get image metadata for size
+        .then(function(metadata) {
+          if (metadata.width > 400 || metadata.height > 400) {
+            return image.resize({ width: 400, height: 400 }).toBuffer(); // resize if too big
+          } else {
+            return image.toBuffer();
+          }
+        })
+        .then(function(data) { // upload to s3 storage
+          const badgeImageObj = {
+            id, name: req.body.name || existingBadge["name"],
+            image: data,
+            contentType: req.file.mimetype // Use the uploaded file's mimetype
+          };
+
+          if (!existingBadgeImage){
+            existingBadgeImage =  new BadgeImage(badgeImageObj);
+          } else {
+            existingBadgeImage["image"] = data;            
+            existingBadge["contentType"]= req.file.mimetype;
+          }
+          console.log('badeImageObj', badgeImageObj);
+          existingBadgeImage.save();
+        })
     }
-
-    
-
     existingBadge.save();
-    existingBadgeImage.save();
     res.status(200).json({ message: 'Badge Modified successfully', data: existingBadge });
 
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
   }
-  });
+  })
+);
 
 
 // upload badge
-router.post("/badge/import", authenticateJWT, upload.single('image'), async (req, res) => {
-// router.post("/admin/badge/import", authenticateJWT, async (req, res) => {
+router.post(
+  "/badge/import", 
+  authenticateJWT, 
+  uploadImage.single('image'), 
+  asyncWrapper(async (req, res, next) => {
+    try {
+      const { id, name, description, level, vertical, skillsEarned, course } = req.body;
+      if ( !id || !name || !description || !level || !vertical || skillsEarned.length === 0 ){
+        return res.status(401).json({ message: "Missing Fields!" });
+      }
+      const badgeExist = await Badge.findOne({id});
+      const badgeImageExist = await BadgeImage.findOne({id});
+
+      if (badgeExist){
+        return res.status(401).json({ message: "Badge already exists" });
+      }
+
+      if (badgeImageExist){
+        return res.status(401).json({ message: "Badge Image already exists" });
+      }
+
+
+      const badgeObj = { id, name, description, level, vertical, skillsEarned };
+      if (course) { badgeObj['course'] = course }
+
+      if (req.file){
+        const image = sharp(req.file.path);
+        image.metadata() // get image metadata for size
+          .then(function(metadata) {
+            if (metadata.width > 400 || metadata.height > 400) {
+              console.log('resizing Image');
+              return image.resize({ width: 400, height: 400 }).toBuffer(); // resize if too big
+            } else {
+              return image.toBuffer();
+            }
+          })
+          .then(function(data) { // upload to s3 storage
+            const badgeImageObj = {
+              id, name,
+              image:  data,
+              contentType: req.file.mimetype // Use the uploaded file's mimetype
+            };
+            const newBadge = new Badge(badgeObj);
+            const newBadgeImage = new BadgeImage(badgeImageObj);
+            console.log('badeImageObj', badgeImageObj);
+            newBadge.save();
+            newBadgeImage.save();
+            return res.status(200).json({ message: 'Badge created successfully', data: newBadge });
+          })
+
+      }
+
+      // const badgeImageObj = {
+      //   id, name,
+      //   image:  fs.readFileSync(path.join(__dirname, '../uploads/', req.file.filename)),
+      //   contentType: req.file.mimetype // Use the uploaded file's mimetype
+      // };
+
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  })
+)
+
+// Get Courses
+router.get("/badges/Course", async (req, res) => {
   try {
-    console.log("TOP", req.body);
-    const { id, name, desc, level, vertical, skillsEarned } = req.body;
-    if ( !id || !name || !desc || !level || !vertical || !skillsEarned ){
-      return res.status(401).json({ message: "Missing Fields!" });
-    }
-    const badgeExist = await Badge.findOne({id});
-    const badgeImageExist = await BadgeImage.findOne({id});
+    const uniqueCourses = await Badge.aggregate([
+      { $group: { _id: "$course" } }, // Group by skillsEarned to get unique values
+      { $project: { course: "$_id", _id: 0 } } // Project the results to a more readable format
+    ]);
 
-    if (badgeExist){
-      return res.status(401).json({ message: "Badge already exists" });
-    }
-
-    if (badgeImageExist){
-      return res.status(401).json({ message: "Badge Image already exists" });
-    }
-
-    console.log(req.body);
-    console.log(req.file);
-    const badgeObj = {
-        id: req.body.id,
-        name: req.body.name,
-        description: req.body.desc,
-        level: req.body.level,
-        vertical: req.body.vertical,
-        skillsEarned: req.body.skillsEarned,
-        image: ``,
-    };
-
-    const badgeImageObj = {
-      id: req.body.id,
-      name: req.body.name,
-      image:  fs.readFileSync(path.join(__dirname, '../uploads/', req.file.filename)),
-      contentType: req.file.mimetype // Use the uploaded file's mimetype
-    };
-
-    const newBadge = new Badge(badgeObj);
-    const newBadgeImage = new BadgeImage(badgeImageObj);
-
-    newBadge.save();
-    newBadgeImage.save();
-    res.status(200).json({ message: 'Badge created successfully', data: newBadge });
+    res.status(200).json({ message: 'All Unique Courses.', data: uniqueCourses.map(course => course.course)});
 
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
   }
-  });
+});
+
 
 // Get Skills 
 router.get("/badges/skills", async (req, res) => {
@@ -376,7 +451,7 @@ router.post("/user/create", authenticateJWT, async (req, res) => {
 });
 
 //file upload
-router.post("/users/import/preview", authenticateJWT, upload.single('file'), async (req, res) => {
+router.post("/users/import/preview", authenticateJWT, uploadCsv.single('file'), async (req, res) => {
   try {
     // Ensure file exists
     if (!req.file || !req.file.path) {

@@ -26,6 +26,7 @@ export default function ImagePreview({
   return (
     <>
       <Image
+      crossOrigin="anonymous"
         src={src}
         alt={alt}
         width={width}

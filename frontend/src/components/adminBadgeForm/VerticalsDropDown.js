@@ -59,9 +59,10 @@ const VerticalsDropDown = ({ verticals, formData, handleChange }) => {
   <input type="text" value={searchTerm} onFocus={handleFocus} onChange={handleSearchChange} className="flex-1 bg-transparent outline-none placeholder:text-muted-foreground px-3 py-2" placeholder="Search vertical" />
       }
   <input disabled={ true } type="text" className={(formData.vertical !== '' ? 'display' : 'hidden' ) + " invisible flex-1 bg-transparent outline-none placeholder:text-muted-foreground px-3 py-2"} placeholder="Search vertical" />
+    <button onClick={() => setIsSkillsDropDownOpen(false)} type="button" className={ (isSkillsDropDownOpen ? "display" : "hidden" ) + " relative rounded-sm opacity-70 ring-offset-background transition-opacity p-2 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"}><div className="rounded-sm text-xs border py-2 px-2 hover:bg-muted">Esc</div><span className="sr-only">Close</span></button>
         <button 
         onClick={() => { handleChange({ target: { name: "vertical", value: "", type: 'radio' } })} } type="button" 
-        className={ (formData.vertical !== '' ? 'display' : 'hidden' ) + " relative right-0 h-6 w-6 p-0"}><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+        className={ (formData.vertical !== '' ? 'display' : 'hidden' ) + " p-2"}><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
     </div> 
     </div> 
 

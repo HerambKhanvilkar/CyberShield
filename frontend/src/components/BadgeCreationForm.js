@@ -20,6 +20,7 @@ function BadgeCreationForm () {
   const [isSkillsDropDownOpen, setIsSkillsDropDownOpen] = useState(false);
   const [skillsEarned, setSkillsEarned] = useState([]);
   const [verticals, setVerticals] = useState([]);
+  const [courses, setCourses] = useState([]);
   const dropDownInputRef = useRef(null);
   const [preview, setPreview] = useState('');
   const [newSkill, setNewSkill] = useState('');
@@ -30,7 +31,7 @@ function BadgeCreationForm () {
    const [formData, setFormData] = useState({
     id: '',
     name: '',
-    desc: '',
+    description: '',
     level: 'Amateur',
     vertical: '',
     course: '',
@@ -50,11 +51,10 @@ function BadgeCreationForm () {
   useEffect(() => {
   const fetchSkills = async () => {
     try {
-    const apiUrl = process.env.SERVER_URL + '/badges/Skills';
+    const apiUrl = process.env.SERVER_URL + '/badges/skills';
     const token = localStorage.getItem("accessToken");
       const response = await axios.get(apiUrl, {
         headers: {
-          'Content-Type': 'multipart/form-data', // Set the content type
           Authorization: `Bearer ${token}`, // Add the token to the headers
         },
       });
@@ -71,6 +71,28 @@ function BadgeCreationForm () {
     }
   };
 
+  const fetchCourses = async () => {
+    try {
+    const apiUrl = process.env.SERVER_URL + '/badges/courses';
+    const token = localStorage.getItem("accessToken");
+      const response = await axios.get(apiUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`, // Add the token to the headers
+        },
+      });
+      // if (!response.ok || Array.isArray(response.data) ) {
+      if (!response) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.data.data;
+      setCourses(data); // Pass the response data to the parent component
+
+    } catch (error) {
+          console.error('Error fetching data:', error);
+        setCourses([]);
+    }
+  };
+
   const fetchVerticals = async () => {
 
     try {
@@ -78,7 +100,6 @@ function BadgeCreationForm () {
     const token = localStorage.getItem("accessToken");
       const response = await axios.get(apiUrl, {
         headers: {
-          'Content-Type': 'multipart/form-data', // Set the content type
           Authorization: `Bearer ${token}`, // Add the token to the headers
         },
       });
@@ -170,6 +191,7 @@ function BadgeCreationForm () {
       // drop down closing code
     } else {
       // Handle other inputs
+      console.log(name, value);
       setFormData({ ...formData, [name]: value });
     }
 
@@ -211,14 +233,14 @@ function BadgeCreationForm () {
     const token = localStorage.getItem("accessToken");
     let toastId;
 
-    if (!formData.image) {
-      toast.info('Please select a file to upload.');
-      return;
-    }
-
     try {
       let response; 
       if (!selectedBadge){
+        if (!formData.image || !formData.vertical || !formData.name || !formData.id || formData.skillsEarned.length === 0 ) {
+          toast.error('Badge form incomplete!');
+          return;
+        }
+
         toastId = toast.loading("Creating Badge...");
         response = await axios.post(apiUrl, formDataObject, {
           headers: {
@@ -240,7 +262,7 @@ function BadgeCreationForm () {
       setFormData({
         id: '',
         name: '',
-        desc: '',
+        description: '',
         level: '',
         course: '',
         vertical: '',
@@ -317,7 +339,7 @@ useEffect(() => {
     setFormData({
       id: selectedBadge.id || '',
       name: selectedBadge.name || '',
-      desc: selectedBadge.description || '',
+      description: selectedBadge.description || '',
       level: selectedBadge.level || 'Amateur',
       course: selectedBadge.course || '',
       vertical: selectedBadge.vertical || '',
@@ -331,7 +353,7 @@ useEffect(() => {
     setFormData({
       id: '', 
       name: '', 
-      desc: '', 
+      description: '', 
       level: 'Amateur', 
       vertical: '', 
       course: '', 
@@ -356,7 +378,13 @@ useEffect(() => {
     {Array.isArray(searchResults) && searchResults.length > 0 ? (
       searchResults.map((badge , index) => (
         <li key={index}>
-                <div onClick={() => setSelectedBadge(badge)} className="flex items-center">
+                <div onClick={() => setSelectedBadge(badge)} 
+        className={(
+            selectedBadge?.id === badge.id 
+            ? "bg-accent text-accent-foreground" 
+            : "hover:text-accent-foreground hover:shadow"
+          ) + 
+          " flex items-center rounded"}>
                     <div className="shrink-0">
                         <img
                         crossOrigin='anonymous'
@@ -444,7 +472,7 @@ useEffect(() => {
 
           <div className="grid grid-cols-1 md:grid-cols-1 py-2.5 space-y-4">
     <CoursesDropDown 
-                     courses={verticals}
+                     courses={courses}
                      formData={formData}
                      handleChange ={handleChange}
     />
@@ -460,10 +488,10 @@ useEffect(() => {
                 className="absolute z-10 top-0 h-6 w-6 p-0 rounded-full bg-gray-800 overflow-auto"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
 
                 <div className="relative flex flex-col items-center w-full rounded-lg border-gray-600">
-                <ImagePreview
+                <img
                   src={preview}
-                  width={400}
-                  height={200}
+                  width={300}
+                  height={300}
                 />
                 </div>
                 </div>
