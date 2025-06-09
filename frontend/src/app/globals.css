@@ -75,7 +75,6 @@
   }
 }
 
-
 @layer base {
   :root {
     --background: 238 100% 6%;
@@ -130,19 +129,6 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
-  }
-}
-
-
-
-
-@layer base {
-  * {
-    @apply border-border;
-    @apply rounded-none;
-  }
-  body {
-    @apply bg-background text-foreground;
   }
 }
 
@@ -321,7 +307,6 @@
 	}
 }
 
-
 .card { perspective: 800px;}
 .content {transform-style: preserve-3d;}
 .card:hover .content {transform: rotateY(.5turn);}
@@ -329,6 +314,40 @@
 .front,
 .back { backface-visibility: hidden;}
 .back{ transform: rotateY(.5turn);}
+/*
+  ---break---
+*/
+@theme inline {
+  --animate-marquee: marquee var(--duration) infinite linear;
+  --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
+  @keyframes marquee {
+  from {
+    transform: translateX(0);
+    }
+  to {
+    transform: translateX(calc(-100% - var(--gap)));
+    }
+  }
+  @keyframes marquee-vertical {
+  from {
+    transform: translateY(0);
+    }
+  to {
+    transform: translateY(calc(-100% - var(--gap)));
+    }
+  }
+}
+/*
+  ---break---
+*/
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
 
 /* Checkbox animation */
 .checkbox-wrapper input[type="checkbox"] {

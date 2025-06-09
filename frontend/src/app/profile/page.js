@@ -5,60 +5,215 @@ import axios from "axios";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { toast } from "react-toastify";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+
 
 export default function ProfilePage() {
   const [userData, setUserData] = useState(null);
+  const [allBadges, setAllBadges] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [profileUpdateModal, setProfileUpdateModal] = useState(false);
   const [selectedBadgeId, setSelectedBadgeId] = useState(null);
+  const [preview, setPreview] = useState(null);
+   const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    password: '',
+    newPassword: '',
+     profileImage: null,
+    badges: []
+  });
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) return toast.error("No token found!");
+  function convertToFormData(jsonObject) {
+  const form = new FormData();
 
-        const response = await axios.get(`${process.env.SERVER_URL}/user`, {
+  for (const key in jsonObject) {
+    if (Object.hasOwnProperty.call(jsonObject, key)) {
+      console.log("key", key);
+      console.log("jsonObject[key]", jsonObject[key]);
+      form.append(key, jsonObject[key]);
+    }
+  }
+
+  return formData;
+}
+  
+async function handlePreviewResize(image){
+  const imagePreviewForm = convertToFormData({ image });
+  const apiUrl = process.env.SERVER_URL + '/preview/image';
+  const token = localStorage.getItem("accessToken");
+  const toastId = toast.loading("Preparing preview...");
+  try {
+    const response = await axios.post(apiUrl, imagePreviewForm, {
+      headers: {
+        'Content-Type': 'multipart/form-data', // Set the content type
+        Authorization: `Bearer ${token}`, // Add the token to the headers
+      },
+    });
+    toast.update(toastId,{
+      isLoading: false, 
+      render:"Image ready for preview",
+      type: "success",
+      autoClose: 5000, 
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Something went wrong... ");
+    toast.update(toastId,{
+      isLoading: false, 
+      render:response.data.message,
+      type: "error",
+      autoClose: 5000, 
+    });
+  }
+}
+
+  function handleUpdateProfileModal(status){
+    setProfileUpdateModal(status);
+  }
+
+//   useEffect(() => {
+//   }, [preview]);
+
+  async function handleFormChange(e) {
+    const { name, value, type, checked } = e.target;
+    if (type === 'file'){
+      setFormData({ ...formData, [name]: e.target.files[0] });
+      const fileReader = new FileReader();
+      fileReader.onloadend = () => {
+        console.log("updating Picture ...");
+        setPreview(fileReader.result); // Set the preview to the file's data URL
+      };
+      // const result = await handlePreviewResize(e.target.files[0]);
+      // fileReader.readAsDataURL(result); // Read the file as a data URL
+      fileReader.readAsDataURL(e.target.files[0]); // Read the file as a data URL
+    } else if (type === 'button') {
+      // Handle checkbox input
+      setFormData((prevData) => {
+        const updatedBadges = prevData.badges.map((badge) => {
+          if (badge.badgeId === value) {
+            // Toggle the isPublic attribute
+            return { ...badge, isPublic: !badge.isPublic };
+          }
+          return badge; // Return the badge unchanged if it doesn't match
+        });
+
+        return {
+          ...prevData,
+          badges: updatedBadges,
+        };
+      });
+    } else {
+      // Handle other inputs
+      console.log(name, value);
+      setFormData({ ...formData, [name]: value });
+    }
+  }
+
+  function convertToFormData(jsonObject) {
+  const form = new FormData();
+
+  for (const key in jsonObject) {
+    if (Object.hasOwnProperty.call(jsonObject, key)) {
+      console.log("key", key);
+      console.log("jsonObject[key]", jsonObject[key]);
+      form.append(key, jsonObject[key]);
+    }
+  }
+
+  return formData;
+}
+
+  async function handleProfileUpdate(e){
+      e.preventDefault();
+    console.log('Form Data:', formData);
+    const formDataObject = convertToFormData(formData);
+    console.log('Form Data:', formDataObject);
+    const apiUrl = process.env.SERVER_URL + '/user/profile';
+    const token = localStorage.getItem("accessToken");
+    let toastId;
+
+    try {
+        toastId = toast.loading("Updating Profile...");
+        const response = await axios.put(apiUrl, formDataObject, {
           headers: {
-            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data', // Set the content type
+            Authorization: `Bearer ${token}`, // Add the token to the headers
           },
         });
 
-        const user = response.data;
+      setProfileUpdateModal(false);
+      await fetchUser();
+      toast.update(toastId,{
+        isLoading: false, 
+        render:response.data.message,
+        type: "success",
+        autoClose: 5000, 
+      });
+    } catch (e) {
+      toast.update(toastId,{
+        isLoading: false, 
+        render:response.data.message,
+        type: "error",
+        autoClose: 5000, 
+      });
+      console.log(e);
+    }
+  }
+const fetchUser = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) return toast.error("No token found!");
 
-        // Fetch all badges
-        const badgesRes = await axios.get(`${process.env.SERVER_URL}/badges`);
-        const allBadges = badgesRes.data.badges;
+    const response = await axios.get(`${process.env.SERVER_URL}/user`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-        // Create badgeMap by id (not badgeId)
-        const badgeMap = {};
-        allBadges.forEach((badge) => {
-          badgeMap[badge.id] = badge;
-        });
+    const user = response.data;
 
-        // Enrich user badges
-        const enrichedBadges = (user.badges || []).map((b) => ({
-          ...badgeMap[b.badgeId],
-          badgeId: b.badgeId,
-          earnedDate: b.earnedDate,
-        }));
+    // Fetch all badges
+    const badgesRes = await axios.get(`${process.env.SERVER_URL}/badges`);
+    setAllBadges(badgesRes.data.badges);
 
-        setUserData({ ...user, badges: enrichedBadges });
+    // Create badgeMap by id (not badgeId)
+    const badgeMap = {};
+    allBadges.forEach((badge) => {
+      badgeMap[badge.id] = badge;
+    });
 
-        // Set default selected badge to latest (first in list)
-        if (enrichedBadges.length > 0) {
-          setSelectedBadgeId(enrichedBadges[0].badgeId);
+    // Enrich user badges
+    const enrichedBadges = (user.badges || []).map((b) => ({
+      ...badgeMap[b.badgeId],
+      badgeId: b.badgeId,
+      earnedDate: b.earnedDate,
+    }));
 
-          //show all details of the first badge
-          console.log("User badges enriched:", enrichedBadges);
-        }
+    setUserData({ ...user, badges: enrichedBadges });
+    setPreview(process.env.SERVER_URL + user.image);
+    console.log("user", user);
+    setFormData({ ...formData, firstName: user.firstName, lastName: user.lastName, badges: user.badges})
 
-        setLoading(false);
-      } catch (err) {
-        console.error("Error fetching user data:", err);
-        toast.error("Failed to load user data");
-        setLoading(false);
-      }
-    };
+    // Set default selected badge to latest (first in list)
+    if (enrichedBadges.length > 0) {
+      setSelectedBadgeId(enrichedBadges[0].badgeId);
+
+      //show all details of the first badge
+      console.log("User badges enriched:", enrichedBadges);
+    }
+
+    setLoading(false);
+  } catch (err) {
+    console.error("Error fetching user data:", err);
+    toast.error("Failed to load user data");
+    setLoading(false);
+  }
+};
+
+  useEffect(() => {
 
     fetchUser();
   }, []);
@@ -87,8 +242,8 @@ export default function ProfilePage() {
           <aside className="md:col-span-1 bg-[#0C0E3C] p-4 rounded-2xl text-center shadow-lg">
             <div className="border-4 border-purple-500 rounded-full w-28 h-28 mx-auto overflow-hidden mb-4">
               <img
-                src="/images/user.png"
-                alt="User"
+                src={ process.env.SERVER_URL + userData.image}
+                alt="User's Profile picture"
                 className="object-cover w-full h-full"
               />
             </div>
@@ -106,7 +261,7 @@ export default function ProfilePage() {
                   userData.badges.map((badge, i) => (
                     <img
                       key={i}
-                      src={`./images/img${badge.badgeId}.png`}
+                      src={process.env.SERVER_URL + `/badge/images/${badge.badgeId}`}
                       alt={badge.badgeId}
                       className={`w-12 h-12 rounded-full border-2 cursor-pointer ${
                         selectedBadgeId === badge.badgeId
@@ -122,23 +277,47 @@ export default function ProfilePage() {
                 )}
               </div>
             </div>
+    <button onClick={() => handleUpdateProfileModal(true)} data-modal-target="crud-modal" data-modal-toggle="crud-modal" className="block text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" type="button">
+    Update modal
+    </button>
+
           </aside>
 
           {/* Main Content */}
           <section className="md:col-span-4 grid gap-6">
+    <div className="grid md:grid-cols-2 md:gap-6">
             {/* Achievements */}
-            <div className="bg-[#0C0E3C] p-6 rounded-2xl shadow-md">
+            <div className="relative z-0 w-full mb-5 group">
               <h3 className="text-xl font-semibold mb-4">Achievements</h3>
-              {/* <ul className="list-disc pl-5 space-y-2 text-sm md:text-base text-gray-300">
-                <li>Completed 6 courses in Red Teaming, OSINT & Forensics</li>
-                <li>Completed Red Teaming Career Path</li>
-                <li>Completed Cyber Titan Workshops (Level 1 & 2)</li>
-                <li>6 months fellowship as Red Teamer at Deepcytes</li>
-              </ul> */}
+              { userData.achievements.length > 0 ? (
+              <ol className="list-none pl-5 space-y-2 text-sm md:text-base text-gray-300">
+                { userData.achievements.map((a, i) => (
+                <li key={i} className="bg-[#0c0e3c] text-blue-100 text-xs font-semibold px-2.5 py-0.5 rounded" >{a}</li>
+              ))}
+              </ol>
+              ) : (
               <p>
                   You haven’t earned any Achievements yet.
                 </p>
+              )}
             </div>
+
+            {/* Courses */}
+            <div className="relative z-0 w-full mb-5 group">
+              <h3 className="text-xl font-semibold mb-4">Courses</h3>
+    {userData.courses.length > 0 ? (
+               <ul className="list-none pl-5 space-y-2 text-sm md:text-base text-gray-300">
+      {userData.courses.map((c,i) => (
+                <li key={i} className="bg-[#0c0e3c] text-blue-100 text-xs font-semibold px-2.5 py-0.5 rounded" >{c}</li>
+      ))}
+              </ul>
+    ): (
+              <p>
+                  You haven’t Done any courses yet.
+                </p>
+    )}
+            </div>
+    </div>
 
             {/* Badge Details */}
             <div className="bg-[#0C0E3C] p-6 rounded-2xl shadow-md">
@@ -149,7 +328,7 @@ export default function ProfilePage() {
                 </h3>
                 <div className="grid md:grid-cols-3 gap-6 items-center">
                   <img
-                    src={`/images/img${selectedBadge.badgeId}.png`}
+                    src={process.env.SERVER_URL + `/badge/images/${selectedBadge.badgeId}`}
                     alt={`Badge ${selectedBadge.badgeId}`}
                     className="w-24 h-24 mx-auto md:mx-0"
                   />
@@ -173,11 +352,11 @@ export default function ProfilePage() {
                       </div>
                       <div>
                         <p className="text-white  font-semibold">Skills Earned</p>
-                        <ul className="list-disc bg-violet-500 rounded-md list-inside text-gray-300 text-sm">
+                        <div className="flex flex-wrap ">
                           {selectedBadge.skillsEarned?.map((skill, idx) => (
-                            <li key={idx}>{skill}</li>
+                            <span key={idx} className="bg-blue-300 text-blue-800 text-xs font-semibold px-2.5 py-0.5 m-1 rounded" >{skill}</span>
                           ))}
-                        </ul>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -199,23 +378,88 @@ export default function ProfilePage() {
               </div>
             )}
           </div>
-
-            {/* Courses */}
-            <div className="bg-[#0C0E3C] p-6 rounded-2xl shadow-md">
-              <h3 className="text-xl font-semibold mb-4">Courses</h3>
-              {/* <ul className="list-disc pl-5 space-y-2 text-sm md:text-base text-gray-300">
-                <li>Cybersecurity Essentials</li>
-                <li>Graduation in Social Engineering</li>
-                <li>Spyware & Ransomware Deep Dive</li>
-                <li>iOS & Android Security Fundamentals</li>
-              </ul> */}
-              <p>
-                  You haven’t Done any courses yet.
-                </p>
-            </div>
           </section>
         </div>
       </main>
+
+    { profileUpdateModal ? (
+<div id="crud-modal" tabIndex="-1" aria-hidden="true" className={("") + " bg-gray-900/50  backdrop-blur-md overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 flex justify-center items-center w-full md:inset-0 max-h-full" }>
+    <div className="relative p-4 w-full max-w-md max-h-full">
+        <div className="relative bg-[#00011E] rounded-lg shadow-sm dark:bg-gray-700">
+            <div className="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
+                <h3 className="text-lg font-semibold text-white-900 dark:text-white">
+                    Update Profile
+                </h3>
+                <button type="button" onClick={() => handleUpdateProfileModal(false)} className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-toggle="crud-modal">
+                    <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                        <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                    </svg>
+                    <span className="sr-only">Close modal</span>
+                </button>
+            </div>
+            <form className="p-4 md:p-5" onSubmit={handleProfileUpdate} >
+                <div className="grid gap-4 mb-4 grid-cols-1">
+                    <div className="flex flex-row items-center justify-space-evenly w-full col-span-2">
+                        <a href="#">
+                            <img className="rounded-full h-20 w-20" src={preview} alt="Profile Image"/>
+                        </a>
+                        <div>
+                            <label htmlFor="dropzone-file" className="text-white bg-blue-600 hover:bg-blue-700  focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-xs px-3 py-1.5 focus:outline-none dark:focus:ring-blue-800">Change Picture
+                  <input
+                    id="dropzone-file"
+                    type="file"
+                    name="profileImage"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleFormChange}
+                  />
+      </label>
+                        </div>
+                    </div>
+                    <div className="col-span-2">
+                        <label htmlFor="name" className="block mb-2 text-sm font-medium text-gray-900 text-white">First Name</label>
+                        <input type="text" value={formData.firstName} onChange={handleFormChange} name="firstName" id="firstName" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="Type first name" />
+                    </div>
+                    <div className="col-span-2">
+                        <label htmlFor="name" className="block mb-2 text-sm font-medium text-gray-900 text-white">Last Name</label>
+                        <input type="text" value={formData.lastName} onChange={handleFormChange} name="lastName" id="lastName" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="Type last name" />
+                    </div>
+                    <div>
+                        <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-900 text-white">Your password</label>
+                        <input value={formData.password} type="password" onChange={handleFormChange} name="password" id="password" placeholder="••••••••" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" /> 
+                    </div>
+
+                    <div>
+                        <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-900 text-white">New password</label>
+                        <input value={formData.newPassword} type="password" onChange={handleFormChange} name="newPassword" id="newPassword" placeholder="••••••••" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" />
+                    </div>
+
+                    <div className="col-span-2 flex flex-col" >
+                    { formData.badges.length > 0 ? (
+                      <>
+                      <label htmlFor="visible-badges" className="text-blue-100" > Check Badges you want visible by other users </label>
+                      <div id="visible-badges" className="flex flex-col items-start mx-5 space-y-2 space-x-2">
+                        { formData.badges.map((b, i) => (
+                          <span key={i} className="p-x-2.5 flex justify-space-between" >
+                          <Checkbox id={b.badgeId} name="badges" value={b.badgeId} checked={b.isPublic === true} type="button" onClick={handleFormChange} />
+                          <Label htmlFor={b.badgeId}>{allBadges.find(a => a.id == b.badgeId ).name}</Label>
+                          </span>
+                          ))}
+                      </div>
+                      </>
+                    ) : (null )}
+                    </div>
+                </div>
+
+                <button type="submit" className="text-white inline-flex items-center bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                    <svg className="me-1 -ms-1 w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd"></path></svg>
+                    Update
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+    ) : ( null )}
       <Footer />
     </>
   );

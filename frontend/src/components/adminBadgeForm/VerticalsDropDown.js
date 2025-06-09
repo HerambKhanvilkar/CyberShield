@@ -52,7 +52,7 @@ const VerticalsDropDown = ({ verticals, formData, handleChange }) => {
     <div id="dropLeveldownSearchButton" data-dropdown-toggle="dropdownSearch" data-dropdown-placement="bottom" className="min-h-10 rounded-md border border-input text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2" type="text" >
     <div className="relative flex flex-wrap gap-1" >
       {formData.vertical !== '' ? (
-        <div className="inline-flex items-center border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80 data-[disabled]:bg-muted-foreground data-[disabled]:text-muted data-[disabled]:hover:bg-muted-foreground data-[fixed]:bg-muted-foreground data-[fixed]:text-muted data-[fixed]:hover:bg-muted-foreground" >
+        <div className="bg-blue-100 text-blue-800 text-xs font-semibold p-2.5 m-2.5 rounded" >
         {formData.vertical}
         </div>
                 ) : 
@@ -69,7 +69,7 @@ const VerticalsDropDown = ({ verticals, formData, handleChange }) => {
 
     <div className="relative"> 
       <div className={(isSkillsDropDownOpen ? "display" : "hidden" ) + " relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-[selected='true']:bg-accent aria-[selected='true']:text-accent-foreground data-[disabled='true']:pointer-events-none data-[disabled='true']:opacity-50"}>
-      <div className="p-1 text-foreground h-full overflow-auto" aria-labelledby="dropdownSearchButton" >
+      <div className="p-1 text-foreground w-full h-50  overflow-y-auto" aria-labelledby="dropdownSearchButton" >
     <div role="group">
         {filteredSkills.length > 0 ? (
           filteredSkills.map((vertical, index) => (
