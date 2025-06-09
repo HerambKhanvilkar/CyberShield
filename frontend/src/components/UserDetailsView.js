@@ -130,7 +130,7 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
       }
     );
     // Update user details in parent component
-    // updateUserDetails(userEmail, response.data.user);
+    //updateUserDetails(userEmail, response.data.user);
 
     toast.success(
       <div>
@@ -166,45 +166,44 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
             className="flex"
           />
           <label className="checkbox-wrapper mt-3">
-  <input
-    id="send-mail-checkbox"
-    type="checkbox"
-    checked={form.sendMail}
-    onChange={(e) => handleChange("sendMail", e.target.checked)}
-    name="sendMail"
-  />
-  <span className="terms-label">
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 200 200"
-      className="checkbox-svg"
-    >
-      <mask fill="white" id="checkbox-mask">
-        <rect height="200" width="200" />
-      </mask>
-      <rect
-        mask="url(#checkbox-mask)"
-        strokeWidth="40"
-        className="checkbox-box"
-        height="200"
-        width="200"
-      />
-      <path
-        strokeWidth="15"
-        d="M52 111.018L76.9867 136L149 64"
-        className="checkbox-tick"
-      />
-    </svg>
-    <span className="label-text text-sm">Send mail to user</span>
-  </span>
-</label>
-
+            <input
+              id="send-mail-checkbox"
+              type="checkbox"
+              checked={form.sendMail}
+              onChange={(e) => handleChange("sendMail", e.target.checked)}
+              name="sendMail"
+            />
+            <span className="terms-label">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 200 200"
+                className="checkbox-svg"
+              >
+                <mask fill="white" id="checkbox-mask">
+                  <rect height="200" width="200" />
+                </mask>
+                <rect
+                  mask="url(#checkbox-mask)"
+                  strokeWidth="40"
+                  className="checkbox-box"
+                  height="200"
+                  width="200"
+                />
+                <path
+                  strokeWidth="15"
+                  d="M52 111.018L76.9867 136L149 64"
+                  className="checkbox-tick"
+                />
+              </svg>
+              <span className="label-text text-sm">Send mail to user</span>
+            </span>
+          </label>
         </div>
 
         {/* Badge actions */}
-        <AssignBadgePopUp user={selectedUser} updateUserDetails={updateUserDetails} />
-        <RevokeBadgePopUp user={selectedUser} updateUserDetails={updateUserDetails} />
+        <AssignBadgePopUp user={selectedUser} updateUserDetails={updateUserDetails}/>
+        <RevokeBadgePopUp user={selectedUser} updateUserDetails={updateUserDetails}/>
       </div>
 
       <div className="w-full flex flex-col lg:flex-row mt-2 gap-4">

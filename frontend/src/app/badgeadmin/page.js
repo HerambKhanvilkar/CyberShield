@@ -108,11 +108,11 @@ export default function SettingsPage() {
     setSearchResults(Array.isArray(data)  ? data : []);
   };
 
-  const updateUserDetails = (email, updatedUser) => {
-    setUsers(prev =>
-      prev.map(user => (user.email === email ? updatedUser : user))
-    );
-  };
+const updateUserDetails = (email, updatedUser) => {
+  setUsersData(prev =>
+    prev.map(user => (user.email === email ? updatedUser : user))
+  );
+};
 
   const renderTabContent = () => {
     switch (activeTab) {
