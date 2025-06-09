@@ -35,6 +35,7 @@ const SkillsDropdown = ({ skillsEarned, formData, handleChange }) => {
   }, []);
 
   const handleSearchChange = (event) => {
+    if(!isSkillsDropDownOpen) setIsSkillsDropDownOpen(true)
     console.log('aksdflajsd');
     setSearchTerm(event.target.value)
   };
@@ -70,8 +71,8 @@ const SkillsDropdown = ({ skillsEarned, formData, handleChange }) => {
 
 
     <div className="relative"> 
-      <div className={(isSkillsDropDownOpen ? "display" : "hidden" ) + " relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-[selected='true']:bg-accent aria-[selected='true']:text-accent-foreground data-[disabled='true']:pointer-events-none data-[disabled='true']:opacity-50"}>
-      <div className="p-1 text-foreground h-full overflow-auto" aria-labelledby="dropdownSearchButton" >
+      <div className={(isSkillsDropDownOpen ? "display" : "hidden" ) + " relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none border-1 border-white-100"}>
+      <div className="p-1 text-foreground w-full h-50 overflow-y-auto" aria-labelledby="dropdownSearchButton" >
     <div role="group">
         {filteredSkills.length > 0 ? (
           filteredSkills.map((skill, index) => (
@@ -79,7 +80,7 @@ const SkillsDropdown = ({ skillsEarned, formData, handleChange }) => {
             { !formData.skillsEarned.includes(skill) ? (
               <div 
             onClick={() => handleChange({ target: { name: "skillsEarned", value: skill, type: 'checkbox', checked: true} })} 
-            className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-[selected='true']:bg-accent aria-[selected='true']:text-accent-foreground data-[disabled='true']:pointer-events-none data-[disabled='true']:opacity-50" data={skill}>
+            className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none " data={skill}>
                   {skill}
               </div>
             ) : null }
@@ -89,7 +90,8 @@ const SkillsDropdown = ({ skillsEarned, formData, handleChange }) => {
           <p className="text-gray-400">No skills available.</p>
         )}
       <div>
-        <div onClick={() => { handleChange({ target: { name: "skillsEarned", value: searchTerm, type: 'checkbox', checked: true} }); setSearchTerm('')} } className={(searchTerm !== '' ? 'display' : 'hidden') + " relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-[selected='true']:bg-accent aria-[selected='true']:text-accent-foreground data-[disabled='true']:pointer-events-none data-[disabled='true']:opacity-50"} id="radix-:rvr:" cmdk-item="" role="option" aria-disabled="false" aria-selected="false" data-disabled="false" data-selected="false" data-value="n">Create {'"' + searchTerm + '"' }</div> </div>
+        <div onClick={() => { handleChange({ target: { name: "skillsEarned", value: searchTerm, type: 'checkbox', checked: true} }); setSearchTerm('')} } className={(searchTerm !== '' ? 'display' : 'hidden') + " relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-[selected='true']:bg-accent aria-[selected='true']:text-accent-foreground data-[disabled='true']:pointer-events-none data-[disabled='true']:opacity-50"} id="radix-:rvr:" cmdk-item="" role="option" aria-disabled="false" aria-selected="false" data-disabled="false" data-selected="false" data-value="n">Create {'"' + searchTerm + '"' }</div> 
+    </div>
       </div>
     </div>
     </div>

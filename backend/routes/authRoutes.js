@@ -139,7 +139,7 @@ router.post("/login", loginValidationRules, validateRequest, async (req, res) =>
     const { email, password } = req.body;
     const user = await User.findOne({
       $or: [{ email }, { username: email }]
-    });
+    }).select('password');
 
     if (!user) return res.status(400).json({ message: " No User Invalid Credentials" });
 
@@ -156,10 +156,11 @@ router.post("/login", loginValidationRules, validateRequest, async (req, res) =>
         { $set: { refreshToken } }
       );
 
-    user.save();
+    await user.save();
 
     // Fetch earned badges
-    const userBadges = user;
+    const userBadges = user.toJSON();
+    console.log(userBadges);
     const allBadges = userBadges
       ? await Badge.find({ id: { $in: userBadges.badges.map(b => b.badgeId) } })
       : [];

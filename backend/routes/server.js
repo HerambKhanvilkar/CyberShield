@@ -7,16 +7,48 @@ const csv = require('csv-parser');
 const { Parser } = require('json2csv');
 const fs = require('fs');
 const path = require('path');
-// Set up multer for file uploads
-const upload = multer({ dest: '../uploads/' });
+const sharp = require('sharp');
+// Set up multer for image Preview
+const uploadPreviewImage = multer({
+  limits: { fileSize: 5 * 1000 * 1000 }, // 5MB max file size
+  fileFilter: function(req, file, callback) {
+    let fileExtension = (file.originalname.split('.')[file.originalname.split('.').length-1]).toLowerCase(); // convert extension to lower case
+    if (["png", "jpg", "jpeg"].indexOf(fileExtension) === -1) {
+      return callback('Wrong file type', false);
+    }
+    file.extension = fileExtension.replace(/jpeg/i, 'jpg'); // all jpeg images to end .jpg
+    callback(null, true);
+  },
+  dest: 'previews/' 
+});
+
+// Profile update
+const uploadImage = multer({ 
+  limits: { fileSize: 5 * 1000 * 1000 }, // 5MB max file size
+  fileFilter: function(req, file, callback) {
+    let fileExtension = (file.originalname.split('.')[file.originalname.split('.').length-1]).toLowerCase(); // convert extension to lower case
+    if (["png", "jpg", "jpeg"].indexOf(fileExtension) === -1) {
+      return callback('Wrong file type', false);
+    }
+    file.extension = fileExtension.replace(/jpeg/i, 'jpg'); // all jpeg images to end .jpg
+    callback(null, true);
+  },
+  dest: 'users/' 
+});
+
 // Import models from the models directory
 const User = require("../models/User");
 const Badge = require("../models/Badge");
 const BadgeImage = require("../models/BadgeImage");
+const UserImage = require("../models/UserImage");
 const BadgesEarned = require("../models/BadgesEarned");
 const { generateToken, authenticateJWT, isAdmin } = require('../middleware/auth');
 
 const getUsername = async (authHeader) => {
+  if(!authHeader){
+    console.log('No auth Header');
+    return null;
+  }
   const token = authHeader.split(" ")[1];
   const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
@@ -86,7 +118,7 @@ router.get("/verify-badge/:id/:username/:timestamp", async (req, res) => {
     
     // Check if user has this specific badge
     const badgeEarned = user.badges.find(
-      b => b.badgeId == id
+      b => (b.badgeId == id && b.isPublic === true)
     );
     
     if (!badgeEarned) {
@@ -514,6 +546,128 @@ router.get('/users/sample', authenticateJWT, async (req, res) => {
   res.attachment(fileName);
   res.send(csv);
 });
+
+// Route for updating profile info.
+router.put('/user/profile', authenticateJWT, uploadImage.single('profileImage'), async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const email = await getUsername(authHeader);
+    const user = await User.findOne({ email });
+    var userImage = await UserImage.findOne({email});
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const { firstName, lastName, password, newPassword, badges}  = req.body;
+
+    if (!firstName && !lastName && !password && !req.file && !badges) {
+      return res.status(404).json({ message: "No data sent for Update. Try again." });
+    }
+
+    if(firstName) { user.firstName = firstName }
+    if(lastName) { user.lastName = lastName }
+    if(badges) { user.badges = user.badges.map(b => {
+      const formBadge = badges.find(f => f.badgeId == b.badgeId)
+      if (formBadge === undefined){ return b }
+      return { ...b, isPublic: formBadge.isPublic }
+    })}
+    if (password){
+      // Verify password
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch){
+        console.log(new Date() + "Incorrect password during password update for user" + user.email);
+        return res.status(404).json({ message: "Incorrect password." });
+      }
+
+      // Hash the password before storing
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      user.password = hashedPassword;
+    }
+
+    if (req.file){
+      console.log("resizing...");
+
+      const image = sharp(req.file.path);
+      image.metadata() // get image metadata for size
+        .then(function(metadata) {
+          if (metadata.width > 400 || metadata.height > 400) {
+            return image.resize({ width: 400, height: 400 }).toBuffer(); // resize if too big
+          } else {
+            return image.toBuffer();
+          }
+        })
+        .then(function(data) { // upload to s3 storage
+          const userImageObj = {
+            id: user._id,
+            email: user["email"],
+            image: data,
+            contentType: req.file.mimetype // Use the uploaded file's mimetype
+          };
+
+          if (!userImage){
+            userImage =  new UserImage(userImageObj);
+          } else {
+            userImage["image"] = data;            
+            userImage["contentType"]= req.file.mimetype;
+          }
+          console.log('userImageObj', userImageObj);
+          userImage.save();
+        })
+    }
+
+    user.set("image", "/user/profile/image/" + userImage._id);
+    user.save();
+    return res.status(200).json({ message: "Profile Updated successfully." });
+  } catch (e) {
+    console.log("Error during profile update", e);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+
+});
+
+router.post("/preview/image", authenticateJWT, uploadPreviewImage.single('image'), async (req, res) => {
+    if (req.file){
+      console.log("resizing...");
+
+      const image = sharp(req.file.path);
+      image.metadata() // get image metadata for size
+        .then(function(metadata) {
+          if (metadata.width > 400 || metadata.height > 400) {
+            return image.resize({ width: 400, height: 400 }).toBuffer(); // resize if too big
+          } else {
+            return image.toBuffer();
+          }
+        })
+        .then(function(data) { // upload to s3 storage
+          res.set('Content-Type', req.file.mimetype);
+          res.send(data);
+        })
+    }
+});
+
+
+// Endpoint to get badge images
+router.get("/user/profile/image/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      if (!id) {
+        return res.status(404).json({ message: "Invalid identifier!" });
+      }
+
+      const userImage = await UserImage.findOne({  });
+      if (!userImage) {
+        return res.status(404).json({ message: "Image not found" });
+      }
+      res.set('Content-Type', userImage.image.contentType);
+      res.send(userImage.image);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+});
+
+
 
 
 module.exports = router;

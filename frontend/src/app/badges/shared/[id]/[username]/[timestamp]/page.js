@@ -7,6 +7,47 @@ import { CheckCircle, Shield } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
+import { cn } from "@/lib/utils";
+import { Marquee } from "@/components/magicui/marquee";
+
+const reviews = [
+  {
+    name: "Jack",
+    username: "@jack",
+    body: "I've never seen anything like this before. It's amazing. I love it.",
+    img: "https://avatar.vercel.sh/jack",
+  },
+  {
+    name: "Jill",
+    username: "@jill",
+    body: "I don't know what to say. I'm speechless. This is amazing.",
+    img: "https://avatar.vercel.sh/jill",
+  },
+  {
+    name: "John",
+    username: "@john",
+    body: "I'm at a loss for words. This is amazing. I love it.",
+    img: "https://avatar.vercel.sh/john",
+  },
+  {
+    name: "Jane",
+    username: "@jane",
+    body: "I'm at a loss for words. This is amazing. I love it.",
+    img: "https://avatar.vercel.sh/jane",
+  },
+  {
+    name: "Jenny",
+    username: "@jenny",
+    body: "I'm at a loss for words. This is amazing. I love it.",
+    img: "https://avatar.vercel.sh/jenny",
+  },
+  {
+    name: "James",
+    username: "@james",
+    body: "I'm at a loss for words. This is amazing. I love it.",
+    img: "https://avatar.vercel.sh/james",
+  },
+];
 
 const SharedBadgePage = () => {
   const { id, username, timestamp } = useParams();
@@ -55,6 +96,54 @@ const SharedBadgePage = () => {
 
     fetchBadgeData();
   }, [id, username, timestamp]);
+
+
+const ReviewCard = ({
+  name
+}) => {
+  return (
+    <figure
+      className={cn(
+        "relative h-full w-max cursor-pointer overflow-hidden rounded-xl border p-4",
+        // light styles
+        "border-gray-950/[.1] bg-gray-950/[.01] hover:bg-gray-950/[.05]",
+        // dark styles
+        "dark:border-gray-50/[.1] dark:bg-gray-50/[.10] dark:hover:bg-gray-50/[.15]",
+      )}
+    >
+      <div className="flex flex-row items-center gap-2">
+        <div className="flex flex-col">
+          <figcaption className="text-sm font-medium dark:text-white">
+            {name}
+          </figcaption>
+        </div>
+      </div>
+    </figure>
+  );
+};
+
+function MarqueeDemo({ skills }) {
+const firstRow = skills.slice(0, skills.length / 2);
+const secondRow = skills.slice(skills.length / 2);
+  return (
+    <div className="relative flex w-full flex-col items-center justify-center overflow-hidden">
+      <Marquee pauseOnHover className="[--duration:20s]">
+        {firstRow.map((skill, i) => (
+          <ReviewCard key={i} name={skill} />
+        ))}
+      </Marquee>
+      <Marquee reverse pauseOnHover className="[--duration:20s]">
+        {secondRow.map((skill, i) => (
+          <ReviewCard key={i} name={skill} />
+        ))}
+      </Marquee>
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-1/4 bg-gradient-to-r from-background"></div>
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-1/4 bg-gradient-to-l from-background"></div>
+    </div>
+  );
+}
+
+
   
   const formatDate = (ts) => {
     const date = new Date(parseInt(ts) * 1000);
@@ -80,11 +169,9 @@ const SharedBadgePage = () => {
   const BadgeDescription = ({ badge }) => (
     <div className="space-y-2 text-white">
       <h2 className="text-2xl font-bold">
-        <span className="text-[#38C8F8]">{badge.name}</span> -{" "}
-        <span className="text-gray-400 text-3xl uppercase">{user}</span>
+        <div className="text-[#38C8F8] text-3xl uppercase">{user}</div>
+        <div className="text-gray-400 ">{badge.name}</div>
       </h2>
-      <p className="italic text-gray-500 hover:text-[#38C8F8]">Course: {badge.course}</p>
-      <p className='text-white hover:text-[#38C8F8]'>{truncateText(badge.description,200)}</p>
     </div>
   );
 
@@ -111,25 +198,25 @@ const BadgeSkillsList = ({ skills }) => (
 );
 
 const BadgeMetrics = ({ badge }) => (
-  <div className="w-full mt-4 text-center text-green-300 flex flex-col gap-2">
+  <div className="w-full mt-4 text-center text-green-300 flex flex-col items-center gap-2">
     {/* Row: Level & Earners side by side */}
-    <div className="flex gap-2">
+    <div className="flex md:flex-col gap-2">
       {/* Level */}
-      <div className="flex-1 p-2 shadow-md border border-[#38C8F8] rounded-md bg-black/60">
-        <div className="text-sm uppercase text-gray-500 hover:text-[#38C8F8]">Level</div>
+      <div className="flex flex-col items-center p-2 shadow-md rounded-md bg-black/60">
+  <svg width="32px" height="32px" viewBox="0 0 512.00 512.00" xmlns="http://www.w3.org/2000/svg" fill="#8cbfde" stroke="#8cbfde" stroke-width="26.624000000000002"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" stroke="#05ffee" stroke-width="23.552"><path fill="#000000" d="M255 471L91.7 387V41h328.6v346zm-147.3-93.74L255 453l149.3-75.76V57H107.7v320.26zm146.43-65.76l98.27-49.89v-49.9l-98.14 49.82-94.66-48.69v50zm.13 32.66l-94.66-48.69v50l94.54 48.62 98.27-49.89v-49.9z"></path></g><g id="SVGRepo_iconCarrier"><path fill="#000000" d="M255 471L91.7 387V41h328.6v346zm-147.3-93.74L255 453l149.3-75.76V57H107.7v320.26zm146.43-65.76l98.27-49.89v-49.9l-98.14 49.82-94.66-48.69v50zm.13 32.66l-94.66-48.69v50l94.54 48.62 98.27-49.89v-49.9z"></path></g></svg>
         <div className="text-lg text-white hover:text-[#38C8F8] font-semibold">{badge.level || 'N/A'}</div>
       </div>
 
       {/* Earners */}
-      <div className="flex-1 p-2 shadow-md border border-[#38C8F8] rounded-md bg-black/60">
-        <div className="text-sm uppercase text-gray-500 hover:text-[#38C8F8]">Earners</div>
+      <div className="flex flex-col items-center p-2 shadow-md rounded-md bg-black/60">
+  <svg width="32px" height="32px" viewBox="0 0 512.00 512.00" xmlns="http://www.w3.org/2000/svg" fill="#8cbfde" stroke="#8cbfde" stroke-width="26.624000000000002"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" stroke="#05ffee" stroke-width="23.552"><path fill="#000000" d="M255 471L91.7 387V41h328.6v346zm-147.3-93.74L255 453l149.3-75.76V57H107.7v320.26zm146.43-65.76l98.27-49.89v-49.9l-98.14 49.82-94.66-48.69v50zm.13 32.66l-94.66-48.69v50l94.54 48.62 98.27-49.89v-49.9z"></path></g><g id="SVGRepo_iconCarrier"><path fill="#000000" d="M255 471L91.7 387V41h328.6v346zm-147.3-93.74L255 453l149.3-75.76V57H107.7v320.26zm146.43-65.76l98.27-49.89v-49.9l-98.14 49.82-94.66-48.69v50zm.13 32.66l-94.66-48.69v50l94.54 48.62 98.27-49.89v-49.9z"></path></g></svg>
         <div className="text-lg text-white hover:text-[#38C8F8] font-semibold">43</div>
       </div>
     </div>
 
     {/* Row: Vertical full-width below */}
-    <div className="p-2 shadow-md border border-[#38C8F8] rounded-md bg-black/60">
-      <div className="text-sm uppercase text-gray-500 hover:text-[#38C8F8]">Vertical</div>
+    <div className="flex flex-col items-center p-2 shadow-md rounded-md bg-black/60">
+  <svg width="32px" height="32px" viewBox="0 0 512.00 512.00" xmlns="http://www.w3.org/2000/svg" fill="#8cbfde" stroke="#8cbfde" stroke-width="26.624000000000002"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" stroke="#05ffee" stroke-width="23.552"><path fill="#000000" d="M255 471L91.7 387V41h328.6v346zm-147.3-93.74L255 453l149.3-75.76V57H107.7v320.26zm146.43-65.76l98.27-49.89v-49.9l-98.14 49.82-94.66-48.69v50zm.13 32.66l-94.66-48.69v50l94.54 48.62 98.27-49.89v-49.9z"></path></g><g id="SVGRepo_iconCarrier"><path fill="#000000" d="M255 471L91.7 387V41h328.6v346zm-147.3-93.74L255 453l149.3-75.76V57H107.7v320.26zm146.43-65.76l98.27-49.89v-49.9l-98.14 49.82-94.66-48.69v50zm.13 32.66l-94.66-48.69v50l94.54 48.62 98.27-49.89v-49.9z"></path></g></svg>
       <div className="text-lg text-white hover:text-[#38C8F8] font-semibold">{badge.vertical || 'General'}</div>
     </div>
   </div>
@@ -177,21 +264,29 @@ const BadgeMetrics = ({ badge }) => (
 
             {/* Right side (or full stack on mobile): Description & Skills */}
             <div className="flex flex-col flex-grow gap-4 md:w-2/3">
-              {/* On mobile, description appears after image + metrics naturally */}
-              <BadgeDescription badge={badge} />
-              <BadgeSkillsList skills={badge.skillsEarned} />
-              {/* Passing Criteria */}
-              <div className="bg-black/60 border border-[#38C8F8] rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
-                <strong className='text-gray-500 hover:text-white'>Passing Criteria:</strong> has scored at least 70% in their assessment and completed all mandatory tasks to earn this badge.
-              </div>
               {/* Authorized Byline */}
               <div className="text-xs text-gray-400 italic text-right pr-1">
+                Authorized and issued by {/* <span className="text-[#38C8F8] not-italic">DeepCytes.</span> */}
                 <img
                   src="https://static.wixstatic.com/media/e48a18_c949f6282e6a4c8e9568f40916a0c704~mv2.png/v1/crop/x_0,y_151,w_1920,h_746/fill/w_203,h_79,fp_0.50_0.50,q_85,usm_0.66_1.00_0.01,enc_auto/For%20Dark%20Theme.png"
                   alt="Authorized Badge"
                   className="ml-auto w-20 mb-2 mr-1"
                 />
-                Authorized and issued by <span className="text-[#38C8F8] not-italic">DeepCytes.</span>
+              </div>
+              {/* On mobile, description appears after image + metrics naturally */}
+              <BadgeDescription badge={badge} />
+              <div className="grid md:grid-cols-1 md:gap-6">
+  <MarqueeDemo skills={badge.skillsEarned} />
+              </div>
+  { /* <BadgeSkillsList skills={badge.skillsEarned} /> */}
+              {/* Passing Criteria */}
+              <div className="grid md:grid-cols-2 md:gap-6">
+              <div className="relative z-0 w-full mb-5 group bg-black/60 border border-[#38C8F8] rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
+                <strong className='text-gray-500 hover:text-white'>Passing Criteria:</strong> has scored at least 70% in their assessment and completed all mandatory tasks to earn this badge.
+              </div>
+              <div className="relative z-0 w-full mb-5 group bg-black/60 border border-[#38C8F8] rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
+                <strong className='text-gray-500 hover:text-white'>Course name:</strong> {badge.course}
+              </div>
               </div>
             </div>
           </div>

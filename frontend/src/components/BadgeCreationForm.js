@@ -117,6 +117,7 @@ function BadgeCreationForm () {
   };
     fetchSkills();
     fetchVerticals();
+    fetchCourses();
 
   }, []);
 

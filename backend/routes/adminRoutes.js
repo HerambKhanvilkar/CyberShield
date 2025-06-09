@@ -199,7 +199,7 @@ router.put(
   "/badge/import", 
   authenticateJWT, 
   uploadImage.single('image'), 
-  asyncWrapper(async (req, res, next) => {
+  async (req, res, next) => {
   try {
 
     const { id, course, name, description, level, vertical, skillsEarned } = req.body;
@@ -260,9 +260,7 @@ router.put(
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
   }
-  })
-);
-
+});
 
 // upload badge
 router.post(
@@ -331,7 +329,7 @@ router.post(
 )
 
 // Get Courses
-router.get("/badges/Course", async (req, res) => {
+router.get("/badges/courses", async (req, res) => {
   try {
     const uniqueCourses = await Badge.aggregate([
       { $group: { _id: "$course" } }, // Group by skillsEarned to get unique values
