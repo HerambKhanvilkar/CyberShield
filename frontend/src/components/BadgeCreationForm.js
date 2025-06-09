@@ -493,6 +493,7 @@ useEffect(() => {
                   src={preview}
                   width={300}
                   height={300}
+                  alt='Image Preview'
                 />
                 </div>
                 </div>

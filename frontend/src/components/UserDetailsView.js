@@ -148,7 +148,7 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
   }
 
   return (
-    <div className="overflow-y-auto scrollbar text-white">
+    <div className="text-white">
       <h2 className="text-xl font-bold mb-4">User Details</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-2 md:gap-8 mb-3">
         <EditableField label="First Name" value={form.firstName} onChange={(val) => handleChange("firstName", val)} />
@@ -156,7 +156,7 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
         <EditableField label="Email" value={form.email} onChange={(val) => handleChange("email", val)} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full items-start md:items-center">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 w-full items-start md:items-center">
         {/* Password field with checkbox */}
         <div className="flex flex-col w-full">
           <EditableField
@@ -165,16 +165,41 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
             onChange={(val) => handleChange("password", val)}
             className="flex"
           />
-          <label className="inline-flex items-center space-x-2 mt-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={form.sendMail}
-              onChange={(e) => handleChange("sendMail", e.target.checked)}
-              className="form-checkbox text-blue-500"
-              name="sendMail"
-            />
-            <span>send mail to user</span>
-          </label>
+          <label className="checkbox-wrapper mt-3">
+  <input
+    id="send-mail-checkbox"
+    type="checkbox"
+    checked={form.sendMail}
+    onChange={(e) => handleChange("sendMail", e.target.checked)}
+    name="sendMail"
+  />
+  <span className="terms-label">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 200 200"
+      className="checkbox-svg"
+    >
+      <mask fill="white" id="checkbox-mask">
+        <rect height="200" width="200" />
+      </mask>
+      <rect
+        mask="url(#checkbox-mask)"
+        strokeWidth="40"
+        className="checkbox-box"
+        height="200"
+        width="200"
+      />
+      <path
+        strokeWidth="15"
+        d="M52 111.018L76.9867 136L149 64"
+        className="checkbox-tick"
+      />
+    </svg>
+    <span className="label-text text-sm">Send mail to user</span>
+  </span>
+</label>
+
         </div>
 
         {/* Badge actions */}

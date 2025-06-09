@@ -65,7 +65,7 @@ function handleBadgeFilter(filter){
 function AllBadgeMyBadgeFilter() {
   return (
     // add fixed  to the nav class name to make the navbar stick to the bottom of the screen
-      <div className={(earnedBadges.length > 0 ? "display" : "hidden") + " container mx-auto mt-2 flex items-center justify-end space-x-5 "}>
+      <div className={(earnedBadges.length > 0 ? "display" : "hidden") + " container mx-auto mt-2 flex items-center justify-center md:justify-end md:-mx-4 space-x-5 "}>
         <Button onClick={() => handleBadgeFilter('all')} size="icon" className={filterCss['allCss']} variant={filterCss['allVariant']}>
           All Badges
         </Button>
@@ -437,7 +437,8 @@ const BadgeMetrics = () => (
       {/* Main content with responsive layout */}
       <main className="flex-grow" key={badgeId}>
         {/* Desktop Layout */}
-        <div className="hidden md:hidden lg:flex md:flex-row max-w-7xl mx-auto p-6 gap-6">
+        <div className="hidden md:hidden lg:flex md:flex-row max-w-7xl min-h-[calc(100vh-250px)] mx-auto p-6 gap-6">
+          
           <section className="md:w-2/6 my-auto space-y-6">
             <BadgeDescription />
             <RelatedBadges />
@@ -446,6 +447,43 @@ const BadgeMetrics = () => (
           &nbsp;
 
           <section className="md:w-2/6 flex flex-col items-center space-y-6">
+            <div>
+              {/* Top earned badge pill */}
+              {earnedBadge && (
+                <div className="z-50">
+                  <div
+                    className="
+                      bg-green-700 bg-opacity-30
+                      text-green-100
+                      rounded-full
+                      px-4 py-1.5
+                      shadow-sm
+                      flex items-center space-x-2
+                      font-semibold
+                      select-none
+                      md:px-5 md:py-2
+                    "
+                    style={{ backdropFilter: "blur(6px)" }} // subtle blur for glassy feel
+                  >
+                    <Award className="w-5 h-5 md:w-6 md:h-6 text-green-300" />
+                    <span className="text-sm md:text-base whitespace-nowrap">
+                      <span className="block md:hidden">
+                        {earnedBadge.earnedDate
+                          ? new Date(earnedBadge.earnedDate).toLocaleDateString()
+                          : "Earned"}
+                      </span>
+                      <span className="hidden md:block">
+                        {earnedBadge.earnedDate
+                          ? `You earned this badge on ${new Date(
+                              earnedBadge.earnedDate
+                            ).toLocaleDateString()}`
+                          : "You have earned this badge"}
+                      </span>
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
             <BadgeImage />
             <BadgeMetrics />
           </section>
@@ -464,6 +502,43 @@ const BadgeMetrics = () => (
           <div className="flex w-full gap-6">
             {/* Badge and Badge Actions */}
             <div className="flex flex-col items-center w-1/2 space-y-4">
+            <div>
+              {/* Top earned badge pill */}
+              {earnedBadge && (
+                <div className="z-50">
+                  <div
+                    className="
+                      bg-green-700 bg-opacity-30
+                      text-green-100
+                      rounded-full
+                      px-4 py-1.5
+                      shadow-sm
+                      flex items-center space-x-2
+                      font-semibold
+                      select-none
+                      md:px-5 md:py-2
+                    "
+                    style={{ backdropFilter: "blur(6px)" }} // subtle blur for glassy feel
+                  >
+                    <Award className="w-5 h-5 md:w-6 md:h-6 text-green-300" />
+                    <span className="text-sm md:text-base whitespace-nowrap">
+                      <span className="block md:hidden">
+                        {earnedBadge.earnedDate
+                          ? new Date(earnedBadge.earnedDate).toLocaleDateString()
+                          : "Earned"}
+                      </span>
+                      <span className="hidden md:block">
+                        {earnedBadge.earnedDate
+                          ? `You earned this badge on ${new Date(
+                              earnedBadge.earnedDate
+                            ).toLocaleDateString()}`
+                          : "You have earned this badge"}
+                      </span>
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
               <BadgeImage />
               <div className="flex flex-wrap justify-center gap-2">
                 <BadgeActions currentBadge={currentBadge} isAuthenticated={isAuthenticated} />
@@ -474,7 +549,7 @@ const BadgeMetrics = () => (
             &nbsp;
 
             {/* Description */}
-            <section className="w-1/2 mt-20">
+            <section className="w-1/2 mt-20 mr-4">
               <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Badge Details</h2>
               <p className="text-gray-300 leading-relaxed">{currentBadge?.description}</p>
               <SkillsEarned />
@@ -487,6 +562,43 @@ const BadgeMetrics = () => (
         <div className="flex sm:hidden flex-col max-w-sm mx-auto p-4 gap-4">
           {/* Badge Image */}
           <section className="flex flex-col items-center">
+            <div className='my-2'>
+              {/* Top earned badge pill */}
+              {earnedBadge && (
+                <div className="z-50">
+                  <div
+                    className="
+                      bg-green-700 bg-opacity-30
+                      text-green-100
+                      rounded-full
+                      px-4 py-1.5
+                      shadow-sm
+                      flex items-center space-x-2
+                      font-semibold
+                      select-none
+                      md:px-5 md:py-2
+                    "
+                    style={{ backdropFilter: "blur(6px)" }} // subtle blur for glassy feel
+                  >
+                    <Award className="w-5 h-5 md:w-6 md:h-6 text-green-300" />
+                    <span className="text-sm md:text-base whitespace-nowrap">
+                      <span className="block md:hidden">
+                        {earnedBadge.earnedDate
+                          ? new Date(earnedBadge.earnedDate).toLocaleDateString()
+                          : "Earned"}
+                      </span>
+                      <span className="hidden md:block">
+                        {earnedBadge.earnedDate
+                          ? `You earned this badge on ${new Date(
+                              earnedBadge.earnedDate
+                            ).toLocaleDateString()}`
+                          : "You have earned this badge"}
+                      </span>
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
             <BadgeImage />
             <div className="text-center text-sm text-gray-400 mt-2">
               {currentBadgeIndex + 1} of {badges.length} badges
