@@ -103,8 +103,8 @@ const CompletedCoursesSection = ({ courses = [], user, updateUserDetails }) => {
   };
 
   return (
-    <div className="w-full bg-gray backdrop-blur-md border border-white/10 rounded-lg p-4 text-white">
-      <h2 className="text-xl font-bold mb-2 text-white">Completed Courses</h2>
+    <div className="w-full bg-gray backdrop-blur-md border border-white/10 rounded-lg p-2 md:p-4 text-white">
+      <h2 className="text-xl font-bold mb-2 text-white border-b border-blue-500">Completed Courses</h2>
 
       <div className="h-auto overflow-y-auto bg-white/5 border border-white/10 rounded-md p-3 space-y-2">
         {courseList.length > 0 ? (

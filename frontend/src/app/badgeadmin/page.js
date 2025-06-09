@@ -118,10 +118,10 @@ export default function SettingsPage() {
     switch (activeTab) {
       case 'Users':
         return (
-          <div className="p-4 rounded-xl bg-slate-900/60 backdrop-blur-xl shadow-lg border border-gray-700">
+          <div className="p-2 md:p-4 rounded-xl bg-slate-900/60 backdrop-blur-xl shadow-lg border border-gray-700">
           {/* Top Row: Search + Pagination */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-2 gap-4">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-row justify-between items-start mb-2 gap-4">
+            <div className="flex gap-4">
               <SearchBox onSearch={handleSearch} className="h-10" />
               <button
                 className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors h-10 flex items-center justify-center"
@@ -130,14 +130,6 @@ export default function SettingsPage() {
                 <UserPlus />
               </button>
             </div>
-            <div className="flex-none">
-          { /* <UsersPagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
-              */}
-            </div>
           </div>
 
           {/* Main Content: Left = User List | Right = User Details */}
@@ -145,7 +137,7 @@ export default function SettingsPage() {
             {/* Left: User List */}
             <div className="w-full md:w-1/3 bg-slate-800/60 rounded-lg p-2 border border-gray-700 flex flex-col max-h-[200px] md:max-h-none">
               <h2 className="text-white font-semibold mb-2">User List</h2>
-              <ScrollArea className="flex-1 overflow-y-auto pr-2">
+              <ScrollArea className="flex-1 overflow-y-auto scrollbar pr-2">
                 <div className="flex flex-col space-y-2 w-full">
                   {Array.isArray(searchResults) && searchResults.length > 0 ? (
                     searchResults.map((user, index) => (
@@ -196,7 +188,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Right: User Details */}
-            <div className="w-full md:w-2/3 bg-slate-800/60 rounded-lg p-4 border border-gray-700 overflow-auto ">
+            <div className="w-full md:w-2/3 bg-slate-800/60 rounded-lg p-2 md:p-4 border border-gray-700 overflow-y-auto scrollbar">
               <UserDetailsView selectedUser={selectedUser} updateUserDetails={updateUserDetails} />
             </div>
           </div>

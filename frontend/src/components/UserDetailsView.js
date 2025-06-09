@@ -150,87 +150,118 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
   return (
     <div className="text-white">
       <h2 className="text-xl font-bold mb-4">User Details</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-2 md:gap-8 mb-3">
         <EditableField label="First Name" value={form.firstName} onChange={(val) => handleChange("firstName", val)} />
         <EditableField label="Last Name" value={form.lastName} onChange={(val) => handleChange("lastName", val)} />
         <EditableField label="Email" value={form.email} onChange={(val) => handleChange("email", val)} />
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 w-full items-start md:items-center">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 w-full items-start md:items-center">
         {/* Password field with checkbox */}
-        <div className="flex flex-col w-full md:w-1/3">
+        <div className="flex flex-col w-full">
           <EditableField
             label="Password"
             value={form.password}
             onChange={(val) => handleChange("password", val)}
-            className="flex-1"
+            className="flex"
           />
-          <label className="inline-flex items-center space-x-2 mt-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={form.sendMail}
-              onChange={(e) => handleChange("sendMail", e.target.checked)}
-              className="form-checkbox text-blue-500"
-              name="sendMail"
-            />
-            <span>send mail to user</span>
-          </label>
+          <label className="checkbox-wrapper mt-3">
+  <input
+    id="send-mail-checkbox"
+    type="checkbox"
+    checked={form.sendMail}
+    onChange={(e) => handleChange("sendMail", e.target.checked)}
+    name="sendMail"
+  />
+  <span className="terms-label">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 200 200"
+      className="checkbox-svg"
+    >
+      <mask fill="white" id="checkbox-mask">
+        <rect height="200" width="200" />
+      </mask>
+      <rect
+        mask="url(#checkbox-mask)"
+        strokeWidth="40"
+        className="checkbox-box"
+        height="200"
+        width="200"
+      />
+      <path
+        strokeWidth="15"
+        d="M52 111.018L76.9867 136L149 64"
+        className="checkbox-tick"
+      />
+    </svg>
+    <span className="label-text text-sm">Send mail to user</span>
+  </span>
+</label>
+
         </div>
 
         {/* Badge actions */}
-        <div className="flex flex-col md:flex-row gap-2 mt-0 w-full md:w-auto">
-          <AssignBadgePopUp user={selectedUser} updateUserDetails={updateUserDetails} />
-          <RevokeBadgePopUp user={selectedUser} updateUserDetails={updateUserDetails} />
-        </div>
+        <AssignBadgePopUp user={selectedUser} updateUserDetails={updateUserDetails} />
+        <RevokeBadgePopUp user={selectedUser} updateUserDetails={updateUserDetails} />
       </div>
 
-      <div className="w-full flex flex-col lg:flex-row mt-2">
-        <div className="flex flex-col items-start justify-start mr-2 mb-2">
-          <div className="flex flex-col w-full gap-4">
-            <Achievements
-              achievements={selectedUser.achievements}
-              user={selectedUser}
-              updateUserDetails={updateUserDetails}
-            />
-            <Courses
-            courses={selectedUser.courses}
+      <div className="w-full flex flex-col lg:flex-row mt-2 gap-4">
+        <div className="flex flex-col w-full lg:w-1/2 gap-4 items-start justify-start">
+          <Achievements
+            achievements={selectedUser.achievements}
             user={selectedUser}
-            updateUserDetails={updateUserDetails} />
-          </div>
+            updateUserDetails={updateUserDetails}/>
+          <Courses
+          courses={selectedUser.courses}
+          user={selectedUser}
+          updateUserDetails={updateUserDetails} />
         </div>
 
         {/* show badges */}
-        <div className="flex flex-col w-full md:w-1/2 items-start justify-start mb-6">
+        <div className="flex flex-col w-full lg:w-1/2 items-start justify-start mb-6">
           <h3 className="text-xl font-bold text-white mb-4 border-b border-blue-500 pb-1 tracking-wide">
             Assigned Badges
           </h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 w-full">
+          <div className="grid grid-cols-2 md:grid-cols-3 mx-auto w-full">
             {selectedUser.badges && selectedUser.badges.length > 0 ? (
               selectedUser.badges.map((badge, index) => (
                 <div
                   key={index}
-                  className="relative flex flex-col items-center justify-center border border-blue-500/20 p-2 rounded-2xl shadow-xl transition-transform hover:scale-105 hover:shadow-blue-500/30"
+                  className="relative flex flex-col items-center justify-center p-4 transition-transform hover:scale-105"
                 >
+                  {/* Revoke Button */}
                   <button
-                    onClick={() => handleRevokeBadge(badge.badgeId, selectedUser.email, updateUserDetails)}
-                    className="absolute top-2 right-2 text-red-400 hover:text-red-600 transition-colors"
+                    onClick={() =>
+                      handleRevokeBadge(badge.badgeId, selectedUser.email, updateUserDetails)
+                    }
+                    className="absolute top-1 right-5 text-pink-400 hover:text-red-500 transition-colors z-10"
                     title="Revoke badge"
                   >
                     <MinusCircle size={18} />
                   </button>
 
-                  <img
-                    src={`./images/img${badge.badgeId}.png`}
-                    alt={`Badge ${badge.name || badge.badgeId}`}
-                    className="w-10 h-10 mb-3 drop-shadow-lg"
-                  />
-                  <span className="text-sm font-semibold text-center text-gray-100">
+                  {/* Badge Image with glow effect on hover */}
+                  <div className="group relative">
+                    <img
+                      crossOrigin="anonymous"
+                      src={`${process.env.SERVER_URL}/badge/images/${badge.badgeId}` || badge.img?.data}
+                      alt={`Badge ${badge.name || badge.badgeId}`}
+                      className="w-16 h-16 rounded-full transition-all duration-300 drop-shadow-md group-hover:drop-shadow-[0_0_10px_rgba(56,200,248,0.8)]"
+                    />
+                  </div>
+
+                  {/* Badge Name */}
+                  <span className="text-sm text-gray-200 mt-2 text-center">
                     {badge.name || "Unnamed Badge"}
                   </span>
                 </div>
               ))
             ) : (
-              <p className="text-gray-400 col-span-full text-center text-sm italic">No badges assigned.</p>
+              <p className="text-gray-400 col-span-full text-center text-sm italic">
+                No badges assigned.
+              </p>
             )}
           </div>
         </div>
@@ -239,7 +270,7 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
       <br/>
       <button
         onClick={handleSave}
-        className="mt-4 px-4 py-2 rounded bg-cyan-600 hover:bg-cyan-700 transition-colors"
+        className="px-4 py-2 rounded bg-cyan-600 hover:bg-cyan-700 transition-colors"
       >
         Save Changes
       </button>

@@ -490,9 +490,11 @@ useEffect(() => {
 
                 <div className="relative flex flex-col items-center w-full rounded-lg border-gray-600">
                 <img
+                  crossOrigin='anonymous'
                   src={preview}
                   width={300}
                   height={300}
+                  alt='Image Preview'
                 />
                 </div>
                 </div>

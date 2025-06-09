@@ -17,7 +17,7 @@ function UserBlock({ data, updateUserDetails, onSelect }) {
       className="w-full flex flex-col md:flex-row bg-slate-950/75 backdrop-blur-md rounded-lg border-2 border-gray-600 border-opacity-50 p-4 justify-between gap-4 hover:border-[#00CBF0]"
     >
       {/* Left Side */}
-      <div className="flex flex-col w-2/3">
+      <div className="flex flex-col w-full">
         {/* Container for names and email */}
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="text-base md:text-lg font-bold text-white-700 whitespace-nowrap">
@@ -41,7 +41,8 @@ function UserBlock({ data, updateUserDetails, onSelect }) {
               {data?.badges?.slice(0, 5).map((badge, index) => (
                 <img
                   key={index}
-                  src={`./images/img${badge.badgeId}.png`}
+                  crossOrigin="anonymous"
+                  src={`${process.env.SERVER_URL}/badge/images/${badge.badgeId}` || badge.img?.data}
                   alt={badge.name || `Badge ${badge.badgeId}`}
                   title={badge.name || "Unnamed Badge"}
                   className="w-5 h-5 rounded-sm drop-shadow-md"

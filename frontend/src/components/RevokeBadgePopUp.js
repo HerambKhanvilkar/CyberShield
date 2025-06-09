@@ -74,10 +74,10 @@ const BadgeAssignmentDropdown = ({ user, updateUserDetails }) => {
   };
 
   return (
-    <div className="max-w-md">
+    <div className="max-w-md mt-0 sm:-mt-8">
       <label className="text-sm font-medium text-gray-300 mb-1">Revoke Badge</label>
       <div className='flex flex-row items-center space-x-2'>
-        <div className="relative w-full border-gray-600">
+        <div className="relative w-full border rounded-md border-gray-600">
           <select
             className="w-full p-2 pr-10 rounded bg-[#1A1B2E]/60 text-gray-400 focus:border-cyan-500 focus:ring-cyan-500 appearance-none"
             value={selectedBadge || ""}
@@ -98,12 +98,6 @@ const BadgeAssignmentDropdown = ({ user, updateUserDetails }) => {
             ▼
           </div>
         </div>
-        <Button
-          className="text-sm bg-gray-700 text-white hover:bg-gray-600"
-          onClick={() => setSelectedBadge(null)}
-        >
-          <RotateCcw />
-        </Button>
         <Button
           className={`text-sm ${selectedBadge ? 'text-red-500' : 'text-gray-400'} bg-gray-800 hover:bg-red-700 hover:text-white`}
           onClick={handleRevoke}
