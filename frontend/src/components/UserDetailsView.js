@@ -14,7 +14,7 @@ function EditableField({ label, value, onChange, className = "" }) {
   const [editing, setEditing] = useState(false);
   const [setUsers] = useState(false);
   return (
-    <div className="`mb-4 group ${className}`">
+  <div className={`mb-4 group ${className}`}>
       <label className="block text-sm font-medium text-gray-300 mb-1">{label}</label>
       <div className="relative">
         <input
@@ -40,6 +40,7 @@ function EditableField({ label, value, onChange, className = "" }) {
   );
 }
 
+
 function UserDetailsView({ selectedUser, updateUserDetails }) {
   const [form, setForm] = useState({
     firstName: "",
@@ -47,6 +48,11 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
     email: "",
     password: "",
   });
+  const [selectedBadgeId, setSelectedBadgeId] = useState(null);
+  const [assignableBadges, setAssignableBadges] = useState([]);
+  const [revokableBadges, setRevokableBadges] = useState([]);
+const [selectedRevokeBadgeId, setSelectedRevokeBadgeId] = useState(null);
+const [loadingRevoke, setLoadingRevoke] = useState(true);
 
   useEffect(() => {
     if (typeof(selectedUser) == typeof('new')){
@@ -67,6 +73,59 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
       });
     } else {
     }
+
+
+
+  const fetchAssignableBadges = async () => {
+
+    try {
+      const token = localStorage.getItem("token");
+      const url = `${process.env.SERVER_URL}/badges`;
+      const userBadgeIds = selectedUser?.badges.map((b) => Number(b.badgeId)) || [];
+
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        timeout: 10000,
+      });
+
+      const availableBadges = response.data.badges.filter(
+        (badge) => !userBadgeIds.includes(badge.id)
+      );
+      setAssignableBadges(availableBadges);
+    } catch (error) {
+      console.error("Error fetching assignable badges:", error);
+    }
+  };
+  const fetchRevokableBadges = async () => {
+  try {
+    setLoadingRevoke(true);
+    const token = localStorage.getItem("token");
+    const url = `${process.env.SERVER_URL}/badges`;
+const userBadgeIds = selectedUser?.badges.map(b => Number(b.badgeId)) || [];
+    const response = await axios.get(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      timeout: 10000,
+    });
+
+    if (response) {
+      const filtered = response.data.badges.filter(b => userBadgeIds.includes(b.id));
+      setRevokableBadges(filtered);
+    }
+  } catch (err) {
+    console.error("Error fetching revokable badges", err);
+  } finally {
+    setLoadingRevoke(false);
+  }
+};
+
+    fetchAssignableBadges();
+    fetchRevokableBadges();
   }, [selectedUser]);
 
   const handleChange = (key, value) => {
@@ -100,7 +159,48 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
           Updated user <strong style={{ color: "#00CBF0" }}>{updatedUser.firstName}</strong>!
         </div>
       );
+      // Assign badge if one is selected
+if (selectedBadgeId) {
+  try {
+    const assignUrl = `${process.env.SERVER_URL}/assign-badge`;
+    const assignResponse = await axios.post(
+      assignUrl,
+      {
+        email: form.email,
+        badgeId: selectedBadgeId,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        timeout: 10000,
+      }
+    );
 
+    updateUserDetails(form.email, assignResponse.data.user);
+    toast.success(
+      <div>
+        Badge assigned to <strong style={{ color: "#00CBF0" }}>{assignResponse.data.user.firstName}</strong>!
+      </div>
+    );
+    setSelectedBadgeId(null);
+    fetchAssignableBadges(); // Refresh dropdown
+  } catch (error) {
+    console.error("Error assigning badge:", error);
+    toast.error("Failed to assign badge.");
+  }
+}
+// Revoke badge if one is selected
+if (selectedRevokeBadgeId) {
+  try {
+    await handleRevokeBadge(selectedRevokeBadgeId, form.email, updateUserDetails);
+    setSelectedRevokeBadgeId(null); // Clear the selection
+    fetchRevokableBadges(); // Refresh the list
+  } catch (err) {
+    console.error("Revoke failed:", err);
+  }
+}
       // Reset password after saving for safety
       setForm((prev) => ({ ...prev, password: "" }));
     } catch (error) {
@@ -108,12 +208,12 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
       toast.error("Failed to update user.");
     }
   };
+  
 
   const handleRevokeBadge = async (badgeId, userEmail, updateUserDetails) => {
   try {
     const token = localStorage.getItem("token");
     const url = `${process.env.SERVER_URL}/revoke-badge`;
-
 
     const response = await axios.post(
       url,
@@ -202,8 +302,69 @@ function UserDetailsView({ selectedUser, updateUserDetails }) {
         </div>
 
         {/* Badge actions */}
-        <AssignBadgePopUp user={selectedUser} updateUserDetails={updateUserDetails}/>
-        <RevokeBadgePopUp user={selectedUser} updateUserDetails={updateUserDetails}/>
+        {/* <AssignBadgePopUp user={selectedUser} updateUserDetails={updateUserDetails}/> */}
+        {/* <RevokeBadgePopUp user={selectedUser} updateUserDetails={updateUserDetails}/> */}
+
+        <div className="max-w-md w-full mt-0 sm:-mt-8">
+          <label className="text-sm font-medium text-gray-300 mb-1">Assign Badge</label>
+          <div className="flex flex-row items-center space-x-2">
+            <div className="relative w-full border rounded-md border-gray-600">
+              <select
+                className="w-full p-2 pr-10 rounded bg-[#1A1B2E]/60 text-gray-400 border-gray-600 focus:border-cyan-500 focus:ring-cyan-500 appearance-none"
+                value={selectedBadgeId || ""}
+                onChange={(e) => setSelectedBadgeId(Number(e.target.value))}
+                disabled={assignableBadges.length === 0}
+              >
+                <option value="" className="bg-slate-800 text-white">Select a badge</option>
+                {assignableBadges.map((badge) => (
+                  <option key={badge.id} value={badge.id} className="bg-slate-800 text-white">
+                    {badge.name}
+                  </option>
+                ))}
+              </select>
+
+              {/* Custom arrow */}
+              <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
+                ▼
+              </div>
+            </div>
+            
+          </div>
+          {assignableBadges.length === 0 && (
+            <p className="text-sm mt-2 text-gray-300">All available badges are already assigned.</p>
+          )}
+        </div>
+
+        <div className="max-w-md mt-4">
+          <label className="text-sm font-medium text-gray-300 mb-1">Revoke Badge</label>
+          <div className="flex flex-row items-center space-x-2">
+            <div className="relative w-full border rounded-md border-gray-600">
+              <select
+                className="w-full p-2 pr-10 rounded bg-[#1A1B2E]/60 text-gray-400 focus:border-red-500 focus:ring-red-500 appearance-none"
+                value={selectedRevokeBadgeId || ""}
+                onChange={(e) => setSelectedRevokeBadgeId(Number(e.target.value))}
+                disabled={loadingRevoke}
+              >
+                <option value="">
+                  {loadingRevoke ? "Loading badges..." : "Select a badge"}
+                </option>
+                {!loadingRevoke &&
+                  revokableBadges.map((badge) => (
+                    <option key={badge.id} value={badge.id} className="bg-slate-800 text-white">
+                      {badge.name}
+                    </option>
+                  ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
+                ▼
+              </div>
+            </div>
+          </div>
+
+          {revokableBadges.length === 0 && !loadingRevoke && (
+            <p className="text-sm mt-2 text-gray-300">This user has no badges assigned to them.</p>
+          )}
+        </div>
       </div>
 
       <div className="w-full flex flex-col lg:flex-row mt-2 gap-4">
