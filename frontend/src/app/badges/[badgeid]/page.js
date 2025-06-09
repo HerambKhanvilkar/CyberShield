@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Award, Share2, Shield, Code } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Award,Trophy, Share2, Shield} from 'lucide-react';
 import axios from 'axios';
 import Navbar from "@/components/Navbar";
 import Footer from '@/components/Footer';
@@ -124,12 +124,6 @@ function AllBadgeMyBadgeFilter() {
     Extreme: 'bg-red-600',
   };
 
-  const getSkillIcon = (skill) => {
-    if (skill === 'Basic Security') return <Shield className="w-5 h-5 mr-1" />;
-    if (skill === 'Web Awareness') return <Code className="w-5 h-5 mr-1" />;
-    return <Shield className="w-5 h-5 mr-1" />;
-  };
-
   useEffect(() => {
     setIsLoading(true);
     const timer = setTimeout(() => setIsLoading(false), 1000);
@@ -220,7 +214,7 @@ return (
     {earnedBadge ? (
       <>
         {/* Earned Info Pill */}
-        <div className="bg-green-700 rounded-full mx-auto p-2 px-3 shadow-md flex items-center space-x-2 md:rounded-md md:p-3">
+        {/* <div className="bg-green-700 rounded-full mx-auto p-2 px-3 shadow-md flex items-center space-x-2 md:rounded-md md:p-3">
           <Award className="w-5 h-5 md:w-6 md:h-6" />
           <span className="text-sm md:text-base whitespace-nowrap">
             <span className="block md:hidden">
@@ -234,7 +228,7 @@ return (
                 : 'You have earned this badge'}
             </span>
           </span>
-        </div>
+        </div> */}
 
         {/* Share Link Pill */}
         <button
@@ -308,14 +302,23 @@ const BadgeMetrics = () => (
 
   // Badge Description Component
   const BadgeDescription = () => (
-    <div className="space-y-2">
-      <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Badge Details</h2>
-      <p className='text-lg'>Course: {currentBadge?.course}</p>
-      <p className="text-gray-300 leading-relaxed">
-        {currentBadge?.description || 'No description available for this badge.'}
-      </p>
+  <div className="space-y-4 p-4 rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg">
+  <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2 text-white flex items-center gap-2">
+    <Trophy/>
+    Badge Details
+  </h2>
+
+    <div className="flex items-center space-x-2 text-lg text-blue-400 font-medium">
+      <span className="text-gray-300">Course:</span>
+      <span className="text-blue-300">{currentBadge?.course || 'N/A'}</span>
     </div>
-  );
+
+    <p className="text-gray-300 leading-relaxed text-base">
+      {currentBadge?.description || 'No description available for this badge.'}
+    </p>
+  </div>
+);
+
 
   // Skills Earned Component
   const SkillsEarned = () => (
@@ -327,8 +330,8 @@ const BadgeMetrics = () => (
             key={idx}
             className="flex items-center text-sm bg-gray-800 rounded-md px-3 py-2 shadow-md"
           >
-            {getSkillIcon(skill)}
-            <span>{skill}</span>
+            <Shield className="w-5 h-5 mr-1 text-blue-400" />
+            <span className="text-sm font-medium">{skill}</span>
           </div>
         ))}
       </div>
@@ -389,7 +392,7 @@ const BadgeMetrics = () => (
         </button>
 
         {/* bg-gradient-to-tr from-blue-700 via-cyan-600 to-teal-600 */}
-        <div className="w-40 h-40 rounded-full z-0 shadow-lg flex items-center justify-center relative overflow-hidden">
+        <div className="w-50 h-50 rounded-full z-0 shadow-lg flex items-center justify-center relative overflow-hidden">
           {!isLoading ? (
             <>
               <img
@@ -639,8 +642,56 @@ const BadgeMetrics = () => (
         </div>
       </main>
 
-      {/* Badge Collection Thumbnails */}
-      <div className="bg-gray-800 p-2 flex flex-col items-center justify-between w-full mt-4 mx-auto">
+      {/* Desktop Badge Collection Thumbnails */}
+      <div className="hidden md:block bg-gray-800 p-2 flex flex-col items-center justify-between rounded-md mt-4 mx-auto">
+        {/* Scrollable row container */}
+        <div className="w-full overflow-x-auto overflow-y-hidden">
+          {/* Row of badges — make width as wide as needed */}
+          <div className="flex space-x-2 w-max px-1 mx-auto">
+            <button
+              aria-label="Previous Badge"
+              onClick={() =>
+                setCurrentBadgeIndex((prev) => (prev === 0 ? badges.length - 1 : prev - 1))
+              }
+              className="p-2 bg-gray-700 rounded-full hover:bg-gray-600 transition"
+            >
+              <ChevronLeft className="w-3 h-3" />
+            </button>
+            {badges.map((badge, index) => (
+              <img
+                key={badge.id}
+                crossOrigin="anonymous"
+                src={`${process.env.SERVER_URL}/badge/images/${badge?.id}` || badge.image?.data}
+                alt={badge.name}
+                className={`w-7 h-7 object-cover rounded-md cursor-pointer shadow-md transition-transform ${
+                  index === currentBadgeIndex ? 'border-2 border-cyan-500 scale-100' : 'opacity-70'
+                }`}
+                onClick={() => setCurrentBadgeIndex(index)}
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    setCurrentBadgeIndex(index);
+                  }
+                }}
+              />
+            ))}
+            <button
+              aria-label="Next Badge"
+              onClick={() =>
+                setCurrentBadgeIndex((prev) => (prev === badges.length - 1 ? 0 : prev + 1))
+              }
+              className="p-2 bg-gray-700 rounded-full hover:bg-gray-600 transition"
+            >
+              <ChevronRight className="w-3 h-3" />
+            </button>
+          </div>
+        </div>
+        <div className="text-gray-300 mt-1 text-xs">
+          {badges.length} Badges — Showing {currentBadgeIndex + 1} of {badges.length}
+        </div>
+      </div>
+      {/* Mobile Badge Collection Thumbnails */}
+      <div className="block md:hidden bg-gray-800 p-2 flex flex-col items-center justify-between rounded-md mt-4 w-full mx-auto">
         {/* Scrollable row container */}
         <div className="w-full overflow-x-auto overflow-y-hidden">
           {/* Row of badges — make width as wide as needed */}

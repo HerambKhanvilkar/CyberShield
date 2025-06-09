@@ -142,8 +142,6 @@ const secondRow = skills.slice(skills.length / 2);
     </div>
   );
 }
-
-
   
   const formatDate = (ts) => {
     const date = new Date(parseInt(ts) * 1000);
@@ -246,8 +244,8 @@ const BadgeMetrics = ({ badge }) => (
             {error}
           </div>
         )}
-{/* bg-gradient-to-b from-[#1E3A8A] to-[#00011E] */}
-        <div className="max-w-4xl mx-auto  background:blur-md rounded-lg p-6 shadow-lg border border-[#38C8F8]">
+{/* bg-gradient-to-b from-[#1E3A8A] to-[#00011E] or from-[#03001e] via-[#7303c0] via-[#ec38bc] to-[#fdeff9]*/}
+        <div className="max-w-4xl mx-auto bg-linear-to-br from-[#000046] to-[#1CB5E0]  background:blur-md rounded-lg p-6 shadow-lg border border-[#38C8F8]">
           <div className="flex flex-col md:flex-row md:space-x-8">
             {/* Left side: Image + Metrics */}
             <div className="flex-shrink-0 mb-6 md:mb-0 md:w-1/3">
