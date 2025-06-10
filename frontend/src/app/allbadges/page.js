@@ -134,7 +134,7 @@ useEffect(() => {
                     {badge.name}
                   </h3>
                   <p className="text-gray-400 text-sm text-center mb-4">
-                    {truncateText(badge.description,100)}
+                    {truncateText(badge.description,150)}
                   </p>
                   <div className="flex flex-wrap justify-center gap-2">
                     {badge.skillsEarned?.slice(0, 3).map((skill, i) => (
