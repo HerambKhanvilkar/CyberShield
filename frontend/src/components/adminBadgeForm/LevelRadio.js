@@ -6,10 +6,10 @@ const LevelRadio = ({ formData, handleChange }) => {
   const levels = ['Amateur', 'Experienced', 'Professional', 'Expert'];
 
   return (
-<div className="flex flex-col lg:flex-row flex-wrap justify-evenly space-y-2">
-          <RadioGroup defaultValue="option1" className="flex flex-col sm:flex-row flex-wrap justify-evenly space-y-2">
+<div className="flex flex-col lg:flex-row flex-wrap">
+          <RadioGroup defaultValue="option1" className="flex flex-col sm:flex-row sm:flex-wrap space-y-2">
     { levels.map((level, index) => (
-            <div key={index} className="flex items-center space-x-2">
+            <div key={index} className="flex flex-row flex-wrap items-center my-2 space-x-2">
               <RadioGroupItem 
                 value={level} 
                 type="radio" 

@@ -316,7 +316,7 @@ const ErrorTable = ({ users,  onUpdateUser }) => {
               const rowData = inEditMode ? editRows[user.row] : user;
               return (
                 <>
-              <div className="flex items-center truncate"> 
+              <div key={index} className="flex items-center truncate"> 
                     {inEditMode ? (
                       <Input 
                         type="text"
