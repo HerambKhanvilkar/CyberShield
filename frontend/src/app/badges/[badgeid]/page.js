@@ -276,106 +276,117 @@ const BadgeMetrics = () => (
   <div className="w-full flex flex-col gap-2 md:flex-row md:justify-between mt-4">
     {/* Mobile: Level + Earners side by side */}
     <div className="flex flex-row gap-2 md:flex-1">
-      {[ 
+      {[
         { label: "Level", value: currentBadge?.level || "N/A" },
         { label: "Earners", value: "43" },
       ].map(({ label, value }, index) => (
         <div
           key={index}
-          className="flex-1 bg-gray-800 rounded-md shadow-md p-4 flex flex-col justify-between text-center min-h-[50px]"
+          className="flex-1 rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg p-4 flex flex-col justify-between text-center min-h-[50px]
+          transition-shadow duration-300 ease-in-out
+          hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)]"
         >
-          <div className="text-sm uppercase text-gray-400">{label}</div>
-          <div className="text-lg font-semibold">{value}</div>
+          <div className="text-sm uppercase text-gray-300">{label}</div>
+          <div className="text-lg font-semibold my-auto text-white">{value}</div>
         </div>
       ))}
     </div>
 
     {/* Mobile: Vertical goes below, but aligns normally in row on md+ */}
     <div className="flex md:flex-1">
-      <div className="flex-1 bg-gray-800 rounded-md shadow-md p-4 flex flex-col justify-between text-center min-h-[50px]">
-        <div className="text-sm uppercase text-gray-400">Vertical</div>
-        <div className="text-lg font-semibold">{currentBadge?.vertical || "General"}</div>
+      <div className="flex-1 rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg p-4 flex flex-col justify-between text-center min-h-[50px]
+            transition-shadow duration-300 ease-in-out
+            hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)]">
+        <div className="text-sm uppercase text-gray-300">Vertical</div>
+        <div className="text-lg font-semibold text-white">{currentBadge?.vertical || "General"}</div>
       </div>
     </div>
   </div>
 );
 
+
   // Badge Description Component
   const BadgeDescription = () => (
   <div className="space-y-4 p-4 rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg">
-  <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2 text-white flex items-center gap-2">
-    <Trophy/>
-    Badge Details
-  </h2>
-
+    <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2 text-white flex items-center gap-2">
+      <Trophy/>
+      Badge Details
+    </h2>
     <div className="flex items-center space-x-2 text-lg text-blue-400 font-medium">
       <span className="text-gray-300">Course:</span>
       <span className="text-blue-300">{currentBadge?.course || 'N/A'}</span>
     </div>
 
-    <p className="text-gray-300 leading-relaxed text-base">
+    <p className="text-gray-300 max-h-[155px] overflow-y-auto scrollbar leading-relaxed text-base">
       {currentBadge?.description || 'No description available for this badge.'}
     </p>
   </div>
 );
 
 
-  // Skills Earned Component
-  const SkillsEarned = () => (
-    <div className="space-y-2">
-      <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Skills Earned</h2>
-      <div className="grid grid-cols-2 gap-3">
-        {currentBadge?.skillsEarned?.map((skill, idx) => (
-          <div
-            key={idx}
-            className="flex items-center text-sm bg-gray-800 rounded-md px-3 py-2 shadow-md"
-          >
-            <Shield className="w-5 h-5 mr-1 text-blue-400" />
-            <span className="text-sm font-medium">{skill}</span>
-          </div>
-        ))}
-      </div>
+// Skills Earned Component with glow on hover
+const SkillsEarned = () => (
+  <div className="space-y-2">
+    <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2 text-white flex items-center gap-2">
+      <Shield className="w-6 h-6 mr-1 text-blue-400" />
+      Skills Earned
+    </h2>
+    <div className="grid grid-cols-2 gap-3">
+      {currentBadge?.skillsEarned?.map((skill, idx) => (
+        <div
+          key={idx}
+          className="flex items-center text-sm rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg px-3 py-2 text-white
+            transition-shadow duration-300 ease-in-out
+            hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)]"
+        >
+          <Shield className="w-5 h-5 mr-1 text-blue-400" />
+          <span className="text-sm font-medium">{skill}</span>
+        </div>
+      ))}
     </div>
-  );
+  </div>
+);
 
-  // Related Badges Component
-  const RelatedBadges = () => (
-    <div>
-      <h3 className="text-xl font-semibold border-b border-gray-700 pb-1 mt-6">Related Badges</h3>
-      <div className="flex space-x-4 overflow-auto py-2">
-        {allBadges
-          .filter((b) => b.id !== currentBadge?.id)
-          .slice(0, 3)
-          .map((relatedBadge) => (
-            <div
-              key={relatedBadge.id}
-              className="flex-shrink-0 cursor-pointer flex flex-col items-center w-24 space-y-2"
-              onClick={() => {
+ // Related Badges Component
+const RelatedBadges = () => (
+  <div>
+    <h3 className="text-xl font-semibold border-b border-gray-700 pb-1 mt-6 text-white">Related Badges</h3>
+    <div className="flex space-x-4 mx-auto overflow-auto py-2">
+      {allBadges
+        .filter((b) => b.id !== currentBadge?.id)
+        .slice(0, 3)
+        .map((relatedBadge) => (
+          <div
+            key={relatedBadge.id}
+            className="flex-shrink-0 cursor-pointer flex flex-col items-center w-24 space-y-2 rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg p-2
+            transition-shadow duration-300 ease-in-out
+            hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)]"
+            onClick={() => {
+              const index = badges.findIndex((b) => b.id === relatedBadge.id);
+              if (index !== -1) setCurrentBadgeIndex(index);
+            }}
+            tabIndex={0}
+            role="button"
+            aria-pressed="false"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
                 const index = badges.findIndex((b) => b.id === relatedBadge.id);
                 if (index !== -1) setCurrentBadgeIndex(index);
-              }}
-              tabIndex={0}
-              role="button"
-              aria-pressed="false"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  const index = badges.findIndex((b) => b.id === relatedBadge.id);
-                  if (index !== -1) setCurrentBadgeIndex(index);
-                }
-              }}
-            >
-              <img
-                crossOrigin="anonymous"
-                src={`${process.env.SERVER_URL}/badge/images/${relatedBadge?.id}` || relatedBadge.image?.data}
-                alt={relatedBadge.name}
-                className="rounded-lg shadow-md w-20 h-20 object-cover"
-              />
-              <span className="text-sm text-center">{relatedBadge.name}</span>
-            </div>
-          ))}
-      </div>
+              }
+            }}
+          >
+            <img
+              crossOrigin="anonymous"
+              src={`${process.env.SERVER_URL}/badge/images/${relatedBadge?.id}` || relatedBadge.image?.data}
+              alt={relatedBadge.name}
+              className="rounded-lg shadow-md w-20 h-20 object-cover"
+            />
+            <span className="text-sm text-center text-white">{relatedBadge.name}</span>
+          </div>
+        ))}
     </div>
-  );
+  </div>
+);
 
   // Badge Image Component with Navigation
   const BadgeImage = () => (
@@ -432,7 +443,7 @@ const BadgeMetrics = () => (
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-900 text-white">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#000428] to-[#004e92] text-white">
       <Navbar />
 
       <AllBadgeMyBadgeFilter/>
@@ -643,9 +654,9 @@ const BadgeMetrics = () => (
       </main>
 
       {/* Desktop Badge Collection Thumbnails */}
-      <div className="hidden md:block bg-gray-800 p-2 flex flex-col items-center justify-between rounded-md mt-4 mx-auto">
+      <div className="hidden md:block rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg p-2 flex flex-col items-center justify-between mt-4 mx-auto">
         {/* Scrollable row container */}
-        <div className="w-full overflow-x-auto overflow-y-hidden">
+        <div className="w-full overflow-x-auto mx-auto overflow-y-hidden">
           {/* Row of badges — make width as wide as needed */}
           <div className="flex space-x-2 w-max px-1 mx-auto">
             <button
@@ -653,7 +664,7 @@ const BadgeMetrics = () => (
               onClick={() =>
                 setCurrentBadgeIndex((prev) => (prev === 0 ? badges.length - 1 : prev - 1))
               }
-              className="p-2 bg-gray-700 rounded-full hover:bg-gray-600 transition"
+              className="p-2 rounded-full hover:bg-gray-600 transition text-white"
             >
               <ChevronLeft className="w-3 h-3" />
             </button>
@@ -680,18 +691,18 @@ const BadgeMetrics = () => (
               onClick={() =>
                 setCurrentBadgeIndex((prev) => (prev === badges.length - 1 ? 0 : prev + 1))
               }
-              className="p-2 bg-gray-700 rounded-full hover:bg-gray-600 transition"
+              className="p-2 rounded-full hover:bg-gray-600 transition text-white"
             >
               <ChevronRight className="w-3 h-3" />
             </button>
           </div>
         </div>
-        <div className="text-gray-300 mt-1 text-xs">
+        <div className="text-gray-300 mt-1 mx-auto text-xs">
           {badges.length} Badges — Showing {currentBadgeIndex + 1} of {badges.length}
         </div>
       </div>
       {/* Mobile Badge Collection Thumbnails */}
-      <div className="block md:hidden bg-gray-800 p-2 flex flex-col items-center justify-between rounded-md mt-4 w-full mx-auto">
+      <div className="block md:hidden rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg p-2 flex flex-col items-center justify-between mt-4 w-full mx-auto">
         {/* Scrollable row container */}
         <div className="w-full overflow-x-auto overflow-y-hidden">
           {/* Row of badges — make width as wide as needed */}
@@ -701,7 +712,7 @@ const BadgeMetrics = () => (
               onClick={() =>
                 setCurrentBadgeIndex((prev) => (prev === 0 ? badges.length - 1 : prev - 1))
               }
-              className="p-2 bg-gray-700 rounded-full hover:bg-gray-600 transition"
+              className="p-2 rounded-full hover:bg-gray-600 transition text-white"
             >
               <ChevronLeft className="w-3 h-3" />
             </button>
@@ -728,7 +739,7 @@ const BadgeMetrics = () => (
               onClick={() =>
                 setCurrentBadgeIndex((prev) => (prev === badges.length - 1 ? 0 : prev + 1))
               }
-              className="p-2 bg-gray-700 rounded-full hover:bg-gray-600 transition"
+              className="p-2 rounded-full hover:bg-gray-600 transition text-white"
             >
               <ChevronRight className="w-3 h-3" />
             </button>
