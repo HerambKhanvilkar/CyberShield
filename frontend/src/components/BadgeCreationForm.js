@@ -368,7 +368,7 @@ useEffect(() => {
 
   return (
     <div className='w-full'>
-      <form onSubmit={handleBadgeFormSubmit} className="flex flex-col w-full mx-auto">
+      <form onSubmit={handleBadgeFormSubmit} className="flex flex-col w-full items-center mx-auto">
       <div className="flex flex-col md:flex-row">
         {/* Left: Badges List */}
         <div className="relative z-0 w-full mb-5 group md:w-1/3 mx-2 bg-slate-800/60 rounded-lg p-2 border border-gray-700">
@@ -422,7 +422,7 @@ useEffect(() => {
     </div>
    </div>
       </div>
-        <div className="w-full md:w-1/3 mx-4">
+        <div className="w-full md:w-1/3 mr-4 px-2">
           {/* Badge Id */}
           <div className="grid md:grid-cols-2 md:gap-6">
             <div className="relative z-0 w-full mb-5 group">
@@ -480,7 +480,7 @@ useEffect(() => {
             </div>
           </div>
 
-        <div className="w-full md:w-1/3 mx-4">
+        <div className="w-full md:w-1/3 px-2">
           <div className="grid md:grid-cols-1 space-y-2 md:gap-6">
               {preview ? (
                 <div className="relative flex flex-col items-end w-full rounded-lg border-gray-600">
@@ -536,7 +536,7 @@ useEffect(() => {
               )}
               <button
                 type="submit"
-                className="text-white bg-blue-600 hover:bg-blue-700 focus:ring-blue-800 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center"
+                className="text-white bg-blue-600 hover:bg-blue-700 focus:ring-blue-800 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 mb-4 text-center"
                 >
                 Submit
               </button>

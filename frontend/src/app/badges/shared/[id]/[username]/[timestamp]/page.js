@@ -196,9 +196,7 @@ const BadgeSkillsList = ({ skills }) => (
 );
 
 const BadgeMetrics = ({ badge }) => (
-  <div className="w-full mt-4 text-center text-green-300 flex flex-col items-center gap-2">
-    {/* Row: Level & Earners side by side */}
-    <div className="flex md:flex-col gap-2">
+  <div className="w-full mt-4 text-center text-green-300 flex md:flex-col justify-around items-center gap-2">
       {/* Level */}
       <div className="flex flex-col items-center p-2 shadow-md rounded-md bg-black/60">
   <svg width="32px" height="32px" viewBox="0 0 512.00 512.00" xmlns="http://www.w3.org/2000/svg" fill="#8cbfde" stroke="#8cbfde" stroke-width="26.624000000000002"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" stroke="#05ffee" stroke-width="23.552"><path fill="#000000" d="M255 471L91.7 387V41h328.6v346zm-147.3-93.74L255 453l149.3-75.76V57H107.7v320.26zm146.43-65.76l98.27-49.89v-49.9l-98.14 49.82-94.66-48.69v50zm.13 32.66l-94.66-48.69v50l94.54 48.62 98.27-49.89v-49.9z"></path></g><g id="SVGRepo_iconCarrier"><path fill="#000000" d="M255 471L91.7 387V41h328.6v346zm-147.3-93.74L255 453l149.3-75.76V57H107.7v320.26zm146.43-65.76l98.27-49.89v-49.9l-98.14 49.82-94.66-48.69v50zm.13 32.66l-94.66-48.69v50l94.54 48.62 98.27-49.89v-49.9z"></path></g></svg>
@@ -210,7 +208,6 @@ const BadgeMetrics = ({ badge }) => (
   <svg width="32px" height="32px" viewBox="0 0 512.00 512.00" xmlns="http://www.w3.org/2000/svg" fill="#8cbfde" stroke="#8cbfde" stroke-width="26.624000000000002"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" stroke="#05ffee" stroke-width="23.552"><path fill="#000000" d="M255 471L91.7 387V41h328.6v346zm-147.3-93.74L255 453l149.3-75.76V57H107.7v320.26zm146.43-65.76l98.27-49.89v-49.9l-98.14 49.82-94.66-48.69v50zm.13 32.66l-94.66-48.69v50l94.54 48.62 98.27-49.89v-49.9z"></path></g><g id="SVGRepo_iconCarrier"><path fill="#000000" d="M255 471L91.7 387V41h328.6v346zm-147.3-93.74L255 453l149.3-75.76V57H107.7v320.26zm146.43-65.76l98.27-49.89v-49.9l-98.14 49.82-94.66-48.69v50zm.13 32.66l-94.66-48.69v50l94.54 48.62 98.27-49.89v-49.9z"></path></g></svg>
         <div className="text-lg text-white hover:text-[#38C8F8] font-semibold">43</div>
       </div>
-    </div>
 
     {/* Row: Vertical full-width below */}
     <div className="flex flex-col items-center p-2 shadow-md rounded-md bg-black/60">
@@ -246,9 +243,18 @@ const BadgeMetrics = ({ badge }) => (
         )}
 {/* bg-gradient-to-b from-[#1E3A8A] to-[#00011E] or from-[#03001e] via-[#7303c0] via-[#ec38bc] to-[#fdeff9]*/}
         <div className="max-w-4xl mx-auto bg-linear-to-br from-[#000046] to-[#1CB5E0]  background:blur-md rounded-lg p-6 shadow-lg border border-[#38C8F8]">
+              {/* Authorized Byline */}
+              <div className="text-xs text-gray-400 italic text-right pr-1">
+                Authorized and issued by {/* <span className="text-[#38C8F8] not-italic">DeepCytes.</span> */}
+                <img
+                  src="https://static.wixstatic.com/media/e48a18_c949f6282e6a4c8e9568f40916a0c704~mv2.png/v1/crop/x_0,y_151,w_1920,h_746/fill/w_203,h_79,fp_0.50_0.50,q_85,usm_0.66_1.00_0.01,enc_auto/For%20Dark%20Theme.png"
+                  alt="Authorized Badge"
+                  className="ml-auto w-20 mb-2 mr-1"
+                />
+              </div>
           <div className="flex flex-col md:flex-row md:space-x-8">
             {/* Left side: Image + Metrics */}
-            <div className="flex-shrink-0 mb-6 md:mb-0 md:w-1/3">
+            <div className="flex-shrink-0 mb-2 md:mb-0 md:w-1/3">
               <img
                 crossOrigin="anonymous"
                 src={`${process.env.SERVER_URL}/badge/images/${badge?.id}` || badge.image?.data}
@@ -261,16 +267,7 @@ const BadgeMetrics = ({ badge }) => (
             </div>
 
             {/* Right side (or full stack on mobile): Description & Skills */}
-            <div className="flex flex-col flex-grow gap-4 md:w-2/3">
-              {/* Authorized Byline */}
-              <div className="text-xs text-gray-400 italic text-right pr-1">
-                Authorized and issued by {/* <span className="text-[#38C8F8] not-italic">DeepCytes.</span> */}
-                <img
-                  src="https://static.wixstatic.com/media/e48a18_c949f6282e6a4c8e9568f40916a0c704~mv2.png/v1/crop/x_0,y_151,w_1920,h_746/fill/w_203,h_79,fp_0.50_0.50,q_85,usm_0.66_1.00_0.01,enc_auto/For%20Dark%20Theme.png"
-                  alt="Authorized Badge"
-                  className="ml-auto w-20 mb-2 mr-1"
-                />
-              </div>
+            <div className="flex flex-col justify-around flex-grow gap-4 md:w-2/3">
               {/* On mobile, description appears after image + metrics naturally */}
               <BadgeDescription badge={badge} />
               <div className="grid md:grid-cols-1 md:gap-6">
@@ -278,12 +275,12 @@ const BadgeMetrics = ({ badge }) => (
               </div>
   { /* <BadgeSkillsList skills={badge.skillsEarned} /> */}
               {/* Passing Criteria */}
-              <div className="grid md:grid-cols-2 md:gap-6">
-              <div className="relative z-0 w-full mb-5 group bg-black/60 border border-[#38C8F8] rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
-                <strong className='text-gray-500 hover:text-white'>Passing Criteria:</strong> has scored at least 70% in their assessment and completed all mandatory tasks to earn this badge.
+              <div className="flex space-x-2 ">
+              <div className="relative w-full z-0 mb-5 group bg-black/60 border rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
+                <strong className='block text-gray-500 hover:text-white -mt-7 bg-black w-max px-2.5'>Passing Criteria</strong> Scored at least 70% in their assessment and completed all mandatory tasks to earn this badge.
               </div>
-              <div className="relative z-0 w-full mb-5 group bg-black/60 border border-[#38C8F8] rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
-                <strong className='text-gray-500 hover:text-white'>Course name:</strong> {badge.course}
+              <div className="relative z-0 w-2/5 mb-5 group bg-black/60 border  rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
+                <strong className='block text-gray-500 hover:text-white -mt-7 bg-black w-max px-2.5'>Course</strong> {badge.course}
               </div>
               </div>
             </div>

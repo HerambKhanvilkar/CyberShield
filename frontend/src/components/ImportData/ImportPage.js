@@ -3,6 +3,8 @@ import axios from 'axios';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { toast } from 'react-toastify';
+import { Checkbox } from '@/components/ui/checkbox' 
+import { Label } from '@/components/ui/label' 
 import CsvDataTable from '@/components/badgeAdminComponents/CsvDataTable';
 
 function MyComponent() {
@@ -16,7 +18,7 @@ function MyComponent() {
   const [status, setStatus] = useState('');
   const [revision, setRevision] = useState(null);
   const [revisionStatus, setRevisionStatus] = useState('');
-  const [refresh, setRefresh] = useState(false);
+  const [upsert, setUpsert] = useState(false);
   const [csvUploadtoastId, setCsvUploadtoastId] = useState('');
 
   // Create a ref to store the latest jobId
@@ -301,9 +303,15 @@ function MyComponent() {
         <div className="space-x-2 space-y-2">
         <>
         { modifyAndUpdateButton ? (
+            <div className="flex flex-col items-center space-x-2">
+          <div>
+          <Checkbox id="checkbox" onClick={() => setUpsert(!upsert)} checked={upsert} />
+          <Label htmlFor="checkbox" className="text-gray-500"><i>*Update only badge data and not user details </i></Label>
+          </div>
           <button  onClick={() => handleUserImport(true)} className="bg-blue-500 text-white text-sm px-4 py-1 rounded">
           Modify and Update                    
           </button>
+        </div>
         ): ( null )}
         </>
         <>
