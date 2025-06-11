@@ -554,6 +554,7 @@ router.put('/user/profile', authenticateJWT, uploadImage.single('profileImage'),
     const email = await getUsername(authHeader);
     const user = await User.findOne({ email });
     var userImage = await UserImage.findOne({email});
+    var imageData = null;
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -590,14 +591,14 @@ router.put('/user/profile', authenticateJWT, uploadImage.single('profileImage'),
 
       const image = sharp(req.file.path);
       image.metadata() // get image metadata for size
-        .then(function(metadata) {
+        .then(async function(metadata) {
           if (metadata.width > 400 || metadata.height > 400) {
             return image.resize({ width: 400, height: 400 }).toBuffer(); // resize if too big
           } else {
             return image.toBuffer();
           }
         })
-        .then(function(data) { // upload to s3 storage
+        .then(async function(data) { // upload to s3 storage
           const userImageObj = {
             id: user._id,
             email: user["email"],
@@ -612,12 +613,12 @@ router.put('/user/profile', authenticateJWT, uploadImage.single('profileImage'),
             userImage["contentType"]= req.file.mimetype;
           }
           console.log('userImageObj', userImageObj);
-          userImage.save();
+          await userImage.save();
         })
     }
 
-    user.set("image", "/user/profile/image/" + userImage._id);
-    user.save();
+    if (req.file) { user.set("image", "/user/profile/image/" + userImage._id); }
+    await user.save();
     return res.status(200).json({ message: "Profile Updated successfully." });
   } catch (e) {
     console.log("Error during profile update", e);
