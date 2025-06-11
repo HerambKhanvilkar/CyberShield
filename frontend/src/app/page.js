@@ -136,10 +136,10 @@ export default function LandingPage() {
               {/* Text content */}
               <div className="flex-1 text-center md:text-left">
                 <h3 className="text-xl sm:text-2xl mb-5 font-semibold">
-                  {badges[activeIndex].name}
+                  {badges[activeIndex]?.name}
                 </h3>
                 <p className="text-text-medium text-base sm:text-lg leading-relaxed text-left mb-8 max-w-lg mx-auto md:mx-0">
-                  {truncateText(badges[activeIndex].description, 200)}
+                  {truncateText(badges[activeIndex]?.description, 200)}
                 </p>
                 
                 {/* Stats */}
@@ -159,8 +159,8 @@ export default function LandingPage() {
               <div className="w-[250px] h-[250px] rounded-full bg-gradient-radial from-cyan-400/10 to-transparent flex items-center justify-center mx-auto md:mx-0">
                 <img
                   crossOrigin="anonymous"
-                  src={`${process.env.SERVER_URL}/badge/images/${badges[activeIndex].id}` || badges[activeIndex].img?.data}
-                  alt={badges[activeIndex].title}
+                  src={`${process.env.SERVER_URL}/badge/images/${badges[activeIndex]?.id}` || badges[activeIndex].img?.data}
+                  alt={badges[activeIndex]?.title}
                   className="max-w-[80%] max-h-[80%] object-contain drop-shadow-md animate-float"
                 />
               </div>
