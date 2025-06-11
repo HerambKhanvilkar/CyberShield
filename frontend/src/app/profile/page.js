@@ -323,84 +323,104 @@ const BadgeMetrics = ({ badge }) => (
       <Navbar />
       <main className="bg-[#00011E] text-white min-h-screen px-4 py-6 md:px-8">
         <div className="w-full h-full mx-auto grid md:grid-cols-5 gap-6">
-          {/* Sidebar */}
-          <aside className="md:col-span-1 p-4 border-r border-b rounded-2xl text-center shadow-lg">
-            <div className="border-4 border-[#0c0e3c]  rounded-full w-max h-28 mx-auto overflow-hidden mb-4">
-              <img
-                src={ process.env.SERVER_URL + userData.image}
-                alt="User's Profile picture"
-                className="object-cover w-full h-full"
-              />
-            </div>
-            <h2 className="text-lg font-bold">
-              {userData.firstName} {userData.lastName}
-            </h2>
-            <p className="text-sm text-gray-400 mt-1">{userData.email}</p>
-    <Button onClick={() => handleUpdateProfileModal(true)} className="bg-gray-500 px-2.5 my-2 py-1 h-max text-blue-100 hover:text-black-800 hover:bg-blue-500"><Edit className="mr-2 h-4 w-4" />Edit</Button>
+          <aside className="md:col-span-1 p-4 rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg text-center">
+          {/* Profile Picture */}
+          <div className="border-4 border-[#0c0e3c] rounded-full w-max h-28 mx-auto overflow-hidden mb-4">
+            <img
+              src={process.env.SERVER_URL + userData.image}
+              alt="User's Profile picture"
+              className="object-cover w-full h-full"
+            />
+          </div>
 
-            <div className="mt-6">
-              <h3 className="text-sm font-semibold text-gray-300 mb-2">
-                My Badges
-              </h3>
-              <div className="flex flex-row flex-wrap space-x-2 justify-between space-y-4">
-                {userData.badges?.length > 0 ? (
-                  userData.badges.map((badge, i) => (
-                    <img
-                      key={i}
-                      src={process.env.SERVER_URL + `/badge/images/${badge.badgeId}`}
-                      alt={badge.badgeId}
-                      className={`w-12 h-12 rounded-full border-2 cursor-pointer ${
-                        selectedBadgeId === badge.badgeId
-                          ? "border-purple-500"
-                          : "border-transparent"
-                      }`}
-                      onClick={() => setSelectedBadgeId(badge.badgeId)}
-                      title={badge.name}
-                    />
-                  ))
-                ) : (
-                  <p className="text-gray-400 text-xs col-span-full">No badges</p>
-                )}
-              </div>
-            </div>
+          {/* User Info */}
+          <h2 className="text-lg font-bold text-white">
+            {userData.firstName} {userData.lastName}
+          </h2>
+          <p className="text-sm text-gray-400 mt-1">{userData.email}</p>
 
-          </aside>
+          {/* Edit Button */}
+          <Button
+            onClick={() => handleUpdateProfileModal(true)}
+            className="bg-gray-500 px-2.5 my-2 py-1 h-max text-blue-100 hover:text-black hover:bg-blue-500"
+          >
+            <Edit className="mr-2 h-4 w-4" />
+            Edit
+          </Button>
+
+          {/* My Badges Section */}
+          <div className="mt-6">
+            <h3 className="text-sm font-semibold text-gray-300 mb-2">My Badges</h3>
+            <div className="flex flex-row flex-wrap gap-2 justify-center">
+              {userData.badges?.length > 0 ? (
+                userData.badges.map((badge, i) => (
+                  <img
+                    key={i}
+                    src={process.env.SERVER_URL + `/badge/images/${badge.badgeId}`}
+                    alt={badge.badgeId}
+                    className={`w-12 h-12 rounded-full border-2 cursor-pointer transition ${
+                      selectedBadgeId === badge.badgeId
+                        ? "border-purple-500"
+                        : "border-white/10"
+                    }`}
+                    onClick={() => setSelectedBadgeId(badge.badgeId)}
+                    title={badge.name}
+                  />
+                ))
+              ) : (
+                <p className="text-gray-400 text-xs col-span-full">No badges</p>
+              )}
+            </div>
+          </div>
+        </aside>
+
 
           {/* Main Content */}
           <section className="md:col-span-4 grid gap-6">
-    <div className="grid md:grid-cols-2 md:gap-6">
-            {/* Achievements */}
-            <div className="relative p-2.5 border-r border-b border-gray-2 rounded-lg z-0 w-full mb-5 group">
-              <h3 className="text-xl font-semibold mb-4">Achievements</h3>
-              { userData.achievements.length > 0 ? (
-              <ol className="list-none pl-5 space-y-2 text-sm md:text-base text-gray-300">
-                { userData.achievements.map((a, i) => (
-                <li key={i} className="bg-[#0c0e3c] text-blue-100 text-xs font-semibold px-2.5 py-0.5 rounded" >{a}</li>
-              ))}
-              </ol>
-              ) : (
-              <p>
-                  You haven’t earned any Achievements yet.
-                </p>
-              )}
-            </div>
+            <div className="grid md:grid-cols-2 md:gap-6">
+              {/* Achievements */}
+              <div className="relative p-4 rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg w-full mb-5">
+                <h3 className="text-xl font-semibold text-white border-b border-gray-700 pb-2 mb-4 flex items-center gap-2">
+                  🏆 Achievements
+                </h3>
+                {userData.achievements.length > 0 ? (
+                  <ol className="list-none pl-5 space-y-2 text-sm md:text-base text-gray-300">
+                    {userData.achievements.map((a, i) => (
+                      <li
+                        key={i}
+                        className="bg-[#0c0e3c] text-blue-100 text-xs font-semibold px-2.5 py-1 rounded border border-blue-400/10"
+                      >
+                        {a}
+                      </li>
+                    ))}
+                  </ol>
+                ) : (
+                  <p className="text-gray-400 text-sm">You haven’t earned any Achievements yet.</p>
+                )}
+              </div>
 
-            {/* Courses */}
-            <div className="relative p-2.5 border-r border-b border-gray-2 rounded-lg z-0 w-full mb-5 group">
-              <h3 className="text-xl font-semibold mb-4">Courses</h3>
-    {userData.courses.length > 0 ? (
-               <ul className="list-none pl-5 space-y-2 text-sm md:text-base text-gray-300">
-      {userData.courses.map((c,i) => (
-                <li key={i} className="bg-[#0c0e3c] text-blue-100 text-xs font-semibold px-2.5 py-0.5 rounded" >{c}</li>
-      ))}
-              </ul>
-    ): (
-              <p>
-                  You haven’t Done any courses yet.
-                </p>
-    )}
+              {/* Courses */}
+              <div className="relative p-4 rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg w-full mb-5">
+                <h3 className="text-xl font-semibold text-white border-b border-gray-700 pb-2 mb-4 flex items-center gap-2">
+                  📚 Courses
+                </h3>
+
+                {userData.courses.length > 0 ? (
+                  <ul className="list-none pl-5 space-y-2 text-sm md:text-base text-gray-300">
+                    {userData.courses.map((c, i) => (
+                      <li
+                        key={i}
+                        className="bg-[#0c0e3c] text-blue-100 text-xs font-semibold px-2.5 py-1 rounded border border-blue-400/10"
+                      >
+                        {c}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-400 text-sm">You haven’t done any courses yet.</p>
+                )}
+              </div>
             </div>
-    </div>
 
             {/* Badge Details */}
             <div className="p-6 rounded-2xl shadow-md">
