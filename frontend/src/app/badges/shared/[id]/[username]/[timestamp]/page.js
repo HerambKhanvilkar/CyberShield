@@ -289,7 +289,6 @@ const BadgeMetrics = ({ badge }) => (
             </div>
           </div>
         </div>
-        </div>
       </main>
       <Footer />
     </div>
