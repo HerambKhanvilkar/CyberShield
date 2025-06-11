@@ -351,21 +351,6 @@ const BadgeMetrics = ({ badge }) => (
             <p className="text-sm text-gray-400 mt-1">{userData.email}</p>
     <Button onClick={() => handleUpdateProfileModal(true)} className="bg-gray-500 px-2.5 my-2 py-1 h-max text-blue-100 hover:text-black-800 hover:bg-blue-500"><Edit className="mr-2 h-4 w-4" />Edit</Button>
 
-          {/* User Info */}
-          <h2 className="text-lg font-bold text-white">
-            {userData.firstName} {userData.lastName}
-          </h2>
-          <p className="text-sm text-gray-400 mt-1">{userData.email}</p>
-
-          {/* Edit Button */}
-          <Button
-            onClick={() => handleUpdateProfileModal(true)}
-            className="bg-gray-500 px-2.5 my-2 py-1 h-max text-blue-100 hover:text-black hover:bg-blue-500"
-          >
-            <Edit className="mr-2 h-4 w-4" />
-            Edit
-          </Button>
-
           {/* My Badges Section */}
           <div className="mt-6">
             <h3 className="text-sm font-semibold text-gray-300 mb-2">My Badges</h3>
@@ -445,6 +430,7 @@ const BadgeMetrics = ({ badge }) => (
     )}
           </ScrollArea >
             </div>
+            </div>
 
             {/* Badge Details */}
             <div className="rounded-2xl shadow-md">
@@ -503,7 +489,6 @@ const BadgeMetrics = ({ badge }) => (
                 </button>
               </div>
             )}
-          </div>
           </div>
           </section>
         </div>
