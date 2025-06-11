@@ -1,6 +1,6 @@
 "use client";
 import React, { useRef,useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Award,Trophy, Share2, Shield} from 'lucide-react';
+import { ChevronLeft, ChevronRight, Award,Trophy, Share2, Shield, BookOpen} from 'lucide-react';
 import axios from 'axios';
 import Navbar from "@/components/Navbar";
 import Footer from '@/components/Footer';
@@ -81,7 +81,7 @@ const scrollRight = () => {
 function AllBadgeMyBadgeFilter() {
   return (
     // add fixed  to the nav class name to make the navbar stick to the bottom of the screen
-      <div className={(earnedBadges.length > 0 ? "display" : "hidden") + " container mx-auto mt-2 flex items-center justify-center md:justify-end md:-mx-4 space-x-5 "}>
+      <div className={(earnedBadges.length > 0 ? "display" : "hidden") + " container mx-auto mt-2 flex items-center justify-center md:justify-start md:mx-4 space-x-5 "}>
         <Button onClick={() => handleBadgeFilter('all')} size="icon" className={filterCss['allCss']} variant={filterCss['allVariant']}>
           All Badges
         </Button>
@@ -289,52 +289,69 @@ return (
 
 // Badge Metrics Component
 const BadgeMetrics = () => (
-  <div className="w-full flex flex-col gap-2 md:flex-row md:justify-between mt-0 md:mt-15">
-    {/* Mobile: Level + Earners side by side */}
-    <div className="flex flex-row gap-2 md:flex-1">
-      {[
-        { label: "Level", value: currentBadge?.level || "N/A" },
-        { label: "Earners", value: "43" },
-      ].map(({ label, value }, index) => (
-        <div
-          key={index}
-          className="flex-1 rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg p-4 flex flex-col justify-between text-center min-h-[50px]
-          transition-shadow duration-300 ease-in-out
-          hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)]"
-        >
-          <div className="text-sm uppercase text-gray-400">{label}</div>
-          <div className="text-lg font-semibold my-auto text-cyan-500">{value}</div>
+  <div className="w-full flex flex-col gap-2 mt-0 md:mt-15">
+    {/* Top Row: Level + Earners + Vertical (all in one row on md+) */}
+    <div className="flex flex-col gap-2 md:flex-row md:justify-between">
+      {/* Level + Earners */}
+      <div className="flex flex-row gap-2 md:flex-1">
+        {[
+          { label: "Level", value: currentBadge?.level || "N/A" },
+          { label: "Earners", value: "43" },
+        ].map(({ label, value }, index) => (
+          <div
+            key={index}
+            className="flex-1 rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg p-4 flex flex-col justify-between text-center min-h-[50px]
+            transition-shadow duration-300 ease-in-out
+            hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)]"
+          >
+            <div className="text-sm uppercase text-gray-600">{label}</div>
+            <div className="text-lg font-semibold my-auto text-white">{value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Vertical */}
+      <div className="flex md:flex-1">
+        <div className="flex-1 rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg p-4 flex flex-col justify-between text-center min-h-[50px]
+              transition-shadow duration-300 ease-in-out
+              hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)]">
+          <div className="text-sm uppercase text-gray-600">Vertical</div>
+          <div className="text-lg font-semibold text-white">
+            {currentBadge?.vertical || "General"}
+          </div>
         </div>
-      ))}
+      </div>
     </div>
 
-    {/* Mobile: Vertical goes below, but aligns normally in row on md+ */}
-    <div className="flex md:flex-1">
-      <div className="flex-1 rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg p-4 flex flex-col justify-between text-center min-h-[50px]
-            transition-shadow duration-300 ease-in-out
-            hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)]">
-        <div className="text-sm uppercase text-gray-400">Vertical</div>
-        <div className="text-lg font-semibold text-cyan-500">{currentBadge?.vertical || "General"}</div>
+    {/* Course Block (always full width, always below the 3 above) */}
+    <div className="flex w-full">
+      <div className="flex-1 p-4 mt-1 rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg">
+        <h3 className="text-xl font-semibold text-white flex items-center gap-2 mb-2">
+          <BookOpen />
+          Course
+        </h3>
+        <p className="text-blue-300 text-sm font-medium">
+          {currentBadge?.course || "No course linked to this badge."}
+        </p>
       </div>
     </div>
   </div>
 );
 
-  // Badge Description Component
-  const BadgeDescription = () => (
-  <div className="space-y-4 p-4 rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg">
-    <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2 text-white flex items-center gap-2">
-      <Trophy/>
-      Badge Details
-    </h2>
-    <div className="flex items-center space-x-2 text-lg text-blue-400 font-medium">
-      <span className="text-gray-300">Course:</span>
-      <span className="text-blue-300">{currentBadge?.course || 'N/A'}</span>
-    </div>
+  // Badge Description Block
+const BadgeDescription = () => (
+  <div>
+    {/* Badge Details Block */}
+    <div className="space-y-4 p-4 rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg">
+      <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2 text-white flex items-center gap-2">
+        <Trophy />
+        Badge Details
+      </h2>
 
-    <p className="text-gray-300 max-h-[170px] overflow-y-auto scrollbar leading-relaxed text-sm font-medium">
-      {currentBadge?.description || 'No description available for this badge.'}
-    </p>
+      <p className="text-gray-300 max-h-[170px] overflow-y-auto scrollbar leading-relaxed text-sm font-medium">
+        {currentBadge?.description || 'No description available for this badge.'}
+      </p>
+    </div>
   </div>
 );
 

@@ -6,35 +6,40 @@ import ParticleBackground from "@/components/ParticleBackground";
 import SplineScene from "@/components/SplineScene";
 import SplineScene2 from "@/components/SplineScene2";
 import Count from "@/components/count";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function LandingPage() {
   const [activeIndex, setActiveIndex] = useState(0);
-  const carouselRef = useRef(null);
   const [badges, setBadges] = useState([]);
   const [loading, setLoading] = useState(true);
+  const carouselRef = useRef(null); // renamed for clarity
+
   const selectBadge = (i) => setActiveIndex(i);
+
   const truncateText = (text, maxLength) => {
-  if (text === null || text === undefined) {
-    return '';
-  }
-  if (text.length > maxLength) {
-    return text.substring(0, maxLength) + '...';
-  }
-  return text;
-};
+    if (!text) return '';
+    return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+  };
+
+  // 🔧 SCROLL FUNCTIONS should be HERE:
+  const scrollLeft = () => {
+    if (carouselRef.current) {
+      carouselRef.current.scrollBy({ left: -150, behavior: "smooth" });
+    }
+  };
+
+  const scrollRight = () => {
+    if (carouselRef.current) {
+      carouselRef.current.scrollBy({ left: 150, behavior: "smooth" });
+    }
+  };
 
   useEffect(() => {
     const fetchBadges = async () => {
       try {
         const res = await fetch(`${process.env.SERVER_URL}/badges`);
         const data = await res.json();
-
-        if (Array.isArray(data.badges)) {
-          setBadges(data.badges);
-        } else {
-          console.error("API response format unexpected:", data);
-          setBadges([]);
-        }
+        setBadges(Array.isArray(data.badges) ? data.badges : []);
       } catch (error) {
         console.error("Failed to fetch badges:", error);
         setBadges([]);
@@ -46,9 +51,7 @@ export default function LandingPage() {
     fetchBadges();
 
     const interval = setInterval(() => {
-      setActiveIndex((prev) =>
-        badges.length ? (prev + 1) % badges.length : 0
-      );
+      setActiveIndex((prev) => (badges.length ? (prev + 1) % badges.length : 0));
     }, 5000);
 
     return () => clearInterval(interval);
@@ -63,7 +66,8 @@ export default function LandingPage() {
           <SplineScene />
         </div>
         <div className="block md:hidden absolute inset-0 z-0 pointer-events-auto">
-          <SplineScene2 />
+          {/* <SplineScene2 /> */}
+          <img src={"https://media.gettyimages.com/id/1352893394/video/cyber-security-abstract-concept-3d-contour-of-shield-icon-on-digital-background-computer.jpg?s=640x640&k=20&c=cXD5qysedU9OhLOCtNw3bxdCf8SXNp3gJNIvP38XQIc="}></img>
         </div>
 
         {/* Foreground Content */}
@@ -97,7 +101,7 @@ export default function LandingPage() {
           </section> */}
           <section className="min-h-[calc(100vh-70px)] mr-auto flex items-center justify-center text-center px-5 py-12 relative">
             <div
-              className="max-w-[800px] mt-100 md:mt-0 mr-auto animate-fadeIn pointer-events-auto
+              className="max-w-[800px] mt-0 md:mt-0 mr-auto animate-fadeIn pointer-events-auto
                         md:bg-transparent md:backdrop-blur-none md:border-none
                         bg-white/10 backdrop-blur-md border border-white/10 rounded-xl p-4"
             >
@@ -128,18 +132,22 @@ export default function LandingPage() {
 
           {/* Featured Badge */}
           <section className="py-2 z-50 bg-[#00040A] pointer-events-auto">
-            <h2 className="text-3xl sm:text-4xl mb-10 text-center">Featured Badge</h2>
+            <h2 className="text-3xl sm:text-4xl mb-2 md:mb-10 text-center text-cyan-500">Featured Badges</h2>
             
             {/* Use column-reverse on mobile, row on md+ */}
-            <div className="flex flex-col-reverse md:flex-row w-5/6 mx-auto items-center gap-10 text-text-light">
-              
+            <div className="flex flex-col-reverse md:flex-row w-5/6 mx-auto items-center gap-0 md:gap-2 text-text-light">
               {/* Text content */}
               <div className="flex-1 text-center md:text-left">
-                <h3 className="text-xl sm:text-2xl mb-5 font-semibold">
+                <h3 className="text-xl sm:text-2xl mb-0 md:mb-5 font-semibold">
                   {badges[activeIndex]?.name}
                 </h3>
-                <p className="text-text-medium text-base sm:text-lg leading-relaxed text-left mb-8 max-w-lg mx-auto md:mx-0">
-                  {truncateText(badges[activeIndex]?.description, 200)}
+                {/* desktop description */}
+                <p className="hidden md:block text-text-medium text-base sm:text-lg leading-relaxed text-left mb-0 md:mb-8 max-w-lg mx-auto md:mx-0">
+                  {truncateText(badges[activeIndex]?.description, 250)}
+                </p>
+                {/* mobile description */}
+                <p className="block md:hidden text-text-medium text-base sm:text-lg leading-relaxed text-left mb-0 md:mb-8 max-w-lg mx-auto md:mx-0">
+                  {truncateText(badges[activeIndex]?.description, 150)}
                 </p>
                 
                 {/* Stats */}
@@ -166,37 +174,59 @@ export default function LandingPage() {
               </div>
             </div>
           </section>
-          {/* Badge Carousel */}
-          {!loading && badges.length > 0 && (
-            <section className="pointer-events-auto z-50 bg-[#00040A] py-20 bg-gradient-to-t from-primary-dark to-transparent">
-              <div className="overflow-y-hidden scrollbar w-5/6 mx-auto overflow-x-auto no-scrollbar px-5">
-                <div
-                  className="flex gap-6 justify-start scroll-smooth snap-x snap-mandatory"
-                  ref={carouselRef}
-                >
-                  {badges.map((badge, i) => (
-                    <div
-                      key={badge.id}
-                      onClick={() => selectBadge(i)}
-                      className={`w-24 h-24 flex-shrink-0 snap-center cursor-pointer rounded-lg flex items-center justify-center transition transform ${
-                        i === activeIndex
-                          ? "bg-cyan-400/20 shadow-lg scale-110"
-                          : "bg-white/5 hover:bg-white/10 hover:-translate-y-1"
-                      }`}
-                    >
-                      <img
-                        crossOrigin="anonymous"
-                        src={`${process.env.SERVER_URL}/badge/images/${badge.id}` || badge.image || badge.img?.data}
-                        alt={badge.title}
-                        className="max-w-[80%] max-h-[80%] object-contain"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
-          )}
 
+          {/* Badge Carousel */}
+          <section className="relative scrollbar pointer-events-auto z-50 bg-[#00040A] py-20 bg-gradient-to-t from-primary-dark to-transparent">
+          {/* Chevron Left */}
+          <button
+            aria-label="Scroll Left"
+            onClick={scrollLeft}
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-gray-800 hover:bg-gray-700 p-2 rounded-full shadow-md"
+          >
+            <ChevronLeft className="w-6 h-6 text-white" />
+          </button>
+
+          {/* Chevron Right */}
+          <button
+            aria-label="Scroll Right"
+            onClick={scrollRight}
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-gray-800 hover:bg-gray-700 p-2 rounded-full shadow-md"
+          >
+            <ChevronRight className="w-6 h-6 text-white" />
+          </button>
+
+          {/* Scrollable Badges */}
+          <div
+            ref={carouselRef}
+            className="w-5/6 mx-auto px-5 overflow-x-scroll scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900"
+            style={{
+              WebkitOverflowScrolling: "touch",
+              overflowY: "hidden",
+              scrollSnapType: "x mandatory",
+            }}
+          >
+            <div className="flex gap-6 justify-start snap-x snap-mandatory">
+              {badges.map((badge, i) => (
+                <div
+                  key={badge.id}
+                  onClick={() => selectBadge(i)}
+                  className={`w-24 h-24 flex-shrink-0 snap-center cursor-pointer rounded-lg flex items-center justify-center transition transform ${
+                    i === activeIndex
+                      ? "bg-cyan-400/20 shadow-lg scale-110"
+                      : "bg-white/5 hover:bg-white/10 hover:-translate-y-1"
+                  }`}
+                >
+                  <img
+                    crossOrigin="anonymous"
+                    src={`${process.env.SERVER_URL}/badge/images/${badge.id}` || badge.image || badge.img?.data}
+                    alt={badge.title}
+                    className="max-w-[80%] max-h-[80%] object-contain"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
           {/* Why Earn Badges */}
           <section className="pointer-events-auto py-20 z-50 bg-[#00040A]">
             <h2 className="text-3xl sm:text-4xl text-center text-white mb-10">
