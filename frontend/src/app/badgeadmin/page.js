@@ -211,7 +211,7 @@ const updateUserDetails = (email, updatedUser) => {
   return (
     <>
       <Navbar />
-      <div className="min-h-full p-3 pb-0 pt-2">
+      <div className="min-h-full p-0 md:p-3 pb-0 pt-2">
         <div className="mb-4 border-b border-gray-700">
     <ul className="flex flex-wrap -mb-px text-sm font-medium text-center">
           {TABS.map((tab, index) => (

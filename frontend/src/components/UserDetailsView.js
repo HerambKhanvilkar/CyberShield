@@ -265,7 +265,7 @@ const userBadgeIds = selectedUser?.badges.map(b => Number(b.badgeId)) || [];
           onChange={(val) => handleChange("password", val)}
           className="w-full"
         />
-        <label className="checkbox-wrapper mt-1">
+        <label className="checkbox-wrapper -mt-2">
           <input
             id="send-mail-checkbox"
             type="checkbox"
@@ -296,7 +296,7 @@ const userBadgeIds = selectedUser?.badges.map(b => Number(b.badgeId)) || [];
                 className="checkbox-tick"
               />
             </svg>
-            <span className="label-text text-sm">Send mail to user</span>
+            <span className="label-text text-sm">Send Updated Password To User</span>
           </span>
         </label>
       </div>
@@ -353,8 +353,7 @@ const userBadgeIds = selectedUser?.badges.map(b => Number(b.badgeId)) || [];
       </div>
     </div>
 
-
-      <div className="w-full flex flex-col lg:flex-row mt-2 gap-4">
+      <div className="w-full flex flex-col lg:flex-row mt-4 md:mt-2 gap-4">
         <div className="flex flex-col w-full lg:w-1/2 gap-4 items-start justify-start">
           <Achievements
             achievements={selectedUser.achievements}

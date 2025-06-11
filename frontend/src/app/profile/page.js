@@ -351,33 +351,47 @@ const BadgeMetrics = ({ badge }) => (
             <p className="text-sm text-gray-400 mt-1">{userData.email}</p>
     <Button onClick={() => handleUpdateProfileModal(true)} className="bg-gray-500 px-2.5 my-2 py-1 h-max text-blue-100 hover:text-black-800 hover:bg-blue-500"><Edit className="mr-2 h-4 w-4" />Edit</Button>
 
-            <div className="mt-6">
-              <h3 className="text-sm font-semibold text-gray-300 mb-2">
-                My Badges
-              </h3>
-              <div className="flex flex-row flex-wrap space-x-2 justify-between space-y-4">
-                {userData.badges?.length > 0 ? (
-                  userData.badges.map((badge, i) => (
-                    <img
-                      key={i}
-                      src={process.env.SERVER_URL + `/badge/images/${badge.badgeId}`}
-                      alt={badge.badgeId}
-                      className={`w-12 h-12 rounded-full border-2 cursor-pointer ${
-                        selectedBadgeId === badge.badgeId
-                          ? "border-purple-500"
-                          : "border-transparent"
-                      }`}
-                      onClick={() => setSelectedBadgeId(badge.badgeId)}
-                      title={badge.name}
-                    />
-                  ))
-                ) : (
-                  <p className="text-gray-400 text-xs col-span-full">No badges</p>
-                )}
-              </div>
-            </div>
+          {/* User Info */}
+          <h2 className="text-lg font-bold text-white">
+            {userData.firstName} {userData.lastName}
+          </h2>
+          <p className="text-sm text-gray-400 mt-1">{userData.email}</p>
 
-          </aside>
+          {/* Edit Button */}
+          <Button
+            onClick={() => handleUpdateProfileModal(true)}
+            className="bg-gray-500 px-2.5 my-2 py-1 h-max text-blue-100 hover:text-black hover:bg-blue-500"
+          >
+            <Edit className="mr-2 h-4 w-4" />
+            Edit
+          </Button>
+
+          {/* My Badges Section */}
+          <div className="mt-6">
+            <h3 className="text-sm font-semibold text-gray-300 mb-2">My Badges</h3>
+            <div className="flex flex-row flex-wrap gap-2 justify-center">
+              {userData.badges?.length > 0 ? (
+                userData.badges.map((badge, i) => (
+                  <img
+                    key={i}
+                    src={process.env.SERVER_URL + `/badge/images/${badge.badgeId}`}
+                    alt={badge.badgeId}
+                    className={`w-12 h-12 rounded-full border-2 cursor-pointer transition ${
+                      selectedBadgeId === badge.badgeId
+                        ? "border-purple-500"
+                        : "border-white/10"
+                    }`}
+                    onClick={() => setSelectedBadgeId(badge.badgeId)}
+                    title={badge.name}
+                  />
+                ))
+              ) : (
+                <p className="text-gray-400 text-xs col-span-full">No badges</p>
+              )}
+            </div>
+          </div>
+        </aside>
+
 
           {/* Main Content */}
           <section className="md:col-span-4 grid gap-6">
@@ -431,7 +445,6 @@ const BadgeMetrics = ({ badge }) => (
     )}
           </ScrollArea >
             </div>
-    </div>
 
             {/* Badge Details */}
             <div className="rounded-2xl shadow-md">
@@ -490,6 +503,7 @@ const BadgeMetrics = ({ badge }) => (
                 </button>
               </div>
             )}
+          </div>
           </div>
           </section>
         </div>

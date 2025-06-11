@@ -127,46 +127,48 @@ export default function LandingPage() {
           </section>
 
           {/* Featured Badge */}
-          {!loading && badges.length > 0 && (
-            <section className="py-20 z-50 bg-[#00040A] pointer-events-auto">
-              <h2 className="text-3xl sm:text-4xl mb-10 text-center">Featured Badge</h2>
-              <div className="flex w-5/6 mx-auto items-center gap-10 flex-wrap md:flex-nowrap text-text-light">
-                <div className="flex-1 text-center md:text-left">
-                  <h3 className="text-xl sm:text-2xl mb-5 font-semibold">
-                    {badges[activeIndex].name}
-                  </h3>
-                  <p className="text-text-medium text-base sm:text-lg leading-relaxed mb-8 max-w-lg mx-auto md:mx-0">
-                    {truncateText(badges[activeIndex].description,200)}
-                  </p>
-                  <div className="flex gap-8 flex-wrap justify-center md:justify-start">
-                    <div className="bg-white/5 rounded-lg p-4 text-center flex-1 min-w-[150px]">
-                      {/* <p className="text-xl font-bold text-cyan-400 mb-1">150+</p> */}
-                      <Count endValue={12345} format='number' direction="up" />
-                      <p className="text-sm text-text-medium">Holders</p>
-                    </div>
-                    <div className="bg-white/5 rounded-lg p-4 text-center flex-1 min-w-[150px]">
-                      {/* <p className="text-xl font-bold text-cyan-400 mb-1">2024</p> */}
-                      <Count endValue={2024} format='year' direction="up" />
-                      <p className="text-sm text-text-medium">Year Launched</p>
-                    </div>
+          <section className="py-2 z-50 bg-[#00040A] pointer-events-auto">
+            <h2 className="text-3xl sm:text-4xl mb-10 text-center">Featured Badge</h2>
+            
+            {/* Use column-reverse on mobile, row on md+ */}
+            <div className="flex flex-col-reverse md:flex-row w-5/6 mx-auto items-center gap-10 text-text-light">
+              
+              {/* Text content */}
+              <div className="flex-1 text-center md:text-left">
+                <h3 className="text-xl sm:text-2xl mb-5 font-semibold">
+                  {badges[activeIndex]?.name}
+                </h3>
+                <p className="text-text-medium text-base sm:text-lg leading-relaxed text-left mb-8 max-w-lg mx-auto md:mx-0">
+                  {truncateText(badges[activeIndex]?.description, 200)}
+                </p>
+                
+                {/* Stats */}
+                <div className="flex gap-4 justify-center md:justify-start flex-nowrap">
+                  <div className="bg-white/5 rounded-lg p-4 text-center w-[140px] md:flex-1 md:min-w-[150px]">
+                    <Count endValue={12345} format="number" direction="up" />
+                    <p className="text-sm text-text-medium">Holders</p>
+                  </div>
+                  <div className="bg-white/5 rounded-lg p-4 text-center w-[140px] md:flex-1 md:min-w-[150px]">
+                    <Count endValue={2024} format="year" direction="up" />
+                    <p className="text-sm text-text-medium">Year Launched</p>
                   </div>
                 </div>
-                <div className="w-[250px] h-[250px] rounded-full bg-gradient-radial from-cyan-400/10 to-transparent flex items-center justify-center mx-auto md:mx-0">
-                  <img
-                    crossOrigin="anonymous"
-                    src={`${process.env.SERVER_URL}/badge/images/${badges[activeIndex].id}` || badges[activeIndex].img?.data}
-                    alt={badges[activeIndex].title}
-                    className="max-w-[80%] max-h-[80%] object-contain drop-shadow-md animate-float"
-                  />
-                </div>
               </div>
-            </section>
-          )}
 
+              {/* Image wrapper - shows on top in mobile view due to flex-col-reverse */}
+              <div className="w-[250px] h-[250px] rounded-full bg-gradient-radial from-cyan-400/10 to-transparent flex items-center justify-center mx-auto md:mx-0">
+                <img
+                  crossOrigin="anonymous"
+                  src={`${process.env.SERVER_URL}/badge/images/${badges[activeIndex]?.id}` || badges[activeIndex].img?.data}
+                  alt={badges[activeIndex]?.title}
+                  className="max-w-[80%] max-h-[80%] object-contain drop-shadow-md animate-float"
+                />
+              </div>
+            </div>
+          </section>
           {/* Badge Carousel */}
           {!loading && badges.length > 0 && (
             <section className="pointer-events-auto z-50 bg-[#00040A] py-20 bg-gradient-to-t from-primary-dark to-transparent">
-              <h2 className="text-3xl sm:text-4xl mb-10 text-center">All Badges</h2>
               <div className="overflow-y-hidden scrollbar w-5/6 mx-auto overflow-x-auto no-scrollbar px-5">
                 <div
                   className="flex gap-6 justify-start scroll-smooth snap-x snap-mandatory"

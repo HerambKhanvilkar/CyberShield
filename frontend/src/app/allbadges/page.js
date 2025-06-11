@@ -119,14 +119,19 @@ useEffect(() => {
           <p className="text-center text-gray-400">Loading badges...</p>
         ) : (
           <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {badges.map((badge) => (
+          {badges.length === 0 ? (
+            <p className="text-center text-gray-400 col-span-full">
+              You have not earned any badges yet.
+            </p>
+          ) : (
+            badges.map((badge) => (
               <Link href={`/badges/${badge.id}`} key={badge.id}>
                 <div className="bg-[#0A0E2A] rounded-xl p-6 shadow-lg border border-white/5 hover:shadow-cyan-500/20 transition duration-300">
                   <div className="flex justify-center mb-4">
                     <img
                       src={`${process.env.SERVER_URL}/badge/images/${badge.id}` || badge.img?.data}
                       alt={badge.name}
-                      crossorigin="anonymous"
+                      crossOrigin="anonymous"
                       className="w-24 h-24 object-contain drop-shadow-xl"
                     />
                   </div>
@@ -134,7 +139,7 @@ useEffect(() => {
                     {badge.name}
                   </h3>
                   <p className="text-gray-400 text-sm text-center mb-4">
-                    {truncateText(badge.description,150)}
+                    {truncateText(badge.description, 150)}
                   </p>
                   <div className="flex flex-wrap justify-center gap-2">
                     {badge.skillsEarned?.slice(0, 3).map((skill, i) => (
@@ -153,8 +158,8 @@ useEffect(() => {
                   </div>
                 </div>
               </Link>
-            ))}
-
+            ))
+          )}
           </section>
         )}
 
