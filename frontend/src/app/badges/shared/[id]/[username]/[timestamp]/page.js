@@ -218,9 +218,12 @@ const BadgeMetrics = ({ badge }) => (
 );
 
   return (
-    <div className="min-h-screen flex flex-col bg-blue-800 text-white font-sans selection:bg-[#38C8F8] selection:text-black">
+    <div className="min-h-screen flex flex-col glow-container text-white font-sans selection:bg-[#38C8F8] selection:text-black">
+      <div className="ball"></div>
+    <div className="ball" style={{ "--delay": "-12s", "--size": "0.35", "--speed": "25s" }}></div>
+    <div className="ball" style={{ "--delay": "-10s", "--size": "0.3", "--speed": "15s" }}></div>
       <Navbar />
-      <div className="mt-4 px-4 mx-auto text-lg text-green-400">
+      <div className="z-50 mt-4 px-4 mx-auto text-lg text-green-400">
         {verificationStatus ? (
           <p>
             <CheckCircle className="inline-block w-4 h-4 mr-1 align-text-bottom" />
@@ -235,16 +238,14 @@ const BadgeMetrics = ({ badge }) => (
           </p>
         )}
       </div>
-      <main className="container mx-auto px-4 py-6 flex-grow">
+      <main className="z-50 container mx-auto px-4 py-6 flex-grow">
         {error && (
           <div className="bg-red-900 text-red-400 p-4 mb-4 rounded-md border border-red-600">
             {error}
           </div>
         )}
-{/* bg-gradient-to-b from-[#1E3A8A] to-[#00011E] or from-[#03001e] via-[#7303c0] via-[#ec38bc] to-[#fdeff9]*/}
-<div className="max-w-4xl mx-auto relative rounded-lg shadow-lg border border-[#38C8F8]">
-  <div className="absolute inset-0 bg-[url('/0.png')] bg-cover bg-center rounded-lg filter brightness-70"></div>
-  <div className="relative glass p-6">
+{/* bg-gradient-to-b from-[#1E3A8A] to-[#00011E] or from-[#03001e] via-[#7303c0] via-[#ec38bc] to-[#fdeff9] or best from-[#000046] to-[#1CB5E0]*/}
+        <div className="max-w-4xl mx-auto bg-linear-to-br bg-[#0000003b] background:blur-md rounded-lg p-6 shadow-lg border border-[#38C8F8]">
               {/* Authorized Byline */}
               <div className="text-xs text-gray-400 italic text-right pr-1">
                 Authorized and issued by {/* <span className="text-[#38C8F8] not-italic">DeepCytes.</span> */}
