@@ -218,7 +218,7 @@ const BadgeMetrics = ({ badge }) => (
 );
 
   return (
-    <div className="min-h-screen flex flex-col bg-black text-white font-sans selection:bg-[#38C8F8] selection:text-black">
+    <div className="min-h-screen flex flex-col bg-blue-800 text-white font-sans selection:bg-[#38C8F8] selection:text-black">
       <Navbar />
       <div className="mt-4 px-4 mx-auto text-lg text-green-400">
         {verificationStatus ? (
@@ -242,7 +242,9 @@ const BadgeMetrics = ({ badge }) => (
           </div>
         )}
 {/* bg-gradient-to-b from-[#1E3A8A] to-[#00011E] or from-[#03001e] via-[#7303c0] via-[#ec38bc] to-[#fdeff9]*/}
-        <div className="max-w-4xl mx-auto bg-linear-to-br from-[#000046] to-[#1CB5E0]  background:blur-md rounded-lg p-6 shadow-lg border border-[#38C8F8]">
+<div className="max-w-4xl mx-auto relative rounded-lg shadow-lg border border-[#38C8F8]">
+  <div className="absolute inset-0 bg-[url('/0.png')] bg-cover bg-center rounded-lg filter brightness-70"></div>
+  <div className="relative glass p-6">
               {/* Authorized Byline */}
               <div className="text-xs text-gray-400 italic text-right pr-1">
                 Authorized and issued by {/* <span className="text-[#38C8F8] not-italic">DeepCytes.</span> */}
@@ -285,6 +287,7 @@ const BadgeMetrics = ({ badge }) => (
               </div>
             </div>
           </div>
+        </div>
         </div>
       </main>
       <Footer />
