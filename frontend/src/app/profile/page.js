@@ -289,19 +289,21 @@ const secondRow = skills.slice(skills.length / 2);
   const BadgeDescription = ({ badge }) => (
     <div className="space-y-2 text-white">
       <h2 className="text-2xl font-bold">
+              <Link href={`/badges/${badge?.id}`} >
         <div className="text-[#38C8F8] text-3xl uppercase">{badge.name}</div>
+              </Link>
       </h2>
-        <div className="text-gray-400 font-mono text-xs">{badge.description}</div>
+        <div className="text-gray-400 font-thin text-xs">{badge.description}</div>
     </div>
   );
 
 const BadgeMetrics = ({ badge }) => (
-  <div className="w-full justify-between mt-4 text-center text-green-300 flex md:flex-col items-center gap-2">
+  <div className="w-full justify-between mt-4 text-center text-green-300 flex flex-col items-center gap-2">
     {/* Row: Level & Earners side by side */}
       {/* Level */}
-      <div className="flex items-center justify-between rounded-md ">
+      <div className="flex flex-row items-center justify-between rounded-md ">
       <div className="flex flex-col items-center p-2 shadow-md rounded-md ">
-  <svg width="32px" height="32px" viewBox="0 0 512.00 512.00" xmlns="http://www.w3.org/2000/svg" fill="#8cbfde" stroke="#8cbfde" stroke-width="26.624000000000002"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" stroke="#05ffee" stroke-width="23.552"><path fill="#000000" d="M255 471L91.7 387V41h328.6v346zm-147.3-93.74L255 453l149.3-75.76V57H107.7v320.26zm146.43-65.76l98.27-49.89v-49.9l-98.14 49.82-94.66-48.69v50zm.13 32.66l-94.66-48.69v50l94.54 48.62 98.27-49.89v-49.9z"></path></g><g id="SVGRepo_iconCarrier"><path fill="#000000" d="M255 471L91.7 387V41h328.6v346zm-147.3-93.74L255 453l149.3-75.76V57H107.7v320.26zm146.43-65.76l98.27-49.89v-49.9l-98.14 49.82-94.66-48.69v50zm.13 32.66l-94.66-48.69v50l94.54 48.62 98.27-49.89v-49.9z"></path></g></svg>
+  <svg width="32px" height="32px" viewBox="-2.4 -2.4 28.80 28.80" fill="#8cdfde" xmlns="http://www.w3.org/2000/svg" stroke="#8cdfde" stroke-width="0.00024000000000000003"><g id="SVGRepo_bgCarrier" stroke-width="0" transform="translate(0,0), scale(1)"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" stroke="#8cbfde" stroke-width="0.144"></g><g id="SVGRepo_iconCarrier"><path fill-rule="evenodd" clip-rule="evenodd" d="M11 2a1 1 0 0 1 2 0v2.062A8.004 8.004 0 0 1 19.938 11H22a1 1 0 0 1 0 2h-2.062A8.004 8.004 0 0 1 13 19.938V22a1 1 0 0 1-2 0v-2.062A8.004 8.004 0 0 1 4.062 13H2a1 1 0 0 1 0-2h2.062A8.004 8.004 0 0 1 11 4.062V2zm7 10a6 6 0 1 0-12 0 6 6 0 0 0 12 0zm-3 0a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" fill="#8cbfde"></path></g></svg>
         <div className="text-lg text-white hover:text-[#38C8F8] font-semibold">{badge.level || 'N/A'}</div>
       </div>
 
@@ -436,10 +438,10 @@ const BadgeMetrics = ({ badge }) => (
             <div className="rounded-2xl shadow-md">
             {selectedBadge ? (
               <>
-        <div className="relative  p-2.5 bg-[url('/0.png')] backdrop-blur-lg border border-white/10 shadow-lg text-white transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)] rounded-lg z-0 w-full mb-5 group">
-          <div className="flex px-3 flex-col md:flex-row md:space-x-8 glass">
+        <div className="relative  bg-center bg-cover bg-[url('/0.png')] backdrop-blur-lg text-white  rounded-lg z-0 w-full mb-5 group">
+          <div className="flex p-1 flex-col md:flex-row glass border border-white/10 shadow-lg transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)] rounded-lg">
             {/* Left side: Image + Metrics */}
-            <div className="flex-shrink-0 mb-6 md:mb-0 md:w-1/3">
+            <div className="flex-shrink-0 my-6 md:mb-0 md:w-1/3">
               <img
                 crossOrigin="anonymous"
                 src={`${process.env.SERVER_URL}/badge/images/${selectedBadge?.id}` || selectedBadge.image?.data}
@@ -454,11 +456,15 @@ const BadgeMetrics = ({ badge }) => (
             {/* Right side (or full stack on mobile): Description & Skills */}
             <div className="flex flex-col flex-grow justify-evenly gap-4 md:w-2/3">
               {/* On mobile, description appears after image + metrics naturally */}
-              <Link href={`/badges/${selectedBadge?.id}`} >
               <BadgeDescription badge={selectedBadge} />
-              </Link>
               <div className="grid md:grid-cols-1 md:gap-6">
+              { selectedBadge.skillsEarned.length > 0 ? (
               <MarqueeDemo skills={selectedBadge.skillsEarned} />
+  ) : (
+              <p>
+                  You haven’t earned any Achievements yet.
+                </p>
+  )}
               </div>
   { /* <BadgeSkillsList skills={badge.skillsEarned} /> */}
               {/* Passing Criteria */}
@@ -467,7 +473,7 @@ const BadgeMetrics = ({ badge }) => (
                 <strong className='block text-gray-500 hover:text-white border border-0 border-r border-l  rounded-lg -mt-7 bg-black w-max px-2.5'>Passing Criteria</strong> Scored at least 70% in their assessment and completed all mandatory tasks to earn this badge.
               </div>
               <div className="relative z-0 w-2/5 mb-5 group bg-black/60 border  rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
-                <strong className='block text-gray-500 hover:text-white border border-0 border-r border-l rounded-lg -mt-7 bg-black w-max px-2.5'>Course</strong> {selectedBadge.course}
+                <strong className='block text-gray-500 hover:text-white border border-0 border-r border-l rounded-lg -mt-7 bg-black w-max px-2.5'>Course</strong> {badge.course}
               </div>
               </div>
             </div>
