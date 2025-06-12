@@ -177,7 +177,7 @@ function BadgeCreationForm () {
           : prevData.skillsEarned.filter((skill) => skill !== value); // Remove if unchecked
         return { ...prevData, skillsEarned };
       });
-    } else if (type === 'radio') {
+    } else if (type === 'button') {
       // Handle radio input
       console.log(name, value, type, checked);
       setFormData({ ...formData, [name]: value });
@@ -368,12 +368,20 @@ useEffect(() => {
 
   return (
     <div className='w-full'>
-      <form onSubmit={handleBadgeFormSubmit} className="flex flex-col w-full items-center mx-auto">
-      <div className="flex flex-col md:flex-row">
+      <form onSubmit={handleBadgeFormSubmit} className="flex flex-col w-full mx-auto">
+      <div className="flex flex-col md:flex-row py-2.5 justify-around ">
         {/* Left: Badges List */}
-        <div className="relative z-0 w-full mb-5 group md:w-1/3 mx-2 bg-slate-800/60 rounded-lg p-2 border border-gray-700">
+        <div className="flex-1 h-max p-4 mt-1 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)]">
+     <div className="group flex justify-between">
           <h2 className="text-white font-semibold mb-2">Badges List </h2>
-         <div className="flow-root">
+        <button type="button" onClick={() => setSelectedBadge(null)} className="flex items-center justify-center text-white rounded-full w-5 h-5 rtl bg-blue-600 hover:bg-blue-700">
+            <svg className="w-2.5 h-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 18">
+                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 1v16M1 9h16"/>
+            </svg>
+            <span className="sr-only">Open actions menu</span>
+        </button>
+    </div>
+         <div className="flow-root ">
           <ScrollArea className="h-[350px] pr-2 overflow-y-auto">
         <ul role="list" className="divide-y divide-gray-700">
     {Array.isArray(searchResults) && searchResults.length > 0 ? (
@@ -412,14 +420,6 @@ useEffect(() => {
       )}
         </ul>
           </ScrollArea>
-     <div className="relative end-6 bottom-6 group">
-        <button type="button" onClick={() => setSelectedBadge(null)} className="flex items-center justify-center text-white rounded-full w-10 h-10 rtl bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-800 absolute bottom-0 right-0">
-            <svg className="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 18">
-                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 1v16M1 9h16"/>
-            </svg>
-            <span className="sr-only">Open actions menu</span>
-        </button>
-    </div>
    </div>
       </div>
         <div className="w-full md:w-1/3 mr-4 px-2">

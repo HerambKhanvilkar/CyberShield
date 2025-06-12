@@ -68,23 +68,23 @@ const VerticalsDropDown = ({ verticals, formData, handleChange }) => {
 
 
     <div className="relative"> 
-      <div className={(isSkillsDropDownOpen ? "display" : "hidden" ) + " relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-[selected='true']:bg-accent aria-[selected='true']:text-accent-foreground data-[disabled='true']:pointer-events-none data-[disabled='true']:opacity-50"}>
-      <div className="p-1 text-foreground w-full h-50  overflow-y-auto" aria-labelledby="dropdownSearchButton" >
+      <div className={(isSkillsDropDownOpen ? "display" : "hidden" ) + " absolute z-50  w-full flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm rounded-2xl bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)]"}>
+      <div className="p-1 text-foreground w-full max-h-50  overflow-y-auto" aria-labelledby="dropdownSearchButton" >
     <div role="group">
         {filteredSkills.length > 0 ? (
           filteredSkills.map((vertical, index) => (
               <div 
             key={index}
             onClick={() => handleChange({ target: { name: "vertical", value: vertical, type: 'radio', checked: true} })} 
-            className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-[selected='true']:bg-accent aria-[selected='true']:text-accent-foreground data-[disabled='true']:pointer-events-none data-[disabled='true']:opacity-50">
+            className="relative flex cursor-default select-none items-center rounded-sm m-1 px-2 py-1.5 text-sm bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)]">
                   {vertical}
               </div>
           ))
         ) : (
-          <p className="text-gray-400">No skills available.</p>
+          <p className="text-gray-400">No verticals available.</p>
         )}
       <div>
-        <div onClick={() => { handleChange({ target: { name: "vertical", value: searchTerm, type: 'radio', checked: true} }); setSearchTerm('')} } className={(searchTerm !== '' ? 'display' : 'hidden') + " relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-[selected='true']:bg-accent aria-[selected='true']:text-accent-foreground data-[disabled='true']:pointer-events-none data-[disabled='true']:opacity-50"} id="radix-:rvr:" cmdk-item="" role="option" aria-disabled="false" aria-selected="false" data-disabled="false" data-selected="false" data-value="n">Create {'"' + searchTerm + '"' }</div> </div>
+        <div onClick={() => { handleChange({ target: { name: "vertical", value: searchTerm, type: 'radio', checked: true} }); setSearchTerm('')} } className={(searchTerm !== '' ? 'display' : 'hidden') + " relative flex cursor-default select-none items-center rounded-sm m-1 px-2 py-1.5 text-sm bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)]"} id="radix-:rvr:" cmdk-item="" role="option" aria-disabled="false" aria-selected="false" data-disabled="false" data-selected="false" data-value="n">Create {'"' + searchTerm + '"' }</div> </div>
       </div>
     </div>
     </div>
