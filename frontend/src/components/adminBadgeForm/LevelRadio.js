@@ -12,7 +12,7 @@ const LevelRadio = ({ formData, handleChange }) => {
             <div key={index} className="flex flex-row flex-wrap items-center my-2 space-x-2">
               <RadioGroupItem 
                 value={level} 
-                type="radio" 
+                type="button" 
                 name="level"
                 onClick={() => handleChange({ target: { name: "level", value:level, type: 'radio', checked:true } })}
                 checked={formData.level === level}
