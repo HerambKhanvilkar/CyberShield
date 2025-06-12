@@ -92,45 +92,64 @@ function AllBadgeMyBadgeFilter() {
   )
 }
 
+useEffect(() => {
+  const fetchAllBadges = async () => {
+    try {
+      setIsDataLoading(true);
 
-  useEffect(() => {
-    const fetchAllBadges = async () => {
-      try {
-        setIsDataLoading(true);
-        const responseBadges = await axios.get(`${process.env.SERVER_URL}/badges`);
-        setBadges(responseBadges.data.badges);
-        setAllBadges(responseBadges.data.badges);
+      const token = localStorage.getItem('token');
 
-        if (user?.username) {
-          const token = localStorage.getItem('token');
-          const responseEarnedBadges = await axios.get(
-            `${process.env.SERVER_URL}/badges-earned`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json',
-              },
-              timeout: 10000,
-            }
+      // 1. Get all badge metadata
+      const responseBadges = await axios.get(`${process.env.SERVER_URL}/badges`);
+      const allBadges = responseBadges.data.badges;
+
+      setBadges(allBadges);
+      setAllBadges(allBadges);
+
+      // 2. If user is logged in, fetch earned badges from /auth/me
+      if (user?.username && token) {
+        const responseUser = await axios.get(`${process.env.SERVER_URL}/auth/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          timeout: 10000,
+        });
+
+        const earnedBadgesWithDates = responseUser.data.user.badges;
+
+        // 3. Merge
+        const mergedEarnedBadges = earnedBadgesWithDates.map((earnedBadge) => {
+          const badgeMeta = allBadges.find(
+            (b) => b.id === Number(earnedBadge.badgeId)
           );
-          setEarnedBadges(responseEarnedBadges.data.badges || []);
-          console.log('Earned Badges:', responseEarnedBadges.data.badges);
-          earnedBadges.forEach((badge) => {
-            console.log(`Badge ID: ${badge.id}, Earned Date: ${badge.earnedDate}`);
+          if (badgeMeta) {
+            return {
+              ...badgeMeta,
+              earnedDate: earnedBadge.earnedDate,
+              isPublic: earnedBadge.isPublic,
+            };
           }
-          );
-        }
-        setIsDataLoading(false);
-      } catch (err) {
-        console.error('Error fetching badges:', err);
-        setError('Failed to load badges from database. Please try again later.');
-        setIsDataLoading(false);
-        setBadges([]);
-      }
-    };
+          return null;
+        }).filter(Boolean);
 
-    fetchAllBadges();
-  }, [user]);
+        setEarnedBadges(mergedEarnedBadges);
+        console.log('Merged Earned Badges:', mergedEarnedBadges);
+      } else {
+        setEarnedBadges([]); // not logged in, no earned badges
+      }
+
+    } catch (err) {
+      console.error('Error fetching badges:', err);
+      setError('Failed to load badges from database. Please try again later.');
+      setBadges([]);
+    } finally {
+      setIsDataLoading(false);
+    }
+  };
+
+  fetchAllBadges(); // 🟢 Always call it
+}, [user]);
 
   const difficultyColors = {
     Easy: 'bg-green-500',
@@ -289,7 +308,7 @@ return (
 
 // Badge Metrics Component
 const BadgeMetrics = () => (
-  <div className="w-full flex flex-col gap-2 mt-0 md:mt-15">
+  <div className="w-full flex flex-col gap-2 mt-0 lg:mt-15">
     {/* Top Row: Level + Earners + Vertical (all in one row on md+) */}
     <div className="flex flex-col gap-2 md:flex-row md:justify-between">
       {/* Level + Earners */}
@@ -510,14 +529,23 @@ const RelatedBadges = () => (
                     <span className="text-sm md:text-base whitespace-nowrap">
                       <span className="block md:hidden">
                         {earnedBadge.earnedDate
-                          ? new Date(earnedBadge.earnedDate).toLocaleDateString()
+                          ? new Date(earnedBadge.earnedDate).toLocaleDateString("en-GB", {
+                              day: "2-digit",
+                              month: "2-digit",
+                              year: "2-digit",
+                            }) // → 05/11/23
                           : "Earned"}
                       </span>
                       <span className="hidden md:block">
                         {earnedBadge.earnedDate
-                          ? `You earned this badge on ${new Date(
-                              earnedBadge.earnedDate
-                            ).toLocaleDateString()}`
+                          ? `You earned this badge on ${new Date(earnedBadge.earnedDate).toLocaleDateString(
+                              "en-GB",
+                              {
+                                day: "numeric",
+                                month: "long",
+                                year: "numeric",
+                              }
+                            )}` // → You earned this badge on 5 November 2023
                           : "You have earned this badge"}
                       </span>
                     </span>
@@ -539,11 +567,11 @@ const RelatedBadges = () => (
         </div>
 
         {/* Tablet Layout */}
-        <section className="hidden md:flex lg:hidden flex-col w-full gap-6 text-white">
+        <section className="hidden md:flex lg:hidden flex-col w-full mx-auto gap-6 text-white">
           <div className="flex w-full gap-6">
             {/* Badge and Badge Actions */}
             <div className="flex flex-col items-center w-1/2 space-y-4">
-            <div>
+            <div className='my-2'>
               {/* Top earned badge pill */}
               {earnedBadge && (
                 <div className="z-50">
@@ -565,14 +593,23 @@ const RelatedBadges = () => (
                     <span className="text-sm md:text-base whitespace-nowrap">
                       <span className="block md:hidden">
                         {earnedBadge.earnedDate
-                          ? new Date(earnedBadge.earnedDate).toLocaleDateString()
+                          ? new Date(earnedBadge.earnedDate).toLocaleDateString("en-GB", {
+                              day: "2-digit",
+                              month: "2-digit",
+                              year: "2-digit",
+                            }) // → 05/11/23
                           : "Earned"}
                       </span>
                       <span className="hidden md:block">
                         {earnedBadge.earnedDate
-                          ? `You earned this badge on ${new Date(
-                              earnedBadge.earnedDate
-                            ).toLocaleDateString()}`
+                          ? `You earned this badge on ${new Date(earnedBadge.earnedDate).toLocaleDateString(
+                              "en-GB",
+                              {
+                                day: "numeric",
+                                month: "long",
+                                year: "numeric",
+                              }
+                            )}` // → You earned this badge on 5 November 2023
                           : "You have earned this badge"}
                       </span>
                     </span>
@@ -625,14 +662,23 @@ const RelatedBadges = () => (
                     <span className="text-sm md:text-base whitespace-nowrap">
                       <span className="block md:hidden">
                         {earnedBadge.earnedDate
-                          ? new Date(earnedBadge.earnedDate).toLocaleDateString()
+                          ? new Date(earnedBadge.earnedDate).toLocaleDateString("en-GB", {
+                              day: "2-digit",
+                              month: "2-digit",
+                              year: "2-digit",
+                            }) // → 05/11/23
                           : "Earned"}
                       </span>
                       <span className="hidden md:block">
                         {earnedBadge.earnedDate
-                          ? `You earned this badge on ${new Date(
-                              earnedBadge.earnedDate
-                            ).toLocaleDateString()}`
+                          ? `You earned this badge on ${new Date(earnedBadge.earnedDate).toLocaleDateString(
+                              "en-GB",
+                              {
+                                day: "numeric",
+                                month: "long",
+                                year: "numeric",
+                              }
+                            )}` // → You earned this badge on 5 November 2023
                           : "You have earned this badge"}
                       </span>
                     </span>
