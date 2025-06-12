@@ -67,7 +67,7 @@ export default function LandingPage() {
         </div>
         <div className="block md:hidden absolute inset-0 z-0 pointer-events-auto">
           {/* <SplineScene2 /> */}
-          <img src={"https://media.gettyimages.com/id/1352893394/video/cyber-security-abstract-concept-3d-contour-of-shield-icon-on-digital-background-computer.jpg?s=640x640&k=20&c=cXD5qysedU9OhLOCtNw3bxdCf8SXNp3gJNIvP38XQIc="}></img>
+          <img src={"https://media.gettyimages.com/id/1352893394/video/cyber-security-abstract-concept-3d-contour-of-shield-icon-on-digital-background-computer.jpg?s=640x640&k=20&c=cXD5qysedU9OhLOCtNw3bxdCf8SXNp3gJNIvP38XQIc="} alt="Landing Page image"></img>
         </div>
 
         {/* Foreground Content */}
