@@ -108,10 +108,64 @@ export default function SettingsPage() {
     setSearchResults(Array.isArray(data)  ? data : []);
   };
 
-const updateUserDetails = (email, updatedUser) => {
-  setUsersData(prev =>
-    prev.map(user => (user.email === email ? updatedUser : user))
+const handleSelectUser = async (user) => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) return toast.error("No token found!");
+
+    const badgesRes = await axios.get(`${process.env.SERVER_URL}/badges`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const allBadges = badgesRes.data.badges;
+    const badgeMap = {};
+    allBadges.forEach((badge) => {
+      badgeMap[badge.id] = badge;
+    });
+
+    const enrichedUser = {
+      ...user,
+      badges: (user.badges || []).map((b) => ({
+        ...badgeMap[b.badgeId],
+        badgeId: b.badgeId,
+        earnedDate: b.earnedDate,
+      })),
+    };
+
+    setSelectedUser(enrichedUser);
+    console.log("updateUser", enrichedUser);
+  } catch (err) {
+    console.error("Error enriching user badges:", err);
+    toast.error("Failed to enrich badge details");
+  }
+}
+
+
+const updateUserDetails = async (email) => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) return toast.error("No token found!");
+    const response = await axios.get(`${process.env.SERVER_URL}/users`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      params: { "email": email }
+    });
+
+    const updatedUser = response.data;
+
+  setSearchResults(prev =>
+    prev.map(user => (user.email === email ? updatedUser[0] : user))
   );
+    console.log("updateUser", updatedUser[0]);
+    handleSelectUser(updatedUser[0]);
+
+  } catch (err) {
+    console.error("Error enriching user badges:", err);
+    toast.error("Failed to enrich badge details");
+  }
 };
 
   const renderTabContent = () => {
@@ -146,38 +200,8 @@ const updateUserDetails = (email, updatedUser) => {
                         className="w-full"
                         data={user}
                         updateUserDetails={updateUserDetails}
-                        onSelect={async () => {
-                          try {
-                            const token = localStorage.getItem("token");
-                            if (!token) return toast.error("No token found!");
-
-                            const badgesRes = await axios.get(`${process.env.SERVER_URL}/badges`, {
-                              headers: {
-                                Authorization: `Bearer ${token}`,
-                              },
-                            });
-
-                            const allBadges = badgesRes.data.badges;
-                            const badgeMap = {};
-                            allBadges.forEach((badge) => {
-                              badgeMap[badge.id] = badge;
-                            });
-
-                            const enrichedUser = {
-                              ...user,
-                              badges: (user.badges || []).map((b) => ({
-                                ...badgeMap[b.badgeId],
-                                badgeId: b.badgeId,
-                                earnedDate: b.earnedDate,
-                              })),
-                            };
-
-                            setSelectedUser(enrichedUser);
-                          } catch (err) {
-                            console.error("Error enriching user badges:", err);
-                            toast.error("Failed to enrich badge details");
-                          }
-                        }}
+                        handleSelectUser={handleSelectUser}
+                        onSelect={() => handleSelectUser(user)}
                       />
                     ))
                   ) : (
@@ -189,7 +213,10 @@ const updateUserDetails = (email, updatedUser) => {
 
             {/* Right: User Details */}
             <div className="w-full md:w-2/3 bg-slate-800/60 rounded-lg p-2 md:p-4 border border-gray-700 overflow-y-auto scrollbar">
-              <UserDetailsView selectedUser={selectedUser} updateUserDetails={updateUserDetails} />
+              <UserDetailsView 
+                selectedUser={selectedUser} 
+                updateUserDetails={updateUserDetails} 
+              />
             </div>
           </div>
         </div>

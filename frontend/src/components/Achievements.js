@@ -18,7 +18,11 @@ const Achievements = ({ achievements = [], user }) => {
       );
       setAchievementList(formatted);
     }
-  }, [achievements]);
+    setModalOpen(false);
+    setNewAchievement("");
+    setEditMode(false);
+    setDeleteMode(false);
+  }, [user]);
 
   const handleDelete = async (index) => {
     const token = localStorage.getItem("token");

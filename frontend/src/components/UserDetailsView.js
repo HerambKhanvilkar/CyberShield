@@ -81,7 +81,7 @@ const [loadingRevoke, setLoadingRevoke] = useState(true);
     try {
       const token = localStorage.getItem("token");
       const url = `${process.env.SERVER_URL}/badges`;
-      const userBadgeIds = selectedUser?.badges.map((b) => Number(b.badgeId)) || [];
+      const userBadgeIds = selectedUser?.badges.map((b) => Number(b.id)) || [];
 
       const response = await axios.get(url, {
         headers: {
@@ -108,7 +108,6 @@ const userBadgeIds = selectedUser?.badges.map(b => Number(b.badgeId)) || [];
     const response = await axios.get(url, {
       headers: {
         Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
       },
       timeout: 10000,
     });
@@ -135,30 +134,6 @@ const userBadgeIds = selectedUser?.badges.map(b => Number(b.badgeId)) || [];
   const handleSave = async () => {
     try {
       const token = localStorage.getItem("token");
-      const url = `${process.env.SERVER_URL}/user/info`;
-
-      // Prepare request body with changed fields only
-      const body = { email: form.email };
-      if (form.firstName.trim()) body.firstName = form.firstName;
-      if (form.lastName.trim()) body.lastName = form.lastName;
-      if (form.password.trim()) body.password = form.password;
-
-      const response = await axios.post(url, body, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        timeout: 10000,
-      });
-
-      const updatedUser = response.data.user;
-
-      updateUserDetails(form.email, updatedUser); // Let parent know
-      toast.success(
-        <div>
-          Updated user <strong style={{ color: "#00CBF0" }}>{updatedUser.firstName}</strong>!
-        </div>
-      );
       // Assign badge if one is selected
       if (selectedBadgeId) {
         try {
@@ -178,14 +153,13 @@ const userBadgeIds = selectedUser?.badges.map(b => Number(b.badgeId)) || [];
             }
           );
 
-          updateUserDetails(form.email, assignResponse.data.user);
           toast.success(
             <div>
               Badge assigned to <strong style={{ color: "#00CBF0" }}>{assignResponse.data.user.firstName}</strong>!
             </div>
           );
           setSelectedBadgeId(null);
-          fetchAssignableBadges(); // Refresh dropdown
+          //fetchAssignableBadges(); // Refresh dropdown
         } catch (error) {
           console.error("Error assigning badge:", error);
           toast.error("Failed to assign badge.");
@@ -196,16 +170,42 @@ const userBadgeIds = selectedUser?.badges.map(b => Number(b.badgeId)) || [];
         try {
           await handleRevokeBadge(selectedRevokeBadgeId, form.email, updateUserDetails);
           setSelectedRevokeBadgeId(null); // Clear the selection
-          fetchRevokableBadges(); // Refresh the list
         } catch (err) {
           console.error("Revoke failed:", err);
         }
       }
       // Reset password after saving for safety
       setForm((prev) => ({ ...prev, password: "" }));
+
+      const url = `${process.env.SERVER_URL}/user/info`;
+
+      // Prepare request body with changed fields only
+      const body = { email: form.email };
+      if (form.firstName.trim()) body.firstName = form.firstName;
+      if (form.lastName.trim()) body.lastName = form.lastName;
+      if (form.password.trim()) body.password = form.password;
+
+      if ( Object.keys(body).length > 1 ){
+        const response = await axios.post(url, body, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          timeout: 10000,
+        });
+
+
+        toast.success(
+          <div>
+          Updated user <strong style={{ color: "#00CBF0" }}>{selectedUser.firstName}</strong>!
+          </div>
+        );
+      }
     } catch (error) {
       console.error("Error updating user:", error);
       toast.error("Failed to update user.");
+    } finally {
+      updateUserDetails(selectedUser.email, null);
     }
   };
   
@@ -240,6 +240,8 @@ const userBadgeIds = selectedUser?.badges.map(b => Number(b.badgeId)) || [];
   } catch (error) {
     console.error("Error revoking badge:", error);
     toast.error("Failed to revoke badge.");
+  } finally {
+    updateUserDetails(userEmail, null);
   }
 };
 
