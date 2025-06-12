@@ -18,7 +18,7 @@ const CompletedCoursesSection = ({ courses = [], user, updateUserDetails }) => {
     const normalized = courses.map((c) => (typeof c === "string" ? { name: c } : c));
     setCourseList(normalized);
     setEditingTexts(normalized.map((c) => c.name));
-  }, [courses]);
+  }, [user]);
 
   const openAddModal = () => {
     setCurrentText("");

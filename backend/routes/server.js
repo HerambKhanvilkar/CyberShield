@@ -314,7 +314,9 @@ router.get("/check-admin",authenticateJWT, async (req, res) => {
 router.get("/users", authenticateJWT, async (req, res) => {
   try {
     // dummy approach, as the variable is modifiable
-    const { email } = req.body || null;
+    const { email } = req.query || null;
+
+    console.log(email);
 
     const authHeader = req.headers.authorization;
 
