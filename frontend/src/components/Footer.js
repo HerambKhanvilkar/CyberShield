@@ -3,7 +3,7 @@ import React from "react";
 
 export default function Footer() {
   return (
-    <footer className="relative z-30 bg-[#00011E] text-white border-t-2 border-[#38C8F8] border-opacity-70">
+    <footer className="relative z-30 bg-gradient-to-br from-[#0a0a0f] to-[#0f111a] text-white border-t-2 border-[#38C8F8] border-opacity-70">
       <div className="mx-auto w-full max-w-screen-xl p-4 py-8 lg:py-12">
         <div className="md:flex md:justify-between">
           <div className="mb-6 md:mb-0">

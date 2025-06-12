@@ -95,7 +95,7 @@ useEffect(() => {
   return (
     <>
       <Navbar />
-      <main className="bg-gradient-to-br from-[#00011E] to-[#000022] min-h-screen text-white px-4 py-12">
+      <main className="min-h-screen bg-gradient-to-br from-[#0a0a0f] to-[#000] via-[#141622] backdrop-blur-md text-white px-4 py-12">
         <section className="text-center max-w-4xl mx-auto mb-12">
           <h1 className="text-4xl sm:text-5xl font-extrabold mb-4">
             Cybersecurity <span className="text-cyan-400">Badges</span>
@@ -126,7 +126,7 @@ useEffect(() => {
           ) : (
             badges.map((badge) => (
               <Link href={`/badges/${badge.id}`} key={badge.id}>
-                <div className="bg-[#0A0E2A] rounded-xl p-6 shadow-lg border border-white/5 hover:shadow-cyan-500/20 transition duration-300">
+                <div className="bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/15 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] rounded-2xl p-6  hover:shadow-cyan-500/20 transition duration-300">
                   <div className="flex justify-center mb-4">
                     <img
                       src={`${process.env.SERVER_URL}/badge/images/${badge.id}` || badge.img?.data}

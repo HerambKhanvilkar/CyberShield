@@ -327,111 +327,113 @@ const BadgeMetrics = ({ badge }) => (
   return (
     <>
       <Navbar />
-      <main className="bg-[#00011E] text-white min-h-screen px-4 py-6 md:px-8">
+      <main className="bg-gradient-to-br from-[#0a0a0f] to-[#000] via-[#141622] backdrop-blur-md text-white min-h-screen px-4 py-6 md:px-8">
         <div className=" w-full h-full mx-auto grid md:grid-cols-5 gap-6">
           {/* Sidebar */}
-          <aside className="relative p-2.5 bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg px-3 py-2 text-white transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)] rounded-lg z-0 w-full mb-5 group md:col-span-1 p-4 text-center ">
-            <div className="border-4 border-[#0c0e3c]  rounded-full w-max h-28 mx-auto overflow-hidden mb-4">
-              { userData.image ? (
-              <img
-                src={ process.env.SERVER_URL + userData.image}
-                alt="User's Profile picture"
-                className="object-cover w-full h-full"
-              />
+          <aside className="relative bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg rounded-2xl p-4 text-white transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)] w-full mb-5 text-center">
+            <div className="border-4 border-[#0c0e3c] rounded-full w-max h-28 mx-auto overflow-hidden mb-4">
+              {userData.image ? (
+                <img
+                  src={process.env.SERVER_URL + userData.image}
+                  alt="User Profile"
+                  className="object-cover w-full h-full"
+                />
               ) : (
-                <div className="w-25 h-25 rounded-full overflow-hidden cursor-pointer transition-all hover:ring-2 hover:ring-blue-400">
-                  <div className="w-full h-full bg-blue-500 text-white flex items-center justify-center text-4xl font-bold">
-                {userData.firstName.slice(0,1).toUpperCase()}
-                {userData.lastName.slice(0,1).toUpperCase()}
-                  </div>
+                <div className="w-28 h-28 rounded-full bg-blue-500 text-white flex items-center justify-center text-4xl font-bold">
+                  {userData.firstName[0]?.toUpperCase()}
+                  {userData.lastName[0]?.toUpperCase()}
                 </div>
               )}
             </div>
-            <h2 className="text-lg font-bold">
-              {userData.firstName} {userData.lastName}
-            </h2>
+            <h2 className="text-lg font-bold">{userData.firstName} {userData.lastName}</h2>
             <p className="text-sm text-gray-400 mt-1">{userData.email}</p>
-    <Button onClick={() => handleUpdateProfileModal(true)} className="bg-gray-500 px-2.5 my-2 py-1 h-max text-blue-100 hover:text-black-800 hover:bg-blue-500"><Edit className="mr-2 h-4 w-4" />Edit</Button>
+            <Button
+              onClick={() => handleUpdateProfileModal(true)}
+              className="bg-gray-500 px-2.5 my-2 py-1 h-max text-blue-100 hover:text-black hover:bg-blue-500"
+            >
+              <Edit className="mr-2 h-4 w-4" />Edit
+            </Button>
 
-          {/* My Badges Section */}
-          <div className="mt-6">
-            <h3 className="text-sm font-semibold text-gray-300 mb-2">My Badges</h3>
-            <div className="flex flex-row flex-wrap gap-2 justify-center">
-              {userData.badges?.length > 0 ? (
-                userData.badges.map((badge, i) => (
-                  <img
-                    key={i}
-                    src={process.env.SERVER_URL + `/badge/images/${badge.badgeId}`}
-                    alt={badge.badgeId}
-                    className={`w-12 h-12 rounded-full border-2 cursor-pointer transition ${
-                      selectedBadgeId === badge.badgeId
-                        ? "border-purple-500"
-                        : "border-white/10"
-                    }`}
-                    onClick={() => setSelectedBadgeId(badge.badgeId)}
-                    title={badge.name}
-                  />
-                ))
-              ) : (
-                <p className="text-gray-400 text-xs col-span-full">No badges</p>
-              )}
+            <div className="mt-6">
+              <h3 className="text-sm font-semibold text-gray-300 mb-2">My Badges</h3>
+              <div className="flex flex-wrap gap-2 justify-center">
+                {userData.badges?.length > 0 ? (
+                  userData.badges.map((badge, i) => (
+                    <img
+                      key={i}
+                      crossOrigin="anonymous"
+                      src={`${process.env.SERVER_URL}/badge/images/${badge.badgeId}`}
+                      alt={badge.badgeId}
+                      className={`w-12 h-12 rounded-full border-2 cursor-pointer transition ${
+                        selectedBadgeId === badge.badgeId
+                          ? "border-purple-500"
+                          : "border-white/10"
+                      }`}
+                      onClick={() => setSelectedBadgeId(badge.badgeId)}
+                      title={badge.name}
+                    />
+                  ))
+                ) : (
+                  <p className="text-gray-400 text-xs col-span-full">No badges</p>
+                )}
+              </div>
             </div>
-          </div>
-        </aside>
-
+          </aside>
 
           {/* Main Content */}
           <section className="md:col-span-4 grid gap-6">
-    <div className="grid md:grid-cols-2 md:gap-6">
-            {/* Achievements */}
-            <div className="relative p-2.5 bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg px-3 py-2 text-white transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)] rounded-lg z-0 w-full mb-5 group">
-              <h3 className="text-xl font-semibold mb-4">Achievements</h3>
-    <ScrollArea className="h-[150px] pr-2 overflow-y-auto">
-              { userData.achievements.length > 0 ? (
-              <ol className="list-none pl-5 space-y-2 text-sm md:text-base text-gray-300">
-                { userData.achievements.map((a, i) => (
-                <li key={i} className="bg-white/5 backdrop-blur-lg  text-blue-100 text-xs font-semibold px-2.5 py-0.5 rounded" >
-                  <BoxReveal duration="0.9"> 
-                  <span className="flex">
-                  <svg className="w-5 h-5 mx-2" fill="#ffe852" viewBox="0 0 512 512" data-name="Layer 1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" stroke="oklch(70.7% .165 254.624)"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><title></title><path d="M432.33,129.92a7.93,7.93,0,0,0-5.65-2.34h-38.1A359.67,359.67,0,0,0,392,77.74a8,8,0,0,0-8-8H128a8,8,0,0,0-8,8,360,360,0,0,0,3.43,49.86H85.32a8,8,0,0,0-8,8c0,26.33,9.85,51.85,28.49,73.81,17.38,20.48,41.63,37,70.22,47.86,12.67,14.91,27.08,26.39,42.8,33.54-1.57,47.84-24.13,82.8-31.32,92.77h-6.67a18,18,0,0,0-18,18v22.68a18,18,0,0,0,18,18H331.18a18,18,0,0,0,18-18V401.58a18,18,0,0,0-18-18h-6.57c-7.23-10.4-29.79-46.43-31.42-92.78,15.72-7.15,30.13-18.63,42.8-33.54,28.59-10.88,52.84-27.39,70.22-47.86,18.62-22,28.47-47.48,28.47-73.8v0A7.94,7.94,0,0,0,432.33,129.92ZM93.69,143.6h32.37c6.25,33.08,17.12,63,31.54,87.53C120.19,210.25,96.79,178.6,93.69,143.6Zm239.49,258v22.68a2,2,0,0,1-2,2H180.84a2,2,0,0,1-2-2V401.58a2,2,0,0,1,2-2H331.18A2,2,0,0,1,333.18,401.58Zm-126.4-18a189.48,189.48,0,0,0,27.81-87.21,85.93,85.93,0,0,0,42.86,0c2.51,39.13,18,70.56,28.08,87.22ZM282.2,278.09a71.43,71.43,0,0,1-52.39,0c-25.78-10-49.36-34.92-66.39-70.22-16.68-34.56-26.29-77.64-27.32-122.12H375.92c-1,44.48-10.64,87.56-27.32,122.12C331.57,243.16,308,268.1,282.2,278.09Zm72.22-47c14.43-24.56,25.3-54.46,31.54-87.54h32.36C415.22,178.57,391.83,210.23,354.42,231.12Z"></path></g></svg>
-                    {a}
-                  </span>
-                  </BoxReveal> 
-                </li>
-              ))}
-              </ol>
-              ) : (
-              <p>
-                  You haven’t earned any Achievements yet.
-                </p>
-              )}
-          </ScrollArea >
-            </div>
+            <div className="grid md:grid-cols-2 md:gap-6">
+              {/* Achievements */}
+              <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg rounded-2xl p-4 text-white transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)] w-full mb-5">
+                <h3 className="text-xl font-semibold mb-4">Achievements</h3>
+                <ScrollArea className="h-[150px] pr-2 overflow-y-auto">
+                  {userData.achievements.length > 0 ? (
+                    <ol className="pl-5 space-y-2 text-sm text-gray-300">
+                      {userData.achievements.map((a, i) => (
+                        <li
+                          key={i}
+                          className="bg-white/5 backdrop-blur-md text-blue-100 text-xs font-semibold px-2.5 py-0.5 rounded"
+                        >
+                          <BoxReveal duration="0.9">
+                            <span className="flex items-center">
+                              <svg className="w-5 h-5 mx-2" fill="#ffe852" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="..."/></svg>
+                              {a}
+                            </span>
+                          </BoxReveal>
+                        </li>
+                      ))}
+                    </ol>
+                  ) : (
+                    <p>You haven’t earned any Achievements yet.</p>
+                  )}
+                </ScrollArea>
+              </div>
 
-            {/* Courses */}
-            <div className="relative p-2.5 bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg px-3 py-2 text-white transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)] rounded-lg z-0 w-full mb-5 group">
-              <h3 className="text-xl font-semibold mb-4">Courses</h3>
-    <ScrollArea className="h-[150px] pr-2 overflow-y-auto">
-    {userData.courses.length > 0 ? (
-               <ul className="list-none pl-5 space-y-2 text-sm md:text-base text-gray-300">
-      {userData.courses.map((c,i) => (
-                <li key={i} className="bg-white/5 backdrop-blur-lg  text-blue-100 text-xs font-semibold px-2.5 py-0.5 rounded" >
-                  <BoxReveal duration="0.9"> 
-                  <span className="flex">
-        <svg className="h-5 w-5 mx-2" fill="#8dff85" viewBox="0 0 1920 1920" xmlns="http://www.w3.org/2000/svg" stroke="#8dff85"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M1801.441 0v1920H219.03v-439.216h-56.514c-31.196 0-56.515-25.299-56.515-56.47 0-31.172 25.319-56.47 56.515-56.47h56.514V1029.02h-56.514c-31.196 0-56.515-25.3-56.515-56.471 0-31.172 25.319-56.47 56.515-56.47h56.514V577.254h-56.514c-31.196 0-56.515-25.299-56.515-56.47 0-31.172 25.319-56.471 56.515-56.471h56.514V0h1582.412Zm-113.03 112.941H332.06v351.373h56.515c31.196 0 56.514 25.299 56.514 56.47 0 31.172-25.318 56.47-56.514 56.47H332.06v338.824h56.515c31.196 0 56.514 25.3 56.514 56.471 0 31.172-25.318 56.47-56.514 56.47H332.06v338.824h56.515c31.196 0 56.514 25.299 56.514 56.47 0 31.172-25.318 56.471-56.514 56.471H332.06v326.275h1356.353V112.94ZM640.289 425.201H1388.9v112.94H640.288v-112.94Zm0 214.83h639.439v112.94h-639.44v-112.94Zm0 534.845H1388.9v112.94H640.288v-112.94Zm0 214.83h639.439v112.94h-639.44v-112.94Z" fill-rule="evenodd"></path> </g></svg>
-                    {c}
-                  </span>
-                  </BoxReveal> 
-                </li>
-      ))}
-              </ul>
-    ): (
-              <p>
-                  You haven’t Done any courses yet.
-                </p>
-    )}
-          </ScrollArea >
-            </div>
+              {/* Courses */}
+              <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg rounded-2xl p-4 text-white transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)] w-full mb-5">
+                <h3 className="text-xl font-semibold mb-4">Courses</h3>
+                <ScrollArea className="h-[150px] pr-2 overflow-y-auto">
+                  {userData.courses.length > 0 ? (
+                    <ul className="pl-5 space-y-2 text-sm text-gray-300">
+                      {userData.courses.map((c, i) => (
+                        <li
+                          key={i}
+                          className="bg-white/5 backdrop-blur-md text-blue-100 text-xs font-semibold px-2.5 py-0.5 rounded"
+                        >
+                          <BoxReveal duration="0.9">
+                            <span className="flex items-center">
+                              <svg className="h-5 w-5 mx-2" fill="#8dff85" viewBox="0 0 1920 1920" xmlns="http://www.w3.org/2000/svg"><path d="..."/></svg>
+                              {c}
+                            </span>
+                          </BoxReveal>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p>You haven’t Done any courses yet.</p>
+                  )}
+                </ScrollArea>
+              </div>
             </div>
 
             {/* Badge Details */}
@@ -459,7 +461,7 @@ const BadgeMetrics = ({ badge }) => (
               <BadgeDescription badge={selectedBadge} />
               <div className="grid md:grid-cols-1 md:gap-6">
               { selectedBadge.skillsEarned.length > 0 ? (
-              <MarqueeDemo skills={selectedBadge.skillsEarned} />
+              <MarqueeDemo skills={selectedBadge?.skillsEarned} />
   ) : (
               <p>
                   You haven’t earned any Achievements yet.
@@ -473,7 +475,7 @@ const BadgeMetrics = ({ badge }) => (
                 <strong className='block text-gray-500 hover:text-white border border-0 border-r border-l  rounded-lg -mt-7 bg-black w-max px-2.5'>Passing Criteria</strong> Scored at least 70% in their assessment and completed all mandatory tasks to earn this badge.
               </div>
               <div className="relative z-0 w-2/5 mb-5 group bg-black/60 border  rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
-                <strong className='block text-gray-500 hover:text-white border border-0 border-r border-l rounded-lg -mt-7 bg-black w-max px-2.5'>Course</strong> {badge.course}
+                <strong className='block text-gray-500 hover:text-white border border-0 border-r border-l rounded-lg -mt-7 bg-black w-max px-2.5'>Course</strong> {selectedBadge?.course}
               </div>
               </div>
             </div>
@@ -519,7 +521,7 @@ const BadgeMetrics = ({ badge }) => (
                 <div className="grid gap-4 mb-4 grid-cols-1">
                     <div className="flex flex-row items-center justify-space-evenly w-full col-span-2">
                         <a href="#">
-                            <img className="rounded-full h-20 w-20" src={preview} alt="Profile Image"/>
+                            <img className="rounded-full h-20 w-20" src={preview} alt="Profile Image" crossOrigin="anonymous"/>
                         </a>
                         <div className="flex flex-row mx-4">
                             <label htmlFor="dropzone-file" className=" flex flex-row text-blue-100 bg-blue-600 hover:bg-blue-700  focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-xs px-3 py-1.5 focus:outline-none dark:focus:ring-blue-800">
