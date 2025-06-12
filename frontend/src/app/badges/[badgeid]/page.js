@@ -306,34 +306,38 @@ return (
 );
   }
 
-// Badge Metrics Component
 const BadgeMetrics = () => (
   <div className="w-full flex flex-col gap-2 mt-0 lg:mt-15">
-    {/* Top Row: Level + Earners + Vertical (all in one row on md+) */}
+    {/* Top Row: Level + Earners + Vertical */}
     <div className="flex flex-col gap-2 md:flex-row md:justify-between">
-      {/* Level + Earners */}
-      <div className="flex flex-row gap-2 md:flex-1">
-        {[
-          { label: "Level", value: currentBadge?.level || "N/A" },
-          { label: "Earners", value: "43" },
-        ].map(({ label, value }, index) => (
-          <div
-            key={index}
-            className="flex-1 rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg p-4 flex flex-col justify-between text-center min-h-[50px]
-            transition-shadow duration-300 ease-in-out
-            hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)]"
-          >
-            <div className="text-sm uppercase text-gray-600">{label}</div>
-            <div className="text-lg font-semibold my-auto text-white">{value}</div>
-          </div>
-        ))}
+      {/* Level */}
+      <div className="relative flex-1">
+        <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-10">
+          <div className="glint" />
+        </div>
+        <div className="rounded-2xl bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] p-4 flex flex-col justify-between text-center min-h-[50px] transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)]">
+          <div className="text-sm uppercase text-gray-600">Level</div>
+          <div className="text-lg font-semibold my-auto text-white">{currentBadge?.level || "N/A"}</div>
+        </div>
+      </div>
+
+      {/* Earners */}
+      <div className="relative flex-1">
+        <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-10">
+          <div className="glint" />
+        </div>
+        <div className="rounded-2xl bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] p-4 flex flex-col justify-between text-center min-h-[50px] transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)]">
+          <div className="text-sm uppercase text-gray-600">Earners</div>
+          <div className="text-lg font-semibold my-auto text-white">43</div>
+        </div>
       </div>
 
       {/* Vertical */}
-      <div className="flex md:flex-1">
-        <div className="flex-1 rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg p-4 flex flex-col justify-between text-center min-h-[50px]
-              transition-shadow duration-300 ease-in-out
-              hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)]">
+      <div className="relative flex-1">
+        <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-10">
+          <div className="glint" />
+        </div>
+        <div className="rounded-2xl bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] p-4 flex flex-col justify-between text-center min-h-[50px] transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)]">
           <div className="text-sm uppercase text-gray-600">Vertical</div>
           <div className="text-lg font-semibold text-white">
             {currentBadge?.vertical || "General"}
@@ -342,9 +346,12 @@ const BadgeMetrics = () => (
       </div>
     </div>
 
-    {/* Course Block (always full width, always below the 3 above) */}
-    <div className="flex w-full">
-      <div className="flex-1 p-4 mt-1 rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg">
+    {/* Course Block */}
+    <div className="relative w-full">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-10">
+        <div className="glint" />
+      </div>
+      <div className="flex-1 p-4 mt-1 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)]">
         <h3 className="text-xl font-semibold text-white flex items-center gap-2 mb-2">
           <BookOpen />
           Course
@@ -359,10 +366,15 @@ const BadgeMetrics = () => (
 
   // Badge Description Block
 const BadgeDescription = () => (
-  <div>
+  <div className="relative">
+    {/* Glint overlay */}
+    <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-10">
+      <div className="glint" />
+    </div>
+
     {/* Badge Details Block */}
-    <div className="space-y-4 p-4 rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg">
-      <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2 text-white flex items-center gap-2">
+    <div className="relative z-20 space-y-4 p-4 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)]">
+      <h2 className="text-2xl font-semibold border-b border-cyan-500 pb-2 text-white flex items-center gap-2">
         <Trophy />
         Badge Details
       </h2>
@@ -377,20 +389,26 @@ const BadgeDescription = () => (
 // Skills Earned Component with glow on hover
 const SkillsEarned = () => (
   <div className="space-y-2">
-    <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2 text-white flex items-center gap-2">
+    <h2 className="text-2xl font-semibold border-b border-cyan-500 pb-2 text-white flex items-center gap-2">
       <Shield className="w-6 h-6 mr-1 text-blue-400" />
       Skills Earned
     </h2>
     <div className="grid grid-cols-2 gap-3">
       {currentBadge?.skillsEarned?.map((skill, idx) => (
-        <div
-          key={idx}
-          className="flex items-center text-sm rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg px-3 py-2 text-white
-            transition-shadow duration-300 ease-in-out
-            hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)]"
-        >
-          <Shield className="w-5 h-5 mr-1 text-blue-400" />
-          <span className="text-sm font-medium">{skill}</span>
+        <div key={idx} className="relative rounded-2xl h-full">
+          {/* Glint overlay */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-10 w-full h-full">
+            <div className="glint" />
+          </div>
+
+          <div
+            className="h-full w-full flex items-center text-sm rounded-2xl bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] px-3 py-2 text-white
+              transition-shadow duration-300 ease-in-out
+              hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)]"
+          >
+            <Shield className="w-5 h-5 mr-1 text-blue-400" />
+            <span className="text-sm font-medium">{skill}</span>
+          </div>
         </div>
       ))}
     </div>
@@ -400,38 +418,52 @@ const SkillsEarned = () => (
  // Related Badges Component
 const RelatedBadges = () => (
   <div>
-    <h3 className="text-xl font-semibold border-b border-gray-700 pb-1 mt-6 text-white">Related Badges</h3>
-    <div className="flex space-x-2 md:space-x-4 mx-auto overflow-auto py-2">
+    <h3 className="text-xl font-semibold border-b border-cyan-500 pb-1 mt-6 text-white">
+      Related Badges
+    </h3>
+
+    <div className="flex space-x-3 md:space-x-4 overflow-x-auto py-2">
       {allBadges
         .filter((b) => b.id !== currentBadge?.id)
         .slice(0, 3)
         .map((relatedBadge) => (
           <div
             key={relatedBadge.id}
-            className="flex-shrink-0 cursor-pointer flex flex-col items-center w-22 md:w-24 space-y-2 rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg p-2
-            transition-shadow duration-300 ease-in-out
-            hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)]"
-            onClick={() => {
-              const index = badges.findIndex((b) => b.id === relatedBadge.id);
-              if (index !== -1) setCurrentBadgeIndex(index);
-            }}
-            tabIndex={0}
-            role="button"
-            aria-pressed="false"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
+            className="relative flex-shrink-0 min-w-[6rem] md:min-w-[6.5rem]"
+          >
+            {/* Glint overlay */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-10 w-full h-full">
+              <div className="glint" />
+            </div>
+
+            <div
+              className="cursor-pointer flex flex-col items-center space-y-2 rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg p-2
+              transition-shadow duration-300 ease-in-out
+              hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)]"
+              onClick={() => {
                 const index = badges.findIndex((b) => b.id === relatedBadge.id);
                 if (index !== -1) setCurrentBadgeIndex(index);
-              }
-            }}
-          >
-            <img
-              crossOrigin="anonymous"
-              src={`${process.env.SERVER_URL}/badge/images/${relatedBadge?.id}` || relatedBadge.image?.data}
-              alt={relatedBadge.name}
-              className="rounded-lg shadow-md w-15 md:w-20 h-15 md:h-20 object-cover"
-            />
-            <span className="text-sm font-medium text-center text-white">{relatedBadge.name}</span>
+              }}
+              tabIndex={0}
+              role="button"
+              aria-pressed="false"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  const index = badges.findIndex((b) => b.id === relatedBadge.id);
+                  if (index !== -1) setCurrentBadgeIndex(index);
+                }
+              }}
+            >
+              <img
+                crossOrigin="anonymous"
+                src={`${process.env.SERVER_URL}/badge/images/${relatedBadge?.id}` || relatedBadge.image?.data}
+                alt={relatedBadge.name}
+                className="rounded-lg shadow-md w-16 h-16 md:w-20 md:h-20 object-cover"
+              />
+              <span className="text-sm font-medium text-center text-white truncate w-full">
+                {relatedBadge.name}
+              </span>
+            </div>
           </div>
         ))}
     </div>
@@ -489,7 +521,7 @@ const RelatedBadges = () => (
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#000428] to-[#004e92] text-white">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#0a0a0f] to-[#000] via-[#141622] backdrop-blur-md text-white">
       <Navbar />
 
       <AllBadgeMyBadgeFilter/>
@@ -561,7 +593,7 @@ const RelatedBadges = () => (
 
           <section className="md:w-2/6 my-auto space-y-6">
             <SkillsEarned />
-            <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Badge Actions</h2>
+            <h2 className="text-2xl font-semibold border-b border-cyan-500 pb-2">Badge Actions</h2>
             <BadgeActions currentBadge={currentBadge} isAuthenticated={isAuthenticated} />
           </section>
         </div>
@@ -727,7 +759,7 @@ const RelatedBadges = () => (
       </main>
 
       {/* Desktop Badge Collection Thumbnails */}
-      <div className="hidden md:block rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg p-2 flex flex-col items-center justify-between mt-4 mx-auto">
+      <div className="hidden md:block rounded-2xl bg-gradient-to-br from-white/10 via-white/5 to-cyan-400/5 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] p-2 flex flex-col items-center justify-between mt-4 mx-auto">
         {/* Scrollable badge row with chevrons */}
         <div className="w-full flex items-center gap-2">
           
@@ -782,7 +814,7 @@ const RelatedBadges = () => (
       </div>
 
       {/* Mobile Badge Collection Thumbnails */}
-      <div className="block md:hidden rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg p-2 flex flex-col items-center justify-between mt-4 w-full mx-auto">
+      <div className="block md:hidden rounded-2xl bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] p-2 flex flex-col items-center justify-between mt-4 w-full mx-auto">
         <div className="w-full relative">
           <button
             aria-label="Previous Badge"
