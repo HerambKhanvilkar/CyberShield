@@ -11,55 +11,53 @@ function UserBlock({ data, updateUserDetails, onSelect }) {
     return text;
   };
 
-  return (
-    <div
-      onClick={onSelect}
-      className="w-full flex flex-col md:flex-row bg-slate-950/75 backdrop-blur-md rounded-lg border-2 border-gray-600 border-opacity-50 p-4 justify-between gap-4 hover:border-[#00CBF0]"
-    >
-      {/* Left Side */}
-      <div className="flex flex-col w-full">
-        {/* Container for names and email */}
-        <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-base md:text-lg font-bold text-white-700 whitespace-nowrap">
-            {data?.firstName} {data?.lastName}
-          </h1>
-          <span
-            className="text-base md:text-lg font-thin font-mono text-gray-400 max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap"
-            title={data?.email} // shows full email on hover
-          >
-            {truncateText(data?.email, 20)}
-          </span>
-        </div>
-        {/* <p className="text-base mt-2 font-mono text-gray-400">
-          Badges: {data?.badges?.length}
-        </p> */}
-        {/* Badges section */}
-        <div className="mt-2 flex items-center gap-2 text-gray-400 font-mono text-sm">
-          <span>Badges: {data?.badges?.length || 0}</span>
-          <div className="flex gap-1">
-            <div className="flex items-center space-x-1">
-              {data?.badges?.slice(0, 5).map((badge, index) => (
-                <img
-                  key={index}
-                  crossOrigin="anonymous"
-                  src={`${process.env.SERVER_URL}/badge/images/${badge.badgeId}` || badge.img?.data}
-                  alt={badge.name || `Badge ${badge.badgeId}`}
-                  title={badge.name || "Unnamed Badge"}
-                  className="w-5 h-5 rounded-sm drop-shadow-md"
-                />
-              ))}
+return (
+  <div
+    onClick={onSelect}
+    className="w-full flex flex-col md:flex-row bg-gradient-to-br from-black/30 to-black/15 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] rounded-xl p-4 justify-between gap-4 hover:shadow-blue-500/30 hover:border-[#00CBF0] transition-all duration-300 cursor-pointer"
+  >
+    {/* Left Side */}
+    <div className="flex flex-col w-full">
+      {/* Container for names and email */}
+      <div className="flex flex-wrap items-center gap-2">
+        <h1 className="text-base md:text-lg font-bold text-white whitespace-nowrap">
+          {data?.firstName} {data?.lastName}
+        </h1>
+        <span
+          className="text-base md:text-lg font-mono text-gray-400 max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap"
+          title={data?.email}
+        >
+          {truncateText(data?.email, 20)}
+        </span>
+      </div>
 
-              {data?.badges?.length > 5 && (
-                <span className="text-sm text-gray-400 font-semibold">
-                  +{data.badges.length - 5} more
-                </span>
-              )}
-            </div>
+      {/* Badges section */}
+      <div className="mt-2 flex items-center gap-2 text-gray-400 font-mono text-sm">
+        <span>Badges: {data?.badges?.length || 0}</span>
+        <div className="flex gap-1">
+          <div className="flex items-center space-x-1">
+            {data?.badges?.slice(0, 5).map((badge, index) => (
+              <img
+                key={index}
+                crossOrigin="anonymous"
+                src={`${process.env.SERVER_URL}/badge/images/${badge.badgeId}` || badge.img?.data}
+                alt={badge.name || `Badge ${badge.badgeId}`}
+                title={badge.name || "Unnamed Badge"}
+                className="w-5 h-5 rounded-sm drop-shadow-md"
+              />
+            ))}
+
+            {data?.badges?.length > 5 && (
+              <span className="text-sm text-gray-400 font-semibold">
+                +{data.badges.length - 5} more
+              </span>
+            )}
           </div>
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 }
 
 export default UserBlock;

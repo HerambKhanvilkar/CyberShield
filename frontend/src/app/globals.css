@@ -386,13 +386,26 @@ backdrop-filter: blur(14.9px);
   background: linear-gradient(
     120deg,
     transparent 0%,
-    rgba(255, 255, 255, 0.1) 45%,
-    rgba(255, 255, 255, 0.25) 50%,
-    rgba(255, 255, 255, 0.1) 55%,
+    rgba(255, 255, 255, 0.05) 40%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.05) 60%,
     transparent 100%
   );
   transform: rotate(25deg);
-  animation: glintMove 3s infinite ease-in-out;
+  animation: glintMove 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.glintleft {
+  animation-delay: 0s;
+}
+
+.glintcenter {
+  animation-delay: 0.6s;
+}
+
+.glintright {
+  animation-delay: 1.2s;
 }
 
 @keyframes glintMove {

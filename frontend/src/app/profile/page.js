@@ -269,7 +269,7 @@ function MarqueeDemo({ skills }) {
 const firstRow = skills.slice(0, skills.length / 2);
 const secondRow = skills.slice(skills.length / 2);
   return (
-    <div className="relative flex w-full flex-col items-center justify-center overflow-hidden">
+    <div className="relative flex w-full rounded-lg flex-col items-center justify-center overflow-hidden">
       <Marquee pauseOnHover className="[--duration:20s]">
         {firstRow.map((skill, i) => (
           <ReviewCard key={i} name={skill} />
@@ -321,8 +321,6 @@ const BadgeMetrics = ({ badge }) => (
     </div>
   </div>
 );
-
-
 
   return (
     <>
@@ -440,8 +438,8 @@ const BadgeMetrics = ({ badge }) => (
             <div className="rounded-2xl shadow-md">
             {selectedBadge ? (
               <>
-        <div className="relative  bg-center bg-cover bg-[url('/0.png')] backdrop-blur-lg text-white  rounded-lg z-0 w-full mb-5 group">
-          <div className="flex p-1 flex-col md:flex-row glass border border-white/10 shadow-lg transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)] rounded-lg">
+        <div className="relative  bg-center bg-cover bg-[url('/0.png')] backdrop-blur-md text-white  rounded-lg z-0 w-full mb-5 group">
+          <div className="flex p-1 flex-col md:flex-row glass backdrop-blur-md border border-white/10 shadow-lg transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)] rounded-lg">
             {/* Left side: Image + Metrics */}
             <div className="flex-shrink-0 my-6 md:mb-0 md:w-1/3">
               <img
@@ -462,13 +460,13 @@ const BadgeMetrics = ({ badge }) => (
               <div className="grid md:grid-cols-1 md:gap-6">
               { selectedBadge.skillsEarned.length > 0 ? (
               <MarqueeDemo skills={selectedBadge?.skillsEarned} />
-  ) : (
-              <p>
-                  You haven’t earned any Achievements yet.
+              ) : (
+                <p>
+                  You haven’t earned any Skills yet.
                 </p>
-  )}
+              )}
               </div>
-  { /* <BadgeSkillsList skills={badge.skillsEarned} /> */}
+              { /* <BadgeSkillsList skills={badge.skillsEarned} /> */}
               {/* Passing Criteria */}
               <div className="flex space-x-2 ">
               <div className="relative w-full z-0 mb-5 group bg-black/60 border rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">

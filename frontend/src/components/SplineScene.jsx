@@ -1,19 +1,19 @@
-import Spline from '@splinetool/react-spline';
-
-export default function SplineScene() {
+export default function VideoBackground() {
   return (
-    <div className="spline-scene">
-      <Spline
-        style={{
-          position: 'absolute',
-          top: '-200px', // adjust this value to shift more or less
-          left: 0,
-          width: '100%',
-          height: '120%',
-          zIndex: 0
-        }}
-        scene="https://prod.spline.design/PYop-g4IX840opNh/scene.splinecode"
-      />
+    <div className="video-background z-0">
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute top-0 left-0 w-full h-full object-cover z-0"
+      >
+        <source src="/videos/desktopvideo.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+
+      {/* Optional: Add overlay blur/tint */}
+      {/* <div className="absolute inset-0 backdrop-blur-sm z-1" /> */}
     </div>
   );
 }

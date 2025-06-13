@@ -91,11 +91,10 @@ useEffect(() => {
     setAllBadgesClass(inActiveButton);
   }
 
-
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-gradient-to-br from-[#0a0a0f] to-[#000] via-[#141622] backdrop-blur-md text-white px-4 py-12">
+      <main className="min-h-screen bg-black/50 from-black/50 to-cyan-500/30 backdrop-blur-md text-white px-4 py-12">
         <section className="text-center max-w-4xl mx-auto mb-12">
           <h1 className="text-4xl sm:text-5xl font-extrabold mb-4">
             Cybersecurity <span className="text-cyan-400">Badges</span>
@@ -126,10 +125,10 @@ useEffect(() => {
           ) : (
             badges.map((badge) => (
               <Link href={`/badges/${badge.id}`} key={badge.id}>
-                <div className="bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/15 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] rounded-2xl p-6  hover:shadow-cyan-500/20 transition duration-300">
+                <div className="bg-gradient-to-br from-gray-950 via-cyan-900/30 to-gray-900 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-6 transition duration-300 hover:shadow-cyan-400/20 hover:scale-[1.01]">
                   <div className="flex justify-center mb-4">
                     <img
-                      src={`${process.env.SERVER_URL}/badge/images/${badge.id}` || badge.img?.data}
+                      src={badge.img?.data || `${process.env.SERVER_URL}/badge/images/${badge.id}`}
                       alt={badge.name}
                       crossOrigin="anonymous"
                       className="w-24 h-24 object-contain drop-shadow-xl"
@@ -145,13 +144,14 @@ useEffect(() => {
                     {badge.skillsEarned?.slice(0, 3).map((skill, i) => (
                       <span
                         key={i}
-                        className="text-xs px-3 py-1 bg-cyan-500/20 text-cyan-300 rounded-full border border-cyan-400/30"
+                        className="text-xs px-2 py-0.5 bg-cyan-500/10 text-cyan-300 rounded-full border border-cyan-300/20"
+                        title={skill}
                       >
                         {skill}
                       </span>
                     ))}
-                    {badge.skillsEarned && badge.skillsEarned.length > 4 && (
-                      <span className="text-xs px-3 py-1 bg-cyan-500/20 text-cyan-300 rounded-full border border-cyan-400/30">
+                    {badge.skillsEarned && badge.skillsEarned.length > 3 && (
+                      <span className="text-xs px-2 py-0.5 bg-cyan-500/10 text-cyan-300 rounded-full border border-cyan-300/20">
                         +{badge.skillsEarned.length - 3} more
                       </span>
                     )}
