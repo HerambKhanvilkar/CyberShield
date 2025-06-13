@@ -172,55 +172,56 @@ const updateUserDetails = async (email) => {
     switch (activeTab) {
       case 'Users':
         return (
-          <div className="p-2 md:p-4 rounded-xl bg-slate-900/60 backdrop-blur-xl shadow-lg border border-gray-700">
-          {/* Top Row: Search + Pagination */}
-          <div className="flex flex-row justify-between items-start mb-2 gap-4">
-            <div className="flex gap-4">
-              <SearchBox onSearch={handleSearch} className="h-10" />
-              <button
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors h-10 flex items-center justify-center"
-                onClick={() => setSelectedUser('new')}
-              >
-                <UserPlus />
-              </button>
+          <div className="p-2 md:p-4 rounded-xl bg-black/50 backdrop-blur-md shadow-lg border border-white/10">
+            {/* Top Row: Search + Pagination */}
+            <div className="flex flex-row justify-between items-start mb-2 gap-4">
+              <div className="flex gap-4">
+                <SearchBox onSearch={handleSearch} className="h-10" />
+                <button
+                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors h-10 flex items-center justify-center"
+                  onClick={() => setSelectedUser('new')}
+                >
+                  <UserPlus />
+                </button>
+              </div>
             </div>
-          </div>
 
-          {/* Main Content: Left = User List | Right = User Details */}
-          <div className="flex flex-col md:flex-row gap-4 h-full md:h-[calc(100vh-200px)]">
-            {/* Left: User List */}
-            <div className="w-full md:w-1/3 bg-slate-800/60 rounded-lg p-2 border border-gray-700 flex flex-col max-h-[200px] md:max-h-none">
-              <h2 className="text-white font-semibold mb-2">User List</h2>
-              <ScrollArea className="flex-1 overflow-y-auto scrollbar pr-2">
-                <div className="flex flex-col space-y-2 w-full">
-                  {Array.isArray(searchResults) && searchResults.length > 0 ? (
-                    searchResults.map((user, index) => (
-                      <UserBlock
-                        key={index}
-                        className="w-full"
-                        data={user}
-                        updateUserDetails={updateUserDetails}
-                        handleSelectUser={handleSelectUser}
-                        onSelect={() => handleSelectUser(user)}
-                      />
-                    ))
-                  ) : (
-                    <p className="text-gray-400">No data available.</p>
-                  )}
+            {/* Main Content: Left = User List | Right = User Details */}
+            <div className="flex flex-col md:flex-row bg-black/20 gap-4 h-full md:h-[calc(100vh-200px)]">
+              {/* Left: User List */}
+              <div className="w-full md:w-1/3 bg-white/5 backdrop-blur-md rounded-lg p-2 border border-white/10 shadow-md flex flex-col h-full">
+                <h2 className="text-white font-semibold mb-2">User List</h2>
+                <div className="flex-1 overflow-hidden">
+                  <ScrollArea className="h-full overflow-y-auto scrollbar pr-2">
+                    <div className="flex flex-col space-y-2 w-full">
+                      {Array.isArray(searchResults) && searchResults.length > 0 ? (
+                        searchResults.map((user, index) => (
+                          <UserBlock
+                            key={index}
+                            className="w-full"
+                            data={user}
+                            updateUserDetails={updateUserDetails}
+                            handleSelectUser={handleSelectUser}
+                            onSelect={() => handleSelectUser(user)}
+                          />
+                        ))
+                      ) : (
+                        <p className="text-gray-400">No data available.</p>
+                      )}
+                    </div>
+                  </ScrollArea>
                 </div>
-              </ScrollArea>
-            </div>
+              </div>
 
-            {/* Right: User Details */}
-            <div className="w-full md:w-2/3 bg-slate-800/60 rounded-lg p-2 md:p-4 border border-gray-700 overflow-y-auto scrollbar">
-              <UserDetailsView 
-                selectedUser={selectedUser} 
-                updateUserDetails={updateUserDetails} 
-              />
+              {/* Right: User Details */}
+              <div className="w-full md:w-2/3 bg-white/5 backdrop-blur-md rounded-lg p-2 md:p-4 border border-white/10 shadow-md overflow-y-auto scrollbar">
+                <UserDetailsView 
+                  selectedUser={selectedUser} 
+                  updateUserDetails={updateUserDetails} 
+                />
+              </div>
             </div>
           </div>
-        </div>
-
         );
       case 'Badges':
         return (
@@ -238,27 +239,28 @@ const updateUserDetails = async (email) => {
   return (
     <>
       <Navbar />
-      <div className="min-h-full p-0 md:p-3 pb-0 pt-0">
-        <div className="mb-0 border-b border-gray-700">
-    <ul className="flex flex-wrap -mb-px text-sm font-medium text-center">
-          {TABS.map((tab, index) => (
-            <li key={index} className="me-2 inline-block px-2 md:px-4 rounded-lg">
-            <button
-              key={tab}
-            className={`inline-block p-2 md:px-4 rounded-t-lg ${
-                activeTab === tab
-                  ? 'text-[#B9D9EB] border-b-2 border-[#B9D9EB]'
-                  : 'text-gray-400 hover:border-gray-300 hover:text-gray-300'
-              }`}
-              onClick={() => setActiveTab(tab)}
-            >
-              {tab}
-            </button>
-            </li>
-          ))}
-    </ul>
+      <div className='bg-[url(/background.png)]'>
+        <div className="min-h-full bg-black/50 backdrop-blur-md p-0 md:p-3 pb-0 pt-0">
+          <div className="mb-0 border-b border-gray-700">
+            <ul className="flex flex-wrap -mb-px text-sm font-medium text-center">
+            {TABS.map((tab, index) => (
+              <li key={index} className="me-2 inline-block px-2 md:px-4 rounded-lg">
+              <button
+                key={tab}
+              className={`inline-block p-2 md:px-4 rounded-t-lg ${
+                  activeTab === tab
+                    ? 'text-[#B9D9EB] border-b-2 border-[#B9D9EB]'
+                    : 'text-gray-400 hover:border-gray-300 hover:text-gray-300'
+                }`}
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab}
+              </button>
+              </li>
+            ))}
+            </ul>
+          </div>
         </div>
-
         <div>{renderTabContent()}</div>
       </div>
         {/* User creation Modal Popup */}

@@ -313,7 +313,7 @@ const BadgeMetrics = () => (
       {/* Level */}
       <div className="relative flex-1">
         <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-10">
-          <div className="glint" />
+          <div className="glint glintcenter" />
         </div>
         <div className="rounded-2xl bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] p-4 flex flex-col justify-between text-center min-h-[50px] transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)]">
           <div className="text-sm uppercase text-gray-600">Level</div>
@@ -324,7 +324,7 @@ const BadgeMetrics = () => (
       {/* Earners */}
       <div className="relative flex-1">
         <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-10">
-          <div className="glint" />
+          <div className="glint glintcenter" />
         </div>
         <div className="rounded-2xl bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] p-4 flex flex-col justify-between text-center min-h-[50px] transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)]">
           <div className="text-sm uppercase text-gray-600">Earners</div>
@@ -335,7 +335,7 @@ const BadgeMetrics = () => (
       {/* Vertical */}
       <div className="relative flex-1">
         <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-10">
-          <div className="glint" />
+          <div className="glint glintcenter" />
         </div>
         <div className="rounded-2xl bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] p-4 flex flex-col justify-between text-center min-h-[50px] transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)]">
           <div className="text-sm uppercase text-gray-600">Vertical</div>
@@ -349,7 +349,7 @@ const BadgeMetrics = () => (
     {/* Course Block */}
     <div className="relative w-full">
       <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-10">
-        <div className="glint" />
+        <div className="glint glintcenter" />
       </div>
       <div className="flex-1 p-4 mt-1 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)]">
         <h3 className="text-xl font-semibold text-white flex items-center gap-2 mb-2">
@@ -369,7 +369,7 @@ const BadgeDescription = () => (
   <div className="relative">
     {/* Glint overlay */}
     <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-10">
-      <div className="glint" />
+      <div className="glint glintleft" />
     </div>
 
     {/* Badge Details Block */}
@@ -398,7 +398,7 @@ const SkillsEarned = () => (
         <div key={idx} className="relative rounded-2xl h-full">
           {/* Glint overlay */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-10 w-full h-full">
-            <div className="glint" />
+            <div className="glint glintright" />
           </div>
 
           <div
@@ -433,7 +433,7 @@ const RelatedBadges = () => (
           >
             {/* Glint overlay */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-10 w-full h-full">
-              <div className="glint" />
+              <div className="glint glintleft" />
             </div>
 
             <div
@@ -489,6 +489,11 @@ const RelatedBadges = () => (
         <div className="w-50 h-50 rounded-full z-0 shadow-lg flex items-center justify-center relative overflow-hidden">
           {!isLoading ? (
             <>
+            <div className='relative'>
+              {/* Glint overlay */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-10 w-full h-full">
+              <div className="glint glintcenter" />
+            </div>
               <img
                 crossOrigin="anonymous"
                 src={`${process.env.SERVER_URL}/badge/images/${currentBadge?.id}` || currentBadge.image?.data}
@@ -497,6 +502,7 @@ const RelatedBadges = () => (
               />
               <div className="absolute bottom-2 left-0 right-0 text-center text-white text-sm font-medium">
                 {currentBadgeIndex + 1} of {badges.length}
+              </div>
               </div>
             </>
           ) : (
@@ -521,391 +527,393 @@ const RelatedBadges = () => (
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#0a0a0f] to-[#000] via-[#141622] backdrop-blur-md text-white">
-      <Navbar />
+    <div className="min-h-screen flex flex-col bg-[url(/background.png)] bg-cover from-[#0a0a0f] to-[#000] via-[#141622] backdrop-blur-md text-white">
+      <div className='bg-black/40 backdrop-blur-md'>
+        <Navbar />
 
-      <AllBadgeMyBadgeFilter/>
-      
-      {/* Main content with responsive layout */}
-      <main className="flex-grow" key={badgeId}>
-        {/* Desktop Layout */}
-        <div className="hidden md:hidden lg:flex md:flex-row max-w-7xl min-h-[calc(100vh-250px)] mx-auto p-6 gap-6">
-          
-          <section className="md:w-2/6 my-auto space-y-6">
-            <BadgeDescription />
-            <RelatedBadges />
-          </section>
-          &nbsp;
-          &nbsp;
-
-          <section className="md:w-2/6 flex flex-col items-center">
-            <div>
-              {/* Top earned badge pill */}
-              {earnedBadge && (
-                <div className="z-30">
-                  <div
-                    className="
-                      bg-green-700 bg-opacity-30
-                      text-green-100
-                      rounded-full
-                      px-4 py-1.5
-                      shadow-sm
-                      flex items-center space-x-2
-                      font-semibold
-                      select-none
-                      md:px-5 md:py-2
-                    "
-                    style={{ backdropFilter: "blur(6px)" }} // subtle blur for glassy feel
-                  >
-                    <Award className="w-5 h-5 md:w-6 md:h-6 text-green-300" />
-                    <span className="text-sm md:text-base whitespace-nowrap">
-                      <span className="block md:hidden">
-                        {earnedBadge.earnedDate
-                          ? new Date(earnedBadge.earnedDate).toLocaleDateString("en-GB", {
-                              day: "2-digit",
-                              month: "2-digit",
-                              year: "2-digit",
-                            }) // → 05/11/23
-                          : "Earned"}
-                      </span>
-                      <span className="hidden md:block">
-                        {earnedBadge.earnedDate
-                          ? `You earned this badge on ${new Date(earnedBadge.earnedDate).toLocaleDateString(
-                              "en-GB",
-                              {
-                                day: "numeric",
-                                month: "long",
-                                year: "numeric",
-                              }
-                            )}` // → You earned this badge on 5 November 2023
-                          : "You have earned this badge"}
-                      </span>
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
-            <BadgeImage />
-            <BadgeMetrics />
-          </section>
-          &nbsp;
-          &nbsp;
-
-          <section className="md:w-2/6 my-auto space-y-6">
-            <SkillsEarned />
-            <h2 className="text-2xl font-semibold border-b border-cyan-500 pb-2">Badge Actions</h2>
-            <BadgeActions currentBadge={currentBadge} isAuthenticated={isAuthenticated} />
-          </section>
-        </div>
-
-        {/* Tablet Layout */}
-        <section className="hidden md:flex lg:hidden flex-col w-full mx-auto gap-6 text-white">
-          <div className="flex w-full gap-6">
-            {/* Badge and Badge Actions */}
-            <div className="flex flex-col items-center w-1/2 space-y-4">
-            <div className='my-2'>
-              {/* Top earned badge pill */}
-              {earnedBadge && (
-                <div className="z-50">
-                  <div
-                    className="
-                      bg-green-700 bg-opacity-30
-                      text-green-100
-                      rounded-full
-                      px-4 py-1.5
-                      shadow-sm
-                      flex items-center space-x-2
-                      font-semibold
-                      select-none
-                      md:px-5 md:py-2
-                    "
-                    style={{ backdropFilter: "blur(6px)" }} // subtle blur for glassy feel
-                  >
-                    <Award className="w-5 h-5 md:w-6 md:h-6 text-green-300" />
-                    <span className="text-sm md:text-base whitespace-nowrap">
-                      <span className="block md:hidden">
-                        {earnedBadge.earnedDate
-                          ? new Date(earnedBadge.earnedDate).toLocaleDateString("en-GB", {
-                              day: "2-digit",
-                              month: "2-digit",
-                              year: "2-digit",
-                            }) // → 05/11/23
-                          : "Earned"}
-                      </span>
-                      <span className="hidden md:block">
-                        {earnedBadge.earnedDate
-                          ? `You earned this badge on ${new Date(earnedBadge.earnedDate).toLocaleDateString(
-                              "en-GB",
-                              {
-                                day: "numeric",
-                                month: "long",
-                                year: "numeric",
-                              }
-                            )}` // → You earned this badge on 5 November 2023
-                          : "You have earned this badge"}
-                      </span>
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
-              <BadgeImage />
-              <div className="flex flex-wrap justify-center gap-2">
-                <BadgeActions currentBadge={currentBadge} isAuthenticated={isAuthenticated} />
-              </div>
-              <BadgeMetrics />
+        <AllBadgeMyBadgeFilter/>
+        
+        {/* Main content with responsive layout */}
+        <main className="flex-grow" key={badgeId}>
+          {/* Desktop Layout */}
+          <div className="hidden md:hidden lg:flex md:flex-row max-w-7xl min-h-[calc(100vh-250px)] mx-auto p-6 gap-6">
+            
+            <section className="md:w-2/6 my-auto space-y-6">
+              <BadgeDescription />
               <RelatedBadges />
-            </div>
+            </section>
             &nbsp;
             &nbsp;
 
-            {/* Description */}
-            <section className="w-1/2 mt-20 mr-4">
-              <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Badge Details</h2>
-              <p className="text-gray-300 leading-relaxed">{currentBadge?.description}</p>
+            <section className="md:w-2/6 flex flex-col items-center">
+              <div>
+                {/* Top earned badge pill */}
+                {earnedBadge && (
+                  <div className="z-30">
+                    <div
+                      className="
+                        bg-green-700 bg-opacity-30
+                        text-green-100
+                        rounded-full
+                        px-4 py-1.5
+                        shadow-sm
+                        flex items-center space-x-2
+                        font-semibold
+                        select-none
+                        md:px-5 md:py-2
+                      "
+                      style={{ backdropFilter: "blur(6px)" }} // subtle blur for glassy feel
+                    >
+                      <Award className="w-5 h-5 md:w-6 md:h-6 text-green-300" />
+                      <span className="text-sm md:text-base whitespace-nowrap">
+                        <span className="block md:hidden">
+                          {earnedBadge.earnedDate
+                            ? new Date(earnedBadge.earnedDate).toLocaleDateString("en-GB", {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "2-digit",
+                              }) // → 05/11/23
+                            : "Earned"}
+                        </span>
+                        <span className="hidden md:block">
+                          {earnedBadge.earnedDate
+                            ? `You earned this badge on ${new Date(earnedBadge.earnedDate).toLocaleDateString(
+                                "en-GB",
+                                {
+                                  day: "numeric",
+                                  month: "long",
+                                  year: "numeric",
+                                }
+                              )}` // → You earned this badge on 5 November 2023
+                            : "You have earned this badge"}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <BadgeImage />
+              <BadgeMetrics />
+            </section>
+            &nbsp;
+            &nbsp;
+
+            <section className="md:w-2/6 my-auto space-y-6">
               <SkillsEarned />
+              <h2 className="text-2xl font-semibold border-b border-cyan-500 pb-2">Badge Actions</h2>
+              <BadgeActions currentBadge={currentBadge} isAuthenticated={isAuthenticated} />
             </section>
           </div>
-        </section>
 
-        {/* Mobile Layout */}
-        <div className="flex sm:hidden flex-col max-w-sm mx-auto p-4 gap-4">
-          {/* Badge Image */}
-          <section className="flex flex-col items-center">
-            <div className='my-2'>
-              {/* Top earned badge pill */}
-              {earnedBadge && (
-                <div className="z-50">
-                  <div
-                    className="
-                      bg-green-700 bg-opacity-30
-                      text-green-100
-                      rounded-full
-                      px-4 py-1.5
-                      shadow-sm
-                      flex items-center space-x-2
-                      font-semibold
-                      select-none
-                      md:px-5 md:py-2
-                    "
-                    style={{ backdropFilter: "blur(6px)" }} // subtle blur for glassy feel
-                  >
-                    <Award className="w-5 h-5 md:w-6 md:h-6 text-green-300" />
-                    <span className="text-sm md:text-base whitespace-nowrap">
-                      <span className="block md:hidden">
-                        {earnedBadge.earnedDate
-                          ? new Date(earnedBadge.earnedDate).toLocaleDateString("en-GB", {
-                              day: "2-digit",
-                              month: "2-digit",
-                              year: "2-digit",
-                            }) // → 05/11/23
-                          : "Earned"}
+          {/* Tablet Layout */}
+          <section className="hidden md:flex lg:hidden flex-col w-full mx-auto gap-6 text-white">
+            <div className="flex w-full gap-6">
+              {/* Badge and Badge Actions */}
+              <div className="flex flex-col items-center w-1/2 space-y-4">
+              <div className='my-2'>
+                {/* Top earned badge pill */}
+                {earnedBadge && (
+                  <div className="z-50">
+                    <div
+                      className="
+                        bg-green-700 bg-opacity-30
+                        text-green-100
+                        rounded-full
+                        px-4 py-1.5
+                        shadow-sm
+                        flex items-center space-x-2
+                        font-semibold
+                        select-none
+                        md:px-5 md:py-2
+                      "
+                      style={{ backdropFilter: "blur(6px)" }} // subtle blur for glassy feel
+                    >
+                      <Award className="w-5 h-5 md:w-6 md:h-6 text-green-300" />
+                      <span className="text-sm md:text-base whitespace-nowrap">
+                        <span className="block md:hidden">
+                          {earnedBadge.earnedDate
+                            ? new Date(earnedBadge.earnedDate).toLocaleDateString("en-GB", {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "2-digit",
+                              }) // → 05/11/23
+                            : "Earned"}
+                        </span>
+                        <span className="hidden md:block">
+                          {earnedBadge.earnedDate
+                            ? `You earned this badge on ${new Date(earnedBadge.earnedDate).toLocaleDateString(
+                                "en-GB",
+                                {
+                                  day: "numeric",
+                                  month: "long",
+                                  year: "numeric",
+                                }
+                              )}` // → You earned this badge on 5 November 2023
+                            : "You have earned this badge"}
+                        </span>
                       </span>
-                      <span className="hidden md:block">
-                        {earnedBadge.earnedDate
-                          ? `You earned this badge on ${new Date(earnedBadge.earnedDate).toLocaleDateString(
-                              "en-GB",
-                              {
-                                day: "numeric",
-                                month: "long",
-                                year: "numeric",
-                              }
-                            )}` // → You earned this badge on 5 November 2023
-                          : "You have earned this badge"}
-                      </span>
-                    </span>
+                    </div>
                   </div>
+                )}
+              </div>
+                <BadgeImage />
+                <div className="flex flex-wrap justify-center gap-2">
+                  <BadgeActions currentBadge={currentBadge} isAuthenticated={isAuthenticated} />
                 </div>
-              )}
+                <BadgeMetrics />
+                <RelatedBadges />
+              </div>
+              &nbsp;
+              &nbsp;
+
+              {/* Description */}
+              <section className="w-1/2 mt-20 mr-4">
+                <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Badge Details</h2>
+                <p className="text-gray-300 leading-relaxed">{currentBadge?.description}</p>
+                <SkillsEarned />
+              </section>
             </div>
-            <BadgeImage />
-            <div className="text-center text-sm text-gray-400 mt-2">
-              {currentBadgeIndex + 1} of {badges.length} badges
-            </div>
           </section>
-          {/* Badge Actions */}
-          <section className="space-y-4">
-            <BadgeActions currentBadge={currentBadge} isAuthenticated={isAuthenticated} />
-          </section>
-        &nbsp;
-        &nbsp;
 
-          {/* Badge Metrics */}
-          <section>
-            <BadgeMetrics />
-          </section>
-        &nbsp;
-        &nbsp;
+          {/* Mobile Layout */}
+          <div className="flex sm:hidden flex-col max-w-sm mx-auto p-4 gap-4">
+            {/* Badge Image */}
+            <section className="flex flex-col items-center">
+              <div className='my-2'>
+                {/* Top earned badge pill */}
+                {earnedBadge && (
+                  <div className="z-50">
+                    <div
+                      className="
+                        bg-green-700 bg-opacity-30
+                        text-green-100
+                        rounded-full
+                        px-4 py-1.5
+                        shadow-sm
+                        flex items-center space-x-2
+                        font-semibold
+                        select-none
+                        md:px-5 md:py-2
+                      "
+                      style={{ backdropFilter: "blur(6px)" }} // subtle blur for glassy feel
+                    >
+                      <Award className="w-5 h-5 md:w-6 md:h-6 text-green-300" />
+                      <span className="text-sm md:text-base whitespace-nowrap">
+                        <span className="block md:hidden">
+                          {earnedBadge.earnedDate
+                            ? new Date(earnedBadge.earnedDate).toLocaleDateString("en-GB", {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "2-digit",
+                              }) // → 05/11/23
+                            : "Earned"}
+                        </span>
+                        <span className="hidden md:block">
+                          {earnedBadge.earnedDate
+                            ? `You earned this badge on ${new Date(earnedBadge.earnedDate).toLocaleDateString(
+                                "en-GB",
+                                {
+                                  day: "numeric",
+                                  month: "long",
+                                  year: "numeric",
+                                }
+                              )}` // → You earned this badge on 5 November 2023
+                            : "You have earned this badge"}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <BadgeImage />
+              <div className="text-center text-sm text-gray-400 mt-2">
+                {currentBadgeIndex + 1} of {badges.length} badges
+              </div>
+            </section>
+            {/* Badge Actions */}
+            <section className="space-y-4">
+              <BadgeActions currentBadge={currentBadge} isAuthenticated={isAuthenticated} />
+            </section>
+          &nbsp;
+          &nbsp;
 
-          {/* Badge Description */}
-          <section>
-            <BadgeDescription />
-          </section>
-        &nbsp;
-        &nbsp;
+            {/* Badge Metrics */}
+            <section>
+              <BadgeMetrics />
+            </section>
+          &nbsp;
+          &nbsp;
 
-          {/* Skills Earned */}
-          <section>
-            <SkillsEarned />
-          </section>
-        &nbsp;
-        &nbsp;
+            {/* Badge Description */}
+            <section>
+              <BadgeDescription />
+            </section>
+          &nbsp;
+          &nbsp;
 
-          {/* Related Badges */}
-          <section>
-            <RelatedBadges />
-          </section>
-        </div>
-      </main>
+            {/* Skills Earned */}
+            <section>
+              <SkillsEarned />
+            </section>
+          &nbsp;
+          &nbsp;
 
-      {/* Desktop Badge Collection Thumbnails */}
-      <div className="hidden md:block rounded-2xl bg-gradient-to-br from-white/10 via-white/5 to-cyan-400/5 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] p-2 flex flex-col items-center justify-between mt-4 mx-auto">
-        {/* Scrollable badge row with chevrons */}
-        <div className="w-full flex items-center gap-2">
+            {/* Related Badges */}
+            <section>
+              <RelatedBadges />
+            </section>
+          </div>
+        </main>
+
+        {/* Desktop Badge Collection Thumbnails */}
+        <div className="hidden md:flex flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-white/10 via-white/5 to-cyan-400/5 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] p-2 mt-4 mx-auto w-max">
           
-          {/* Left Chevron */}
-          <button
-            onClick={scrollLeft}
-            className="p-2 rounded-full hover:bg-gray-600 transition text-white"
-            aria-label="Scroll Left"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
+          {/* Scrollable badge row with chevrons */}
+          <div className="flex items-center gap-2">
+            
+            {/* Left Chevron */}
+            <button
+              onClick={scrollLeft}
+              className="p-2 rounded-full hover:bg-gray-600 transition text-white"
+              aria-label="Scroll Left"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
 
-          {/* Scrollable container (max width for 5 badges) */}
-          <div
-            ref={scrollRef}
-            className="overflow-x-hidden overflow-y-hidden scrollbar-hide w-[275px]" // 5 badges
-          >
-            <div className="flex space-x-2 w-max">
+            {/* Scrollable container (max width for 5 badges) */}
+            <div
+              ref={scrollRef}
+              className="overflow-x-hidden overflow-y-hidden scrollbar-hide max-w-[275px]"
+            >
+              <div className="flex space-x-2 w-max">
+                {badges.map((badge, index) => (
+                  <img
+                    key={badge.id}
+                    crossOrigin="anonymous"
+                    src={
+                      badge.image?.data || `${process.env.SERVER_URL}/badge/images/${badge?.id}`
+                    }
+                    alt={badge.name}
+                    className={`w-12 h-12 object-cover rounded-md cursor-pointer shadow-md transition-transform ${
+                      index === currentBadgeIndex
+                        ? 'border-2 border-cyan-500 scale-100'
+                        : 'opacity-70'
+                    }`}
+                    onClick={() => setCurrentBadgeIndex(index)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Right Chevron */}
+            <button
+              onClick={scrollRight}
+              className="p-2 rounded-full hover:bg-gray-600 transition text-white"
+              aria-label="Scroll Right"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="text-gray-300 mt-1 text-center text-xs">
+            {badges.length} Badges — Showing {currentBadgeIndex + 1} of {badges.length}
+          </div>
+        </div>
+
+        {/* Mobile Badge Collection Thumbnails */}
+        <div className="block md:hidden rounded-2xl bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] p-2 flex flex-col items-center justify-between mt-4 w-full mx-auto">
+          <div className="w-full relative">
+            <button
+              aria-label="Previous Badge"
+              onClick={() => {
+                const container = document.getElementById("mobileBadgeScroll");
+                container.scrollBy({ left: -300, behavior: "smooth" });
+              }}
+              className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 p-2 rounded-full bg-gray-700/50 hover:bg-gray-700 text-white"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            {/* Scrollable & draggable container */}
+            <div
+              id="mobileBadgeScroll"
+              className="flex space-x-2 overflow-x-auto px-6 scroll-smooth cursor-grab active:cursor-grabbing"
+              style={{ WebkitOverflowScrolling: "touch" }}
+              onMouseDown={(e) => {
+                const container = e.currentTarget;
+                let startX = e.pageX - container.offsetLeft;
+                let scrollLeft = container.scrollLeft;
+
+                const onMouseMove = (eMove) => {
+                  const x = eMove.pageX - container.offsetLeft;
+                  const walk = (x - startX) * 1.5;
+                  container.scrollLeft = scrollLeft - walk;
+                };
+
+                const onMouseUp = () => {
+                  window.removeEventListener("mousemove", onMouseMove);
+                  window.removeEventListener("mouseup", onMouseUp);
+                };
+
+                window.addEventListener("mousemove", onMouseMove);
+                window.addEventListener("mouseup", onMouseUp);
+              }}
+              onTouchStart={(e) => {
+                const container = e.currentTarget;
+                const touchStartX = e.touches[0].pageX;
+                const scrollStart = container.scrollLeft;
+
+                const onTouchMove = (eMove) => {
+                  const touchX = eMove.touches[0].pageX;
+                  const walk = (touchX - touchStartX) * 1.5;
+                  container.scrollLeft = scrollStart - walk;
+                };
+
+                const onTouchEnd = () => {
+                  container.removeEventListener("touchmove", onTouchMove);
+                  container.removeEventListener("touchend", onTouchEnd);
+                };
+
+                container.addEventListener("touchmove", onTouchMove);
+                container.addEventListener("touchend", onTouchEnd);
+              }}
+            >
               {badges.map((badge, index) => (
                 <img
                   key={badge.id}
                   crossOrigin="anonymous"
-                  src={
-                    `${process.env.SERVER_URL}/badge/images/${badge?.id}` ||
-                    badge.image?.data
-                  }
+                  src={`${process.env.SERVER_URL}/badge/images/${badge?.id}` || badge.image?.data}
                   alt={badge.name}
                   className={`w-12 h-12 object-cover rounded-md cursor-pointer shadow-md transition-transform ${
                     index === currentBadgeIndex
-                      ? 'border-2 border-cyan-500 scale-100'
-                      : 'opacity-70'
+                      ? "border-2 border-cyan-500 scale-100"
+                      : "opacity-70"
                   }`}
                   onClick={() => setCurrentBadgeIndex(index)}
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      setCurrentBadgeIndex(index);
+                    }
+                  }}
                 />
               ))}
             </div>
+
+            <button
+              aria-label="Next Badge"
+              onClick={() => {
+                const container = document.getElementById("mobileBadgeScroll");
+                container.scrollBy({ left: 300, behavior: "smooth" });
+              }}
+              className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 p-2 rounded-full bg-gray-700/50 hover:bg-gray-700 text-white"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
-
-          {/* Right Chevron */}
-          <button
-            onClick={scrollRight}
-            className="p-2 rounded-full hover:bg-gray-600 transition text-white"
-            aria-label="Scroll Right"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-
-        <div className="text-gray-300 mt-1 mx-auto text-center text-xs">
-          {badges.length} Badges — Showing {currentBadgeIndex + 1} of {badges.length}
-        </div>
-      </div>
-
-      {/* Mobile Badge Collection Thumbnails */}
-      <div className="block md:hidden rounded-2xl bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] p-2 flex flex-col items-center justify-between mt-4 w-full mx-auto">
-        <div className="w-full relative">
-          <button
-            aria-label="Previous Badge"
-            onClick={() => {
-              const container = document.getElementById("mobileBadgeScroll");
-              container.scrollBy({ left: -300, behavior: "smooth" });
-            }}
-            className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 p-2 rounded-full bg-gray-700/50 hover:bg-gray-700 text-white"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-
-          {/* Scrollable & draggable container */}
-          <div
-            id="mobileBadgeScroll"
-            className="flex space-x-2 overflow-x-auto px-6 scroll-smooth cursor-grab active:cursor-grabbing"
-            style={{ WebkitOverflowScrolling: "touch" }}
-            onMouseDown={(e) => {
-              const container = e.currentTarget;
-              let startX = e.pageX - container.offsetLeft;
-              let scrollLeft = container.scrollLeft;
-
-              const onMouseMove = (eMove) => {
-                const x = eMove.pageX - container.offsetLeft;
-                const walk = (x - startX) * 1.5;
-                container.scrollLeft = scrollLeft - walk;
-              };
-
-              const onMouseUp = () => {
-                window.removeEventListener("mousemove", onMouseMove);
-                window.removeEventListener("mouseup", onMouseUp);
-              };
-
-              window.addEventListener("mousemove", onMouseMove);
-              window.addEventListener("mouseup", onMouseUp);
-            }}
-            onTouchStart={(e) => {
-              const container = e.currentTarget;
-              const touchStartX = e.touches[0].pageX;
-              const scrollStart = container.scrollLeft;
-
-              const onTouchMove = (eMove) => {
-                const touchX = eMove.touches[0].pageX;
-                const walk = (touchX - touchStartX) * 1.5;
-                container.scrollLeft = scrollStart - walk;
-              };
-
-              const onTouchEnd = () => {
-                container.removeEventListener("touchmove", onTouchMove);
-                container.removeEventListener("touchend", onTouchEnd);
-              };
-
-              container.addEventListener("touchmove", onTouchMove);
-              container.addEventListener("touchend", onTouchEnd);
-            }}
-          >
-            {badges.map((badge, index) => (
-              <img
-                key={badge.id}
-                crossOrigin="anonymous"
-                src={`${process.env.SERVER_URL}/badge/images/${badge?.id}` || badge.image?.data}
-                alt={badge.name}
-                className={`w-12 h-12 object-cover rounded-md cursor-pointer shadow-md transition-transform ${
-                  index === currentBadgeIndex
-                    ? "border-2 border-cyan-500 scale-100"
-                    : "opacity-70"
-                }`}
-                onClick={() => setCurrentBadgeIndex(index)}
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    setCurrentBadgeIndex(index);
-                  }
-                }}
-              />
-            ))}
+          <div className="text-gray-300 mt-1 text-xs">
+            {badges.length} Badges — Showing {currentBadgeIndex + 1} of {badges.length}
           </div>
-
-          <button
-            aria-label="Next Badge"
-            onClick={() => {
-              const container = document.getElementById("mobileBadgeScroll");
-              container.scrollBy({ left: 300, behavior: "smooth" });
-            }}
-            className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 p-2 rounded-full bg-gray-700/50 hover:bg-gray-700 text-white"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-        <div className="text-gray-300 mt-1 text-xs">
-          {badges.length} Badges — Showing {currentBadgeIndex + 1} of {badges.length}
         </div>
       </div>
       <Footer />

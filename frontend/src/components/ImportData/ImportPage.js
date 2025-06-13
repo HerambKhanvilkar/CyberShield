@@ -257,9 +257,8 @@ function MyComponent() {
     console.log("data", data);
   }
 
-
   return (
-    <div className="flex flex-col lg:flex-row justify-between gap-6 mb-6">
+    <div className="flex flex-col lg:flex-row bg-black/40 backdrop-blur-md justify-between gap-6 mb-6">
     {/* Left side - Description and buttons */}
       <div className="flex flex-col justify-between space-y-4 lg:max-w-sm">
         <div>

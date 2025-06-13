@@ -61,150 +61,60 @@ export default function LandingPage() {
     <>
       <Navbar />
       <div className="relative min-h-screen bg-[#00040A] text-white font-sans">
-        {/* Interactive Background */}
-        <div className="hidden md:block absolute inset-0 z-0 pointer-events-auto">
-          {/* <SplineScene /> */}
-        </div>
-        <div className="block md:hidden absolute inset-0 z-0 pointer-events-auto">
-          {/* <SplineScene2 /> */}
-          {/* <img src={"https://img.freepik.com/premium-photo/hud-shield-icon-symbolize-cyber-security-data-protection-vertical-mobile-wallpaper_896558-58608.jpg?w=360"}
-          alt="trial image"></img> */}
-        </div>
-
         {/* Foreground Content */}
         <div className="relative z-10 mx-auto pointer-events-none">
           {/* Hero Section */}
-          {/* <section className="min-h-[calc(100vh-70px)] mr-auto flex items-center justify-center text-center px-5 py-12 relative">
-            <div className="max-w-[800px] mr-auto animate-fadeIn pointer-events-auto">
+          <section className="relative min-h-[calc(100vh-70px)] px-5 py-12 bg-black">
+            {/* Mobile image block only */}
+            <div className="block md:hidden relative w-full h-[250px]">
               <img
-                src="https://static.wixstatic.com/media/e48a18_c949f6282e6a4c8e9568f40916a0c704~mv2.png/v1/crop/x_0,y_151,w_1920,h_746/fill/w_203,h_79,fp_0.50_0.50,q_85,usm_0.66_1.00_0.01,enc_auto/For%20Dark%20Theme.png"
-                alt="Logo"
-                className="hidden md:block max-w-[200px] mb-5 drop-shadow-[0_0_20px_rgba(0,212,255,0.5)] mx-auto"
+                src="/cyber-security-concept-digital-art.jpg"
+                alt="Cyber Background"
+                className="w-full h-full object-cover"
               />
-              <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight mb-5">
-                Cybersecurity Badges
-              </h1>
-              <p className="text-lg sm:text-xl max-w-[600px] mx-auto mb-10 text-text-medium">
-                Earn and showcase badges for your cybersecurity skills and achievements.
-              </p>
-              <div className="flex justify-center gap-5 flex-wrap pointer-events-auto">
-                <button className="px-7 py-3 text-base sm:text-lg border border-cyan-400 bg-gradient-to-br from-cyan-300/20 to-cyan-400/20 hover:from-cyan-300/40 hover:to-cyan-400/40 hover:shadow-[0_0_20px_rgba(0,212,255,0.5)] transition rounded">
-                  Get Started
-                </button>
-                <button
-                  onClick={() => window.open("https://learn.deepcytes.io/", "_blank")}
-                  className="px-7 py-3 text-base sm:text-lg border border-white/20 bg-white/10 hover:bg-white/20 transition rounded"
-                >
-                  Learn More
-                </button>
-              </div>
+              <div className="absolute inset-0 bg-gradient-to-b from-black/0 via-black/50 to-black" />
             </div>
-          </section> */}
-          {/* image version */}
-          {/* <section className="min-h-[calc(100vh-70px)] flex items-center justify-center px-5 py-2 md:py-12 relative">
-            <div className="flex flex-col-reverse md:flex-row items-center justify-between gap-2 md:gap-10 max-w-7xl w-full">
 
-              {/* Left Content
-              <div className="flex-1 animate-fadeIn bg-white/10 backdrop-blur-md border border-white/10 rounded-xl p-6 text-center md:text-left">
+            {/* Content block */}
+            <div className="relative z-10 max-w-7xl mt-0 md:mt-30 mx-auto flex flex-col md:flex-row items-center justify-start">
+              <div className="flex-1 text-white text-left mt-5 md:mt-0 px-4">
                 <img
                   src="https://static.wixstatic.com/media/e48a18_c949f6282e6a4c8e9568f40916a0c704~mv2.png/v1/crop/x_0,y_151,w_1920,h_746/fill/w_203,h_79,fp_0.50_0.50,q_85,usm_0.66_1.00_0.01,enc_auto/For%20Dark%20Theme.png"
                   alt="Logo"
-                  className="hidden md:block max-w-[200px] mb-5 drop-shadow-[0_0_20px_rgba(0,212,255,0.5)]"
+                  className="max-w-[200px] hidden md:block mb-5 drop-shadow-[0_0_20px_rgba(0,212,255,0.5)]"
                 />
-                <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight mb-5">
+                <h1 className="text-4xl md:text-5xl font-extrabold mb-5">
                   Cybersecurity Badges
                 </h1>
-                <p className="text-lg sm:text-xl max-w-[600px] mx-auto md:mx-0 mb-10 text-text-medium">
+                <p className="text-lg md:text-xl mb-10 text-white/80 max-w-lg">
                   Earn and showcase badges for your cybersecurity skills and achievements.
                 </p>
-                <div className="flex justify-center md:justify-start gap-5 flex-wrap">
-                  <button className="px-7 py-3 text-base sm:text-lg border border-cyan-400 bg-gradient-to-br from-cyan-300/20 to-cyan-400/20 hover:from-cyan-300/40 hover:to-cyan-400/40 hover:shadow-[0_0_20px_rgba(0,212,255,0.5)] transition rounded">
+                <div className="flex flex-wrap gap-5">
+                  <button className="px-7 py-3 border border-cyan-400 bg-gradient-to-br from-cyan-300/20 to-cyan-400/20 hover:from-cyan-300/40 hover:to-cyan-400/40 hover:shadow-[0_0_20px_rgba(0,212,255,0.5)] transition rounded">
                     Get Started
                   </button>
                   <button
                     onClick={() => window.open("https://learn.deepcytes.io/", "_blank")}
-                    className="px-7 py-3 text-base sm:text-lg border border-white/20 bg-white/10 hover:bg-white/20 transition rounded"
+                    className="px-7 py-3 border border-white/20 bg-white/10 hover:bg-white/20 transition rounded"
                   >
                     Learn More
                   </button>
                 </div>
               </div>
+            </div>
 
-              {/* Right side video
-              <div className="flex-1">
-                <video
-                  className="absolute top-0 left-0 w-full h-full object-cover z-0"
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                >
-                  <source src="/videos/mobilevideo.mp4" type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
-              </div>
-            </div>
-          </section> */}
-          {/* mobile hero section */}
-          <section className="block md:hidden min-h-[calc(100vh-70px)] mr-auto flex items-center justify-center text-center px-5 py-12 relative">
-            <SplineScene2 />
+            {/* Desktop-only background image gradient */}
             <div
-              className="max-w-[800px] z-10 mt-0 md:mt-0 mr-auto animate-fadeIn pointer-events-auto
-                        md:bg-transparent md:backdrop-blur-none md:border-none
-                        bg-white/10 backdrop-blur-md border border-white/10 rounded-xl p-4"
-            >
-              <img
-                src="https://static.wixstatic.com/media/e48a18_c949f6282e6a4c8e9568f40916a0c704~mv2.png/v1/crop/x_0,y_151,w_1920,h_746/fill/w_203,h_79,fp_0.50_0.50,q_85,usm_0.66_1.00_0.01,enc_auto/For%20Dark%20Theme.png"
-                alt="Logo"
-                className="hidden md:block max-w-[200px] mb-5 drop-shadow-[0_0_20px_rgba(0,212,255,0.5)] mx-auto"
-              />
-              <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight mb-5">
-                Cybersecurity Badges
-              </h1>
-              <p className="text-lg sm:text-xl max-w-[600px] mx-auto mb-10 text-text-medium">
-                Earn and showcase badges for your cybersecurity skills and achievements.
-              </p>
-              <div className="flex justify-center gap-5 flex-wrap pointer-events-auto">
-                <button className="px-7 py-3 text-base sm:text-lg border border-cyan-400 bg-gradient-to-br from-cyan-300/20 to-cyan-400/20 hover:from-cyan-300/40 hover:to-cyan-400/40 hover:shadow-[0_0_20px_rgba(0,212,255,0.5)] transition rounded">
-                  Get Started
-                </button>
-                <button
-                  onClick={() => window.open("https://learn.deepcytes.io/", "_blank")}
-                  className="px-7 py-3 text-base sm:text-lg border border-white/20 bg-white/10 hover:bg-white/20 transition rounded"
-                >
-                  Learn More
-                </button>
-              </div>
-            </div>
-          </section>
-          
-          {/* desktop hero section */}
-          <section className="relative z-10 hidden md:block min-h-[calc(100vh-70px)] flex items-center justify-center text-center px-5 py-12">
-            <SplineScene />
-            <div id="vertical_center" className="max-w-[800px] mt-0 md:mt-25 animate-fadeIn pointer-events-auto bg-white/10 backdrop-blur-md border border-white/10 rounded-xl p-4">
-              <img
-                src="https://static.wixstatic.com/media/e48a18_c949f6282e6a4c8e9568f40916a0c704~mv2.png/v1/crop/x_0,y_151,w_1920,h_746/fill/w_203,h_79,fp_0.50_0.50,q_85,usm_0.66_1.00_0.01,enc_auto/For%20Dark%20Theme.png"
-                alt="Logo"
-                className="hidden md:block max-w-[200px] mb-5 drop-shadow-[0_0_20px_rgba(0,212,255,0.5)] mx-auto"
-              />
-              <h1 className="text-3xl z-50 sm:text-4xl font-extrabold leading-tight mb-5">
-                Cybersecurity Badges
-              </h1>
-              <p className="text-lg z-100 sm:text-xl max-w-[600px] mx-auto mb-10 text-text-medium">
-                Earn and showcase badges for your cybersecurity skills and achievements.
-              </p>
-              <div className="flex justify-center gap-5 flex-wrap pointer-events-auto">
-                <button className="px-7 z-50 py-3 text-base sm:text-lg border border-cyan-400 bg-gradient-to-br from-cyan-300/20 to-cyan-400/20 hover:from-cyan-300/40 hover:to-cyan-400/40 hover:shadow-[0_0_20px_rgba(0,212,255,0.5)] transition rounded">
-                  Get Started
-                </button>
-                <button
-                  onClick={() => window.open("https://learn.deepcytes.io/", "_blank")}
-                  className="px-7 z-50 py-3 text-base sm:text-lg border border-white/20 bg-white/10 hover:bg-white/20 transition rounded"
-                >
-                  Learn More
-                </button>
-              </div>
-            </div>
+              className="hidden md:block absolute inset-0 bg-no-repeat bg-right bg-contain pointer-events-none"
+              style={{
+                backgroundImage:
+                  'linear-gradient(to right, rgb(0,0,0) 35%, rgb(0,0,0) 35%, rgba(0,1,30,0.33) 55%, rgba(0,1,30,0) 90%), url("/cyber-security-concept-digital-art.jpg")',
+                backgroundSize: 'contain',
+                backgroundPosition: 'right center',
+                backgroundRepeat: 'no-repeat',
+                zIndex: 0,
+              }}
+            />
           </section>
 
           {/* Featured Badge */}
