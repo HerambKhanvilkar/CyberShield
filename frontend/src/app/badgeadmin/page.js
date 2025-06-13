@@ -24,7 +24,7 @@ const ITEMS_PER_PAGE = 10;
 export default function SettingsPage() {
   const [searchResults, setSearchResults] = useState([]); // Initialize as an empty array
   const [selectedUser, setSelectedUser] = useState(null);
-  const [activeTab, setActiveTab] = useState('Badges');
+  const [activeTab, setActiveTab] = useState('Users');
   const [usersData, setUsersData] = useState(users);
 
   // Page status

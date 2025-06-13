@@ -258,12 +258,11 @@ function MyComponent() {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row bg-black/40 backdrop-blur-md justify-between gap-6 mb-6">
+    <div className="flex flex-col lg:flex-row bg-black/40 backdrop-blur-md justify-between gap-6 p-2">
     {/* Left side - Description and buttons */}
       <div className="flex flex-col justify-between space-y-4 lg:max-w-sm">
-        <div>
-
-          <label className="block mb-2 text-sm font-medium text-white-900" htmlFor="file_input">Select file</label>
+        <div className='my-auto'>
+          <label className="block mb-2 text-md font-medium text-white-900" htmlFor="file_input">Select file</label>
           <Input
             aria-describedby="file_input_help" 
             placeholder="foobar"
@@ -271,7 +270,7 @@ function MyComponent() {
             accept=".csv" 
             id="file_input"
             onChange={handleFileChange} />
-          <p className="mt-1 text-sm text-gray-300" id="file_input_help">CSV (MAX. 10MB).</p>
+          <p className="mt-2 text-sm text-gray-300" id="file_input_help">CSV (MAX. 10MB).</p>
         </div>
         <div className="space-x-2">
           <button className="bg-green-700 text-white text-sm px-4 py-1 rounded"
@@ -283,7 +282,7 @@ function MyComponent() {
       </div>
 
     {/* Right side - CSV Preview Card */}
-    <div className="flex-1">
+    <div className="flex-1 my-5">
       { !file ? (
           <div className="w-full h-64 border border-dashed border-gray-400 rounded-lg bg-white/5 flex items-center justify-center text-gray-400">
           Select a File to preview.

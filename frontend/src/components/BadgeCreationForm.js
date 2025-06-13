@@ -367,11 +367,11 @@ useEffect(() => {
 
 
   return (
-    <div className='w-full bg-black/50 backdrop-blur-md'>
+    <div className='w-full bg-black/50 backdrop-blur-md px-2'>
       <form onSubmit={handleBadgeFormSubmit} className="flex flex-col w-full mx-auto">
         <div className="flex flex-col md:flex-row py-2.5 justify-around ">
           {/* Left: Badges List */}
-          <div className="flex-1 h-max p-4 mt-1 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)]">
+          <div className="flex-1 h-max p-4 mt-1 rounded-2xl mr-4 bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)]">
             <div className="group flex justify-between">
               <h2 className="text-white font-semibold mb-2">Badges List </h2>
               <button type="button" onClick={() => setSelectedBadge(null)} className="flex items-center justify-center text-white rounded-full w-5 h-5 rtl bg-blue-600 hover:bg-blue-700">
@@ -382,7 +382,7 @@ useEffect(() => {
               </button>
             </div>
             <div className="flow-root ">
-              <ScrollArea className="h-[350px] pr-2 overflow-y-auto">
+              <ScrollArea className="h-[400px] pr-2 overflow-y-auto">
                 <ul role="list" className="divide-y divide-gray-700">
                   {Array.isArray(searchResults) && searchResults.length > 0 ? (
                     searchResults.map((badge , index) => (

@@ -87,7 +87,7 @@ function MarqueeDemo({ skills }) {
 const firstRow = skills.slice(0, skills.length / 2);
 const secondRow = skills.slice(skills.length / 2);
   return (
-    <div className="relative flex w-full flex-col items-center rounded-lg justify-center overflow-hidden">
+    <div className="relative flex w-full rounded-2xl flex-col items-center justify-center overflow-hidden">
       <Marquee pauseOnHover className="[--duration:5s]">
         {firstRow.map((skill, i) => (
           <ReviewCard key={i} name={skill} />
@@ -211,7 +211,7 @@ const BadgeMetrics = ({ badge }) => (
         )}
 {/* bg-gradient-to-b from-[#1E3A8A] to-[#00011E] or from-[#03001e] via-[#7303c0] via-[#ec38bc] to-[#fdeff9] or best from-[#000046] to-[#1CB5E0]*/}
         <div className="relative  bg-center bg-cover bg-[url('/0.png')] backdrop-blur-lg text-white rounded-[25px] z-0 w-full mb-5 group">
-          <div className="flex p-1 flex-col glass border border-white/10 shadow-lg transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)] rounded-lg">
+          <div className="flex p-1 flex-col glass backdrop-blur-md border border-white/10 shadow-lg transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)] rounded-lg">
                          
               {/* Authorized Byline */}
               <div className="flex flex-col items-center md:items-end text-xs text-gray-400 italic justify-between md:justify-end p-1.5 space-x-2 rounded-lg">
