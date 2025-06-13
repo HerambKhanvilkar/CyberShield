@@ -1,6 +1,7 @@
 "use client";
 import React, { useRef,useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Award,Trophy, Share2, Shield, BookOpen} from 'lucide-react';
+import { toast } from "react-toastify";
 import axios from 'axios';
 import Navbar from "@/components/Navbar";
 import Footer from '@/components/Footer';
@@ -208,6 +209,51 @@ useEffect(() => {
     const [showLoginMessage, setShowLoginMessage] = useState(false);
     const [showShareSuccess, setShowShareSuccess] = useState(false);
     const [shareUrl, setShareUrl] = useState('');
+   const [formData, setFormData] = useState({
+    badges: []
+  });
+
+    useEffect(() => {
+      async function updatePublicStatus () {
+          let toastId;
+        try {
+          if (formData.badges.length === 0 ){
+            console.log("Form ain't filled ");
+            return;
+          }
+          console.log("Attempting public ");
+          const formDataObject = convertToFormData(formData);
+          const apiUrl = process.env.SERVER_URL + '/user/profile';
+          const token = localStorage.getItem("accessToken");
+
+          toastId = toast.loading("Making badge Public...");
+          const response = await axios.put(apiUrl, formDataObject, {
+            headers: {
+              'Content-Type': 'multipart/form-data', // Set the content type
+              Authorization: `Bearer ${token}`, // Add the token to the headers
+            },
+          });
+
+          toast.update(toastId ,{
+            isLoading: false, 
+            render:"Badge ready to share",
+            type: "success",
+            autoClose: 5000, 
+          });
+        } catch (e) {
+          toast.update(toastId,{
+            isLoading: false, 
+            render:"Something went wrong",
+            type: "error",
+            autoClose: 5000, 
+          });
+          console.log(e);
+        }
+      }
+
+     updatePublicStatus(); 
+
+    }, [formData])
 
     useEffect(() => {
       const userStr = localStorage.getItem('user');
@@ -226,6 +272,21 @@ useEffect(() => {
       }
     }, [currentBadge?.id]);
 
+    function convertToFormData(jsonObject) {
+      const form = new FormData();
+
+      for (const key in jsonObject) {
+        if (Object.hasOwnProperty.call(jsonObject, key)) {
+          console.log("key", key);
+          console.log("jsonObject[key]", jsonObject[key]);
+          form.append(key, jsonObject[key]);
+        }
+      }
+
+      return formData;
+    }
+
+
     const handleGenerateShareLink = () => {
       // if (!isAuthenticated) {
       //   setShowLoginMessage(true);
@@ -235,13 +296,20 @@ useEffect(() => {
 
       const userStr = localStorage.getItem('user');
       if (!userStr) return;
+      console.log("setting formData");
+      setFormData((prevData) => {
+        return {
+          ...prevData,
+          badges: [{badgeId: currentBadge?.id, isPublic: true}],
+        };
+      });
 
       const user = JSON.parse(userStr);
       const shareURL = `${window.location.origin}/badges/shared/${currentBadge?.id}/${user.username}/${Math.floor(Date.now() / 1000)}`;
       setShareUrl(shareURL);
       setShowShareSuccess(true);
       setTimeout(() => setShowShareSuccess(false), 3000);
-      navigator.clipboard.writeText(shareURL);
+      // navigator.clipboard.writeText(shareURL);
     };
 
 return (
