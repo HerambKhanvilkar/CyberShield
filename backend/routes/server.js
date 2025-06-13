@@ -570,7 +570,10 @@ router.put('/user/profile', authenticateJWT, uploadImage.single('profileImage'),
 
     if(firstName) { user.firstName = firstName }
     if(lastName) { user.lastName = lastName }
-    if(badges) { user.badges = user.badges.map(b => {
+    if(badges) { 
+      console.log(badges);
+      badges.forEach(b => console.log(b))
+      user.badges = user.badges.map(b => {
       const formBadge = badges.find(f => f.badgeId == b.badgeId)
       if (formBadge === undefined){ return b }
       return { ...b, isPublic: formBadge.isPublic }

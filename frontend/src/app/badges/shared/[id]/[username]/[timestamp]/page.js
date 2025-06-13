@@ -1,6 +1,6 @@
 'use client';
 
-import { useParams } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { CheckCircle, Shield } from 'lucide-react';
@@ -16,7 +16,7 @@ const SharedBadgePage = () => {
   const [badge, setBadge] = useState(null);
   const [allBadges, setAllBadges] = useState([]);
 
-  const [verificationStatus, setVerificationStatus] = useState(null);
+  const [verificationStatus, setVerificationStatus] = useState(false);
   const [user, setUser] = useState('');
   const [error, setError] = useState('');
 
@@ -57,6 +57,24 @@ const SharedBadgePage = () => {
 
     fetchBadgeData();
   }, [id, username, timestamp]);
+
+  if (isLoading || !badge) {
+    return (
+      <div className="min-h-screen flex flex-col bg-black text-white">
+        <Navbar />
+        <div className="flex-grow flex flex-col items-center justify-center">
+          <div className="loader border-8 border-t-8 border-[#38C8F8] h-16 w-16 animate-spin rounded-full mb-4" />
+          <p className="text-white text-lg">Loading Badge Gallery...</p>
+        </div>
+      </div>
+    );
+  }
+
+if( !verificationStatus ) {
+  console.log(verificationStatus);
+  return notFound();
+}
+
 
 
 const ReviewCard = ({
@@ -112,18 +130,6 @@ const secondRow = skills.slice(skills.length / 2);
       day: 'numeric',
     });
   };
-
-  if (isLoading || !badge) {
-    return (
-      <div className="min-h-screen flex flex-col bg-black text-white">
-        <Navbar />
-        <div className="flex-grow flex flex-col items-center justify-center">
-          <div className="loader border-8 border-t-8 border-[#38C8F8] h-16 w-16 animate-spin rounded-full mb-4" />
-          <p className="text-white text-lg">Loading Badge Gallery...</p>
-        </div>
-      </div>
-    );
-  }
 
   const BadgeDescription = ({ badge }) => (
     <div className="text-white">
