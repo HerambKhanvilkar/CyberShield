@@ -416,3 +416,87 @@
     transform: translateX(100%) rotate(25deg);
   }
 }
+
+/* === Global Print Color Handling === */
+*, *::before, *::after {
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+  page-break-before: avoid !important;
+  page-break-after: avoid !important;
+}
+
+/* === A4 Landscape Page Setup === */
+@page {
+  size: A4 landscape;
+  margin: 1cm;
+}
+
+@media print {
+  html, body {
+    /* width: 297mm;
+    height: 210mm; */
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    background: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    background-color: rgba(0, 0, 0, 0.4) !important;
+  }
+
+  /* === Force Flex Layout on Print (Overrides Tailwind Responsive Classes) === */
+  .print\\:flex {
+    display: flex !important;
+  }
+
+  .print\\:block {
+    display: block !important;
+  }
+
+  .print\\:hidden {
+    display: none !important;
+  }
+
+  /* === Avoid Breaking Inside Containers === */
+  .avoid-break {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* === Simulate backdrop-blur-md (since real blur doesn't print) === */
+  .simulate-blur {
+    /* background-color: rgba(0, 0, 0, 0.4) !important; */
+    backdrop-filter: blur(36px) !important;
+  }
+
+  /* Optional: Avoid breaks on certain sections like footer/header */
+  header, footer, .no-break {
+    page-break-inside: avoid !important;
+  }
+    /* === Force Flex Row in Print === */
+
+  .print-flex-row {
+    flex-direction: row !important;
+  }
+
+  .print-justify-between {
+    justify-content: space-between !important;
+  }
+
+  .print-gap-2 {
+    gap: 0.5rem !important; /* Tailwind's gap-2 = 0.5rem */
+  }
+  /* === Scale Down for Print Fit === */
+  .print-scale-fit {
+    transform: scale(0.88); /* adjust this if still clipped */
+    transform-origin: top center;
+  }
+
+  /* === Prevent Overflow Clipping === */
+  .print-container {
+    max-height: auto !important;
+    overflow: hidden !important;
+  }
+}
