@@ -84,6 +84,33 @@ async function handlePreviewResize(image){
 //   useEffect(() => {
 //   }, [preview]);
 
+const Card = ({ title, options}) => (
+              <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg rounded-2xl p-4 text-white transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)] w-full mb-5">
+                <h3 className="text-xl font-semibold mb-4">{title}</h3>
+                <ScrollArea className="h-[150px] pr-2 overflow-y-auto">
+                  {options.length > 0 ? (
+                    <ol className="pl-5 space-y-2 text-sm text-gray-300">
+                      {options.map((a, i) => (
+                        <li
+                          key={i}
+                          className="bg-white/5 backdrop-blur-md text-blue-100 text-xs font-thin px-2.5 py-0.5 rounded"
+                        >
+                          <BoxReveal duration="0.9">
+                            <span className="flex items-center">
+                              <svg className="w-5 h-5 mx-2" fill="#ffe852" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="..."/></svg>
+                              {a}
+                            </span>
+                          </BoxReveal>
+                        </li>
+                      ))}
+                    </ol>
+                  ) : (
+                    <p>You haven’t earned any {title} yet.</p>
+                  )}
+                </ScrollArea>
+              </div>
+  );
+
   async function handleFormChange(e) {
     const { name, value, type, checked } = e.target;
     if (type === 'file'){
@@ -382,57 +409,17 @@ const BadgeMetrics = ({ badge }) => (
           <section className="md:col-span-4 grid gap-6">
             <div className="grid md:grid-cols-2 md:gap-6">
               {/* Achievements */}
-              <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg rounded-2xl p-4 text-white transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)] w-full mb-5">
-                <h3 className="text-xl font-semibold mb-4">Achievements</h3>
-                <ScrollArea className="h-[150px] pr-2 overflow-y-auto">
-                  {userData.achievements.length > 0 ? (
-                    <ol className="pl-5 space-y-2 text-sm text-gray-300">
-                      {userData.achievements.map((a, i) => (
-                        <li
-                          key={i}
-                          className="bg-white/5 backdrop-blur-md text-blue-100 text-xs font-semibold px-2.5 py-0.5 rounded"
-                        >
-                          <BoxReveal duration="0.9">
-                            <span className="flex items-center">
-                              <svg className="w-5 h-5 mx-2" fill="#ffe852" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="..."/></svg>
-                              {a}
-                            </span>
-                          </BoxReveal>
-                        </li>
-                      ))}
-                    </ol>
-                  ) : (
-                    <p>You haven’t earned any Achievements yet.</p>
-                  )}
-                </ScrollArea>
-              </div>
+                <Card 
+                  title="Achivements"
+                  options={userData.achievements}
+                />
 
               {/* Courses */}
-              <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg rounded-2xl p-4 text-white transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)] w-full mb-5">
-                <h3 className="text-xl font-semibold mb-4">Courses</h3>
-                <ScrollArea className="h-[150px] pr-2 overflow-y-auto">
-                  {userData.courses.length > 0 ? (
-                    <ul className="pl-5 space-y-2 text-sm text-gray-300">
-                      {userData.courses.map((c, i) => (
-                        <li
-                          key={i}
-                          className="bg-white/5 backdrop-blur-md text-blue-100 text-xs font-semibold px-2.5 py-0.5 rounded"
-                        >
-                          <BoxReveal duration="0.9">
-                            <span className="flex items-center">
-                              <svg className="h-5 w-5 mx-2" fill="#8dff85" viewBox="0 0 1920 1920" xmlns="http://www.w3.org/2000/svg"><path d="..."/></svg>
-                              {c}
-                            </span>
-                          </BoxReveal>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p>You haven’t Done any courses yet.</p>
-                  )}
-                </ScrollArea>
+                <Card 
+                  title="Courses"
+                  options={userData.courses}
+                />
               </div>
-            </div>
 
             {/* Badge Details */}
             <div className="rounded-2xl shadow-md">
