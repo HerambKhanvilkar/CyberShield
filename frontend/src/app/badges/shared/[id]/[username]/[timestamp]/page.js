@@ -83,7 +83,7 @@ const ReviewCard = ({
   return (
     <figure
       className={cn(
-           "relative h-full w-64 cursor-pointer overflow-hidden rounded-xl border p-4",
+        "relative h-full w-max cursor-pointer overflow-hidden rounded-xl border p-4",
         // light styles
         "border-gray-950/[.1] bg-gray-950/[.01] hover:bg-gray-950/[.05]",
         // dark styles
@@ -97,22 +97,21 @@ const ReviewCard = ({
           </figcaption>
         </div>
       </div>
-    </figure>
+    </figure>  
   );
 };
 
 function MarqueeDemo({ skills }) {
 const firstRow = skills.slice(0, skills.length / 2);
 const secondRow = skills.slice(skills.length / 2);
-  return (
-    <div className="relative flex w-full flex-col items-center justify-center overflow-hidden">
-            <Marquee reverse pauseOnHover className="[--duration:20s]">
+  return  (
+    <div className="relative flex w-full rounded-2xl flex-col items-center justify-center overflow-hidden">
+      <Marquee pauseOnHover className="[--duration:10s]">
         {firstRow.map((skill, i) => (
           <ReviewCard key={i} name={skill} />
         ))}
       </Marquee>
-            <Marquee pauseOnHover className="[--duration:20s]">
-
+      <Marquee reverse pauseOnHover className="[--duration:10s]">
         {secondRow.map((skill, i) => (
           <ReviewCard key={i} name={skill} />
         ))}
@@ -217,7 +216,7 @@ const BadgeMetrics = ({ badge }) => (
           </div>
         )}
 {/* bg-gradient-to-b from-[#1E3A8A] to-[#00011E] or from-[#03001e] via-[#7303c0] via-[#ec38bc] to-[#fdeff9] or best from-[#000046] to-[#1CB5E0]*/}
-        <div className="relative  bg-center bg-cover bg-[url('/0.png')] backdrop-blur-lg text-white rounded-[25px] z-0 w-full mb-5 group">
+        <div className="relative  bg-center bg-cover bg-[url('/0.png')] backdrop-blur-lg text-white rounded-[25px] z-0 w-full mb-5">
           <div className="flex p-1 flex-col glass backdrop-blur-md border border-white/10 shadow-lg transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)] rounded-lg">
                          
               {/* Authorized Byline */}
