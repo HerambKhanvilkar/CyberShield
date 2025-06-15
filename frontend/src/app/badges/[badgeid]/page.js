@@ -340,8 +340,7 @@ return (
         >
           <Share2 className="w-5 h-5 md:w-6 md:h-6" />
           <span className="text-sm md:text-base whitespace-nowrap">
-            <span className="block md:hidden">Share</span>
-            <span className="hidden md:block">Generate Share Link</span>
+            <span>Share</span>
           </span>
         </button>
       </>
@@ -674,7 +673,7 @@ const RelatedBadges = () => (
           </div>
 
           {/* Tablet Layout */}
-          <section className="hidden md:flex lg:hidden flex-col w-full mx-auto gap-6 text-white">
+          <section className="hidden md:flex lg:hidden p-2 flex-col w-full mx-auto gap-6 text-white">
             <div className="flex w-full gap-6">
               {/* Badge and Badge Actions */}
               <div className="flex flex-col items-center w-1/2 space-y-4">
@@ -735,9 +734,8 @@ const RelatedBadges = () => (
               &nbsp;
 
               {/* Description */}
-              <section className="w-1/2 mt-20 mr-4">
-                <h2 className="text-2xl font-semibold border-b border-gray-700 pb-2">Badge Details</h2>
-                <p className="text-gray-300 leading-relaxed">{currentBadge?.description}</p>
+              <section className="w-1/2 mr-4 space-y-2">
+                <BadgeDescription />
                 <SkillsEarned />
               </section>
             </div>
@@ -905,7 +903,9 @@ const RelatedBadges = () => (
             {/* Scrollable & draggable container */}
             <div
               id="mobileBadgeScroll"
-              className="flex space-x-2 overflow-x-auto px-6 scroll-smooth cursor-grab active:cursor-grabbing"
+              className={`flex space-x-2 overflow-x-auto px-6 scroll-smooth cursor-grab active:cursor-grabbing ${
+                          badges.length < 5 ? 'justify-center' : ''
+                        }`}
               style={{ WebkitOverflowScrolling: "touch" }}
               onMouseDown={(e) => {
                 const container = e.currentTarget;
