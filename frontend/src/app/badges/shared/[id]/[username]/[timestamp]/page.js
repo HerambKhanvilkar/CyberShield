@@ -163,10 +163,10 @@ const BadgeSkillsList = ({ skills }) => (
 );
 
 const BadgeMetrics = ({ badge }) => (
-  <div className="w-full justify-between mt-4 text-center text-green-300 flex flex-col items-center gap-2">
+  <div className="w-full justify-center mt-4 text-center text-green-300 flex flex-col items-center gap-2">
     {/* Row: Level & Earners side by side */}
       {/* Level */}
-      <div className="flex flex-row w-full md:items-center justify-around rounded-md ">
+      <div className="flex flex-row w-full md:items-center justify-center rounded-md ">
       <div className="flex flex-col items-center p-2 shadow-md rounded-md ">
   <svg width="32px" height="32px" viewBox="-2.4 -2.4 28.80 28.80" fill="#8cdfde" xmlns="http://www.w3.org/2000/svg" stroke="#8cdfde" strokeWidth="0.00024000000000000003"><g id="SVGRepo_bgCarrier" strokeWidth="0" transform="translate(0,0), scale(1)"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" stroke-linejoin="round" stroke="#8cbfde" strokeWidth="0.144"></g><g id="SVGRepo_iconCarrier"><path fill-rule="evenodd" clip-rule="evenodd" d="M11 2a1 1 0 0 1 2 0v2.062A8.004 8.004 0 0 1 19.938 11H22a1 1 0 0 1 0 2h-2.062A8.004 8.004 0 0 1 13 19.938V22a1 1 0 0 1-2 0v-2.062A8.004 8.004 0 0 1 4.062 13H2a1 1 0 0 1 0-2h2.062A8.004 8.004 0 0 1 11 4.062V2zm7 10a6 6 0 1 0-12 0 6 6 0 0 0 12 0zm-3 0a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" fill="#8cbfde"></path></g></svg>
         <div className="text-lg text-white hover:text-[#38C8F8] font-semibold">{badge.level || 'N/A'}</div>
