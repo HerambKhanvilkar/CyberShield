@@ -3,7 +3,7 @@ import React from "react";
 
 export default function Footer() {
   return (
-    <footer className="relative z-30 bg-gradient-to-br from-[#0a0a0f] to-[#0f111a] text-white border-t-2 border-[#38C8F8] border-opacity-70">
+    <footer className="relative print:hidden z-30 bg-gradient-to-br from-[#0a0a0f] to-[#0f111a] text-white border-t-2 border-[#38C8F8] border-opacity-70">
       <div className="mx-auto w-full max-w-screen-xl p-4 py-8 lg:py-12">
         <div className="md:flex md:justify-between">
           <div className="mb-6 md:mb-0">
@@ -16,7 +16,7 @@ export default function Footer() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 gap-8 sm:gap-6 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-8 sm:gap-6 sm:grid-cols-3 print:hidden">
             <div>
               <h2 className="mb-6 text-sm font-semibold uppercase">Resources</h2>
               <ul className="text-gray-400 font-medium">
@@ -53,14 +53,14 @@ export default function Footer() {
           </div>
         </div>
 
-        <hr className="my-6 border-gray-700" />
+        <hr className="my-6 border-gray-700 print:hidden"/>
 
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center print:hidden">
           <span className="text-sm text-gray-400 text-center sm:text-left">
             © 2025 DeepCytes. All Rights Reserved.
           </span>
 
-        <div className="flex justify-center mt-4 sm:mt-0">
+        <div className="flex justify-center mt-4 sm:mt-0 print:hidden">
           {[
             {
               href: "https://www.instagram.com/deepcytes?igsh=ZHQ4bDNhazNtOHVm",
