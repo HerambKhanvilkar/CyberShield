@@ -77,12 +77,30 @@ router.get("/badges", async (req, res) => {
 // Endpoint to get badge images
 router.get("/badge/images/:id", async (req, res) => {
     try {
+      if (!req.params.id) 
+        return res.status(404).json({ message: "Image not found" });
         const badgeImage = await BadgeImage.findOne({ id: req.params.id });
         if (!badgeImage) {
             return res.status(404).json({ message: "Image not found" });
         }
         res.set('Content-Type', badgeImage.image.contentType);
         res.send(badgeImage.image);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+});
+
+// Endpoint to get badge earners
+router.get("/badge/earners/:id", async (req, res) => {
+    try {
+      if (!req.params.id) 
+        return res.status(404).json({ message: "Badge not found" });
+        const earners = await User.countDocuments({ 'badges.badgeId': req.params.id });
+        if (!earners) {
+            return res.status(404).json({ message: "Badge not found" });
+        }
+      res.json({earners});
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Internal Server Error" });
@@ -112,7 +130,7 @@ router.get("/verify-badge/:id/:username/:timestamp", async (req, res) => {
     // Check if the badge was actually earned by this user
     const user = await User.findById(username);
     
-    if (user.badges === []) {
+    if (user.badges.lenght === 0) {
       return res.status(404).json({ verified: false });
     }
     
@@ -197,7 +215,7 @@ router.get("/badges-earned", authenticateJWT, async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
     
-    if (user.badges === []) {
+    if (user.badges.lenght === 0) {
       return res.json({ badges: [] });
     }
 
