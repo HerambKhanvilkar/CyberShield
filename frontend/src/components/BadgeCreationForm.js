@@ -441,21 +441,6 @@ useEffect(() => {
               </div>
             </div>
 
-            <div className="relative z-0 w-full mb-5 group">
-              {/* Badge Description */}
-              <DescriptionTextArea
-                  formData={formData}
-                  handleChange={handleChange}
-                />
-            </div>
-            <div className="relative z-0 w-full mb-5 group">
-              {/* Badge Levels */}
-              <LevelRadio 
-                formData={formData} 
-                handleChange={handleChange}
-              />
-            </div>
-
             <div className="grid grid-cols-1 md:grid-cols-1 py-2.5 space-y-4">
               {/* Skills */}
                 <SearchDropdown
@@ -479,6 +464,22 @@ useEffect(() => {
                   handleChange ={handleChange}
                 />
               </div>
+
+            <div className="relative z-0 w-full mb-5 group">
+              {/* Badge Description */}
+              <DescriptionTextArea
+                  formData={formData}
+                  handleChange={handleChange}
+              />
+            </div>
+
+            <div className="relative z-0 w-full mb-5 group">
+              {/* Badge Levels */}
+              <LevelRadio 
+                formData={formData} 
+                handleChange={handleChange}
+              />
+            </div>
           </div>
 
           {/* Image Preview Section */}

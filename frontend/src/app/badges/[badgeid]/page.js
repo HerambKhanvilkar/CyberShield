@@ -214,9 +214,9 @@ useEffect(() => {
     const [showLoginMessage, setShowLoginMessage] = useState(false);
     const [showShareSuccess, setShowShareSuccess] = useState(false);
     const [shareUrl, setShareUrl] = useState('');
-   const [formData, setFormData] = useState({
-    badges: []
-  });
+    const [formData, setFormData] = useState({
+      badges: []
+    });
 
     useEffect(() => {
       async function updatePublicStatus () {
@@ -278,18 +278,37 @@ useEffect(() => {
     }, [currentBadge?.id]);
 
     function convertToFormData(jsonObject) {
-      const form = new FormData();
+  const form = new FormData();
 
-      for (const key in jsonObject) {
-        if (Object.hasOwnProperty.call(jsonObject, key)) {
-          console.log("key", key);
-          console.log("jsonObject[key]", jsonObject[key]);
-          form.append(key, jsonObject[key]);
+  for (const key in jsonObject) {
+    if (Object.prototype.hasOwnProperty.call(jsonObject, key)) {
+      const value = jsonObject[key];
+
+      // Handle array of objects like badges
+      if (Array.isArray(value)) {
+        value.forEach((item, index) => {
+          if (typeof item === 'object' && item !== null) {
+            for (const subKey in item) {
+              form.append(`${key}[${index}][${subKey}]`, item[subKey]);
+            }
+          } else {
+            form.append(`${key}[${index}]`, item);
+          }
+        });
+      } else if (typeof value === 'object' && value !== null) {
+        // Handle nested single object
+        for (const subKey in value) {
+          form.append(`${key}[${subKey}]`, value[subKey]);
         }
+      } else {
+        form.append(key, value);
       }
-
-      return form;
     }
+  }
+
+  return form;
+}
+
 
     const handleGenerateShareLink = () => {
       // if (!isAuthenticated) {
@@ -313,7 +332,7 @@ useEffect(() => {
       setShareUrl(shareURL);
       setShowShareSuccess(true);
       setTimeout(() => setShowShareSuccess(false), 3000);
-      // navigator.clipboard.writeText(shareURL);
+      navigator.clipboard.writeText(shareURL);
     };
 
 return (
@@ -490,14 +509,14 @@ const RelatedBadges = () => (
       Related Badges
     </h3>
 
-    <div className="flex space-x-3 md:space-x-4 overflow-x-auto py-2">
+    <div className="flex space-x-2 overflow-x-auto scrollbar py-2">
       {allBadges
         .filter((b) => b.id !== currentBadge?.id)
         .slice(0, 3)
         .map((relatedBadge) => (
           <div
             key={relatedBadge.id}
-            className="relative flex-shrink-0 min-w-[6rem] md:min-w-[6.5rem]"
+            className="mx-2 relative flex-shrink-0 min-w-[6rem] md:min-w-[6.5rem]"
           >
             {/* Glint overlay */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-10 w-full h-full">
