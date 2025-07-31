@@ -33,6 +33,8 @@ const BadgeId = () => {
   const [showShareSuccess, setShowShareSuccess] = useState(false);
   const [showLoginMessage, setShowLoginMessage] = useState(false);
   const { isAuthenticated, user } = useAuthContext();
+  const [earnersCount, setEarnersCount] = useState(null);
+
   const pageRef = useRef(null);
   const handlePrint = () => {
     print(pageRef.current);
@@ -47,6 +49,23 @@ const BadgeId = () => {
   }
   return text;
 };
+
+useEffect(() => {
+  const fetchEarnersCount = async () => {
+    if (!badgeId) return;
+
+    try {
+      const response = await axios.get(`${process.env.SERVER_URL}/badge/earners/${badgeId}`);
+      setEarnersCount(response.data.earners);
+    } catch (error) {
+      console.error("Failed to fetch earners count:", error);
+      setEarnersCount("N/A");
+    }
+  };
+
+  fetchEarnersCount();
+}, [badgeId]);
+
 
 function handleBadgeFilter(filter){
     if (filter === 'all'){
@@ -415,7 +434,9 @@ const BadgeMetrics = () => (
         </div>
         <div className="flex-1 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] p-4 flex flex-col justify-between text-center min-h-[50px] transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)]">
           <div className="text-sm uppercase text-gray-600">Earners</div>
-          <div className="text-lg font-semibold my-auto text-white">43</div>
+          <div className="text-lg font-semibold my-auto text-white">
+            {earnersCount !== null ? earnersCount : '...'}
+          </div>
         </div>
       </div>
 
