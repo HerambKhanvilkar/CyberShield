@@ -15,6 +15,11 @@ const { Parser } = require('json2csv');
 const agenda = require('../worker.js'); // path to your agenda initialization module
 const { validateMIMEType } = require("validate-image-type");
 const sharp = require('sharp');
+const { 
+  sendBulkUserWelcomeEmail,
+  sendBadgeReceivedEmail,
+  sendProfileUpdateEmail 
+} = require("../services/emailService");
 
 const uploadImage = multer({ 
   limits: { fileSize: 5 * 1000 * 1000 }, // 5MB max file size
@@ -216,7 +221,7 @@ router.put(
     }
 
 
-    if (skillsEarned && skillsEarned !== []) { existingBadge["skillsEarned"] = skillsEarned } 
+    if (skillsEarned && Array.isArray(skillsEarned) && skillsEarned.length > 0) { existingBadge["skillsEarned"] = skillsEarned } 
     if (vertical) { existingBadge["vertical"] = vertical } 
     if (level) { existingBadge["level"] = level } 
     if (description) { existingBadge["description"] = description } 
@@ -494,12 +499,45 @@ router.post("/users/import/:jobId",authenticateJWT, async (req, res) => {
       return res.status(404).json({ message: "Job not found." });
     }
     
-    const hashedPassword = await bcrypt.hash('Pass@123', 10);
+    // Generate random password function
+    const generateRandomPassword = () => {
+      const length = 12;
+      const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+      const numbers = '0123456789';
+      const special = '!@#$%^&*';
+      const allChars = uppercase + lowercase + numbers + special;
+      
+      let password = '';
+      // Ensure at least one of each type
+      password += uppercase[Math.floor(Math.random() * uppercase.length)];
+      password += lowercase[Math.floor(Math.random() * lowercase.length)];
+      password += numbers[Math.floor(Math.random() * numbers.length)];
+      password += special[Math.floor(Math.random() * special.length)];
+      
+      // Fill the rest randomly
+      for (let i = 4; i < length; i++) {
+        password += allChars[Math.floor(Math.random() * allChars.length)];
+      }
+      
+      // Shuffle the password
+      return password.split('').sort(() => Math.random() - 0.5).join('');
+    };
 
-    const usersToBeInserted = jobStatusDoc.result.validUsers.map(u => {
+    // Store plain text passwords temporarily to send in emails
+    const userPasswordMap = new Map();
+    
+    const usersToBeInserted = await Promise.all(jobStatusDoc.result.validUsers.map(async u => {
       const badges = (JSON.parse("[" + u.badgeIds + "]")).map(b => {
         return { badgeId: b, earnedDate: new Date() }
       });
+
+      // Generate unique random password for this user
+      const plainPassword = generateRandomPassword();
+      const hashedPassword = await bcrypt.hash(plainPassword, 10);
+      
+      // Store for email sending
+      userPasswordMap.set(u.email, plainPassword);
 
       return {
         email: u.email,
@@ -508,7 +546,7 @@ router.post("/users/import/:jobId",authenticateJWT, async (req, res) => {
         badges: badges,
         password: hashedPassword
       };
-    });
+    }));
 
     let usersToBeUpdated = []
 
@@ -539,10 +577,41 @@ router.post("/users/import/:jobId",authenticateJWT, async (req, res) => {
     if ( usersToBeInserted.length > 0){
       await User.insertMany(usersToBeInserted);
       console.log("insert");
+      
+      // Send welcome emails to new users with their unique passwords
+      for (const user of usersToBeInserted) {
+        try {
+          const plainPassword = userPasswordMap.get(user.email);
+          await sendBulkUserWelcomeEmail(user.email, plainPassword);
+          console.log(`Welcome email sent to ${user.email}`);
+        } catch (emailError) {
+          console.error(`Failed to send welcome email to ${user.email}:`, emailError);
+          // Continue processing other users even if one email fails
+        }
+      }
+      // Clear the password map for security
+      userPasswordMap.clear();
     }
     if ( usersToBeUpdated.length > 0){
-      await User.bulkWrite(usersToBeInserted);
+      await User.bulkWrite(usersToBeUpdated);
       console.log("update");
+      
+      // Send profile update notification to updated users
+      for (const updateOp of usersToBeUpdated) {
+        try {
+          const email = updateOp.updateOne.filter.email;
+          await sendProfileUpdateEmail(
+            email,
+            'profile_update',
+            '',
+            'Your profile has been updated with new badges by an administrator.'
+          );
+          console.log(`Profile update email sent to ${email}`);
+        } catch (emailError) {
+          console.error(`Failed to send update email to ${updateOp.updateOne.filter.email}:`, emailError);
+          // Continue processing other users even if one email fails
+        }
+      }
     }
 
     jobStatusDoc.importedUsers = [

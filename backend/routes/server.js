@@ -8,6 +8,10 @@ const { Parser } = require('json2csv');
 const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
+const { 
+  sendBadgeReceivedEmail,
+  sendProfileUpdateEmail 
+} = require("../services/emailService");
 // Set up multer for image Preview
 const uploadPreviewImage = multer({
   limits: { fileSize: 5 * 1000 * 1000 }, // 5MB max file size
@@ -296,6 +300,19 @@ router.post("/assign-badge", authenticateJWT, async (req, res) => {
     user.badges.push({ badgeId, earnedDate: new Date() });
     await user.save();
     
+    // Send badge received email notification
+    try {
+      await sendBadgeReceivedEmail(
+        user.email,
+        badge.name,
+        badge.description || 'Congratulations on earning this achievement!'
+      );
+      console.log(`Badge notification email sent to ${user.email}`);
+    } catch (emailError) {
+      console.error(`Failed to send badge notification email to ${user.email}:`, emailError);
+      // Don't fail the request if email fails
+    }
+    
     res.json({ 
       message: "Badge assigned successfully", 
       user: {
@@ -532,6 +549,20 @@ router.post("/revoke-badge", authenticateJWT, async (req, res) => {
     user.badges.forEach(b => { 
       // console.log("users.badges", b.badgeId);
     })
+    
+    // Send badge revocation email notification
+    try {
+      await sendProfileUpdateEmail(
+        user.email,
+        'badge_stripped',
+        badge.name,
+        '<p style="margin-top: 10px;">If you believe this was done in error, please contact support.</p>'
+      );
+      console.log(`Badge revocation email sent to ${user.email}`);
+    } catch (emailError) {
+      console.error(`Failed to send badge revocation email to ${user.email}:`, emailError);
+      // Don't fail the request if email fails
+    }
     
     res.json({ message: "Badge revoked successfully", 
       user: {

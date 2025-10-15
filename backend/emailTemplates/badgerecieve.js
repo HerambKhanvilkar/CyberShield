@@ -1,5 +1,5 @@
-function getActionEmail(data) {
-  const newCves =  data || {msg: "Vendor Microsoft has been Added to Hello"};
+function getBadgeReceivedEmail(badgeName, badgeDescription, profileLink) {
+  const additionalInfo = badgeDescription ? `<p style="margin-top: 10px;"><strong>Description:</strong> ${badgeDescription}</p>` : '';
 
   return `
 <!DOCTYPE html>
@@ -54,17 +54,15 @@ function getActionEmail(data) {
       </div>
 
       <!-- Header -->
-      <h1 style="font-family: 'Playfair Display', serif; font-size: 22px; margin: 10px 0;">🔄 Profile Update Notification</h1>
+      <h1 style="font-family: 'Playfair Display', serif; font-size: 22px; margin: 10px 0;">🎉 Congratulations on Your New Badge!</h1>
       <p style="color: #b0b0b0; margin-bottom: 20px;">
-        Your profile has recently been updated. See the details below.
+        You've earned the <strong>${badgeName}</strong> badge!
       </p>
 
-      <!-- Change Info -->
+      <!-- Badge Info -->
       <div class="glass" style="margin-top: 20px; padding: 15px;">
         <p style="font-size: 14px; line-height: 1.5;">
-          ${reasonType === 'badge_stripped'
-            ? `The <strong>${badgeName}</strong> badge has been removed from your profile.`
-            : `Your profile information has been edited by an administrator.`}
+          Great work! You've been awarded the <strong>${badgeName}</strong> badge for your achievements.
         </p>
         ${additionalInfo}
       </div>
@@ -78,7 +76,7 @@ function getActionEmail(data) {
 
       <!-- Footer -->
       <div style="margin-top: 30px; font-size: 13px; color: #888888;">
-        This message was sent to notify you of changes to your profile or achievements.<br/>
+        Keep up the great work! Continue your learning journey to earn more badges.<br/>
         If you have questions, reach out to <a href="mailto:support@deepcytes.com" style="color: #ffffff;">support@deepcytes.com</a>.
       </div>
 
@@ -89,4 +87,4 @@ function getActionEmail(data) {
   `;
 }
 
-module.exports = { getActionEmail };
+module.exports = { getBadgeReceivedEmail };

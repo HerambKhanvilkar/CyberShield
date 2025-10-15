@@ -1,6 +1,4 @@
-function getActionEmail(data) {
-  const newCves =  data || {msg: "Vendor Microsoft has been Added to Hello"};
-
+function getAdminDailyEmail(adminName, date, logs = []) {
   return `
   <!DOCTYPE html>
 <html>
@@ -90,4 +88,4 @@ function getActionEmail(data) {
   `;
 }
 
-module.exports = { getActionEmail };
+module.exports = { getAdminDailyEmail };

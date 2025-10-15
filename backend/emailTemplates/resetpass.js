@@ -1,6 +1,4 @@
-function getActionEmail(data) {
-  const newCves =  data || {msg: "Vendor Microsoft has been Added to Hello"};
-
+function getResetPasswordEmail(otpCode) {
   return `
 <!DOCTYPE html>
 <html>
@@ -107,4 +105,4 @@ function getActionEmail(data) {
   `;
 }
 
-module.exports = { getActionEmail };
+module.exports = { getResetPasswordEmail };

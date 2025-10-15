@@ -5,10 +5,10 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const router = express.Router();
-// TODO: Setup OTP mail
-// const nodemailer = require("nodemailer");
-// const { sendEmail, sendWelcomeEmail } = require("../auth/mail");
-// const authMiddleware = require("../../middleware/auth");
+const { 
+  sendRegistrationOTP, 
+  sendPasswordResetOTP 
+} = require("../services/emailService");
 const { generateToken, generateRefreshToken, authenticateJWT, isAdmin } = require('../middleware/auth');
 const { body, validationResult } = require("express-validator");
 const mongoSanitize = require("mongo-sanitize");
@@ -123,9 +123,15 @@ router.post("/register/otp", [body("email").isEmail().withMessage("Invalid email
         { upsert: true }
       );
 
-      // TODO
-      // await sendEmail(email, "Your OTP for Registration", `Your OTP is ${otp}`);
-      res.status(200).json({ message: "OTP sent to email" });
+      // Send OTP email
+      try {
+        await sendRegistrationOTP(email, otp);
+        res.status(200).json({ message: "OTP sent to email" });
+      } catch (emailError) {
+        console.error("Failed to send OTP email:", emailError);
+        // Still return success to prevent email enumeration attacks
+        res.status(200).json({ message: "OTP sent to email" });
+      }
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Server error" });
@@ -279,11 +285,15 @@ router.post("/reset-password/otp", async (req, res) => {
       { upsert: true }
     );
 
-    // TODO
-    // RESET-PASSWORD
-    // await sendEmail(email, "OTP for Password Reset", `Your OTP is ${otp}`);
-    // console.log(email, "OTP for Password Reset", `Your OTP is ${otp}`);
-    res.status(200).json({ message: "OTP sent to email" });
+    // Send password reset OTP email
+    try {
+      await sendPasswordResetOTP(email, otp);
+      res.status(200).json({ message: "OTP sent to email" });
+    } catch (emailError) {
+      console.error("Failed to send password reset OTP email:", emailError);
+      // Still return success to prevent email enumeration attacks
+      res.status(200).json({ message: "OTP sent to email" });
+    }
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Server error" });
