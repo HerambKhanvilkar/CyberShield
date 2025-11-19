@@ -203,28 +203,12 @@ function Navbar() {
                 href="/"
                 className="hover:text-[#3DB5DA] transition-colors flex items-center gap-2"
               >
-                {/* <House /> */}
                 <span>Home</span>
               </Link>
-              {/* <button
-                onClick={handleDashboardClick}
-                className="hover:text-[#3DB5DA] transition-colors flex items-center gap-2"
-              >
-                <LayoutDashboard />
-                <span>Dashboard</span>
-              </button> */}
-              {/* <button
-                onClick={handleFeedClick}
-                className="hover:text-[#3DB5DA] transition-colors flex items-center gap-2"
-              >
-                <Newspaper />
-                <span>Feed</span>
-              </button> */}
               <Link
                 href="/allbadges"
                 className="hover:text-[#3DB5DA] transition-colors flex items-center gap-2"
               >
-                {/* <ShoppingBag /> */}
                 <span>All Badges</span>
               </Link>
 
@@ -272,15 +256,20 @@ function Navbar() {
                   onClick={toggleDropdown}
                   className="flex items-center space-x-2 text-white bg-[#1a1a4b] px-4 py-2 rounded-lg hover:bg-[#2b2b6b]"
                 >
-                  {user.profilePicture ? (
+                  {/* Show profile picture (preferred), then server image, then initials, then icon */}
+                  {user?.profilePicture || user?.image ? (
                     <img
-                      src={user.profilePicture}
-                      alt={user.firstName}
+                      src={user?.profilePicture ? user.profilePicture : process.env.SERVER_URL + user.image}
+                      alt={user?.firstName || user?.email || 'User'}
+                      crossOrigin="anonymous"
                       className="w-8 h-8 rounded-full object-cover"
-                      onError={(e) =>
-                        (e.currentTarget.src = "/default-avatar.png")
-                      }
+                      onError={(e) => (e.currentTarget.src = "/default-avatar.png")}
                     />
+                  ) : user?.firstName || user?.lastName ? (
+                    <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">
+                      {user.firstName?.[0]?.toUpperCase()}
+                      {user.lastName?.[0]?.toUpperCase()}
+                    </div>
                   ) : (
                     <FaUserCircle className="w-8 h-8" />
                   )}

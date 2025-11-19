@@ -14,7 +14,8 @@ const BadgeAssignmentDropdown = ({ user, updateUserDetails }) => {
     try {
       const token = localStorage.getItem("token");
       const url = `${process.env.SERVER_URL}/badges`;
-      const userBadges = user?.badges.map(b => Number(b.badgeId));
+      const userBadgesStrings = new Set((user?.badges || []).map(b => String(b.badgeId || b.id)));
+      const userBadgesNumbers = new Set((user?.badges || []).map(b => Number(b.badgeId || b.id)).filter(n => !isNaN(n)));
       const response = await axios.get(url, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -24,9 +25,13 @@ const BadgeAssignmentDropdown = ({ user, updateUserDetails }) => {
       });
 
       if (response) {
-        const assignableBadges = response.data.badges.filter(
-          badge => !userBadges.includes(badge.id)
-        );
+        const assignableBadges = response.data.badges.filter((badge) => {
+          const bIdStr = String(badge.badgeId || badge.id);
+          const bIdNum = Number(badge.id);
+          if (userBadgesStrings.has(bIdStr)) return false;
+          if (!isNaN(bIdNum) && userBadgesNumbers.has(bIdNum)) return false;
+          return true;
+        });
         setBadges(assignableBadges);
       }
     } catch (error) {
@@ -77,12 +82,12 @@ const BadgeAssignmentDropdown = ({ user, updateUserDetails }) => {
           <select
             className="w-full p-2 pr-10 rounded bg-[#1A1B2E]/60 text-gray-400 border-gray-600 focus:border-cyan-500 focus:ring-cyan-500 appearance-none"
             value={selectedBadge || ""}
-            onChange={(e) => setSelectedBadge(Number(e.target.value))}
+            onChange={(e) => setSelectedBadge(e.target.value)}
             disabled={badges.length === 0}
           >
             <option value="" className="bg-slate-800 text-white">Select a badge</option>
             {badges.map((badge) => (
-                <option key={badge.id} value={badge.id} className="bg-slate-800 text-white">
+                <option key={badge.id} value={badge.badgeId || badge.id} className="bg-slate-800 text-white">
                   {badge.name}
                 </option>
               ))}

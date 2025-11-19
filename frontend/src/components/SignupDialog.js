@@ -21,8 +21,12 @@ import { useRouter } from "next/navigation";
 import { useAuthContext } from "./AuthContext";
 import { toast } from "react-toastify"; // Import toast
 
-const SignupDialog = () => {
-  const [isOpen, setIsOpen] = useState(false);
+const SignupDialog = ({ open, onOpenChange }) => {
+  // Support controlled open state (when opened from LoginDialog)
+  const isControlled = typeof open === 'boolean' && typeof onOpenChange === 'function';
+  const [isOpenLocal, setIsOpenLocal] = useState(false);
+  const isOpen = isControlled ? open : isOpenLocal;
+  const setIsOpen = isControlled ? onOpenChange : setIsOpenLocal;
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -56,9 +60,8 @@ const SignupDialog = () => {
   };
 
   const consoleOTP = (value) => {
-    const sixDigitValue = value.toString().padStart(6, "0");
-    setOtp(sixDigitValue);
-    setOtp(value);
+    // Store OTP exactly as entered; enable Register only when length === 6
+    setOtp(String(value || ''));
   };
 
   useEffect(() => {
@@ -110,9 +113,12 @@ const SignupDialog = () => {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline">Sign Up</Button>
-      </DialogTrigger>
+      {/* Only render the built-in trigger when not controlled by parent */}
+      {!isControlled && (
+        <DialogTrigger asChild>
+          <Button variant="outline">Sign Up</Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-[425px] bg-blue-950/10 backdrop-blur-sm shadow-lg rounded-lg border border-white/20">
         <DialogHeader>
           <DialogTitle>Sign Up</DialogTitle>
@@ -202,34 +208,42 @@ const SignupDialog = () => {
             <>
               <div>
                 <Label>Enter OTP</Label>
-                <InputOTP
-                  maxLength={6}
-                  value={otp}
-                  onChange={(value) => consoleOTP(value)}
-                >
-                  <InputOTPGroup>
-                    <InputOTPSlot index={0} />
-                    <InputOTPSlot index={1} />
-                    <InputOTPSlot index={2} />
-                    <InputOTPSlot index={3} />
-                    <InputOTPSlot index={4} />
-                    <InputOTPSlot index={5} />
-                  </InputOTPGroup>
-                </InputOTP>
+                <div className="flex items-center gap-2 mt-2">
+                  <InputOTP
+                    maxLength={6}
+                    value={otp}
+                    onChange={(value) => consoleOTP(value)}
+                  >
+                    <InputOTPGroup>
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
+                    </InputOTPGroup>
+                  </InputOTP>
+
+                  {/* Circular refresh icon button for resending OTP */}
+                  <button
+                    type="button"
+                    onClick={handleSendOtp}
+                    aria-label="Resend OTP"
+                    title="Resend OTP"
+                    className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center p-1"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5 text-white">
+                      <path d="M21 12a9 9 0 1 1-3-6.7" strokeLinecap="round" strokeLinejoin="round"></path>
+                      <polyline points="21 3 21 9 15 9" strokeLinecap="round" strokeLinejoin="round"></polyline>
+                    </svg>
+                  </button>
+                </div>
               </div>
               <DialogFooter>
-                <Button onClick={handleSignup}>Register</Button>
-              </DialogFooter>
-              {/* <div className="grid gap-4 py-4">
-                <Button
-                  variant="outline"
-                  onClick={handleGoogleLogin}
-                  className="w-full bg-white text-black font-bold"
-                >
-                  <FcGoogle className="w-6 h-6" />
-                  Sign in with Google
+                <Button onClick={handleSignup} disabled={String(otp).length !== 6}>
+                  Register
                 </Button>
-              </div> */}
+              </DialogFooter>
             </>
           )}
         </div>

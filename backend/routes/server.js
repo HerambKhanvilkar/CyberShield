@@ -115,7 +115,13 @@ router.get("/badge/earners/:id", async (req, res) => {
 // Get single badge by ID
 router.get("/badge/:id", async (req, res) => {
   try {
-    const badge = await Badge.findOne({ id: parseInt(req.params.id) });
+    const id = req.params.id;
+    // Try find by badgeId (string) first, then numeric id
+    let badge = await Badge.findOne({ badgeId: id });
+    if (!badge && !isNaN(parseInt(id))) {
+      badge = await Badge.findOne({ id: parseInt(id) });
+    }
+
     if (!badge) {
       return res.status(404).json({ message: "Badge not found" });
     }
@@ -131,32 +137,35 @@ router.get("/verify-badge/:id/:username/:timestamp", async (req, res) => {
   try {
     const { id, username, timestamp } = req.params;
     
-    // Check if the badge was actually earned by this user
-    const user = await User.findById(username);
-    
-    if (user.badges.lenght === 0) {
+    // Support either _id or email passed as "username". Try _id first, otherwise email.
+    let user = null;
+    try {
+      // try treat username as ObjectId
+      user = await User.findById(username).lean();
+    } catch (e) {
+      user = null;
+    }
+
+    if (!user) {
+      const decodedUsername = decodeURIComponent(username);
+      user = await User.findOne({ email: decodedUsername }).lean();
+    }
+
+    if (!user || !Array.isArray(user.badges) || user.badges.length === 0) {
       return res.status(404).json({ verified: false });
     }
-    
-    // Check if user has this specific badge
+
+    // Check if user has this specific badge (support numeric id or badgeId string)
     const badgeEarned = user.badges.find(
-      b => (b.badgeId == id && b.isPublic === true)
+      b => (String(b.badgeId) === String(id) && b.isPublic === true)
     );
-    
+
     if (!badgeEarned) {
       return res.status(403).json({ verified: false });
     }
-    
-    // Optional: Add timestamp validation 
-    // const currentTime = Math.floor(Date.now() / 1000);
-    // const linkAge = currentTime - parseInt(timestamp);
-    
-    // Invalidate links older than 30 days
-    // if (linkAge > 30 * 24 * 60 * 60) {
-    //   return res.status(410).json({ verified: false });
-    // }
-    
-    res.json({ verified: true , firstName: user.firstName, lastName: user.lastName});
+
+    // Return the certificateId (if present) to show on share page
+    res.json({ verified: true, firstName: user.firstName, lastName: user.lastName, certificateId: badgeEarned.certificateId || null });
   } catch (error) {
     console.error("Verification error:", error);
     res.status(500).json({ verified: false });
@@ -177,16 +186,16 @@ router.post("/generate-share-link", authenticateJWT, async (req, res) => {
       return res.status(400).json({ message: "Badge ID is required" });
     }
     
-    // Fetch earned badges
-    const userBadges = await BadgesEarned.findOne({ username }).lean();
-    
-    if (!userBadges) {
+    // Fetch earned badges from User record
+    const user = await User.findOne({ email: username }).lean();
+
+    if (!user || !Array.isArray(user.badges)) {
       return res.status(403).json({ message: "No badges found for user" });
     }
-    
-    // Check if user has this badge
-    const hasBadge = userBadges.badges.some(badge => badge.badgeId === parseInt(badgeId));
-    
+
+    // Check if user has this badge (badgeId is string)
+    const hasBadge = user.badges.some(badge => String(badge.badgeId) === String(badgeId));
+
     if (!hasBadge) {
       return res.status(403).json({ message: "You can only share badges you've earned" });
     }
@@ -194,8 +203,8 @@ router.post("/generate-share-link", authenticateJWT, async (req, res) => {
     // Generate timestamp for the link
     const timestamp = Math.floor(Date.now()/1000);
     
-    // Generate share link
-    const shareLink = `/badge/shared/${badgeId}/${encodeURIComponent(username)}/${timestamp}`;
+    // Generate share link (use badgeId string)
+    const shareLink = `/badge/shared/${encodeURIComponent(badgeId)}/${encodeURIComponent(username)}/${timestamp}`;
     
     res.json({ shareLink });
   } catch (error) {
@@ -225,13 +234,20 @@ router.get("/badges-earned", authenticateJWT, async (req, res) => {
 
     // Fetch full badge details for each earned badge
     const badgeIds = user.badges.map(b => b.badgeId);
-    
-    const allBadges = await Badge.find({ id: { $in: badgeIds } }).lean();
+    // Separate numeric ids and string badgeIds
+    const numericIds = badgeIds.map(id => parseInt(id)).filter(n => !isNaN(n));
+    const stringIds = badgeIds.filter(id => isNaN(parseInt(id)));
 
-    // Map earned badges with dates
+    const query = { $or: [] };
+    if (stringIds.length > 0) query.$or.push({ badgeId: { $in: stringIds } });
+    if (numericIds.length > 0) query.$or.push({ id: { $in: numericIds } });
+
+    const allBadges = query.$or.length > 0 ? await Badge.find(query).lean() : [];
+
+    // Map earned badges with dates (match by badgeId string or numeric id)
     const earnedBadges = allBadges.map(badge => ({
       ...badge,
-      earnedDate: user.badges.find(b => b.badgeId === badge.id)?.earnedDate
+      earnedDate: user.badges.find(b => String(b.badgeId) === String(badge.badgeId) || String(b.badgeId) === String(badge.id))?.earnedDate
     }));
 
     res.json({ badges: earnedBadges });
@@ -284,7 +300,11 @@ router.post("/assign-badge", authenticateJWT, async (req, res) => {
     }
     
     // Check if badge exists
-    const badge = await Badge.findOne({ id: badgeId });
+    // Support badge lookup by numeric id or string badgeId
+    let badge = await Badge.findOne({ id: badgeId });
+    if (!badge) {
+      badge = await Badge.findOne({ badgeId: String(badgeId) });
+    }
     if (!badge) {
       return res.status(404).json({ message: "Badge not found" });
     }
@@ -296,8 +316,21 @@ router.post("/assign-badge", authenticateJWT, async (req, res) => {
       return res.status(400).json({ message: "User already has this badge" });
     }
 
-    // Add badge to existing record
-    user.badges.push({ badgeId, earnedDate: new Date() });
+    // Generate a unique certificate ID for this issuance by incrementing badge.certificateCounter
+    const updatedBadge = await Badge.findOneAndUpdate(
+      { _id: badge._id },
+      { $inc: { certificateCounter: 1 } },
+      { new: true }
+    );
+
+    const counter = updatedBadge.certificateCounter || 1;
+    const seq = String(counter).padStart(3, '0');
+    // Use badge.badgeId if present, otherwise construct from badge.name + id fallback
+    const baseBadgeId = updatedBadge.badgeId || (String(updatedBadge.id).padStart(6, '0'));
+    const certificateId = `${baseBadgeId}${seq}`;
+
+    // Add badge to existing record with certificateId and store badgeId string
+    user.badges.push({ badgeId: updatedBadge.badgeId || String(updatedBadge.id), earnedDate: new Date(), certificateId });
     await user.save();
     
     // Send badge received email notification
@@ -522,8 +555,11 @@ router.post("/revoke-badge", authenticateJWT, async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
     
-    // Check if badge exists
-    const badge = await Badge.findOne({ id: badgeId });
+    // Support numeric id or string badgeId for lookup
+    let badge = await Badge.findOne({ id: badgeId });
+    if (!badge) {
+      badge = await Badge.findOne({ badgeId: String(badgeId) });
+    }
     if (!badge) {
       return res.status(404).json({ message: "Badge not found" });
     }
@@ -539,7 +575,7 @@ router.post("/revoke-badge", authenticateJWT, async (req, res) => {
     }
 
     // Remove an badge with a specific id
-    const index = user.badges.findIndex(b => b.badgeId == badgeId);
+    const index = user.badges.findIndex(b => String(b.badgeId) == String(badgeId));
     // console.log("index", index);
     if (index !== -1) {
       user.badges.splice(index, 1);
@@ -582,9 +618,9 @@ router.post("/revoke-badge", authenticateJWT, async (req, res) => {
 router.get('/users/sample', authenticateJWT, async (req, res) => {
   // Create dummy data
   const sampleData = [
-    { _id: '1', email: 'user1@example.com', firstName: 'John', lastName: 'Doe', badgeIds: [101, 102].toString() },
-    { _id: '2', email: 'user2@example.com', firstName: 'Jane', lastName: 'Smith', badgeIds: [101].toString() },
-    { _id: '3', email: 'user3@example.com', firstName: 'Alice', lastName: 'Johnson', badgeIds: [104, 111].toString() },
+    { _id: '1', email: 'user1@example.com', firstName: 'John', lastName: 'Doe', badgeIds: ['CA000100','CA000101'].toString() },
+    { _id: '2', email: 'user2@example.com', firstName: 'Jane', lastName: 'Smith', badgeIds: ['CA000100'].toString() },
+    { _id: '3', email: 'user3@example.com', firstName: 'Alice', lastName: 'Johnson', badgeIds: ['CA000104','CA000111'].toString() },
   ];
 
   // Convert JSON to CSV

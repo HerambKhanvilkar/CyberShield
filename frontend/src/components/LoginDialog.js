@@ -71,27 +71,27 @@ const LoginDialog = () => {
   };
 
   const toggleSignupDialog = () => {
-    setShowSignup(true); // Show Signup dialog on click
+    // Close login dialog and open signup dialog directly
+    setIsOpen(false);
+    setShowSignup(true);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <>
+      {/* Controlled Signup dialog opened from the Login dialog */}
+      <SignupDialog open={showSignup} onOpenChange={setShowSignup} />
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button variant="outline">Login</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px] bg-blue-950/10 backdrop-blur-sm shadow-lg rounded-lg border border-white/20">
         <DialogHeader>
-          <DialogTitle>{showSignup ? "Sign Up" : "Login"}</DialogTitle>
-          <DialogDescription>
-            {showSignup
-              ? "Enter your details to create an account."
-              : "Enter your credentials to log in."}
-          </DialogDescription>
+          <DialogTitle>Login</DialogTitle>
+          <DialogDescription>Enter your credentials to log in.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           {error && <div className="text-red-500 font-medium">{error}</div>}
-          {!showSignup ? (
-            <>
+          <>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="email" className="text-right">
                   Email
@@ -134,10 +134,7 @@ const LoginDialog = () => {
                   Sign up
                 </button>
               </div>
-            </>
-          ) : (
-            <SignupDialog setShowSignup={setShowSignup} /> // Pass setShowSignup to allow closing the signup dialog
-          )}
+          </>
         </div>
         <DialogFooter>
           {!showSignup ? (
@@ -154,6 +151,7 @@ const LoginDialog = () => {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    </>
   );
 };
 

@@ -38,7 +38,7 @@ async function testEmail() {
     console.log('  - MAILGUN_API_KEY');
     console.log('  - MAILGUN_DOMAIN');
     console.log('  - MAILGUN_API_URL (optional)');
-    console.log('  - MAILGUN_FROM_EMAIL (optional)');
+  console.log('  - MAILGUN_FROM (optional)');
     rl.close();
     return;
   }
@@ -46,7 +46,7 @@ async function testEmail() {
   console.log('✅ Environment variables loaded');
   console.log(`   Domain: ${process.env.MAILGUN_DOMAIN}`);
   console.log(`   API URL: ${process.env.MAILGUN_API_URL || 'https://api.mailgun.net (default)'}`);
-  console.log(`   From Email: ${process.env.MAILGUN_FROM_EMAIL || `noreply@${process.env.MAILGUN_DOMAIN} (default)`}\n`);
+  console.log(`   From Email: ${process.env.MAILGUN_FROM || process.env.MAILGUN_FROM_EMAIL || `noreply@${process.env.MAILGUN_DOMAIN} (default)`}\n`);
 
   const email = await question('Enter test email address: ');
   

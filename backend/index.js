@@ -6,6 +6,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const logger = require("./logger");
 const helmet = require("helmet");
+const securityHeaders = require("./middleware/securityHeaders");
 const mongoSanitize = require("mongo-sanitize");
 const escapeHtml = require("escape-html");
 const serverRoutes = require("./routes/server");
@@ -46,6 +47,9 @@ const speedLimiter = slowDown({
 });
 
 app.use(helmet({contentSecurityPolicy: false}));
+
+// Add additional security headers (CSP intentionally disabled per request)
+app.use(securityHeaders);
 
 app.use(express.json());
 

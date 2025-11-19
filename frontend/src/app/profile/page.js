@@ -24,6 +24,7 @@ export default function ProfilePage() {
   const [selectedBadgeId, setSelectedBadgeId] = useState(null);
   const [preview, setPreview] = useState(null);
   const [earnersCount, setEarnersCount] = useState(null);
+  const [displayCertificateId, setDisplayCertificateId] = useState(null);
    const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -100,32 +101,34 @@ async function handlePreviewResize(image){
 //   useEffect(() => {
 //   }, [preview]);
 
-const Card = ({ title, options}) => (
-              <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg rounded-2xl p-4 text-white transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)] w-full mb-5">
-                <h3 className="text-xl font-semibold mb-4">{title}</h3>
-                <ScrollArea className="h-[150px] pr-2 overflow-y-auto">
-                  {options.length > 0 ? (
-                    <ol className="pl-5 space-y-2 text-sm text-gray-300">
-                      {options.map((a, i) => (
-                        <li
-                          key={i}
-                          className="bg-white/5 backdrop-blur-md text-blue-100 text-xs font-thin px-2.5 py-0.5 rounded"
-                        >
-                          <BoxReveal duration="0.9">
-                            <span className="flex items-center">
-                              <svg className="w-5 h-5 mx-2" fill="#ffe852" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="..."/></svg>
-                              {a}
-                            </span>
-                          </BoxReveal>
-                        </li>
-                      ))}
-                    </ol>
-                  ) : (
-                    <p>You haven’t earned any {title} yet.</p>
-                  )}
-                </ScrollArea>
-              </div>
+  const Card = ({ title, options}) => (
+    <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg rounded-2xl p-4 text-white transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)] w-full mb-5">
+      <h3 className="text-xl font-semibold mb-4">{title}</h3>
+      <ScrollArea className="h-[150px] pr-2 overflow-y-auto">
+        {options.length > 0 ? (
+          <ol className="pl-5 space-y-2 text-sm text-gray-300">
+            {options.map((a, i) => (
+              <li
+                key={i}
+                className="bg-white/5 backdrop-blur-md text-blue-100 text-xs font-thin px-2.5 py-0.5 rounded"
+              >
+                <BoxReveal duration="0.9">
+                  <span className="flex items-center">
+                    <svg className="w-5 h-5 mx-2" fill="#ffe852" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="..."/></svg>
+                    {a}
+                  </span>
+                </BoxReveal>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p>You haven’t earned any {title} yet.</p>
+        )}
+      </ScrollArea>
+    </div>
   );
+
+  
 
   async function handleFormChange(e) {
     const { name, value, type, checked } = e.target;
@@ -227,11 +230,12 @@ const fetchUser = async () => {
 
     // Fetch all badges
     const badgesRes = await axios.get(`${process.env.SERVER_URL}/badges`);
-    setAllBadges(badgesRes.data.badges);
+    const fetchedBadges = badgesRes.data.badges || [];
+    setAllBadges(fetchedBadges);
 
-    // Create badgeMap by id (not badgeId)
+    // Create badgeMap by id (not badgeId) from freshly fetched badges
     const badgeMap = {};
-    allBadges.forEach((badge) => {
+    fetchedBadges.forEach((badge) => {
       badgeMap[badge.id] = badge;
     });
 
@@ -240,6 +244,7 @@ const fetchUser = async () => {
       ...badgeMap[b.badgeId],
       badgeId: b.badgeId,
       earnedDate: b.earnedDate,
+      certificateId: b.certificateId || b.certificate_id || null,
     }));
 
     setUserData({ ...user, badges: enrichedBadges });
@@ -267,6 +272,52 @@ const fetchUser = async () => {
 
     fetchUser();
   }, []);
+  
+  // determine selectedBadge and compute its displayCertificateId in a stable hook order
+  const selectedBadge = allBadges.find(
+    (badge) => String(badge.badgeId || badge.id) === String(selectedBadgeId)
+  );
+
+  // Check if selected badge is the latest (first in userData.badges)
+  const isLatestBadge = userData?.badges?.length > 0 && selectedBadgeId === userData?.badges?.[0]?.badgeId;
+
+  // Compute a display-friendly certificate id for the selected badge
+  useEffect(() => {
+    const earned = userData?.badges?.find((b) => String(b.badgeId) === String(selectedBadgeId));
+    const certificateId = earned?.certificateId || earned?.certificate_id || null;
+
+    if (!selectedBadge) {
+      setDisplayCertificateId(null);
+      return;
+    }
+
+    // If server-provided certificateId already contains letters, use it
+    if (certificateId && /[A-Za-z]/.test(certificateId)) {
+      setDisplayCertificateId(certificateId);
+      return;
+    }
+
+    const seq = certificateId ? String(certificateId).slice(-3) : null;
+
+    let baseBadgeId = null;
+    if (selectedBadge.badgeId) {
+      baseBadgeId = selectedBadge.badgeId;
+    } else if (selectedBadge.name) {
+      const initials = String(selectedBadge.name)
+        .split(/\s+/)
+        .map((w) => w[0])
+        .filter(Boolean)
+        .slice(0, 2)
+        .join("")
+        .toUpperCase();
+      baseBadgeId = `${initials}${String(selectedBadge.id).padStart(6, "0")}`;
+    } else {
+      baseBadgeId = String(selectedBadge.id).padStart(6, "0");
+    }
+
+    const derived = seq ? `${baseBadgeId}${seq}` : `${baseBadgeId}`;
+    setDisplayCertificateId(derived);
+  }, [selectedBadgeId, selectedBadge, userData]);
 
   if (loading || !userData) {
     return (
@@ -276,53 +327,47 @@ const fetchUser = async () => {
     );
   }
 
-  const selectedBadge = allBadges.find(
-    (badge) => badge.id == selectedBadgeId
-  );
-
-  // Check if selected badge is the latest (first in userData.badges)
-  const isLatestBadge = userData.badges.length > 0 && selectedBadgeId === userData.badges[0].badgeId;
 
 
-const ReviewCard = ({
-  name
-}) => {
-  return (
-    <figure
-      className={cn(
-        "relative h-full w-max cursor-pointer overflow-hidden rounded-xl border p-4",
-        // light styles
-        "border-gray-950/[.1] bg-gray-950/[.01] hover:bg-gray-950/[.05]",
-        // dark styles
-        "dark:border-gray-50/[.1] dark:bg-gray-50/[.10] dark:hover:bg-gray-50/[.15]",
-      )}
-    >
-      <div className="flex flex-row items-center gap-2">
-        <div className="flex flex-col">
-          <figcaption className="text-sm font-medium dark:text-white">
-            {name}
-          </figcaption>
+  const ReviewCard = ({
+    name
+  }) => {
+    return (
+      <figure
+        className={cn(
+          "relative h-full w-max cursor-pointer overflow-hidden rounded-xl border p-4",
+          // light styles
+          "border-gray-950/[.1] bg-gray-950/[.01] hover:bg-gray-950/[.05]",
+          // dark styles
+          "dark:border-gray-50/[.1] dark:bg-gray-50/[.10] dark:hover:bg-gray-50/[.15]",
+        )}
+      >
+        <div className="flex flex-row items-center gap-2">
+          <div className="flex flex-col">
+            <figcaption className="text-sm font-medium dark:text-white">
+              {name}
+            </figcaption>
+          </div>
         </div>
-      </div>
-    </figure>
-  );
-};
+      </figure>
+    );
+  };
 
 function MarqueeDemo({ skills }) {
-const firstRow = skills.slice(0, skills.length / 2);
-const secondRow = skills.slice(skills.length / 2);
-  return (
-    <div className="relative flex w-full rounded-lg flex-col items-center justify-center overflow-hidden">
-      <Marquee pauseOnHover className="[--duration:20s]">
-        {firstRow.map((skill, i) => (
-          <ReviewCard key={i} name={skill} />
-        ))}
-      </Marquee>
-      <Marquee reverse pauseOnHover className="[--duration:20s]">
-        {secondRow.map((skill, i) => (
-          <ReviewCard key={i} name={skill} />
-        ))}
-      </Marquee>
+  const firstRow = skills.slice(0, skills.length / 2);
+  const secondRow = skills.slice(skills.length / 2);
+    return (
+      <div className="relative flex w-full rounded-lg flex-col items-center justify-center overflow-hidden">
+        <Marquee pauseOnHover className="[--duration:20s]">
+          {firstRow.map((skill, i) => (
+            <ReviewCard key={i} name={skill} />
+          ))}
+        </Marquee>
+        <Marquee reverse pauseOnHover className="[--duration:20s]">
+          {secondRow.map((skill, i) => (
+            <ReviewCard key={i} name={skill} />
+          ))}
+        </Marquee>
       <div className="pointer-events-none absolute inset-y-0 left-0 w-1/4 bg-gradient-to-r from-background"></div>
       <div className="pointer-events-none absolute inset-y-0 right-0 w-1/4 bg-gradient-to-l from-background"></div>
     </div>
@@ -333,10 +378,10 @@ const secondRow = skills.slice(skills.length / 2);
     <div className="space-y-2 text-white">
       <h2 className="text-2xl font-bold">
               <Link href={`/badges/${badge?.id}`} >
-        <div className="text-[#38C8F8] text-3xl uppercase">{badge.name}</div>
+        <div className="text-[#38C8F8] text-3xl uppercase">{badge?.name}</div>
               </Link>
       </h2>
-        <div className="text-gray-400 font-thin text-xs">{badge.description}</div>
+        <div className="text-gray-400 font-thin text-xs">{badge?.description}</div>
     </div>
   );
 
@@ -379,6 +424,7 @@ const BadgeMetrics = ({ badge }) => (
                 <img
                   src={process.env.SERVER_URL + userData.image}
                   alt="User Profile"
+                  crossOrigin="anonymous"
                   className="object-cover w-full h-full"
                 />
               ) : (
@@ -463,9 +509,9 @@ const BadgeMetrics = ({ badge }) => (
               {/* On mobile, description appears after image + metrics naturally */}
               <BadgeDescription badge={selectedBadge} />
               <div className="grid md:grid-cols-1 md:gap-6">
-              { selectedBadge.skillsEarned.length > 0 ? (
-              <MarqueeDemo skills={selectedBadge?.skillsEarned} />
-              ) : (
+              { selectedBadge?.skillsEarned?.length > 0 ? (
+                          <MarqueeDemo skills={selectedBadge?.skillsEarned} />
+                          ) : (
                 <p>
                   You haven’t earned any Skills yet.
                 </p>
@@ -475,12 +521,20 @@ const BadgeMetrics = ({ badge }) => (
               {/* Passing Criteria */}
               <div className="flex space-x-2 ">
               <div className="relative w-full z-0 mb-5 group bg-black/60 border rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
-                <strong className='block text-gray-500 hover:text-white border border-0 border-r border-l  rounded-lg -mt-7 bg-black w-max px-2.5'>Passing Criteria</strong> Scored at least 70% in their assessment and completed all mandatory tasks to earn this badge.
+                <strong className='block text-gray-500 hover:text-white border-r border-l rounded-lg -mt-7 bg-black w-max px-2.5'>Passing Criteria</strong> Scored at least 70% in their assessment and completed all mandatory tasks to earn this badge.
               </div>
               <div className="relative z-0 w-2/5 mb-5 group bg-black/60 border  rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
-                <strong className='block text-gray-500 hover:text-white border border-0 border-r border-l rounded-lg -mt-7 bg-black w-max px-2.5'>Course</strong> {selectedBadge?.course}
+                <strong className='block text-gray-500 hover:text-white border-r border-l rounded-lg -mt-7 bg-black w-max px-2.5'>Course</strong> {selectedBadge?.course}
               </div>
               </div>
+              {displayCertificateId && (
+                <div className="mt-auto mb-2 w-full">
+                  <div className="relative w-full z-0 group bg-black/60 border rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
+                    <strong className='block text-gray-500 hover:text-white border-r border-l rounded-lg -mt-7 bg-black w-max px-2.5 mb-2'>Certificate ID</strong>
+                    <div className="mt-1 font-mono font-semibold text-sm">{displayCertificateId}</div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
               </div>
@@ -587,7 +641,7 @@ const BadgeMetrics = ({ badge }) => (
                             <EyeClosed className="h-4 w-4" />
                             </Button>
                           )}
-                          <Label htmlFor={b.badgeId}>{allBadges.find(a => a.id == b.badgeId ).name}</Label>
+                          <Label htmlFor={b.badgeId}>{allBadges.find(a => String(a.badgeId || a.id) === String(b.badgeId))?.name || b.badgeId}</Label>
                           </span>
                           ))}
                       </div>

@@ -81,7 +81,8 @@ const [loadingRevoke, setLoadingRevoke] = useState(true);
     try {
       const token = localStorage.getItem("token");
       const url = `${process.env.SERVER_URL}/badges`;
-      const userBadgeIds = selectedUser?.badges.map((b) => Number(b.id)) || [];
+      const userBadgeIdsStrings = new Set((selectedUser?.badges || []).map((b) => String(b.badgeId || b.id)));
+      const userBadgeIdsNumbers = new Set((selectedUser?.badges || []).map((b) => Number(b.badgeId || b.id)).filter(n => !isNaN(n)));
 
       const response = await axios.get(url, {
         headers: {
@@ -91,9 +92,13 @@ const [loadingRevoke, setLoadingRevoke] = useState(true);
         timeout: 10000,
       });
 
-      const availableBadges = response.data.badges.filter(
-        (badge) => !userBadgeIds.includes(badge.id)
-      );
+      const availableBadges = response.data.badges.filter((badge) => {
+        const bIdStr = String(badge.badgeId || badge.id);
+        const bIdNum = Number(badge.id);
+        if (userBadgeIdsStrings.has(bIdStr)) return false;
+        if (!isNaN(bIdNum) && userBadgeIdsNumbers.has(bIdNum)) return false;
+        return true;
+      });
       setAssignableBadges(availableBadges);
     } catch (error) {
       console.error("Error fetching assignable badges:", error);
@@ -104,7 +109,8 @@ const [loadingRevoke, setLoadingRevoke] = useState(true);
     setLoadingRevoke(true);
     const token = localStorage.getItem("token");
     const url = `${process.env.SERVER_URL}/badges`;
-const userBadgeIds = selectedUser?.badges.map(b => Number(b.badgeId)) || [];
+  const userBadgeIdsStrings = new Set((selectedUser?.badges || []).map((b) => String(b.badgeId || b.id)));
+  const userBadgeIdsNumbers = new Set((selectedUser?.badges || []).map((b) => Number(b.badgeId || b.id)).filter(n => !isNaN(n)));
     const response = await axios.get(url, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -113,7 +119,13 @@ const userBadgeIds = selectedUser?.badges.map(b => Number(b.badgeId)) || [];
     });
 
     if (response) {
-      const filtered = response.data.badges.filter(b => userBadgeIds.includes(b.id));
+      const filtered = response.data.badges.filter((b) => {
+        const bIdStr = String(b.badgeId || b.id);
+        const bIdNum = Number(b.id);
+        if (userBadgeIdsStrings.has(bIdStr)) return true;
+        if (!isNaN(bIdNum) && userBadgeIdsNumbers.has(bIdNum)) return true;
+        return false;
+      });
       setRevokableBadges(filtered);
     }
   } catch (err) {
@@ -310,12 +322,12 @@ const userBadgeIds = selectedUser?.badges.map(b => Number(b.badgeId)) || [];
           <select
             className="w-full p-2 pr-10 rounded bg-[#1A1B2E]/60 text-gray-400 border-gray-600 focus:border-cyan-500 focus:ring-cyan-500 appearance-none"
             value={selectedBadgeId || ""}
-            onChange={(e) => setSelectedBadgeId(Number(e.target.value))}
+            onChange={(e) => setSelectedBadgeId(e.target.value)}
             disabled={assignableBadges.length === 0}
           >
             <option value="" className="bg-slate-800 text-white">Select a badge</option>
             {assignableBadges.map((badge) => (
-              <option key={badge.id} value={badge.id} className="bg-slate-800 text-white">
+              <option key={badge.id} value={badge.badgeId || badge.id} className="bg-slate-800 text-white">
                 {badge.name}
               </option>
             ))}
@@ -334,7 +346,7 @@ const userBadgeIds = selectedUser?.badges.map(b => Number(b.badgeId)) || [];
           <select
             className="w-full p-2 pr-10 rounded bg-[#1A1B2E]/60 text-gray-400 focus:border-red-500 focus:ring-red-500 appearance-none"
             value={selectedRevokeBadgeId || ""}
-            onChange={(e) => setSelectedRevokeBadgeId(Number(e.target.value))}
+            onChange={(e) => setSelectedRevokeBadgeId(e.target.value)}
             disabled={loadingRevoke}
           >
             <option value="">
@@ -342,7 +354,7 @@ const userBadgeIds = selectedUser?.badges.map(b => Number(b.badgeId)) || [];
             </option>
             {!loadingRevoke &&
               revokableBadges.map((badge) => (
-                <option key={badge.id} value={badge.id} className="bg-slate-800 text-white">
+                <option key={badge.id} value={badge.badgeId || badge.id} className="bg-slate-800 text-white">
                   {badge.name}
                 </option>
               ))}
@@ -394,7 +406,7 @@ const userBadgeIds = selectedUser?.badges.map(b => Number(b.badgeId)) || [];
                   <div className="group relative">
                     <img
                       crossOrigin="anonymous"
-                      src={`${process.env.SERVER_URL}/badge/images/${badge.badgeId}` || badge.img?.data}
+                      src={`${process.env.SERVER_URL}/badge/images/${!isNaN(Number(badge.badgeId)) ? badge.badgeId : (badge.id || '')}` || badge.img?.data}
                       alt={`Badge ${badge.name || badge.badgeId}`}
                       className="w-16 h-16 rounded-full transition-all duration-300 drop-shadow-md group-hover:drop-shadow-[0_0_10px_rgba(56,200,248,0.8)]"
                     />

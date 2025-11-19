@@ -18,6 +18,8 @@ const SharedBadgePage = () => {
 
   const [verificationStatus, setVerificationStatus] = useState(false);
   const [user, setUser] = useState('');
+  const [certificateId, setCertificateId] = useState(null);
+  const [displayCertificateId, setDisplayCertificateId] = useState(null);
   const [error, setError] = useState('');
   const [earnersCount, setEarnersCount] = useState(null);
 
@@ -47,6 +49,7 @@ const SharedBadgePage = () => {
           );
           setVerificationStatus(verifyRes.data.verified);
           setUser(`${verifyRes.data.firstName} ${verifyRes.data.lastName}`);
+          setCertificateId(verifyRes.data.certificateId || null);
         } catch {
           setVerificationStatus(false);
         }
@@ -59,6 +62,39 @@ const SharedBadgePage = () => {
 
     fetchBadgeData();
   }, [id, username, timestamp]);
+
+  // Compute a display-friendly certificate id including badge initials if missing
+  useEffect(() => {
+    if (!badge) return;
+    // If server-provided certificateId already contains letters, use it
+    if (certificateId && /[A-Za-z]/.test(certificateId)) {
+      setDisplayCertificateId(certificateId);
+      return;
+    }
+
+    // Determine sequence (last 3 chars if present) and build base badgeId
+    const seq = certificateId ? String(certificateId).slice(-3) : null;
+
+    let baseBadgeId = null;
+    if (badge.badgeId) {
+      baseBadgeId = badge.badgeId;
+    } else if (badge.name) {
+      // derive initials from badge name (first letters of first two words)
+      const initials = String(badge.name)
+        .split(/\s+/)
+        .map(w => w[0])
+        .filter(Boolean)
+        .slice(0, 2)
+        .join('')
+        .toUpperCase();
+      baseBadgeId = `${initials}${String(badge.id).padStart(6, '0')}`;
+    } else {
+      baseBadgeId = String(badge.id).padStart(6, '0');
+    }
+
+    const derived = seq ? `${baseBadgeId}${seq}` : `${baseBadgeId}`;
+    setDisplayCertificateId(derived);
+  }, [badge, certificateId]);
 
   useEffect(() => {
     const fetchEarnersCount = async () => {
@@ -92,8 +128,6 @@ if( !verificationStatus ) {
   console.log(verificationStatus);
   return notFound();
 }
-
-
 
 const ReviewCard = ({
   name
@@ -261,7 +295,7 @@ const BadgeMetrics = ({ badge }) => (
             </div>
 
             {/* Right side (or full stack on mobile): Description & Skills */}
-            <div className="flex flex-col p-2.5 justify-around flex-grow gap-4 md:w-2/3">
+              <div className="flex flex-col p-2.5 justify-around flex-grow gap-4 md:w-2/3">
               {/* On mobile, description appears after image + metrics naturally */}
               <BadgeDescription badge={badge} />
               <div className="grid md:grid-cols-1 md:gap-6">
@@ -273,16 +307,28 @@ const BadgeMetrics = ({ badge }) => (
                   </p>
                 )}
               </div>
-  { /* <BadgeSkillsList skills={badge.skillsEarned} /> */}
+              { /* <BadgeSkillsList skills={badge.skillsEarned} /> */}
+
               {/* Passing Criteria */}
               <div className="flex flex-col sm:flex-row space-x-1 ">
-              <div className="relative w-full z-0 mb-5 group bg-black/60 border rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
-                <strong className='block text-gray-500 hover:text-white border border-0 border-r border-l  rounded-lg -mt-7 bg-black w-max px-2.5'>Passing Criteria</strong> Scored at least 70% in their assessment and completed all mandatory tasks to earn this badge.
+                <div className="relative w-full z-0 mb-5 group bg-black/60 border rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
+                  <strong className='block text-gray-500 hover:text-white border border-0 border-r border-l  rounded-lg -mt-7 bg-black w-max px-2.5'>Passing Criteria</strong> Scored at least 70% in their assessment and completed all mandatory tasks to earn this badge.
+                </div>
+
+                <div className="z-0 sm:w-2/5 mb-5 group bg-black/60 border  rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
+                  <strong className='block text-gray-500 hover:text-white border border-0 border-r border-l rounded-lg -mt-7 bg-black w-max px-2.5'>Course</strong> {badge.course}
+                </div>
               </div>
-              <div className="z-0 sm:w-2/5 mb-5 group bg-black/60 border  rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
-                <strong className='block text-gray-500 hover:text-white border border-0 border-r border-l rounded-lg -mt-7 bg-black w-max px-2.5'>Course</strong> {badge.course}
-              </div>
-              </div>
+
+              {/* Certificate ID */}
+              {displayCertificateId && (
+                <div className="mt-auto mb-2 w-full">
+                  <div className="relative w-full z-0 group bg-black/60 border rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
+                    <strong className='block text-gray-500 hover:text-white border border-0 border-r border-l rounded-lg -mt-7 bg-black w-max px-2.5 mb-2'>Certificate ID</strong>
+                    <div className="mt-1 font-mono font-semibold text-sm">{displayCertificateId}</div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           </div>

@@ -46,7 +46,8 @@ const sendEmail = async ({ to, subject, html, from = null }) => {
     throw new Error('Email service not configured');
   }
 
-  const fromEmail = from || process.env.MAILGUN_FROM_EMAIL || `noreply@${process.env.MAILGUN_DOMAIN}`;
+  // Prefer MAILGUN_FROM (new) then MAILGUN_FROM_EMAIL (legacy), then default to noreply@<domain>
+  const fromEmail = from || process.env.MAILGUN_FROM || process.env.MAILGUN_FROM_EMAIL || `noreply@${process.env.MAILGUN_DOMAIN}`;
 
   try {
     const messageData = {

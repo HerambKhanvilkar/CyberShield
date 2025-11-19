@@ -143,10 +143,10 @@ useEffect(() => {
 
         const earnedBadgesWithDates = responseUser.data.user.badges;
 
-        // 3. Merge
+        // 3. Merge - match by new `badgeId` string if present, otherwise fall back to numeric id
         const mergedEarnedBadges = earnedBadgesWithDates.map((earnedBadge) => {
           const badgeMeta = allBadges.find(
-            (b) => b.id === Number(earnedBadge.badgeId)
+            (b) => (b.badgeId && String(b.badgeId) === String(earnedBadge.badgeId)) || b.id === Number(earnedBadge.badgeId)
           );
           if (badgeMeta) {
             return {
@@ -193,7 +193,7 @@ useEffect(() => {
   useEffect(() => {
     if (badges.length > 0 && badgeId) {
       const index = badges.findIndex(
-        (b) => String(b.id) === String(badgeId)
+        (b) => String(b.id) === String(badgeId) || String(b.badgeId) === String(badgeId)
       );
       if (index !== -1) setCurrentBadgeIndex(index)
       else setCurrentBadgeIndex(0);
@@ -228,8 +228,9 @@ useEffect(() => {
   }
 
   //badge Actions Component
-  const BadgeActions = ({ currentBadge, isAuthenticated }) => {
+  const BadgeActions = ({ currentBadge, isAuthenticated, outerEarnedBadge }) => {
     const [earnedBadge, setEarnedBadge] = useState(null);
+    const hasEarned = earnedBadge || outerEarnedBadge;
     const [showLoginMessage, setShowLoginMessage] = useState(false);
     const [showShareSuccess, setShowShareSuccess] = useState(false);
     const [shareUrl, setShareUrl] = useState('');
@@ -287,14 +288,14 @@ useEffect(() => {
         const user = JSON.parse(userStr);
         const userBadges = user.badges || [];
 
-        const match = userBadges.find((b) => b.id === currentBadge?.id);
+        const match = userBadges.find((b) => String(b.badgeId) === String(currentBadge?.badgeId) || b.badgeId == currentBadge?.id || b.id == currentBadge?.id);
         if (match) {
           setEarnedBadge(match);
         }
       } catch (err) {
         console.error('Failed to parse user from localStorage', err);
       }
-    }, [currentBadge?.id]);
+    }, [currentBadge?.id, currentBadge?.badgeId]);
 
     function convertToFormData(jsonObject) {
   const form = new FormData();
@@ -347,16 +348,16 @@ useEffect(() => {
       });
 
       const user = JSON.parse(userStr);
-      const shareURL = `${window.location.origin}/badges/shared/${currentBadge?.id}/${user.username}/${Math.floor(Date.now() / 1000)}`;
+      const shareURL = `${window.location.origin}/badges/shared/${currentBadge?.badgeId || currentBadge?.id}/${user.username}/${Math.floor(Date.now() / 1000)}`;
       setShareUrl(shareURL);
       setShowShareSuccess(true);
       setTimeout(() => setShowShareSuccess(false), 3000);
       navigator.clipboard.writeText(shareURL);
     };
 
-return (
+    return (
   <div className="flex flex-row flex-wrap gap-2 md:flex-col md:space-y-4">
-    {earnedBadge ? (
+    {hasEarned ? (
       <>
         {/* Share Link Pill */}
         <button
@@ -711,7 +712,7 @@ const RelatedBadges = () => (
             <section className="md:w-2/6 print:w-[33.3%] my-auto space-y-6">
               <SkillsEarned />
               <h2 className="text-2xl font-semibold border-b border-cyan-500 pb-2">Badge Actions</h2>
-              <BadgeActions currentBadge={currentBadge} isAuthenticated={isAuthenticated} />
+              <BadgeActions currentBadge={currentBadge} isAuthenticated={isAuthenticated} outerEarnedBadge={earnedBadge} />
             </section>
           </div>
 
@@ -768,7 +769,7 @@ const RelatedBadges = () => (
               </div>
                 <BadgeImage />
                 <div className="flex flex-wrap justify-center gap-2">
-                  <BadgeActions currentBadge={currentBadge} isAuthenticated={isAuthenticated} />
+                  <BadgeActions currentBadge={currentBadge} isAuthenticated={isAuthenticated} outerEarnedBadge={earnedBadge} />
                 </div>
                 <BadgeMetrics />
                 <RelatedBadges />
@@ -841,7 +842,7 @@ const RelatedBadges = () => (
             </section>
             {/* Badge Actions */}
             <section className="space-y-4">
-              <BadgeActions currentBadge={currentBadge} isAuthenticated={isAuthenticated} />
+              <BadgeActions currentBadge={currentBadge} isAuthenticated={isAuthenticated} outerEarnedBadge={earnedBadge} />
             </section>
           &nbsp;
           &nbsp;

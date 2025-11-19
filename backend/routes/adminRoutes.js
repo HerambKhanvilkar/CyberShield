@@ -213,8 +213,9 @@ router.put(
     if (!id){
       return res.status(401).json({ message: "Badge Id required" });
     }
-    existingBadge = await Badge.findOne({id});
-    existingBadgeImage = await BadgeImage.findOne({id});
+    // allow lookup by numeric id or badgeId
+    existingBadge = await Badge.findOne({ id }) || await Badge.findOne({ badgeId: String(id) });
+    existingBadgeImage = await BadgeImage.findOne({ id });
 
     if (!existingBadge){
       return res.status(401).json({ message: "Badge yet to be created" });
@@ -274,11 +275,11 @@ router.post(
   uploadImage.single('image'), 
   asyncWrapper(async (req, res, next) => {
     try {
-      const { id, name, description, level, vertical, skillsEarned, course } = req.body;
+      const { id, name, description, level, vertical, skillsEarned, course, badgeId } = req.body;
       if ( !id || !name || !description || !level || !vertical || skillsEarned.length === 0 ){
         return res.status(401).json({ message: "Missing Fields!" });
       }
-      const badgeExist = await Badge.findOne({id});
+      const badgeExist = await Badge.findOne({ id }) || await Badge.findOne({ badgeId: String(badgeId || '') });
       const badgeImageExist = await BadgeImage.findOne({id});
 
       if (badgeExist){
@@ -290,7 +291,16 @@ router.post(
       }
 
 
+      // Construct badge object. Accept `badgeId` from client or build from name+id fallback
       const badgeObj = { id, name, description, level, vertical, skillsEarned };
+      if (badgeId) { badgeObj.badgeId = String(badgeId); }
+      else if (name && id) {
+        // derive prefix from first two words' initials
+        const parts = String(name).trim().split(/\s+/);
+        let prefix = (parts[0] || '').charAt(0) + (parts[1] ? parts[1].charAt(0) : (parts[0] || '').charAt(1) || 'X');
+        prefix = prefix.toUpperCase().replace(/[^A-Z]/g, '').padEnd(2, 'X').slice(0,2);
+        badgeObj.badgeId = `${prefix}${String(id).padStart(6,'0')}`;
+      }
       if (course) { badgeObj['course'] = course }
 
       if (req.file){
@@ -528,9 +538,24 @@ router.post("/users/import/:jobId",authenticateJWT, async (req, res) => {
     const userPasswordMap = new Map();
     
     const usersToBeInserted = await Promise.all(jobStatusDoc.result.validUsers.map(async u => {
-      const badges = (JSON.parse("[" + u.badgeIds + "]")).map(b => {
-        return { badgeId: b, earnedDate: new Date() }
-      });
+      const badgeIdsArray = JSON.parse("[" + u.badgeIds + "]");
+      const badges = [];
+      for (const b of badgeIdsArray) {
+        // Find badge by numeric id or badgeId string
+        let badgeDoc = await Badge.findOne({ id: b }) || await Badge.findOne({ badgeId: String(b) });
+        if (!badgeDoc) {
+          // push the raw badge id so validation elsewhere can pick it up
+          badges.push({ badgeId: b, earnedDate: new Date() });
+          continue;
+        }
+        // increment certificateCounter and build certificateId
+        const updated = await Badge.findOneAndUpdate({ _id: badgeDoc._id }, { $inc: { certificateCounter: 1 } }, { new: true });
+        const counter = updated.certificateCounter || 1;
+        const seq = String(counter).padStart(3, '0');
+        const baseBadgeId = updated.badgeId || String(updated.id).padStart(6, '0');
+        const certificateId = `${baseBadgeId}${seq}`;
+        badges.push({ badgeId: updated.badgeId || String(updated.id), earnedDate: new Date(), certificateId });
+      }
 
       // Generate unique random password for this user
       const plainPassword = generateRandomPassword();

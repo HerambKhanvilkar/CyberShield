@@ -32,12 +32,13 @@ function BadgeCreationForm () {
     id: '',
     name: '',
     description: '',
-    level: 'Amateur',
+    level: '',
     vertical: '',
     course: '',
     skillsEarned: [],
     image: null,
   });
+  const [nextId, setNextId] = useState(null);
 
   const fetchBadges = async () => {
     const badgesRes = await axios.get(`${process.env.SERVER_URL}/badges`);
@@ -47,6 +48,26 @@ function BadgeCreationForm () {
   useEffect(() => {
     fetchBadges();
   }, []);
+
+  // compute next id placeholder based on highest existing badge id
+  useEffect(() => {
+    if (!Array.isArray(searchResults) || searchResults.length === 0) {
+      setNextId(null);
+      return;
+    }
+    const ids = searchResults
+      .map((b) => {
+        const n = Number(b.id ?? b.badgeId ?? b.id);
+        return Number.isFinite(n) ? n : null;
+      })
+      .filter((v) => v !== null);
+    if (ids.length === 0) {
+      setNextId(null);
+      return;
+    }
+    const max = Math.max(...ids);
+    setNextId(max + 1);
+  }, [searchResults]);
 
   useEffect(() => {
   const fetchSkills = async () => {
@@ -222,7 +243,7 @@ function BadgeCreationForm () {
     }
   }
 
-  return formData;
+  return form;
 }
   
   const handleBadgeFormSubmit = async (e) => {
@@ -237,8 +258,9 @@ function BadgeCreationForm () {
     try {
       let response; 
       if (!selectedBadge){
-        if (!formData.image || !formData.vertical || !formData.name || !formData.id || formData.skillsEarned.length === 0 ) {
-          toast.error('Badge form incomplete!');
+        // require only id and name for creation; other fields optional
+        if (!formData.id || !formData.name) {
+          toast.error('Please provide at least Badge ID and Name');
           return;
         }
 
@@ -335,7 +357,7 @@ const updateBadgeDetails = (email, updatedBadge) => {
 
 useEffect(() => {
   if (selectedBadge) {
-    const badgeImageUrl = `${process.env.SERVER_URL}/badge/images/${selectedBadge.id}`;
+  const badgeImageUrl = `${process.env.SERVER_URL}/badge/images/${selectedBadge.id}`;
 
     setFormData({
       id: selectedBadge.id || '',
@@ -389,10 +411,10 @@ useEffect(() => {
                       <li key={index}>
                               <div onClick={() => setSelectedBadge(badge)} 
                       className={(
-                          selectedBadge?.id === badge.id 
-                          ? "bg-accent text-accent-foreground" 
-                          : "hover:text-accent-foreground hover:shadow"
-                        ) + 
+                            (String(selectedBadge?.id) === String(badge.id) || String(selectedBadge?.badgeId) === String(badge.badgeId))
+                            ? "bg-accent text-accent-foreground" 
+                            : "hover:text-accent-foreground hover:shadow"
+                          ) + 
                         " flex items-center rounded"}>
                                   <div className="shrink-0">
                                       <img
@@ -430,6 +452,7 @@ useEffect(() => {
                 <IdInput
                   formData={formData}
                   handleChange={handleChange}
+                  nextId={nextId}
                 />
               </div>
               {/* Badge Name */}
@@ -539,10 +562,19 @@ useEffect(() => {
                 )}
                 <button
                   type="submit"
-                  className="text-white bg-blue-600 hover:bg-blue-700 focus:ring-blue-800 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 mb-4 text-center"
+                  className="text-white bg-blue-600 hover:bg-blue-700 focus:ring-blue-800 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 mb-2 text-center"
                   >
                   Submit
                 </button>
+                {selectedBadge && (
+                  <button
+                    type="button"
+                    onClick={handleDeleteBadge}
+                    className="ml-2 text-white bg-red-600 hover:bg-red-700 focus:ring-red-800 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 mb-4 text-center"
+                  >
+                    Delete
+                  </button>
+                )}
             </div>
           </div>
 
@@ -551,5 +583,23 @@ useEffect(() => {
     </div>
   );
 }
+
+  // Delete selected badge
+  const handleDeleteBadge = async () => {
+    if (!selectedBadge) return;
+    if (!confirm(`Delete badge ${selectedBadge.name || selectedBadge.badgeId || selectedBadge.id}? This cannot be undone.`)) return;
+    const token = localStorage.getItem("accessToken");
+    let toastId = toast.loading("Deleting badge...");
+    try {
+      const url = `${process.env.SERVER_URL}/badge/${selectedBadge.id || selectedBadge.badgeId}`;
+      await axios.delete(url, { headers: { Authorization: `Bearer ${token}` } });
+      toast.update(toastId, { isLoading: false, render: "Badge deleted", type: "success", autoClose: 3000 });
+      setSelectedBadge(null);
+      await fetchBadges();
+    } catch (err) {
+      toast.update(toastId, { isLoading: false, render: "Delete failed", type: "error", autoClose: 5000 });
+      console.error("Delete badge failed", err);
+    }
+  };
 
 export default BadgeCreationForm;

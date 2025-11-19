@@ -61,8 +61,13 @@ module.exports = function (agenda) {
 
       let alreadyUsersExist = await User.find({ email: { $in: emails } })
       let usersExist = alreadyUsersExist.map(u => u.email);
-      let badgesArray = (await Badge.find({}, { id: 1, _id: 0 }))
-        .map(b => b.id);
+      // Collect both numeric ids and string badgeIds so CSV can refer to either
+      let badgesRaw = await Badge.find({}, { id: 1, badgeId: 1, _id: 0 });
+      let badgesArray = [];
+      badgesRaw.forEach(b => {
+        if (b.id !== undefined && b.id !== null) badgesArray.push(b.id);
+        if (b.badgeId) badgesArray.push(b.badgeId);
+      });
 
       await Promise.all(validRows.map(async (user) => {
         const { email, firstName, lastName, badgeIds } = user;

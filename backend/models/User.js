@@ -35,6 +35,11 @@ const UserSchema = new mongoose.Schema({
       select: true,
       default: new Date(),
     },
+    certificateId: {
+      type: String,
+      select: true,
+      default: null,
+    },
     isPublic: {
       type: Boolean,
       select: true,

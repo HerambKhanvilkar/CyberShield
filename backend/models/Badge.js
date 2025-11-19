@@ -6,6 +6,13 @@ const BadgeSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+  // Human-facing badge identifier. Format: <PREFIX><6-digit-number> e.g. CA000100
+  badgeId: {
+    type: String,
+    required: false,
+    unique: true,
+    sparse: true,
+  },
   name: {
     type: String,
     required: true
@@ -40,6 +47,11 @@ const BadgeSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  // Incrementing counter used to generate unique certificate IDs for this badge
+  certificateCounter: {
+    type: Number,
+    default: 0
+  }
 });
 
 module.exports = mongoose.model('Badge', BadgeSchema);

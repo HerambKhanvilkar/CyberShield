@@ -7,12 +7,12 @@ import "./globals.css";
 
 export const metadata = {
   title: "DeepCytes",
-  description: "DeepCytes CVE Explorer",
+  description: "DeepCytes Badge Viewer",
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className="bg-[#00011e]">
         <SessionProviderWrapper>
           <AuthProvider>

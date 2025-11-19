@@ -166,15 +166,20 @@ router.post("/login", loginValidationRules, validateRequest, async (req, res) =>
 
     // Fetch earned badges
     const userBadges = user.toJSON();
-    console.log(userBadges);
-    const allBadges = userBadges
-      ? await Badge.find({ id: { $in: userBadges.badges.map(b => b.badgeId) } })
-      : [];
+    const badgeIds = (userBadges?.badges || []).map(b => b.badgeId);
+    const numericIds = badgeIds.map(id => parseInt(id)).filter(n => !isNaN(n));
+    const stringIds = badgeIds.filter(id => isNaN(parseInt(id)));
 
-    // Map earned badges with dates
+    const query = { $or: [] };
+    if (stringIds.length > 0) query.$or.push({ badgeId: { $in: stringIds } });
+    if (numericIds.length > 0) query.$or.push({ id: { $in: numericIds } });
+
+    const allBadges = query.$or.length > 0 ? await Badge.find(query) : [];
+
+    // Map earned badges with dates (match by badgeId string or numeric id)
     const earnedBadges = allBadges.map(badge => ({
       ...badge.toObject(),
-      earnedDate: userBadges?.badges.find(b => b.badgeId === badge.id)?.earnedDate
+      earnedDate: userBadges?.badges.find(b => String(b.badgeId) === String(badge.badgeId) || String(b.badgeId) === String(badge.id))?.earnedDate
     }));
 
     res.status(200).json({
