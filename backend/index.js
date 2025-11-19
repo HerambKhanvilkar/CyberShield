@@ -65,9 +65,13 @@ const corsOptions = {
     // If frontendOrigin is a comma-separated list, support that
     if (String(frontendOrigin).includes(',')) {
       const allowed = String(frontendOrigin).split(',').map(s => s.trim());
-      return allowed.indexOf(origin) !== -1 ? callback(null, true) : callback(new Error('Not allowed by CORS'));
+      const ok = allowed.indexOf(origin) !== -1;
+      if (!ok) console.warn(`CORS denied for origin: ${origin}`);
+      return callback(null, ok);
     }
-    return origin === frontendOrigin ? callback(null, true) : callback(new Error('Not allowed by CORS'));
+    const ok = origin === frontendOrigin;
+    if (!ok) console.warn(`CORS denied for origin: ${origin}`);
+    return callback(null, ok);
   },
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
@@ -78,6 +82,15 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
+
+// Generic error handler to avoid leaking stack traces and to return proper status codes
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err && err.stack ? err.stack : err);
+  if (err && err.message && err.message.includes('CORS')) {
+    return res.status(403).json({ message: 'CORS Forbidden' });
+  }
+  res.status(500).json({ message: 'Internal Server Error' });
+});
 
 // Sanitize & Escape All Inputs Middleware
 // app.use((req, res, next) => {
