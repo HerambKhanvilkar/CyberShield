@@ -108,7 +108,7 @@ export default function LandingPage() {
               className="hidden md:block absolute inset-0 bg-no-repeat bg-right bg-contain pointer-events-none"
               style={{
                 backgroundImage:
-                  'linear-gradient(to right, rgb(0,0,0) 35%, rgb(0,0,0) 35%, rgba(0,1,30,0.33) 55%, rgba(0,1,30,0) 90%), url("/cyber-security-concept-digital-art.jpg")',
+                  'linear-gradient(to right, rgb(0,0,0) 35%, rgb(0,0,0) 35%, rgba(0,1,30,0.33) 55%, rgba(0,1,30,0) 90%), url("/cyber-security-concept-digital-art-min.jpg")',
                 backgroundSize: 'contain',
                 backgroundPosition: 'right center',
                 backgroundRepeat: 'no-repeat',
