@@ -68,7 +68,7 @@ function Navbar() {
     try {
       // Call the /logout API endpoint
       const response = await fetch(
-        `${process.env.SERVER_URL}/api/auth/logout`,
+        `${process.env.SERVER_URL}/auth/logout`,
         {
           method: "POST",
           headers: {

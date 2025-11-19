@@ -55,13 +55,29 @@ app.use(express.json());
 
 app.use(express.urlencoded({extended:true}))
 
-app.use(
-  cors({
-    origin: process.env.FRONTEND || "http://localhost:3000",
-    // origin: "http://localhost:5173",
-    // origin: "http://dccveengine-vm.eastus.cloudapp.azure.com",
-  })
-);
+
+// Configure CORS more explicitly to avoid common CORS errors
+const frontendOrigin = process.env.FRONTEND || "http://localhost:3000";
+const corsOptions = {
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl, server-to-server)
+    if (!origin) return callback(null, true);
+    // If frontendOrigin is a comma-separated list, support that
+    if (String(frontendOrigin).includes(',')) {
+      const allowed = String(frontendOrigin).split(',').map(s => s.trim());
+      return allowed.indexOf(origin) !== -1 ? callback(null, true) : callback(new Error('Not allowed by CORS'));
+    }
+    return origin === frontendOrigin ? callback(null, true) : callback(new Error('Not allowed by CORS'));
+  },
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: true,
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // Sanitize & Escape All Inputs Middleware
 // app.use((req, res, next) => {
