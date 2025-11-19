@@ -62,15 +62,25 @@ const corsOptions = {
   origin: function(origin, callback) {
     // Allow requests with no origin (like mobile apps, curl, server-to-server)
     if (!origin) return callback(null, true);
+    // Always allow localhost during local development (covers http://localhost:3000)
+    try {
+      const low = String(origin).toLowerCase();
+      if (low.includes('localhost') || low.includes('127.0.0.1') || low.includes('[::1]')) {
+        console.log(`CORS allowed for local origin: ${origin}`);
+        return callback(null, true);
+      }
+    } catch (e) {
+      // ignore parsing errors and continue with normal checks
+    }
     // If frontendOrigin is a comma-separated list, support that
     if (String(frontendOrigin).includes(',')) {
       const allowed = String(frontendOrigin).split(',').map(s => s.trim());
       const ok = allowed.indexOf(origin) !== -1;
-      if (!ok) console.warn(`CORS denied for origin: ${origin}`);
+      if (ok) console.log(`CORS allowed for origin: ${origin}`); else console.warn(`CORS denied for origin: ${origin}`);
       return callback(null, ok);
     }
     const ok = origin === frontendOrigin;
-    if (!ok) console.warn(`CORS denied for origin: ${origin}`);
+    if (ok) console.log(`CORS allowed for origin: ${origin}`); else console.warn(`CORS denied for origin: ${origin}`);
     return callback(null, ok);
   },
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
