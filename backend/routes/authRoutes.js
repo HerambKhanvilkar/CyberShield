@@ -143,9 +143,10 @@ router.post("/register/otp", [body("email").isEmail().withMessage("Invalid email
 router.post("/login", loginValidationRules, validateRequest, async (req, res) => {
   try {
     const { email, password } = req.body;
+    // Include password explicitly (schema may set select: false)
     const user = await User.findOne({
       $or: [{ email }, { username: email }]
-    }).select('password');
+    }).select('+password');
 
     if (!user) return res.status(400).json({ message: " No User Invalid Credentials" });
 
@@ -157,12 +158,13 @@ router.post("/login", loginValidationRules, validateRequest, async (req, res) =>
     const token =  generateToken(user);
     const refreshToken = generateRefreshToken(user);
 
-    // TODO: CONVERT TO MONGOOOSE 
-      await user.updateOne(
-        { $set: { refreshToken } }
-      );
-
-    await user.save();
+    // Save refresh token on the user document
+    try {
+      user.refreshToken = refreshToken;
+      await user.save();
+    } catch (saveErr) {
+      console.error('Failed saving refresh token on user:', saveErr);
+    }
 
     // Fetch earned badges
     const userBadges = user.toJSON();

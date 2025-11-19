@@ -83,12 +83,16 @@ router.get("/badge/images/:id", async (req, res) => {
     try {
       if (!req.params.id) 
         return res.status(404).json({ message: "Image not found" });
-        const badgeImage = await BadgeImage.findOne({ id: req.params.id });
-        if (!badgeImage) {
-            return res.status(404).json({ message: "Image not found" });
-        }
-        res.set('Content-Type', badgeImage.image.contentType);
-        res.send(badgeImage.image);
+    // Ensure numeric id lookup when IDs are stored as numbers
+    const lookupId = isNaN(parseInt(req.params.id)) ? req.params.id : parseInt(req.params.id);
+    const badgeImage = await BadgeImage.findOne({ id: lookupId });
+    if (!badgeImage || !badgeImage.image) {
+      return res.status(404).json({ message: "Image not found" });
+    }
+    // BadgeImage model stores contentType in its own field
+    const contentType = badgeImage.contentType || 'application/octet-stream';
+    res.set('Content-Type', contentType);
+    res.send(badgeImage.image);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Internal Server Error" });
