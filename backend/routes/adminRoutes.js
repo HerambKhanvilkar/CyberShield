@@ -600,7 +600,7 @@ router.post("/users/import/:jobId",authenticateJWT, async (req, res) => {
 
 
     if ( usersToBeInserted.length > 0){
-      await User.insertMany(usersToBeInserted);
+      const inserted = await User.insertMany(usersToBeInserted);
       console.log("insert");
       
       // Send welcome emails to new users with their unique passwords
@@ -614,6 +614,28 @@ router.post("/users/import/:jobId",authenticateJWT, async (req, res) => {
           // Continue processing other users even if one email fails
         }
       }
+
+      // Send badge received emails for badges assigned during insert
+      for (const user of usersToBeInserted) {
+        if (!user.badges || user.badges.length === 0) continue;
+        for (const badgeEntry of user.badges) {
+          try {
+            // Try to resolve badge name/description from Badge collection
+            const badgeDoc = await Badge.findOne({ badgeId: String(badgeEntry.badgeId) }) || await Badge.findOne({ id: badgeEntry.badgeId });
+            const badgeName = (badgeDoc && badgeDoc.name) ? badgeDoc.name : (badgeEntry.badgeId || 'a badge');
+            const badgeDesc = (badgeDoc && badgeDoc.description) ? badgeDoc.description : '';
+            const backendBase = process.env.BACKEND_URL || process.env.FRONTEND_URL || `http://localhost:${process.env.PORT || '3001'}`;
+            const imageUrl = badgeDoc && badgeDoc.id ? `${backendBase}/api/badge/images/${badgeDoc.id}` : `${backendBase}/api/badge/images/${badgeEntry.badgeId}`;
+            const certificateId = badgeEntry.certificateId || null;
+            await sendBadgeReceivedEmail(user.email, badgeName, badgeDesc, null, certificateId, imageUrl);
+            console.log(`Badge received email sent to ${user.email} for ${badgeName}`);
+          } catch (emailError) {
+            console.error(`Failed to send badge email to ${user.email} for badge ${badgeEntry.badgeId}:`, emailError);
+            // Don't fail the whole import if email sending fails
+          }
+        }
+      }
+
       // Clear the password map for security
       userPasswordMap.clear();
     }
@@ -621,10 +643,11 @@ router.post("/users/import/:jobId",authenticateJWT, async (req, res) => {
       await User.bulkWrite(usersToBeUpdated);
       console.log("update");
       
-      // Send profile update notification to updated users
+      // Send profile update + badge received notification to updated users
       for (const updateOp of usersToBeUpdated) {
         try {
           const email = updateOp.updateOne.filter.email;
+          // Send profile update
           await sendProfileUpdateEmail(
             email,
             'profile_update',
@@ -634,7 +657,27 @@ router.post("/users/import/:jobId",authenticateJWT, async (req, res) => {
           console.log(`Profile update email sent to ${email}`);
         } catch (emailError) {
           console.error(`Failed to send update email to ${updateOp.updateOne.filter.email}:`, emailError);
-          // Continue processing other users even if one email fails
+        }
+
+        // If there are new badges in the write op, send badge received emails
+        try {
+          const newBadges = (updateOp.updateOne.update && updateOp.updateOne.update.$push && updateOp.updateOne.update.$push.badges && updateOp.updateOne.update.$push.badges.$each) ? updateOp.updateOne.update.$push.badges.$each : [];
+          for (const badgeEntry of newBadges) {
+            try {
+              const badgeDoc = await Badge.findOne({ badgeId: String(badgeEntry.badgeId) }) || await Badge.findOne({ id: badgeEntry.badgeId });
+              const badgeName = (badgeDoc && badgeDoc.name) ? badgeDoc.name : (badgeEntry.badgeId || 'a badge');
+              const badgeDesc = (badgeDoc && badgeDoc.description) ? badgeDoc.description : '';
+              const backendBase = process.env.BACKEND_URL || process.env.FRONTEND_URL || `http://localhost:${process.env.PORT || '3001'}`;
+              const imageUrl = badgeDoc && badgeDoc.id ? `${backendBase}/api/badge/images/${badgeDoc.id}` : `${backendBase}/api/badge/images/${badgeEntry.badgeId}`;
+              const certificateId = badgeEntry.certificateId || null;
+              await sendBadgeReceivedEmail(updateOp.updateOne.filter.email, badgeName, badgeDesc, null, certificateId, imageUrl);
+              console.log(`Badge received email sent to ${updateOp.updateOne.filter.email} for ${badgeName}`);
+            } catch (emailError) {
+              console.error(`Failed to send badge email to ${updateOp.updateOne.filter.email} for badge ${badgeEntry.badgeId}:`, emailError);
+            }
+          }
+        } catch (err) {
+          console.error('Error while sending badge emails for updates:', err);
         }
       }
     }

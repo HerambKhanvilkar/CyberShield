@@ -124,11 +124,13 @@ const sendBulkUserWelcomeEmail = async (email, password, loginUrl = null) => {
  * @param {string} badgeName - Name of the badge
  * @param {string} badgeDescription - Badge description
  * @param {string} profileLink - Link to user's profile
+ * @param {string|null} certificateId - Optional certificate ID to display
+ * @param {string|null} badgeImageUrl - Optional absolute URL to badge image
  */
-const sendBadgeReceivedEmail = async (email, badgeName, badgeDescription, profileLink = null) => {
+const sendBadgeReceivedEmail = async (email, badgeName, badgeDescription, profileLink = null, certificateId = null, badgeImageUrl = null) => {
   const { getBadgeReceivedEmail } = require('../emailTemplates/badgerecieve');
   const defaultProfileLink = profileLink || `${process.env.FRONTEND_URL || 'http://localhost:3000'}/profile`;
-  const html = getBadgeReceivedEmail(badgeName, badgeDescription, defaultProfileLink);
+  const html = getBadgeReceivedEmail(badgeName, badgeDescription, defaultProfileLink, certificateId, badgeImageUrl);
   
   return sendEmail({
     to: email,

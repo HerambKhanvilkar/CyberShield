@@ -337,12 +337,17 @@ router.post("/assign-badge", authenticateJWT, async (req, res) => {
     user.badges.push({ badgeId: updatedBadge.badgeId || String(updatedBadge.id), earnedDate: new Date(), certificateId });
     await user.save();
     
-    // Send badge received email notification
+    // Send badge received email notification (include certificateId and badge image URL)
     try {
+      const backendBase = process.env.BACKEND_URL || process.env.FRONTEND_URL || `http://localhost:${process.env.PORT || '3001'}`;
+      const imageUrl = updatedBadge && updatedBadge.id ? `${backendBase}/api/badge/images/${updatedBadge.id}` : `${backendBase}/api/badge/images/${badge.badgeId || badge.id}`;
       await sendBadgeReceivedEmail(
         user.email,
         badge.name,
-        badge.description || 'Congratulations on earning this achievement!'
+        badge.description || 'Congratulations on earning this achievement!',
+        null,
+        certificateId,
+        imageUrl
       );
       console.log(`Badge notification email sent to ${user.email}`);
     } catch (emailError) {

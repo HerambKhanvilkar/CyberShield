@@ -1,5 +1,11 @@
-function getBadgeReceivedEmail(badgeName, badgeDescription, profileLink) {
+function getBadgeReceivedEmail(badgeName, badgeDescription, profileLink, certificateId = null, badgeImageUrl = null) {
   const additionalInfo = badgeDescription ? `<p style="margin-top: 10px;"><strong>Description:</strong> ${badgeDescription}</p>` : '';
+  const certificateHtml = certificateId ? `<p style="margin-top: 12px;"><strong>Certificate ID:</strong> ${certificateId}</p>` : '';
+  const imageHtml = badgeImageUrl ? `
+        <div style="margin-top: 15px; text-align:center;">
+          <img src="${badgeImageUrl}" alt="${badgeName}" style="max-width:160px; width:100%; height:auto; border-radius:8px; display:block; margin:0 auto;" />
+        </div>
+  ` : '';
 
   return `
 <!DOCTYPE html>
@@ -64,7 +70,9 @@ function getBadgeReceivedEmail(badgeName, badgeDescription, profileLink) {
         <p style="font-size: 14px; line-height: 1.5;">
           Great work! You've been awarded the <strong>${badgeName}</strong> badge for your achievements.
         </p>
+        ${imageHtml}
         ${additionalInfo}
+        ${certificateHtml}
       </div>
 
       <!-- CTA -->
