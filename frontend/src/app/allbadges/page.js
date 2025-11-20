@@ -22,74 +22,69 @@ export default function AllBadgesPage() {
 };
 
 useEffect(() => {
-  const fetchAllBadges = async () => {
+  let mounted = true;
+  (async () => {
+    setLoading(true);
     try {
+      // Fetch all badges
       const res = await fetch(`${process.env.SERVER_URL}/badges`);
       const data = await res.json();
+      const all = Array.isArray(data.badges) ? data.badges : [];
+      if (!mounted) return;
+      setAllBadges(all);
 
-      if (Array.isArray(data.badges)) {
-        setAllBadges(data.badges);
-        setBadges(data.badges);
-      } else {
-        console.error("API response format unexpected:", data);
-        setAllBadges([]); // fallback to empty array
+      // If user is logged in, fetch their badges and order owned badges first
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        setBadges(all);
+        setMyBadges([]);
+        return;
       }
-    } catch (error) {
-      console.error("Failed to fetch badges:", error);
-      setAllBadges([]); // fallback
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const fetchMyBadges = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.SERVER_URL}/badges-earned`, {
-        method: 'GET', // Specify the method if needed (GET is default)
-        headers: {
-          'Authorization': `Bearer ${token}`, // Add the token to the Authorization header
-          'Content-Type': 'application/json' // Optional: specify content type if needed
-        }
-      });
+      try {
+        const res2 = await fetch(`${process.env.SERVER_URL}/badges-earned`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        const data2 = await res2.json();
+        const mine = Array.isArray(data2.badges) ? data2.badges : [];
+        if (!mounted) return;
+        setMyBadges(mine);
 
-      const data = await res.json();
-
-      if (Array.isArray(data.badges)) {
-        setMyBadges(data.badges);
-      } else {
-        console.error("API response format unexpected:", data);
-        setMyBadges([]); // fallback to empty array
+        const ownedSet = new Set(mine.map(b => String(b.badgeId || b.id)));
+        const owned = all.filter(b => ownedSet.has(String(b.badgeId || b.id)));
+        const unowned = all.filter(b => !ownedSet.has(String(b.badgeId || b.id)));
+        setBadges([...owned, ...unowned]);
+      } catch (err) {
+        console.error('Failed to fetch user badges:', err);
+        setBadges(all);
+        setMyBadges([]);
       }
-    } catch (error) {
-      console.error("Failed to fetch badges:", error);
-      setMyBadges([]); // fallback
+    } catch (err) {
+      console.error('Failed to fetch badges:', err);
+      setAllBadges([]);
+      setBadges([]);
+      setMyBadges([]);
     } finally {
-      setLoading(false);
+      if (mounted) setLoading(false);
     }
-  };
-
-  fetchAllBadges();
-  fetchMyBadges();
+  })();
+  return () => { mounted = false };
 }, []);
 
-  const activeButton = "px-5 py-1.5 text-xs font-medium text-gray-900 bg-gray-300 rounded-lg";
-  const inActiveButton = "px-5 py-1.5 text-xs font-medium text-white hover:bg-gray-700 rounded-lg";
-
-  const [allBadgesClass, setAllBadgesClass] = useState(activeButton);
-  const [myBadgesClass, setMyBadgesClass] = useState(inActiveButton);
-
-  const handleAllBadges = () => {
-    setBadges(allBadges);
-    setAllBadgesClass(activeButton);
-    setMyBadgesClass(inActiveButton);
-  }
-
-  const handleMyBadges = () => {
-    setBadges(myBadges);
-    setMyBadgesClass(activeButton);
-    setAllBadgesClass(inActiveButton);
-  }
+  // Helper to check ownership: returns true if user has this badge
+  const isOwned = (badge) => {
+    if (!myBadges || myBadges.length === 0) return false;
+    // myBadges may contain badge objects with id or badgeId
+    return myBadges.some(
+      (b) =>
+        String(b.badgeId || b.id) === String(b.badgeId || badge.id) ||
+        String(b.badgeId || b.id) === String(badge.badgeId || badge.id)
+    );
+  };
 
   return (
     <>
@@ -105,27 +100,29 @@ useEffect(() => {
         </section>
         <section className="text-center max-w-4xl mx-auto mb-12">
         </section>
-        <div className="grid max-w-xs grid-cols-2 gap-1 p-1 mx-auto my-4 rounded-lg bg-gray-600" role="group">
-          <button onClick={handleAllBadges} type="button" className={allBadgesClass} >
-          All Badges
-          </button>
-              <button onClick={handleMyBadges} type="button" className={myBadgesClass}>
-              My Badges
-          </button>
-        </div>
+        {/* Always show all badges; owned badges will be highlighted, unowned appear grayscaled */}
 
         {loading ? (
           <p className="text-center text-gray-400">Loading badges...</p>
-        ) : (
-          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          ) : (
+          <section style={{ gridAutoRows: '1fr' }} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {badges.length === 0 ? (
             <p className="text-center text-gray-400 col-span-full">
               You have not earned any badges yet.
             </p>
           ) : (
-            badges.map((badge) => (
+            badges.map((badge) => {
+              const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+              const loggedIn = !!token;
+              const owned = isOwned(badge);
+
+              const baseClass = 'h-full flex flex-col bg-gradient-to-br from-gray-950 via-cyan-900/30 to-gray-900 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-6 transition duration-300 hover:shadow-cyan-400/20 hover:scale-[1.01]';
+              const glassyUnownedClass = 'h-full flex flex-col bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 transition duration-300 hover:shadow-lg hover:scale-[1.01] filter grayscale contrast-75 opacity-70';
+              const cardClass = loggedIn ? (owned ? baseClass : glassyUnownedClass) : baseClass;
+
+              return (
               <Link href={`/badges/${badge.id}`} key={badge.id}>
-                <div className="bg-gradient-to-br from-gray-950 via-cyan-900/30 to-gray-900 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-6 transition duration-300 hover:shadow-cyan-400/20 hover:scale-[1.01]">
+                <div className={cardClass}>
                   <div className="flex justify-center mb-4">
                     <img
                       src={badge.img?.data || `${process.env.SERVER_URL}/badge/images/${badge.id}`}
@@ -137,10 +134,10 @@ useEffect(() => {
                   <h3 className="text-xl font-semibold text-cyan-400 mb-2 text-center">
                     {badge.name}
                   </h3>
-                  <p className="text-gray-400 text-sm text-center mb-4">
+                  <p className="text-gray-400 text-sm text-center mb-4 flex-1">
                     {truncateText(badge.description, 150)}
                   </p>
-                  <div className="flex flex-wrap justify-center gap-2">
+                  <div className="flex flex-wrap justify-center gap-2 mt-auto">
                     {badge.skillsEarned?.slice(0, 3).map((skill, i) => (
                       <span
                         key={i}
@@ -158,7 +155,7 @@ useEffect(() => {
                   </div>
                 </div>
               </Link>
-            ))
+            )})
           )}
           </section>
         )}

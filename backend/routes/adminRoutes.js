@@ -343,6 +343,72 @@ router.post(
   })
 )
 
+// Delete badge (admin only)
+router.delete('/badge/:id', authenticateJWT, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const authHeader = req.headers.authorization;
+    const adminUsername = await getUsername(authHeader);
+    const adminUser = await User.findOne({ email: adminUsername });
+    if (!adminUser || !adminUser.isAdmin) {
+      return res.status(403).json({ message: 'Unauthorized. Admin access required.' });
+    }
+
+    if (!id) return res.status(400).json({ message: 'Badge id required' });
+
+    // Support numeric id or badgeId string
+    let badge = null;
+    if (!isNaN(parseInt(id))) {
+      badge = await Badge.findOne({ id: parseInt(id) });
+    }
+    if (!badge) {
+      badge = await Badge.findOne({ badgeId: String(id) });
+    }
+
+    if (!badge) return res.status(404).json({ message: 'Badge not found' });
+
+    // Find users who currently have this badge (by badgeId string or numeric id string)
+    const badgeIdStr = badge.badgeId || String(badge.id);
+    const numericIdStr = String(badge.id);
+    // Include emailPreferences so we can honor user preferences when notifying
+    const affectedUsers = await User.find({ 'badges.badgeId': { $in: [badgeIdStr, numericIdStr] } }).select('email badges emailPreferences');
+
+    // Remove badge entries from users
+    await User.updateMany({ 'badges.badgeId': badgeIdStr }, { $pull: { badges: { badgeId: badgeIdStr } } });
+    if (numericIdStr !== badgeIdStr) {
+      await User.updateMany({ 'badges.badgeId': numericIdStr }, { $pull: { badges: { badgeId: numericIdStr } } });
+    }
+
+    // Delete badge and its image record
+    await Badge.deleteOne({ _id: badge._id });
+    await BadgeImage.deleteOne({ id: badge.id });
+
+    // Notify affected users about revocation, respecting their preferences
+    for (const u of affectedUsers) {
+      try {
+        const prefs = u.emailPreferences || {};
+        if (prefs.profileUpdate !== false) {
+          await sendProfileUpdateEmail(
+            u.email,
+            'badge_stripped',
+            badge.name,
+            '<p style="margin-top: 10px;">If you believe this was done in error, please contact support.</p>'
+          );
+        } else {
+          console.log(`Skipping revoke email for ${u.email} due to preferences`);
+        }
+      } catch (emailErr) {
+        console.error(`Failed to send revoke email to ${u.email}:`, emailErr);
+      }
+    }
+
+    return res.status(200).json({ message: 'Badge deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting badge:', error);
+    return res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
 // Get Courses
 router.get("/badges/courses", async (req, res) => {
   try {
@@ -391,7 +457,7 @@ router.get("/badges/verticals", async (req, res) => {
   }
 });
 
-// upload badge
+// delete user
 router.post("/user/delete", authenticateJWT, async (req, res) => {
   try {
     const { email } = req.body;
@@ -422,6 +488,7 @@ router.post("/user/delete", authenticateJWT, async (req, res) => {
   }
 });
 
+//create user
 router.post("/user/create", authenticateJWT, async (req, res) => {
   try {
     const { email, firstName, lastName, password } = req.body;
@@ -574,17 +641,36 @@ router.post("/users/import/:jobId",authenticateJWT, async (req, res) => {
     }));
 
     let usersToBeUpdated = []
+    // map email -> newBadges (with certificateId) for notifications after updates
+    const updateBadgeMap = new Map();
 
     if ( upsert ) { 
-      for ( u of jobStatusDoc.result.invalidUsers){
+      for ( const u of jobStatusDoc.result.invalidUsers){
           if (u.error.includes('Badge')){
             return res.status(401)
               .json({message: 'Badge related Errors need resolution.'});
           }
           const { email, firstName, lastName, badgeIds } = u;
 
-          const newBadges = ( JSON.parse("[" + badgeIds + "]") )
-              .map(b => {return { badgeId: b, earnedDate: new Date() }});
+          const rawBadgeIds = JSON.parse("[" + badgeIds + "]");
+          const newBadges = [];
+          for (const b of rawBadgeIds) {
+            // Find badge by numeric id or badgeId string
+            let badgeDoc = await Badge.findOne({ id: b }) || await Badge.findOne({ badgeId: String(b) });
+            if (!badgeDoc) {
+              // push raw badge id if not found (validation elsewhere should catch)
+              newBadges.push({ badgeId: b, earnedDate: new Date() });
+              continue;
+            }
+            // increment certificateCounter and build certificateId
+            const updated = await Badge.findOneAndUpdate({ _id: badgeDoc._id }, { $inc: { certificateCounter: 1 } }, { new: true });
+            const counter = updated.certificateCounter || 1;
+            const seq = String(counter).padStart(3, '0');
+            const baseBadgeId = updated.badgeId || String(updated.id).padStart(6, '0');
+            const certificateId = `${baseBadgeId}${seq}`;
+            newBadges.push({ badgeId: updated.badgeId || String(updated.id), earnedDate: new Date(), certificateId });
+          }
+
           usersToBeUpdated.push({
             updateOne: {
               filter: { email },
@@ -595,6 +681,9 @@ router.post("/users/import/:jobId",authenticateJWT, async (req, res) => {
               upsert: false,
             }
           });
+
+          // store newBadges for later notifications
+          updateBadgeMap.set(email, newBadges);
         };
     }
 
@@ -616,23 +705,33 @@ router.post("/users/import/:jobId",authenticateJWT, async (req, res) => {
       }
 
       // Send badge received emails for badges assigned during insert
-      for (const user of usersToBeInserted) {
-        if (!user.badges || user.badges.length === 0) continue;
-        for (const badgeEntry of user.badges) {
-          try {
-            // Try to resolve badge name/description from Badge collection
-            const badgeDoc = await Badge.findOne({ badgeId: String(badgeEntry.badgeId) }) || await Badge.findOne({ id: badgeEntry.badgeId });
-            const badgeName = (badgeDoc && badgeDoc.name) ? badgeDoc.name : (badgeEntry.badgeId || 'a badge');
-            const badgeDesc = (badgeDoc && badgeDoc.description) ? badgeDoc.description : '';
-            const backendBase = process.env.BACKEND_URL || process.env.FRONTEND_URL || `http://localhost:${process.env.PORT || '3001'}`;
-            const imageUrl = badgeDoc && badgeDoc.id ? `${backendBase}/api/badge/images/${badgeDoc.id}` : `${backendBase}/api/badge/images/${badgeEntry.badgeId}`;
-            const certificateId = badgeEntry.certificateId || null;
-            await sendBadgeReceivedEmail(user.email, badgeName, badgeDesc, null, certificateId, imageUrl);
-            console.log(`Badge received email sent to ${user.email} for ${badgeName}`);
-          } catch (emailError) {
-            console.error(`Failed to send badge email to ${user.email} for badge ${badgeEntry.badgeId}:`, emailError);
-            // Don't fail the whole import if email sending fails
+      // Use the actually inserted/saved documents so we can read their preferences
+      for (const savedUser of inserted) {
+        try {
+          if (!savedUser.badges || savedUser.badges.length === 0) continue;
+          const prefs = savedUser.emailPreferences || {};
+          if (prefs.badgeReceived === false) {
+            console.log(`Skipping badge emails for ${savedUser.email} due to preferences`);
+            continue;
           }
+          for (const badgeEntry of savedUser.badges) {
+            try {
+              // Try to resolve badge name/description from Badge collection
+              const badgeDoc = await Badge.findOne({ badgeId: String(badgeEntry.badgeId) }) || await Badge.findOne({ id: badgeEntry.badgeId });
+              const badgeName = (badgeDoc && badgeDoc.name) ? badgeDoc.name : (badgeEntry.badgeId || 'a badge');
+              const badgeDesc = (badgeDoc && badgeDoc.description) ? badgeDoc.description : '';
+              const backendBase = process.env.BACKEND_URL || process.env.FRONTEND_URL || `http://localhost:${process.env.PORT || '3001'}`;
+              const imageUrl = badgeDoc && badgeDoc.id ? `${backendBase}/api/badge/images/${badgeDoc.id}` : `${backendBase}/api/badge/images/${badgeEntry.badgeId}`;
+              const certificateId = badgeEntry.certificateId || null;
+              await sendBadgeReceivedEmail(savedUser.email, badgeName, badgeDesc, null, certificateId, imageUrl);
+              console.log(`Badge received email sent to ${savedUser.email} for ${badgeName}`);
+            } catch (emailError) {
+              console.error(`Failed to send badge email to ${savedUser.email} for badge ${badgeEntry.badgeId}:`, emailError);
+              // Don't fail the whole import if email sending fails
+            }
+          }
+        } catch (err) {
+          console.error(`Error processing badge emails for inserted user ${savedUser.email}:`, err);
         }
       }
 
@@ -644,24 +743,33 @@ router.post("/users/import/:jobId",authenticateJWT, async (req, res) => {
       console.log("update");
       
       // Send profile update + badge received notification to updated users
-      for (const updateOp of usersToBeUpdated) {
+      for (const [email, newBadges] of updateBadgeMap.entries()) {
         try {
-          const email = updateOp.updateOne.filter.email;
-          // Send profile update
-          await sendProfileUpdateEmail(
-            email,
-            'profile_update',
-            '',
-            'Your profile has been updated with new badges by an administrator.'
-          );
-          console.log(`Profile update email sent to ${email}`);
+          const savedUser = await User.findOne({ email }).select('email emailPreferences');
+          const prefs = savedUser?.emailPreferences || {};
+          if (prefs.profileUpdate !== false) {
+            await sendProfileUpdateEmail(
+              email,
+              'profile_update',
+              '',
+              'Your profile has been updated with new badges by an administrator.'
+            );
+            console.log(`Profile update email sent to ${email}`);
+          } else {
+            console.log(`Skipping profile update email for ${email} due to preferences`);
+          }
         } catch (emailError) {
-          console.error(`Failed to send update email to ${updateOp.updateOne.filter.email}:`, emailError);
+          console.error(`Failed to send update email to ${email}:`, emailError);
         }
 
-        // If there are new badges in the write op, send badge received emails
+        // Badge received emails for the newly pushed badges
         try {
-          const newBadges = (updateOp.updateOne.update && updateOp.updateOne.update.$push && updateOp.updateOne.update.$push.badges && updateOp.updateOne.update.$push.badges.$each) ? updateOp.updateOne.update.$push.badges.$each : [];
+          const savedUser = await User.findOne({ email }).select('email emailPreferences');
+          const prefs = savedUser?.emailPreferences || {};
+          if (prefs.badgeReceived === false) {
+            console.log(`Skipping badge emails for ${email} due to preferences`);
+            continue;
+          }
           for (const badgeEntry of newBadges) {
             try {
               const badgeDoc = await Badge.findOne({ badgeId: String(badgeEntry.badgeId) }) || await Badge.findOne({ id: badgeEntry.badgeId });
@@ -670,10 +778,10 @@ router.post("/users/import/:jobId",authenticateJWT, async (req, res) => {
               const backendBase = process.env.BACKEND_URL || process.env.FRONTEND_URL || `http://localhost:${process.env.PORT || '3001'}`;
               const imageUrl = badgeDoc && badgeDoc.id ? `${backendBase}/api/badge/images/${badgeDoc.id}` : `${backendBase}/api/badge/images/${badgeEntry.badgeId}`;
               const certificateId = badgeEntry.certificateId || null;
-              await sendBadgeReceivedEmail(updateOp.updateOne.filter.email, badgeName, badgeDesc, null, certificateId, imageUrl);
-              console.log(`Badge received email sent to ${updateOp.updateOne.filter.email} for ${badgeName}`);
+              await sendBadgeReceivedEmail(email, badgeName, badgeDesc, null, certificateId, imageUrl);
+              console.log(`Badge received email sent to ${email} for ${badgeName}`);
             } catch (emailError) {
-              console.error(`Failed to send badge email to ${updateOp.updateOne.filter.email} for badge ${badgeEntry.badgeId}:`, emailError);
+              console.error(`Failed to send badge email to ${email} for badge ${badgeEntry.badgeId}:`, emailError);
             }
           }
         } catch (err) {

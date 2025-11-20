@@ -28,7 +28,7 @@ const CompletedCoursesSection = ({ courses = [], user, updateUserDetails }) => {
 
   const handleDeleteEntry = async (index) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("accessToken");
       await axios.delete(`${process.env.SERVER_URL}/users/courses/${index}`, {
         data: { email: user.email },
         headers: {
@@ -50,7 +50,7 @@ const CompletedCoursesSection = ({ courses = [], user, updateUserDetails }) => {
     if (!text.trim()) return;
 
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("accessToken");
       await axios.put(
         `${process.env.SERVER_URL}/users/courses/${index}`,
         {
@@ -76,7 +76,7 @@ const CompletedCoursesSection = ({ courses = [], user, updateUserDetails }) => {
   const handleModalSubmit = async () => {
     if (!currentText.trim()) return;
     setLoading(true);
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken");
 
     try {
       await axios.post(

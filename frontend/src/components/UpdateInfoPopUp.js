@@ -29,7 +29,7 @@ const BadgeAssignmentDialog = ({ user, updateUserDetails }) => {
   const handleUpdateInfo = async () => {
     // Implement logic to assign the selected badge to the user
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("accessToken");
       const url = `${process.env.SERVER_URL}/user/info`;
       const body = {"email": user.email};
       if (firstName.trim()){

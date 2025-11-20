@@ -351,7 +351,7 @@ function Navbar() {
               onClick={() => setIsSidenavOpen(false)}
               className="text-gray-400 text-2xl hover:text-white"
             >
-              All Badges
+              Badges
             </Link>
 
             <Link

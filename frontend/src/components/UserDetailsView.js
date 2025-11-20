@@ -79,7 +79,7 @@ const [loadingRevoke, setLoadingRevoke] = useState(true);
   const fetchAssignableBadges = async () => {
 
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("accessToken");
       const url = `${process.env.SERVER_URL}/badges`;
       const userBadgeIdsStrings = new Set((selectedUser?.badges || []).map((b) => String(b.badgeId || b.id)));
       const userBadgeIdsNumbers = new Set((selectedUser?.badges || []).map((b) => Number(b.badgeId || b.id)).filter(n => !isNaN(n)));
@@ -107,7 +107,7 @@ const [loadingRevoke, setLoadingRevoke] = useState(true);
   const fetchRevokableBadges = async () => {
   try {
     setLoadingRevoke(true);
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken");
     const url = `${process.env.SERVER_URL}/badges`;
   const userBadgeIdsStrings = new Set((selectedUser?.badges || []).map((b) => String(b.badgeId || b.id)));
   const userBadgeIdsNumbers = new Set((selectedUser?.badges || []).map((b) => Number(b.badgeId || b.id)).filter(n => !isNaN(n)));
@@ -145,7 +145,7 @@ const [loadingRevoke, setLoadingRevoke] = useState(true);
 
   const handleSave = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("accessToken");
       // Assign badge if one is selected
       if (selectedBadgeId) {
         try {
@@ -224,7 +224,7 @@ const [loadingRevoke, setLoadingRevoke] = useState(true);
 
   const handleRevokeBadge = async (badgeId, userEmail, updateUserDetails) => {
   try {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken");
     const url = `${process.env.SERVER_URL}/revoke-badge`;
 
     const response = await axios.post(

@@ -349,12 +349,6 @@ const handleNewSkillModalToggle = () => {
   setNewSkillModalOpen(!newSkillModalOpen);
 };
 
-const updateBadgeDetails = (email, updatedBadge) => {
-  setUsers(prev =>
-    prev.map(user => (user.email === email ? updatedUser : user))
-  );
-};
-
 useEffect(() => {
   if (selectedBadge) {
   const badgeImageUrl = `${process.env.SERVER_URL}/badge/images/${selectedBadge.id}`;
@@ -387,6 +381,23 @@ useEffect(() => {
   }
 }, [selectedBadge]);
 
+  // Delete selected badge
+  const handleDeleteBadge = async () => {
+    if (!selectedBadge) return;
+    if (!window.confirm(`Delete badge ${selectedBadge.name || selectedBadge.badgeId || selectedBadge.id}? This cannot be undone.`)) return;
+    const token = localStorage.getItem("accessToken");
+    let toastId = toast.loading("Deleting badge...");
+    try {
+      const url = `${process.env.SERVER_URL}/badge/${selectedBadge.id || selectedBadge.badgeId}`;
+      await axios.delete(url, { headers: { Authorization: `Bearer ${token}` } });
+      toast.update(toastId, { isLoading: false, render: "Badge deleted", type: "success", autoClose: 3000 });
+      setSelectedBadge(null);
+      await fetchBadges();
+    } catch (err) {
+      toast.update(toastId, { isLoading: false, render: "Delete failed", type: "error", autoClose: 5000 });
+      console.error("Delete badge failed", err);
+    }
+  };
 
   return (
     <div className='w-full bg-black/50 backdrop-blur-md px-2'>
@@ -577,29 +588,12 @@ useEffect(() => {
                 )}
             </div>
           </div>
-
         </div> 
       </form>
     </div>
   );
 }
 
-  // Delete selected badge
-  const handleDeleteBadge = async () => {
-    if (!selectedBadge) return;
-    if (!confirm(`Delete badge ${selectedBadge.name || selectedBadge.badgeId || selectedBadge.id}? This cannot be undone.`)) return;
-    const token = localStorage.getItem("accessToken");
-    let toastId = toast.loading("Deleting badge...");
-    try {
-      const url = `${process.env.SERVER_URL}/badge/${selectedBadge.id || selectedBadge.badgeId}`;
-      await axios.delete(url, { headers: { Authorization: `Bearer ${token}` } });
-      toast.update(toastId, { isLoading: false, render: "Badge deleted", type: "success", autoClose: 3000 });
-      setSelectedBadge(null);
-      await fetchBadges();
-    } catch (err) {
-      toast.update(toastId, { isLoading: false, render: "Delete failed", type: "error", autoClose: 5000 });
-      console.error("Delete badge failed", err);
-    }
-  };
+ 
 
 export default BadgeCreationForm;

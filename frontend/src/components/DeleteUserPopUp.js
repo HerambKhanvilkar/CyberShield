@@ -20,7 +20,7 @@ const DeleteUserDialog = ({ user, updateUserDetails }) => {
   const handleDelete = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("accessToken");
       const url = `${process.env.SERVER_URL}/user/delete`;
 
       const response = await axios.post(

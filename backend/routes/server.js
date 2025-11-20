@@ -341,15 +341,21 @@ router.post("/assign-badge", authenticateJWT, async (req, res) => {
     try {
       const backendBase = process.env.BACKEND_URL || process.env.FRONTEND_URL || `http://localhost:${process.env.PORT || '3001'}`;
       const imageUrl = updatedBadge && updatedBadge.id ? `${backendBase}/api/badge/images/${updatedBadge.id}` : `${backendBase}/api/badge/images/${badge.badgeId || badge.id}`;
-      await sendBadgeReceivedEmail(
-        user.email,
-        badge.name,
-        badge.description || 'Congratulations on earning this achievement!',
-        null,
-        certificateId,
-        imageUrl
-      );
-      console.log(`Badge notification email sent to ${user.email}`);
+      // Respect user's email preferences (default to true)
+      const prefs = user.emailPreferences || {};
+      if (prefs.badgeReceived !== false) {
+        await sendBadgeReceivedEmail(
+          user.email,
+          badge.name,
+          badge.description || 'Congratulations on earning this achievement!',
+          null,
+          certificateId,
+          imageUrl
+        );
+        console.log(`Badge notification email sent to ${user.email}`);
+      } else {
+        console.log(`Skipping badge email for ${user.email} due to preferences`);
+      }
     } catch (emailError) {
       console.error(`Failed to send badge notification email to ${user.email}:`, emailError);
       // Don't fail the request if email fails
@@ -597,13 +603,19 @@ router.post("/revoke-badge", authenticateJWT, async (req, res) => {
     
     // Send badge revocation email notification
     try {
-      await sendProfileUpdateEmail(
-        user.email,
-        'badge_stripped',
-        badge.name,
-        '<p style="margin-top: 10px;">If you believe this was done in error, please contact support.</p>'
-      );
-      console.log(`Badge revocation email sent to ${user.email}`);
+      // Respect user's profileUpdate preference (default true)
+      const prefs = user.emailPreferences || {};
+      if (prefs.profileUpdate !== false) {
+        await sendProfileUpdateEmail(
+          user.email,
+          'badge_stripped',
+          badge.name,
+          '<p style="margin-top: 10px;">If you believe this was done in error, please contact support.</p>'
+        );
+        console.log(`Badge revocation email sent to ${user.email}`);
+      } else {
+        console.log(`Skipping profile/update email for ${user.email} due to preferences`);
+      }
     } catch (emailError) {
       console.error(`Failed to send badge revocation email to ${user.email}:`, emailError);
       // Don't fail the request if email fails
@@ -656,9 +668,10 @@ router.put('/user/profile', authenticateJWT, uploadImage.single('profileImage'),
       return res.status(404).json({ message: "User not found" });
     }
 
-    const { firstName, lastName, password, newPassword, badges}  = req.body;
+    const { firstName, lastName, password, newPassword, badges, emailPreferences }  = req.body;
 
-    if (!firstName && !lastName && !password && !req.file && !badges) {
+    // Allow updating emailPreferences alone, or any of the other profile fields
+    if (!firstName && !lastName && !password && !req.file && !badges && !emailPreferences) {
       return res.status(404).json({ message: "No data sent for Update. Try again." });
     }
 
@@ -717,6 +730,20 @@ router.put('/user/profile', authenticateJWT, uploadImage.single('profileImage'),
     }
 
     if (req.file) { user.set("image", "/user/profile/image/" + userImage._id); }
+    // Update email preferences if provided
+    if (emailPreferences) {
+      try {
+        const prefs = typeof emailPreferences === 'string' ? JSON.parse(emailPreferences) : emailPreferences;
+        user.emailPreferences = user.emailPreferences || {};
+        if (typeof prefs === 'object') {
+          if (typeof prefs.badgeReceived !== 'undefined') user.emailPreferences.badgeReceived = !!prefs.badgeReceived;
+          if (typeof prefs.profileUpdate !== 'undefined') user.emailPreferences.profileUpdate = !!prefs.profileUpdate;
+          if (typeof prefs.adminDaily !== 'undefined') user.emailPreferences.adminDaily = !!prefs.adminDaily;
+        }
+      } catch (err) {
+        console.warn('Invalid emailPreferences payload', err);
+      }
+    }
     await user.save();
     return res.status(200).json({ message: "Profile Updated successfully." });
   } catch (e) {

@@ -8,7 +8,7 @@ function SearchBox({ onSearch }) {
   useEffect(() => {
             const fetchData = async () => {
                 try {
-                  const token = localStorage.getItem("token");
+                  const token = localStorage.getItem("accessToken");
                   let url = "";
                   if (query !== "") {
                     url = `${process.env.SERVER_URL}/users/autocomplete?q=${encodeURIComponent(query)}`;

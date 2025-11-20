@@ -39,7 +39,7 @@ export default function SettingsPage() {
 
   const handleNewUser = async (email, firstName, lastName, password) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("accessToken");
       if (!token) {
         toast.error("No auth token found.");
         return;
@@ -110,7 +110,7 @@ export default function SettingsPage() {
 
 const handleSelectUser = async (user) => {
   try {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken");
     if (!token) return toast.error("No token found!");
 
     const badgesRes = await axios.get(`${process.env.SERVER_URL}/badges`, {
@@ -145,7 +145,7 @@ const handleSelectUser = async (user) => {
 
 const updateUserDetails = async (email) => {
   try {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken");
     if (!token) return toast.error("No token found!");
     const response = await axios.get(`${process.env.SERVER_URL}/users`, {
       headers: {

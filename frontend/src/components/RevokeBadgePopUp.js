@@ -13,7 +13,7 @@ const BadgeAssignmentDropdown = ({ user, updateUserDetails }) => {
   const fetchBadges = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("accessToken");
       const url = `${process.env.SERVER_URL}/badges`;
       const userBadgesStrings = new Set((user?.badges || []).map(b => String(b.badgeId || b.id)));
       const userBadgesNumbers = new Set((user?.badges || []).map(b => Number(b.badgeId || b.id)).filter(n => !isNaN(n)));
@@ -47,7 +47,7 @@ const BadgeAssignmentDropdown = ({ user, updateUserDetails }) => {
 
   const handleRevoke = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("accessToken");
       const url = `${process.env.SERVER_URL}/revoke-badge`;
       const response = await axios.post(
         url,

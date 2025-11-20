@@ -34,19 +34,37 @@ export default function ProfilePage() {
     badges: []
   });
 
+  // include emailPreferences in the form state so UI can edit it
+  // defaults will be overwritten by server-provided values in fetchUser
+  useEffect(() => {
+    setFormData((f) => ({
+      ...f,
+      emailPreferences: {
+        badgeReceived: true,
+        profileUpdate: true,
+        adminDaily: true,
+      },
+    }));
+  }, []);
+
   function convertToFormData(jsonObject) {
-  const form = new FormData();
+    const form = new FormData();
 
-  for (const key in jsonObject) {
-    if (Object.hasOwnProperty.call(jsonObject, key)) {
-      console.log("key", key);
-      console.log("jsonObject[key]", jsonObject[key]);
-      form.append(key, jsonObject[key]);
+    for (const key in jsonObject) {
+      if (Object.hasOwnProperty.call(jsonObject, key)) {
+        const val = jsonObject[key];
+        if (val instanceof File) {
+          form.append(key, val);
+        } else if (typeof val === "object" && val !== null) {
+          form.append(key, JSON.stringify(val));
+        } else {
+          form.append(key, val == null ? "" : String(val));
+        }
+      }
     }
-  }
 
-  return formData;
-}
+    return form;
+  }
 const fetchEarnersCount = async (badgeId) => {
   try {
     const response = await axios.get(`${process.env.SERVER_URL}/badge/earners/${badgeId}`);
@@ -165,19 +183,16 @@ async function handlePreviewResize(image){
     }
   }
 
-  function convertToFormData(jsonObject) {
-  const form = new FormData();
-
-  for (const key in jsonObject) {
-    if (Object.hasOwnProperty.call(jsonObject, key)) {
-      console.log("key", key);
-      console.log("jsonObject[key]", jsonObject[key]);
-      form.append(key, jsonObject[key]);
-    }
+  function handlePreferenceChange(e) {
+    const { name, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      emailPreferences: {
+        ...(prev.emailPreferences || {}),
+        [name]: checked,
+      },
+    }));
   }
-
-  return formData;
-}
 
   async function handleProfileUpdate(e){
       e.preventDefault();
@@ -217,7 +232,7 @@ async function handlePreviewResize(image){
   }
 const fetchUser = async () => {
   try {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken");
     if (!token) return toast.error("No token found!");
 
     const response = await axios.get(`${process.env.SERVER_URL}/user`, {
@@ -248,9 +263,25 @@ const fetchUser = async () => {
     }));
 
     setUserData({ ...user, badges: enrichedBadges });
-    setPreview(process.env.SERVER_URL + user.image);
+    // Only set preview when the user has an image path
+    if (user.image) {
+      setPreview(process.env.SERVER_URL + user.image);
+    } else {
+      setPreview(null);
+    }
     console.log("user", user);
-    setFormData({ ...formData, badges: user.badges})
+    setFormData((prev) => ({
+      ...prev,
+      firstName: user.firstName || prev.firstName,
+      lastName: user.lastName || prev.lastName,
+      badges: user.badges || [],
+      // ensure we have the user's stored preferences if any
+      emailPreferences: user.emailPreferences || prev.emailPreferences || {
+        badgeReceived: true,
+        profileUpdate: true,
+        adminDaily: true,
+      },
+    }));
 
     // Set default selected badge to latest (first in list)
     if (enrichedBadges.length > 0) {
@@ -578,7 +609,13 @@ const BadgeMetrics = ({ badge }) => (
                 <div className="grid gap-4 mb-4 grid-cols-1">
                     <div className="flex flex-row items-center justify-space-evenly w-full col-span-2">
                         <a href="#">
-                            <img className="rounded-full h-20 w-20" src={preview} alt="Profile Image" crossOrigin="anonymous"/>
+                          {preview ? (
+                            <img className="rounded-full h-20 w-20" src={preview} alt="Profile Image" crossOrigin="anonymous" />
+                          ) : (
+                            <div className="rounded-full h-20 w-20 bg-blue-500 text-white flex items-center justify-center text-2xl font-bold">
+                              {userData.firstName?.[0]?.toUpperCase()}{userData.lastName?.[0]?.toUpperCase()}
+                            </div>
+                          )}
                         </a>
                         <div className="flex flex-row mx-4">
                             <label htmlFor="dropzone-file" className=" flex flex-row text-blue-100 bg-blue-600 hover:bg-blue-700  focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-xs px-3 py-1.5 focus:outline-none dark:focus:ring-blue-800">
@@ -648,8 +685,29 @@ const BadgeMetrics = ({ badge }) => (
                       </>
                     ) : (null )}
                     </div>
-                </div>
-                    <Button type="submit" className="bg-gray-500 px-2.5 h-max text-blue-100 hover:text-black-800 hover:bg-blue-500"><Check className="mr-2 h-4 w-4" />Confirm</Button>
+                  </div>
+
+                  <div className="space-y-4 mb-4">
+                    <Label>Notification Preferences</Label>
+                    <div className="flex flex-col gap-2">
+                      <label className="flex items-center gap-2">
+                        <input type="checkbox" name="badgeReceived" checked={!!formData.emailPreferences?.badgeReceived} onChange={handlePreferenceChange} />
+                        <span className="text-sm text-gray-300">Badge received</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input type="checkbox" name="profileUpdate" checked={!!formData.emailPreferences?.profileUpdate} onChange={handlePreferenceChange} />
+                        <span className="text-sm text-gray-300">Profile updates</span>
+                      </label>
+                      {userData?.isAdmin && (
+                        <label className="flex items-center gap-2">
+                          <input type="checkbox" name="adminDaily" checked={!!formData.emailPreferences?.adminDaily} onChange={handlePreferenceChange} />
+                          <span className="text-sm text-gray-300">Admin daily report</span>
+                        </label>
+                      )}
+                    </div>
+                  </div>
+
+                  <Button type="submit" className="bg-gray-500 px-2.5 h-max text-blue-100 hover:text-black-800 hover:bg-blue-500"><Check className="mr-2 h-4 w-4" />Confirm</Button>
             </form>
         </div>
     </div>

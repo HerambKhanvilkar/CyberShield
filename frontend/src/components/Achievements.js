@@ -25,7 +25,7 @@ const Achievements = ({ achievements = [], user }) => {
   }, [user]);
 
   const handleDelete = async (index) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken");
     try {
       await axios.delete(
         `${process.env.SERVER_URL}/users/achievements/${index}`,
@@ -55,7 +55,7 @@ const Achievements = ({ achievements = [], user }) => {
 
   const handleSaveChanges = async () => {
     setLoading(true);
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken");
 
     try {
       await Promise.all(
@@ -86,7 +86,7 @@ const Achievements = ({ achievements = [], user }) => {
   const handleAddAchievement = async () => {
     if (!newAchievement.trim()) return;
     setLoading(true);
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken");
 
     try {
       await axios.post(
