@@ -209,7 +209,7 @@ function Navbar() {
                 href="/allbadges"
                 className="hover:text-[#3DB5DA] transition-colors flex items-center gap-2"
               >
-                <span>All Badges</span>
+                <span>Badges</span>
               </Link>
 
               {/* More dropdown */}
