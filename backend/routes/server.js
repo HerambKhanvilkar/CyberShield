@@ -13,8 +13,9 @@ const {
   sendProfileUpdateEmail 
 } = require("../services/emailService");
 const { awardCompositeBadgesForUser, revokeDependentBadgesForUser } = require('../services/badgeService');
-// Set up multer for image Preview
+// Set up multer for image Preview (use memory storage)
 const uploadPreviewImage = multer({
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1000 * 1000 }, // 5MB max file size
   fileFilter: function(req, file, callback) {
     let fileExtension = (file.originalname.split('.')[file.originalname.split('.').length-1]).toLowerCase(); // convert extension to lower case
@@ -23,12 +24,12 @@ const uploadPreviewImage = multer({
     }
     file.extension = fileExtension.replace(/jpeg/i, 'jpg'); // all jpeg images to end .jpg
     callback(null, true);
-  },
-  dest: 'previews/' 
+  }
 });
 
-// Profile update
+// Profile update (use memory storage to avoid temporary disk files)
 const uploadImage = multer({ 
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1000 * 1000 }, // 5MB max file size
   fileFilter: function(req, file, callback) {
     let fileExtension = (file.originalname.split('.')[file.originalname.split('.').length-1]).toLowerCase(); // convert extension to lower case
@@ -37,8 +38,7 @@ const uploadImage = multer({
     }
     file.extension = fileExtension.replace(/jpeg/i, 'jpg'); // all jpeg images to end .jpg
     callback(null, true);
-  },
-  dest: 'users/' 
+  }
 });
 
 // Import models from the models directory
@@ -705,14 +705,30 @@ router.put('/user/profile', authenticateJWT, uploadImage.single('profileImage'),
 
     if(firstName) { user.firstName = firstName }
     if(lastName) { user.lastName = lastName }
-    if(badges) { 
-      console.log(badges);
-      badges.forEach(b => console.log(b))
-      user.badges = user.badges.map(b => {
-      const formBadge = badges.find(f => f.badgeId == b.badgeId)
-      if (formBadge === undefined){ return b }
-      return { ...b, isPublic: formBadge.isPublic }
-    })}
+    if (badges) {
+      console.log('raw badges payload:', badges);
+      // badges may be sent as a JSON string or an actual array. Normalize it.
+      let parsedBadges = badges;
+      if (typeof badges === 'string') {
+        try {
+          parsedBadges = JSON.parse(badges);
+        } catch (err) {
+          // If parsing fails, keep the original value (likely a single id or malformed payload)
+          parsedBadges = badges;
+        }
+      }
+
+      if (!Array.isArray(parsedBadges)) {
+        console.warn('Profile update: badges payload is not an array:', parsedBadges);
+      } else {
+        parsedBadges.forEach(b => console.log('parsed badge entry:', b));
+        user.badges = user.badges.map(existing => {
+          const formBadge = parsedBadges.find(f => String(f.badgeId) == String(existing.badgeId));
+          if (formBadge === undefined) return existing;
+          return { ...existing, isPublic: !!formBadge.isPublic };
+        });
+      }
+    }
     if (password){
       // Verify password
       const isMatch = await bcrypt.compare(password, user.password);
@@ -726,38 +742,39 @@ router.put('/user/profile', authenticateJWT, uploadImage.single('profileImage'),
       user.password = hashedPassword;
     }
 
-    if (req.file){
-      console.log("resizing...");
+    if (req.file) {
+      try {
+        console.log("processing uploaded profile image (memory buffer)...");
+        const image = sharp(req.file.buffer);
+        const metadata = await image.metadata();
+        let data;
+        if (metadata.width > 400 || metadata.height > 400) {
+          data = await image.resize({ width: 400, height: 400 }).toBuffer();
+        } else {
+          data = await image.toBuffer();
+        }
 
-      const image = sharp(req.file.path);
-      image.metadata() // get image metadata for size
-        .then(async function(metadata) {
-          if (metadata.width > 400 || metadata.height > 400) {
-            return image.resize({ width: 400, height: 400 }).toBuffer(); // resize if too big
-          } else {
-            return image.toBuffer();
-          }
-        })
-        .then(async function(data) { // upload to s3 storage
-          const userImageObj = {
-            id: user._id,
-            email: user["email"],
-            image: data,
-            contentType: req.file.mimetype // Use the uploaded file's mimetype
-          };
+        const userImageObj = {
+          id: String(user._id),
+          email: user.email,
+          image: data,
+          contentType: req.file.mimetype
+        };
 
-          if (!userImage){
-            userImage =  new UserImage(userImageObj);
-          } else {
-            userImage["image"] = data;            
-            userImage["contentType"]= req.file.mimetype;
-          }
-          console.log('userImageObj', userImageObj);
-          await userImage.save();
-        })
+        if (!userImage) {
+          userImage = new UserImage(userImageObj);
+        } else {
+          userImage.image = data;
+          userImage.contentType = req.file.mimetype;
+        }
+        await userImage.save();
+
+        // Point user's image field to the profile image route for this saved UserImage
+        user.set('image', '/user/profile/image/' + userImage._id);
+      } catch (imgErr) {
+        console.error('Error processing profile image:', imgErr);
+      }
     }
-
-    if (req.file) { user.set("image", "/user/profile/image/" + userImage._id); }
     // Update email preferences if provided
     if (emailPreferences) {
       try {
@@ -781,45 +798,67 @@ router.put('/user/profile', authenticateJWT, uploadImage.single('profileImage'),
 
 });
 
-router.post("/preview/image", authenticateJWT, uploadPreviewImage.single('image'), async (req, res) => {
-    if (req.file){
-      console.log("resizing...");
-
-      const image = sharp(req.file.path);
-      image.metadata() // get image metadata for size
-        .then(function(metadata) {
-          if (metadata.width > 400 || metadata.height > 400) {
-            return image.resize({ width: 400, height: 400 }).toBuffer(); // resize if too big
-          } else {
-            return image.toBuffer();
-          }
-        })
-        .then(function(data) { // upload to s3 storage
-          res.set('Content-Type', req.file.mimetype);
-          res.send(data);
-        })
+router.post('/preview/image', authenticateJWT, uploadPreviewImage.single('image'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+    console.log('resizing preview from memory buffer...');
+    const image = sharp(req.file.buffer);
+    const metadata = await image.metadata();
+    let data;
+    if (metadata.width > 400 || metadata.height > 400) {
+      data = await image.resize({ width: 400, height: 400 }).toBuffer();
+    } else {
+      data = await image.toBuffer();
     }
+    res.set('Content-Type', req.file.mimetype);
+    res.send(data);
+  } catch (err) {
+    console.error('Error preparing preview image:', err);
+    res.status(500).json({ message: 'Failed to process preview image' });
+  }
 });
 
 
 // Endpoint to get badge images
-router.get("/user/profile/image/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      if (!id) {
-        return res.status(404).json({ message: "Invalid identifier!" });
-      }
+router.get('/user/profile/image/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(404).json({ message: 'Invalid identifier!' });
 
-      const userImage = await UserImage.findOne({  });
-      if (!userImage) {
-        return res.status(404).json({ message: "Image not found" });
-      }
-      res.set('Content-Type', userImage.image.contentType);
-      res.send(userImage.image);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
+    const userImage = await UserImage.findById(id);
+    if (!userImage || !userImage.image) return res.status(404).json({ message: 'Image not found' });
+
+    res.set('Content-Type', userImage.contentType || 'image/png');
+    res.send(userImage.image);
+  } catch (error) {
+    console.error('Error fetching user image:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+// Delete user's profile image
+router.delete('/user/profile/image', authenticateJWT, async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const email = await getUsername(authHeader);
+    if (!email) return res.status(403).json({ message: 'User not found' });
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const userImage = await UserImage.findOne({ email: user.email });
+    if (userImage) {
+      await UserImage.deleteOne({ _id: userImage._id });
     }
+
+    user.image = null;
+    await user.save();
+
+    res.json({ message: 'Profile image removed' });
+  } catch (error) {
+    console.error('Error removing profile image:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
 });
 
 

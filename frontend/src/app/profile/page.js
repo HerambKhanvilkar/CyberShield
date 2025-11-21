@@ -23,6 +23,7 @@ export default function ProfilePage() {
   const [profileUpdateModal, setProfileUpdateModal] = useState(false);
   const [selectedBadgeId, setSelectedBadgeId] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [showImageViewer, setShowImageViewer] = useState(false);
   const [earnersCount, setEarnersCount] = useState(null);
   const [displayCertificateId, setDisplayCertificateId] = useState(null);
    const [formData, setFormData] = useState({
@@ -180,6 +181,25 @@ async function handlePreviewResize(image){
       // Handle other inputs
       console.log(name, value);
       setFormData({ ...formData, [name]: value });
+    }
+  }
+
+  // Remove profile image on server and refresh UI
+  async function handleRemoveImage(e) {
+    e.preventDefault();
+    const token = localStorage.getItem('accessToken');
+    if (!token) return toast.error('Not authenticated');
+    try {
+      await axios.delete(`${process.env.SERVER_URL}/user/profile/image`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPreview(null);
+      setFormData((prev) => ({ ...prev, profileImage: null }));
+      await fetchUser();
+      toast.success('Profile image removed');
+    } catch (err) {
+      console.error('Failed to remove profile image', err);
+      toast.error('Failed to remove profile image');
     }
   }
 
@@ -590,8 +610,18 @@ const BadgeMetrics = ({ badge }) => (
         </div>
       </main>
 
-    { profileUpdateModal ? (
-<div id="crud-modal" tabIndex="-1" aria-hidden="true" className={("") + " bg-gray-900/50  backdrop-blur-md overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 flex justify-center items-center w-full md:inset-0 max-h-full" }>
+    { profileUpdateModal && (
+      <>
+        {showImageViewer && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={() => setShowImageViewer(false)}>
+            <img
+              src={preview || (userData.image ? `${process.env.SERVER_URL}${userData.image}` : '')}
+              alt="Profile Preview"
+              className="max-w-[90vw] max-h-[90vh] rounded-lg shadow-lg"
+            />
+          </div>
+        )}
+        <div id="crud-modal" tabIndex="-1" aria-hidden="true" className={("") + " bg-gray-900/50  backdrop-blur-md overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 flex justify-center items-center w-full md:inset-0 max-h-full" }>
     <div className="relative p-4 w-full max-w-lg max-h-full">
         <div className="relative bg-[#00011E] rounded-lg shadow-sm dark:bg-gray-700">
             <div className="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
@@ -608,28 +638,34 @@ const BadgeMetrics = ({ badge }) => (
             <form className="p-4 md:p-5" onSubmit={handleProfileUpdate} >
                 <div className="grid gap-4 mb-4 grid-cols-1">
                     <div className="flex flex-row items-center justify-space-evenly w-full col-span-2">
-                        <a href="#">
-                          {preview ? (
-                            <img className="rounded-full h-20 w-20" src={preview} alt="Profile Image" crossOrigin="anonymous" />
-                          ) : (
-                            <div className="rounded-full h-20 w-20 bg-blue-500 text-white flex items-center justify-center text-2xl font-bold">
-                              {userData.firstName?.[0]?.toUpperCase()}{userData.lastName?.[0]?.toUpperCase()}
-                            </div>
-                          )}
-                        </a>
-                        <div className="flex flex-row mx-4">
-                            <label htmlFor="dropzone-file" className=" flex flex-row text-blue-100 bg-blue-600 hover:bg-blue-700  focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-xs px-3 py-1.5 focus:outline-none dark:focus:ring-blue-800">
-      <Upload className="mr-2 h-4 w-4" />
-      <span>Upload </span>
-      </label>
-                  <input
-                    id="dropzone-file"
-                    type="file"
-                    name="profileImage"
-                    className="hidden"
-                    accept="image/*"
-                    onChange={handleFormChange}
-                  />
+                        <div className="flex items-center gap-4">
+                          <a href="#" onClick={(e) => { e.preventDefault(); if (preview || userData.image) setShowImageViewer(true); }}>
+                            {preview ? (
+                              <img className="rounded-full h-20 w-20 cursor-zoom-in" src={preview} alt="Profile Image" crossOrigin="anonymous" />
+                            ) : userData.image ? (
+                              <img className="rounded-full h-20 w-20 cursor-zoom-in" src={`${process.env.SERVER_URL}${userData.image}`} alt="Profile Image" crossOrigin="anonymous" />
+                            ) : (
+                              <div className="rounded-full h-20 w-20 bg-blue-500 text-white flex items-center justify-center text-2xl font-bold">
+                                {userData.firstName?.[0]?.toUpperCase()}{userData.lastName?.[0]?.toUpperCase()}
+                              </div>
+                            )}
+                          </a>
+
+                          <div className="flex flex-row mx-4 items-center">
+                            <label htmlFor="dropzone-file" className=" flex flex-row text-blue-100 bg-blue-600 hover:bg-blue-700  focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-xs px-3 py-1.5 focus:outline-none dark:focus:ring-blue-800 cursor-pointer">
+                              <Upload className="mr-2 h-4 w-4" />
+                              <span>Upload</span>
+                            </label>
+                            <button type="button" onClick={handleRemoveImage} className="ml-2 text-xs px-3 py-1.5 rounded bg-red-600 hover:bg-red-700 text-white">Remove</button>
+                            <input
+                              id="dropzone-file"
+                              type="file"
+                              name="profileImage"
+                              className="hidden"
+                              accept="image/*"
+                              onChange={handleFormChange}
+                            />
+                          </div>
                         </div>
                     </div>
                     <div className="space-y-2 col-span-2">
@@ -712,7 +748,8 @@ const BadgeMetrics = ({ badge }) => (
         </div>
     </div>
 </div>
-    ) : ( null )}
+        </>
+      )}
       <Footer />
     </>
   );

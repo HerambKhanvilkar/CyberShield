@@ -37,8 +37,23 @@ const authenticateJWT = (req, res, next) => {
     req.user = decoded;
     next();
   } catch (error) {
-    console.error("JWT verification error:", error);
-    return res.status(403).json({ message: "Invalid or expired token" });
+    // Handle common JWT errors gracefully and return a clear status/code.
+    // - TokenExpiredError: token is valid but expired -> 401 Unauthorized
+    // - JsonWebTokenError: token is malformed/invalid -> 401 Unauthorized
+    // Otherwise return a generic 401 without printing full stack traces.
+    if (error && error.name === 'TokenExpiredError') {
+      // Don't print full stack for expired tokens; log minimal info at debug level.
+      console.warn('JWT expired:', error.message);
+      return res.status(401).json({ error: 'token_expired', message: 'Token expired' });
+    }
+    if (error && error.name === 'JsonWebTokenError') {
+      console.warn('Invalid JWT:', error.message);
+      return res.status(401).json({ error: 'invalid_token', message: 'Invalid token' });
+    }
+
+    // Unexpected error: log message but avoid noisy stack traces in production.
+    console.warn('JWT verification error:', error && error.message ? error.message : error);
+    return res.status(401).json({ error: 'authentication_failed', message: 'Invalid or expired token' });
   }
 };
 
