@@ -12,6 +12,7 @@ const {
   sendBadgeReceivedEmail,
   sendProfileUpdateEmail 
 } = require("../services/emailService");
+const { awardCompositeBadgesForUser, revokeDependentBadgesForUser } = require('../services/badgeService');
 // Set up multer for image Preview
 const uploadPreviewImage = multer({
   limits: { fileSize: 5 * 1000 * 1000 }, // 5MB max file size
@@ -360,6 +361,15 @@ router.post("/assign-badge", authenticateJWT, async (req, res) => {
       console.error(`Failed to send badge notification email to ${user.email}:`, emailError);
       // Don't fail the request if email fails
     }
+    // After assigning this badge, check for any composite badges that should be auto-awarded
+    try {
+      const awarded = await awardCompositeBadgesForUser(user);
+      if (awarded && awarded.length > 0) {
+        console.log(`Auto-awarded composite badges to ${user.email}: ${awarded.map(a=>a.name).join(', ')}`);
+      }
+    } catch (compErr) {
+      console.error('Error while checking/awarding composite badges:', compErr);
+    }
     
     res.json({ 
       message: "Badge assigned successfully", 
@@ -620,8 +630,26 @@ router.post("/revoke-badge", authenticateJWT, async (req, res) => {
       console.error(`Failed to send badge revocation email to ${user.email}:`, emailError);
       // Don't fail the request if email fails
     }
+    // After removing this badge, revoke any composite badges that depended on it
+    try {
+      const { revokeDependentBadgesForUser } = require('../services/badgeService');
+      const revoked = await revokeDependentBadgesForUser(user, [String(badge._id || badge.id || badge.badgeId)]);
+      if (revoked && revoked.length > 0) console.log(`Cascade revoked ${revoked.length} composite badges for ${user.email}`);
+    } catch (err) {
+      console.error('Error during composite cascade revocation:', err);
+    }
     
-    res.json({ message: "Badge revoked successfully", 
+      // After assigning this badge, check for any composite badges that should be auto-awarded
+      try {
+        const awarded = await awardCompositeBadgesForUser(user);
+        if (awarded && awarded.length > 0) {
+          console.log(`Auto-awarded composite badges to ${user.email}: ${awarded.map(a=>a.name).join(', ')}`);
+        }
+      } catch (compErr) {
+        console.error('Error while checking/awarding composite badges:', compErr);
+      }
+
+      res.json({ 
       user: {
         email: user.email, 
         firstName: user.firstName, 

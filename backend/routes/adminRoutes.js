@@ -20,6 +20,7 @@ const {
   sendBadgeReceivedEmail,
   sendProfileUpdateEmail 
 } = require("../services/emailService");
+const { awardCompositeBadgesForUser } = require('../services/badgeService');
 
 const uploadImage = multer({ 
   limits: { fileSize: 5 * 1000 * 1000 }, // 5MB max file size
@@ -207,7 +208,7 @@ router.put(
   async (req, res, next) => {
   try {
 
-    const { id, course, name, description, level, vertical, skillsEarned } = req.body;
+    const { id, course, name, description, level, vertical, skillsEarned, requires } = req.body;
     var existingBadge = null;
     var existingBadgeImage = null;
     if (!id){
@@ -222,7 +223,14 @@ router.put(
     }
 
 
-    if (skillsEarned && Array.isArray(skillsEarned) && skillsEarned.length > 0) { existingBadge["skillsEarned"] = skillsEarned } 
+    if (skillsEarned && Array.isArray(skillsEarned) && skillsEarned.length > 0) { existingBadge["skillsEarned"] = skillsEarned }
+    if (typeof requires !== 'undefined') {
+      try {
+        existingBadge.requires = typeof requires === 'string' ? JSON.parse(requires) : requires;
+      } catch (e) {
+        existingBadge.requires = requires;
+      }
+    }
     if (vertical) { existingBadge["vertical"] = vertical } 
     if (level) { existingBadge["level"] = level } 
     if (description) { existingBadge["description"] = description } 
@@ -275,7 +283,7 @@ router.post(
   uploadImage.single('image'), 
   asyncWrapper(async (req, res, next) => {
     try {
-      const { id, name, description, level, vertical, skillsEarned, course, badgeId } = req.body;
+      const { id, name, description, level, vertical, skillsEarned, course, badgeId, requires } = req.body;
       if ( !id || !name || !description || !level || !vertical || skillsEarned.length === 0 ){
         return res.status(401).json({ message: "Missing Fields!" });
       }
@@ -294,6 +302,14 @@ router.post(
       // Construct badge object. Accept `badgeId` from client or build from name+id fallback
       const badgeObj = { id, name, description, level, vertical, skillsEarned };
       if (badgeId) { badgeObj.badgeId = String(badgeId); }
+      // Parse requires if provided
+      if (typeof requires !== 'undefined') {
+        try {
+          badgeObj.requires = typeof requires === 'string' ? JSON.parse(requires) : requires;
+        } catch (e) {
+          badgeObj.requires = requires;
+        }
+      }
       else if (name && id) {
         // derive prefix from first two words' initials
         const parts = String(name).trim().split(/\s+/);
@@ -399,6 +415,21 @@ router.delete('/badge/:id', authenticateJWT, async (req, res) => {
         }
       } catch (emailErr) {
         console.error(`Failed to send revoke email to ${u.email}:`, emailErr);
+      }
+    }
+
+    // For each affected user, also revoke any composite badges that depended on the deleted badge
+    for (const u of affectedUsers) {
+      try {
+        const freshUser = await User.findOne({ email: u.email });
+        if (!freshUser) continue;
+        const { revokeDependentBadgesForUser } = require('../services/badgeService');
+        const revoked = await revokeDependentBadgesForUser(freshUser, [String(badge._id || badge.id)]);
+        if (revoked && revoked.length > 0) {
+          console.log(`Cascade revoked ${revoked.length} composite badges for ${freshUser.email}`);
+        }
+      } catch (err) {
+        console.error('Error during composite cascade revocation for user', u.email, err);
       }
     }
 
@@ -730,6 +761,12 @@ router.post("/users/import/:jobId",authenticateJWT, async (req, res) => {
               // Don't fail the whole import if email sending fails
             }
           }
+          // After initial badges, check for composite badges to auto-award
+          try {
+            await awardCompositeBadgesForUser(savedUser);
+          } catch (err) {
+            console.error('Error awarding composite badges for inserted user', savedUser.email, err);
+          }
         } catch (err) {
           console.error(`Error processing badge emails for inserted user ${savedUser.email}:`, err);
         }
@@ -783,6 +820,13 @@ router.post("/users/import/:jobId",authenticateJWT, async (req, res) => {
             } catch (emailError) {
               console.error(`Failed to send badge email to ${email} for badge ${badgeEntry.badgeId}:`, emailError);
             }
+          }
+          // After sending badge emails, check composite awarding for this user
+          try {
+            const savedUserDoc = await User.findOne({ email });
+            await awardCompositeBadgesForUser(savedUserDoc);
+          } catch (err) {
+            console.error('Error awarding composite badges for updated user', email, err);
           }
         } catch (err) {
           console.error('Error while sending badge emails for updates:', err);

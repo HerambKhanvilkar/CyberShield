@@ -66,7 +66,7 @@ const corsOptions = {
     try {
       const low = String(origin).toLowerCase();
       if (low.includes('localhost') || low.includes('127.0.0.1') || low.includes('[::1]')) {
-        console.log(`CORS allowed for local origin: ${origin}`);
+        //console.log(`CORS allowed for local origin: ${origin}`);
         return callback(null, true);
       }
     } catch (e) {
@@ -76,11 +76,11 @@ const corsOptions = {
     if (String(frontendOrigin).includes(',')) {
       const allowed = String(frontendOrigin).split(',').map(s => s.trim());
       const ok = allowed.indexOf(origin) !== -1;
-      if (ok) console.log(`CORS allowed for origin: ${origin}`); else console.warn(`CORS denied for origin: ${origin}`);
+      //if (ok) console.log(`CORS allowed for origin: ${origin}`); else console.warn(`CORS denied for origin: ${origin}`);
       return callback(null, ok);
     }
     const ok = origin === frontendOrigin;
-    if (ok) console.log(`CORS allowed for origin: ${origin}`); else console.warn(`CORS denied for origin: ${origin}`);
+    //if (ok) console.log(`CORS allowed for origin: ${origin}`); else console.warn(`CORS denied for origin: ${origin}`);
     return callback(null, ok);
   },
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',

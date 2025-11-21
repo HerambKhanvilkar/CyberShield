@@ -43,6 +43,11 @@ const BadgeSchema = new mongoose.Schema({
   skillsEarned: [{
     type: String,
   }],
+  // Optional prerequisite badges — array of Badge _id references that must be earned
+  requires: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Badge'
+  }],
   course: {
     type: String,
     default: ''

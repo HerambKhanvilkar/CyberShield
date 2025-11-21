@@ -154,7 +154,7 @@ const sendProfileUpdateEmail = async (email, reasonType, badgeName = '', additio
   
   return sendEmail({
     to: email,
-    subject: '🔄 Profile Update Notification - DeepCytes',
+    subject: 'Profile Update Notification - DeepCytes',
     html: html
   });
 };

@@ -3,6 +3,7 @@ import ImagePreview from "./ui/imagePreview";
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import SearchDropdown from "@/components/adminBadgeForm/SearchDropdown";
+import PrereqDropdown from "@/components/adminBadgeForm/PrereqDropdown";
 import VerticalsDropdown from "@/components/adminBadgeForm/VerticalsDropDown";
 import CoursesDropDown from "@/components/adminBadgeForm/CoursesDropDown";
 import IdInput from "@/components/adminBadgeForm/IdInput";
@@ -36,6 +37,8 @@ function BadgeCreationForm () {
     vertical: '',
     course: '',
     skillsEarned: [],
+    requires: [],
+    hasPrereqs: false,
     image: null,
   });
   const [nextId, setNextId] = useState(null);
@@ -189,9 +192,14 @@ function BadgeCreationForm () {
    const { name, value, type, checked } = e.target;
 
     if (type === 'checkbox') {
+      // If this is the hasPrereqs checkbox, toggle prereq UI and clear requires when unchecked
+      if (name === 'hasPrereqs') {
+        setFormData(prev => ({ ...prev, hasPrereqs: checked, requires: checked ? prev.requires : [] }));
+        return;
+      }
       console.log("name", name, value, formData.skillsEarned);
       console.log("checked", checked);
-      // Handle checkbox input
+      // Handle checkbox input (skills list toggles)
       setFormData((prevData) => {
         const skillsEarned = checked
           ? [...prevData.skillsEarned, value] // Add if checked
@@ -239,7 +247,14 @@ function BadgeCreationForm () {
     if (Object.hasOwnProperty.call(jsonObject, key)) {
       console.log("key", key);
       console.log("jsonObject[key]", jsonObject[key]);
-      form.append(key, jsonObject[key]);
+        const val = jsonObject[key];
+        if (val instanceof File) {
+          form.append(key, val);
+        } else if (Array.isArray(val) || (typeof val === 'object' && val !== null)) {
+          form.append(key, JSON.stringify(val));
+        } else if (typeof val !== 'undefined' && val !== null) {
+          form.append(key, String(val));
+        }
     }
   }
 
@@ -291,6 +306,8 @@ function BadgeCreationForm () {
         vertical: '',
         skillsEarned: [],
         file: null,
+        hasPrereqs: false,
+        requires: [],
       })
       setPreview('');
       toast.update(toastId,{
@@ -361,6 +378,8 @@ useEffect(() => {
       course: selectedBadge.course || '',
       vertical: selectedBadge.vertical || '',
       skillsEarned: selectedBadge.skillsEarned || [],
+      requires: (selectedBadge.requires || []).map(r => String(r)),
+      hasPrereqs: Array.isArray(selectedBadge.requires) && selectedBadge.requires.length > 0,
       image: selectedBadge.image || null,
     });
 
@@ -373,9 +392,11 @@ useEffect(() => {
       description: '', 
       level: 'Amateur', 
       vertical: '', 
-      course: '', 
-      skillsEarned: '', 
-      image: '', 
+        course: '', 
+        skillsEarned: [], 
+        requires: [],
+        hasPrereqs: false,
+        image: '', 
     });
     setPreview('');
   }
@@ -402,9 +423,9 @@ useEffect(() => {
   return (
     <div className='w-full bg-black/50 backdrop-blur-md px-2'>
       <form onSubmit={handleBadgeFormSubmit} className="flex flex-col w-full mx-auto">
-        <div className="flex flex-col md:flex-row py-2.5 justify-around ">
+        <div className="flex flex-col md:flex-row md:items-stretch items-start py-2.5 justify-around ">
           {/* Left: Badges List */}
-          <div className="flex-1 h-max p-4 mt-1 rounded-2xl mr-4 bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)]">
+          <div className="flex-1 flex flex-col p-4 mt-1 rounded-2xl mr-4 bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)]">
             <div className="group flex justify-between">
               <h2 className="text-white font-semibold mb-2">Badges List </h2>
               <button type="button" onClick={() => setSelectedBadge(null)} className="flex items-center justify-center text-white rounded-full w-5 h-5 rtl bg-blue-600 hover:bg-blue-700">
@@ -456,7 +477,7 @@ useEffect(() => {
             </div>
           </div>
           {/* Id and details section */}
-          <div className="w-full md:w-1/3 mr-4 px-2 mt-1 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] p-4">
+          <div className="w-full md:w-1/3 mr-4 px-2 mt-1 rounded-2xl flex flex-col bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] p-4">
             {/* Badge Id */}
             <div className="grid md:grid-cols-2 md:gap-6">
               <div className="relative z-0 w-full mb-5 group">
@@ -498,6 +519,27 @@ useEffect(() => {
                   handleChange ={handleChange}
                 />
               </div>
+            
+            <div className="relative z-10 w-full mb-5 group">
+              <label className="flex items-center gap-2 text-sm font-medium text-white mb-2">
+                <input
+                  type="checkbox"
+                  name="hasPrereqs"
+                  checked={!!formData.hasPrereqs}
+                  onChange={handleChange}
+                  className="w-4 h-4 rounded bg-gray-700"
+                />
+                <span>Does this badge have prerequisites?</span>
+              </label>
+
+              {formData.hasPrereqs && (
+                <>
+                  <label className="block text-sm font-medium text-white mb-2">Got by completing (prerequisite badges)</label>
+                  <PrereqDropdown badges={searchResults} formData={formData} setFormData={setFormData} />
+                  <p className="text-xs text-gray-400 mt-1">Select badges that must be earned before this badge is auto-awarded.</p>
+                </>
+              )}
+            </div>
 
             <div className="relative z-0 w-full mb-5 group">
               {/* Badge Description */}

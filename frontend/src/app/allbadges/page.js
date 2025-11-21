@@ -4,6 +4,7 @@ import Footer from "@/components/Footer";
 import { useEffect, useState } from "react";
 import React from "react";
 import Link from "next/link";
+import PieBadgeOverlay from '@/components/PieBadgeOverlay';
 
 export default function AllBadgesPage() {
   const [allBadges, setAllBadges] = useState([]);
@@ -116,14 +117,23 @@ useEffect(() => {
               const loggedIn = !!token;
               const owned = isOwned(badge);
 
-              const baseClass = 'h-full flex flex-col bg-gradient-to-br from-gray-950 via-cyan-900/30 to-gray-900 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-6 transition duration-300 hover:shadow-cyan-400/20 hover:scale-[1.01]';
-              const glassyUnownedClass = 'h-full flex flex-col bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 transition duration-300 hover:shadow-lg hover:scale-[1.01] filter grayscale contrast-75 opacity-70';
+              const baseClass = 'relative h-full flex flex-col bg-gradient-to-br from-gray-950 via-cyan-900/30 to-gray-900 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-6 transition duration-300 hover:shadow-cyan-400/20 hover:scale-[1.01]';
+              const glassyUnownedClass = 'relative h-full flex flex-col bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 transition duration-300 hover:shadow-lg hover:scale-[1.01] filter grayscale contrast-75 opacity-70';
               const cardClass = loggedIn ? (owned ? baseClass : glassyUnownedClass) : baseClass;
 
               return (
               <Link href={`/badges/${badge.id}`} key={badge.id}>
                 <div className={cardClass}>
-                  <div className="flex justify-center mb-4">
+                  {loggedIn && badge.requires && badge.requires.length > 0 && (() => {
+                    const ownedSet = new Set();
+                    myBadges.forEach(mb => {
+                      if (mb._id) ownedSet.add(String(mb._id));
+                      if (mb.id) ownedSet.add(String(mb.id));
+                      if (mb.badgeId) ownedSet.add(String(mb.badgeId));
+                    });
+                    return <PieBadgeOverlay requires={badge.requires} ownedSet={ownedSet} />;
+                  })()}
+                  <div className="flex justify-center mb-4 relative z-10">
                     <img
                       src={badge.img?.data || `${process.env.SERVER_URL}/badge/images/${badge.id}`}
                       alt={badge.name}
