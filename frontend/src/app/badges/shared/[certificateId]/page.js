@@ -21,6 +21,34 @@
    const [earnersCount, setEarnersCount] = useState(null);
    const [earnedDate, setEarnedDate] = useState(null);
 
+
+
+  // Optimized fade transition for background video using a single <video>
+  const [videoSrc, setVideoSrc] = useState("/background.mp4");
+  const [fade, setFade] = useState(false);
+  const [pendingSrc, setPendingSrc] = useState(null);
+
+  // Preload both videos on mount
+  useEffect(() => {
+    const preload = (src) => {
+      const v = document.createElement('video');
+      v.src = src;
+      v.preload = 'auto';
+      v.muted = true;
+      v.load();
+    };
+    preload("/background.mp4");
+  }, []);
+
+  // When pendingSrc is set, wait for it to be ready before fading in
+  const handleCanPlay = () => {
+    setVideoSrc(pendingSrc);
+    setPendingSrc(null);
+    setTimeout(() => setFade(false), 50); // Small delay for fade-in
+  };
+
+
+
    useEffect(() => {
      const fetchByCertificate = async () => {
        if (!certificateId) return setIsLoading(false);
@@ -125,6 +153,12 @@
        <div className="text-xl font-semibold text-gray-400">
          <i> {badge?.name} </i>
        </div>
+      {/* Show badge description if available */}
+      {/* {badge?.description && (
+        <div className="mt-3 text-sm text-gray-300 max-w-prose leading-relaxed">
+          {badge.description}
+        </div>
+      )} */}
      </div>
    );
 
@@ -151,9 +185,36 @@
 
    return (
      <div className="min-h-screen flex flex-col glow-container text-white font-sans selection:bg-[#38C8F8] selection:text-black">
-       <div className="ball"></div>
+       {/*<div className="ball"></div>
        <div className="ball" style={{ '--delay': '-12s', '--size': '0.35', '--speed': '25s' }}></div>
        <div className="ball" style={{ '--delay': '-10s', '--size': '0.3', '--speed': '15s' }}></div>
+
+       {/* Background video with blur applied and theme switching */}
+        <div className="fixed inset-0 w-full h-full z-0">
+          {/* Main video */}
+          <video
+            key={videoSrc}
+            className={`absolute inset-0 w-full h-full object-cover blur-sm transition-opacity duration-400 ${fade ? 'opacity-0' : 'opacity-100'}`}
+            autoPlay
+            loop
+            muted
+            playsInline
+            style={{ pointerEvents: 'none' }}
+          >
+            <source src={videoSrc} type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+          {/* Preload and wait for new video before fade-in */}
+          {pendingSrc && (
+            <video
+              style={{ display: 'none' }}
+              src={pendingSrc}
+              onCanPlay={handleCanPlay}
+              preload="auto"
+              muted
+            />
+          )}
+        </div>
        <Navbar />
        <div className="z-10 mt-4 px-4 mx-auto text-lg text-green-400">
          {verificationStatus ? (
@@ -173,7 +234,8 @@
            <div className="bg-red-900 text-red-400 p-4 mb-4 rounded-md border border-red-600">{error}</div>
          )}
 
-         <div className="relative bg-center bg-cover bg-[url('/0.png')] backdrop-blur-lg text-white rounded-[25px] z-0 w-full mb-5">
+         {/*<div className="relative bg-center bg-cover bg-[url('/0.png')] backdrop-blur-lg text-white rounded-[25px] z-0 w-full mb-5">*/}
+         <div className="relative bg-black/15 backdrop-blur-lg text-white rounded-[25px] z-0 w-full mb-5">
            <div className="flex p-1 flex-col glass backdrop-blur-md border border-white/10 shadow-lg transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)] rounded-lg">
              <div className="flex flex-col md:flex-row md:space-x-8">
                <div className="flex-shrink-0 mb-2 md:mb-0 md:w-1/3">
@@ -198,26 +260,26 @@
                    )}
                  </div>
 
-                 <div className="flex flex-col sm:flex-row space-x-1 ">
-                   <div className="relative w-full z-0 mb-5 group bg-black/60 border rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
-                     <strong className='block text-gray-500 hover:text-white rounded-lg -mt-7 bg-black w-max px-2.5'>Passing Criteria</strong>
-                     Scored at least 70% in their assessment and completed all mandatory tasks to earn this badge.
-                   </div>
+                <div className="flex flex-col sm:flex-row space-x-1 ">
+                  {displayCertificateId && (
+                    <div className="mt-auto mb-2 w-full">
+                      <div className="relative w-full z-0 group bg-black/60 border rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
+                        <strong className='block text-gray-500 hover:text-white rounded-lg -mt-7 bg-black w-max px-2.5 mb-2'>Certificate ID</strong>
+                        <div className="mt-1 font-mono font-semibold text-sm">{displayCertificateId}</div>
+                      </div>
+                    </div>
+                  )}
 
-                   <div className="z-0 sm:w-2/5 mb-5 group bg-black/60 border rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
-                     <strong className='block text-gray-500 hover:text-white rounded-lg -mt-7 bg-black w-max px-2.5'>Course</strong> {badge?.course}
-                   </div>
-                 </div>
+                  <div className="z-0 sm:w-2/5 mb-5 group bg-black/60 border rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
+                    <strong className='block text-gray-500 hover:text-white rounded-lg -mt-7 bg-black w-max px-2.5'>Course</strong> {badge?.course}
+                  </div>
+                </div>
 
-                 {displayCertificateId && (
-                   <div className="mt-auto mb-2 w-full">
-                     <div className="relative w-full z-0 group bg-black/60 border rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
-                       <strong className='block text-gray-500 hover:text-white rounded-lg -mt-7 bg-black w-max px-2.5 mb-2'>Certificate ID</strong>
-                       <div className="mt-1 font-mono font-semibold text-sm">{displayCertificateId}</div>
-                     </div>
-                   </div>
-                 )}
-               </div>
+                <div className="relative w-full z-0 mb-5 group bg-black/60 border rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
+                  <strong className='block text-gray-500 hover:text-white rounded-lg -mt-7 bg-black w-max px-2.5'>Passing Criteria</strong>
+                    Scored at least 70% in their assessment and completed all mandatory tasks to earn this badge.
+                </div>
+              </div>
              </div>
            </div>
          </div>
