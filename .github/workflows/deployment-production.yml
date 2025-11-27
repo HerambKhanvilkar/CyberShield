@@ -100,7 +100,7 @@ jobs:
               # Restart the application if it exists
               pm2 restart Badge-Viewer-Backend
             else
-              # Start the application if it doesn't exist
+              #Start the application if it doesn't exist
               pm2 start npm --name "Badge-Viewer-Backend" -- start
             fi
 
