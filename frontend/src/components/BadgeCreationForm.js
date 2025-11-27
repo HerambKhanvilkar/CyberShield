@@ -33,6 +33,7 @@ function BadgeCreationForm () {
     id: '',
     name: '',
     description: '',
+    abbreviation: '',
     level: '',
     vertical: '',
     course: '',
@@ -273,16 +274,15 @@ function BadgeCreationForm () {
     try {
       let response; 
       if (!selectedBadge){
-        // require only id and name for creation; other fields optional
-        if (!formData.id || !formData.name) {
-          toast.error('Please provide at least Badge ID and Name');
-          return;
-        }
+          // require id, name and description for creation; other fields optional
+          if (!formData.id || !formData.name || !formData.description) {
+            toast.error('Please provide Badge ID, Name and Description');
+            return;
+          }
 
         toastId = toast.loading("Creating Badge...");
         response = await axios.post(apiUrl, formDataObject, {
           headers: {
-            'Content-Type': 'multipart/form-data', // Set the content type
             Authorization: `Bearer ${token}`, // Add the token to the headers
           },
         });
@@ -290,7 +290,6 @@ function BadgeCreationForm () {
         toastId = toast.loading("Modifying Badge...");
         response = await axios.put(apiUrl, formDataObject, {
           headers: {
-            'Content-Type': 'multipart/form-data', // Set the content type
             Authorization: `Bearer ${token}`, // Add the token to the headers
           },
         });
@@ -301,6 +300,7 @@ function BadgeCreationForm () {
         id: '',
         name: '',
         description: '',
+        abbreviation: '',
         level: '',
         course: '',
         vertical: '',
@@ -325,9 +325,11 @@ function BadgeCreationForm () {
         type: "error",
         autoClose: 5000, 
       });
-
-      if (response.status === 400){
-        toast.error(response.data); // Error message
+      const resp = error && error.response ? error.response : null;
+      if (resp && resp.status === 400){
+        toast.error(resp.data && resp.data.message ? resp.data.message : JSON.stringify(resp.data));
+      } else if (resp && resp.status) {
+        toast.error(`Request failed (${resp.status})`);
       }
 
       console.error('There was a problem with the upload operation:', error);
@@ -374,6 +376,7 @@ useEffect(() => {
       id: selectedBadge.id || '',
       name: selectedBadge.name || '',
       description: selectedBadge.description || '',
+      abbreviation: selectedBadge.abbreviation || '',
       level: selectedBadge.level || 'Amateur',
       course: selectedBadge.course || '',
       vertical: selectedBadge.vertical || '',
@@ -390,6 +393,7 @@ useEffect(() => {
       id: '', 
       name: '', 
       description: '', 
+      abbreviation: '',
       level: 'Amateur', 
       vertical: '', 
         course: '', 
@@ -493,6 +497,16 @@ useEffect(() => {
                   formData={formData}
                   handleChange={handleChange}
                 />
+               <div className="mt-2">
+                 <label className="block text-xs text-gray-300 mb-1">Abbreviation (certificate prefix)</label>
+                 <input
+                   name="abbreviation"
+                   value={formData.abbreviation}
+                   onChange={handleChange}
+                   className="w-full px-2 py-1 rounded bg-gray-800 text-white text-sm"
+                   placeholder="e.g. CA, XY"
+                 />
+               </div>
               </div>
             </div>
 

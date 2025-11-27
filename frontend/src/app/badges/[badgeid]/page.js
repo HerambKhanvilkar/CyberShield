@@ -153,6 +153,7 @@ useEffect(() => {
               ...badgeMeta,
               earnedDate: earnedBadge.earnedDate,
               isPublic: earnedBadge.isPublic,
+              certificateId: earnedBadge.certificateId || null,
             };
           }
           return null;
@@ -330,7 +331,7 @@ useEffect(() => {
 }
 
 
-    const handleGenerateShareLink = () => {
+    const handleGenerateShareLink = async () => {
       // if (!isAuthenticated) {
       //   setShowLoginMessage(true);
       //   setTimeout(() => setShowLoginMessage(false), 3000);
@@ -348,11 +349,62 @@ useEffect(() => {
       });
 
       const user = JSON.parse(userStr);
-      const shareURL = `${window.location.origin}/badges/shared/${currentBadge?.badgeId || currentBadge?.id}/${user.username}/${Math.floor(Date.now() / 1000)}`;
+      // Prefer certificateId-based share URL when available
+      let shareURL = '';
+      try {
+        // First try the local earned badge entry
+        const localEarned = earnedBadge;
+        if (localEarned && localEarned.certificateId) {
+          try {
+            const v = await axios.get(`${process.env.SERVER_URL}/verify-badge/certificate/${encodeURIComponent(localEarned.certificateId)}`);
+            const displayId = v?.data?.displayCertificateId || localEarned.certificateId;
+            shareURL = `${window.location.origin}/badges/shared/${displayId}`;
+          } catch (e) {
+            shareURL = `${window.location.origin}/badges/shared/${localEarned.certificateId}`;
+          }
+        } else {
+          // Try to find certificateId in stored user badges
+          const certMatch = (user.badges || []).find(b => (
+            String(b.badgeId) === String(currentBadge?.badgeId) || String(b.badgeId) === String(currentBadge?.id) || String(b.id) === String(currentBadge?.id)
+          ) && b.certificateId);
+          if (certMatch && certMatch.certificateId) {
+            try {
+              const v2 = await axios.get(`${process.env.SERVER_URL}/verify-badge/certificate/${encodeURIComponent(certMatch.certificateId)}`);
+              const displayId2 = v2?.data?.displayCertificateId || certMatch.certificateId;
+              shareURL = `${window.location.origin}/badges/shared/${displayId2}`;
+            } catch (e) {
+              shareURL = `${window.location.origin}/badges/shared/${certMatch.certificateId}`;
+            }
+          } else {
+            // Fallback: ask backend to generate a share link (legacy path), requires auth
+            const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
+            if (token) {
+              try {
+                const resp = await axios.post(`${process.env.SERVER_URL}/generate-share-link`, { badgeId: currentBadge?.id }, {
+                  headers: { Authorization: `Bearer ${token}` }
+                });
+                if (resp?.data?.shareLink) {
+                  shareURL = resp.data.shareLink.startsWith('http') ? resp.data.shareLink : `${window.location.origin}${resp.data.shareLink}`;
+                }
+              } catch (err) {
+                console.warn('generate-share-link failed, falling back to client link', err);
+              }
+            }
+            // Last-resort client-side legacy link
+            if (!shareURL) {
+              shareURL = `${window.location.origin}/badges/shared/old/${currentBadge?.badgeId || currentBadge?.id}/${user.username}/${Math.floor(Date.now() / 1000)}`;
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error while building share link:', err);
+        shareURL = `${window.location.origin}/badges/shared/old/${currentBadge?.badgeId || currentBadge?.id}/${user.username}/${Math.floor(Date.now() / 1000)}`;
+      }
+
       setShareUrl(shareURL);
       setShowShareSuccess(true);
       setTimeout(() => setShowShareSuccess(false), 3000);
-      navigator.clipboard.writeText(shareURL);
+      try { await navigator.clipboard.writeText(shareURL); } catch (e) { /* ignore */ }
     };
 
     return (

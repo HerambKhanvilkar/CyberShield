@@ -33,16 +33,24 @@ const BadgeSchema = new mongoose.Schema({
   level: {
     type: String,
     // enum: ['Amateur', 'Intermediate', 'Professional'],
-    required: true
+    required: false,
+    default: ''
   },
   vertical: {
     type: String,
     // enum: ['Information Security', 'Incident Response and Management', 'Cybersecurity', 'Cybersecurity Professional Development'],
-    required: true
+    required: false,
+    default: ''
   },
   skillsEarned: [{
     type: String,
   }],
+  // Optional short prefix used when generating per-issuance certificate IDs
+  abbreviation: {
+    type: String,
+    required: false,
+    default: ''
+  },
   // Optional prerequisite badges — array of Badge _id references that must be earned
   requires: [{
     type: mongoose.Schema.Types.ObjectId,

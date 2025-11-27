@@ -37,9 +37,22 @@ async function awardCompositeBadgesForUser(user) {
         // award composite badge
         const updated = await (require('../models/Badge')).findOneAndUpdate({ _id: comp._id }, { $inc: { certificateCounter: 1 } }, { new: true });
         const counter = updated.certificateCounter || 1;
-        const seq = String(counter).padStart(3, '0');
-        const baseBadgeId = updated.badgeId || String(updated.id).padStart(6, '0');
-        const certificateId = `${baseBadgeId}${seq}`;
+        // Use 4-digit sequence for per-issuer counter
+        const seq = String(counter).padStart(4, '0');
+        // Format abbreviation to 4 chars: pad right with '0' if shorter, trim to 4 if longer
+        const fmtAbbr = (val) => {
+          if (!val) return ''.padEnd(4, '0');
+          const s = String(val).toUpperCase().replace(/[^A-Z0-9]/g, '');
+          return s.length >= 4 ? s.slice(0,4) : s.padEnd(4, '0');
+        };
+        const abbrPart = updated.abbreviation && String(updated.abbreviation).trim() !== ''
+          ? fmtAbbr(updated.abbreviation)
+          : (updated.badgeId ? fmtAbbr(String(updated.badgeId).slice(0,4)) : fmtAbbr(String(updated.id)));
+
+        // badge id (numeric id) is mandatory and used as-is (no fixed padding)
+        const badgeIdPart = String(updated.id);
+        const certificateId = `${abbrPart}${badgeIdPart}${seq}`;
+        console.log(`Auto-awarded certificateId ${certificateId} for composite badge ${updated._id} (abbreviation=${updated.abbreviation || ''})`);
         user.badges.push({ badgeId: updated.badgeId || String(updated.id), earnedDate: new Date(), certificateId });
         await user.save();
 

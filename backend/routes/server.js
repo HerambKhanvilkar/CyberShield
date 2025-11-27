@@ -82,11 +82,27 @@ router.get("/badges", async (req, res) => {
 // Endpoint to get badge images
 router.get("/badge/images/:id", async (req, res) => {
     try {
-      if (!req.params.id) 
+      const rawId = req.params.id;
+      if (!rawId || rawId === 'undefined' || rawId === 'null') {
         return res.status(404).json({ message: "Image not found" });
-    // Ensure numeric id lookup when IDs are stored as numbers
-    const lookupId = isNaN(parseInt(req.params.id)) ? req.params.id : parseInt(req.params.id);
-    const badgeImage = await BadgeImage.findOne({ id: lookupId });
+      }
+
+      // Prefer numeric lookup (BadgeImage.id is Number). If a non-numeric badgeId
+      // string was provided, try to resolve it to a numeric Badge.id first.
+      let lookupId = null;
+      const maybeNum = parseInt(rawId);
+      if (!isNaN(maybeNum)) {
+        lookupId = maybeNum;
+      } else {
+        // Try resolving by Badge.badgeId -> get its numeric id
+        const badgeDoc = await Badge.findOne({ badgeId: rawId }).select('id');
+        if (!badgeDoc || typeof badgeDoc.id === 'undefined') {
+          return res.status(404).json({ message: "Image not found" });
+        }
+        lookupId = badgeDoc.id;
+      }
+
+      const badgeImage = await BadgeImage.findOne({ id: lookupId });
     if (!badgeImage || !badgeImage.image) {
       return res.status(404).json({ message: "Image not found" });
     }
@@ -177,11 +193,87 @@ router.get("/verify-badge/:id/:username/:timestamp", async (req, res) => {
   }
 });
 
+// Verify by certificateId (new: allows share links like /badges/shared/<certificateId>)
+router.get('/verify-badge/certificate/:certificateId', async (req, res) => {
+  try {
+    const { certificateId } = req.params;
+    if (!certificateId) return res.status(400).json({ verified: false, message: 'certificateId required' });
+
+    // Try exact match first (stored certificateId may be digits-only)
+    let user = await User.findOne({ 'badges.certificateId': certificateId }).select('firstName lastName email badges');
+
+    // If not found, try stripping leading letters (allow links like 'TB000301004' to match stored '000301004')
+    if (!user) {
+      const alt = String(certificateId).replace(/^[A-Za-z]+/, '');
+      if (alt && alt !== certificateId) {
+        user = await User.findOne({ 'badges.certificateId': alt }).select('firstName lastName email badges');
+      }
+    }
+
+    if (!user) return res.json({ verified: false });
+
+    const badgeEntry = (user.badges || []).find(b => String(b.certificateId) === String(certificateId) || String(b.certificateId) === String(certificateId).replace(/^[A-Za-z]+/, ''));
+    if (!badgeEntry) return res.json({ verified: false });
+
+
+    // Resolve the Badge document for display
+    let badgeDoc = null;
+    const bid = badgeEntry.badgeId;
+    if (bid && !isNaN(parseInt(bid))) {
+      badgeDoc = await Badge.findOne({ id: parseInt(bid) });
+    }
+    if (!badgeDoc) {
+      badgeDoc = await Badge.findOne({ badgeId: String(bid) });
+    }
+
+    // Build a display-friendly certificateId: prefer using badge abbreviation (if available)
+    // If stored certificateId is digits-only, prepend abbreviation (or 'TB') and pad badge id
+    let displayCertificateId = String(certificateId);
+    try {
+      const stored = String(badgeEntry.certificateId || certificateId);
+      const hasLetters = /[A-Za-z]/.test(stored);
+      const abbr = (badgeDoc && badgeDoc.abbreviation) ? String(badgeDoc.abbreviation).toUpperCase() : 'TB';
+      if (!hasLetters) {
+        const badgeIdPadded = badgeDoc && badgeDoc.id ? String(badgeDoc.id).padStart(6, '0') : String(bid).padStart(6, '0');
+        const seq = stored.slice(-3); // last 3 digits as sequence
+        displayCertificateId = `${abbr}${badgeIdPadded}${seq}`;
+      }
+    } catch (e) {
+      // ignore and fall back to raw
+      displayCertificateId = String(certificateId);
+    }
+
+    // Return a compact verification payload
+    return res.json({
+      verified: true,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      certificateId: String(badgeEntry.certificateId || certificateId),
+      displayCertificateId,
+      badge: badgeDoc || { id: badgeEntry.badgeId },
+      earnedDate: badgeEntry.earnedDate || null
+    });
+  } catch (error) {
+    console.error('Error verifying by certificateId:', error);
+    return res.status(500).json({ verified: false, message: 'Internal Server Error' });
+  }
+});
+
 // Generate share link endpoint
 router.post("/generate-share-link", authenticateJWT, async (req, res) => {
   try {
     const { badgeId } = req.body;
-    const username = req.headers.username;
+    // Prefer explicit header, but fall back to JWT-derived username (email)
+    let username = req.headers.username;
+    if (!username) {
+      try {
+        const authHeader = req.headers.authorization;
+        username = await getUsername(authHeader);
+      } catch (e) {
+        username = null;
+      }
+    }
 
     if (!username) {
       return res.status(400).json({ message: "Username is required" });
@@ -208,9 +300,40 @@ router.post("/generate-share-link", authenticateJWT, async (req, res) => {
     // Generate timestamp for the link
     const timestamp = Math.floor(Date.now()/1000);
     
-    // Generate share link (use badgeId string)
-    const shareLink = `/badge/shared/${encodeURIComponent(badgeId)}/${encodeURIComponent(username)}/${timestamp}`;
-    
+    // Prefer certificate-based share link when possible
+    const badgeEntry = user.badges.find(badge => String(badge.badgeId) === String(badgeId));
+    let shareLink;
+    if (badgeEntry && badgeEntry.certificateId) {
+      // Build displayCertificateId similar to verify endpoint
+      let displayCertificateId = String(badgeEntry.certificateId || '').toString();
+      try {
+        const stored = String(badgeEntry.certificateId || '');
+        const hasLetters = /[A-Za-z]/.test(stored);
+        // Resolve badge doc for abbreviation and numeric id
+        let badgeDoc = null;
+        const bid = badgeEntry.badgeId;
+        if (bid && !isNaN(parseInt(bid))) {
+          badgeDoc = await Badge.findOne({ id: parseInt(bid) });
+        }
+        if (!badgeDoc) {
+          badgeDoc = await Badge.findOne({ badgeId: String(bid) });
+        }
+        const abbr = (badgeDoc && badgeDoc.abbreviation) ? String(badgeDoc.abbreviation).toUpperCase() : 'TB';
+        if (!hasLetters) {
+          const badgeIdPadded = badgeDoc && badgeDoc.id ? String(badgeDoc.id).padStart(6, '0') : String(bid).padStart(6, '0');
+          const seq = stored.slice(-3);
+          displayCertificateId = `${abbr}${badgeIdPadded}${seq}`;
+        }
+      } catch (e) {
+        displayCertificateId = String(badgeEntry.certificateId || badgeId);
+      }
+
+      shareLink = `/badges/shared/${displayCertificateId}`;
+    } else {
+      // Fallback: legacy share link format
+      shareLink = `/badge/shared/${encodeURIComponent(badgeId)}/${encodeURIComponent(username)}/${timestamp}`;
+    }
+
     res.json({ shareLink });
   } catch (error) {
     console.error("Error generating share link:", error);
@@ -329,10 +452,19 @@ router.post("/assign-badge", authenticateJWT, async (req, res) => {
     );
 
     const counter = updatedBadge.certificateCounter || 1;
-    const seq = String(counter).padStart(3, '0');
-    // Use badge.badgeId if present, otherwise construct from badge.name + id fallback
-    const baseBadgeId = updatedBadge.badgeId || (String(updatedBadge.id).padStart(6, '0'));
-    const certificateId = `${baseBadgeId}${seq}`;
+    const seq = String(counter).padStart(4, '0');
+    // Format abbreviation to exactly 4 chars (pad right with '0')
+    const fmtAbbr = (val) => {
+      if (!val) return ''.padEnd(4, '0');
+      const s = String(val).toUpperCase().replace(/[^A-Z0-9]/g, '');
+      return s.length >= 4 ? s.slice(0,4) : s.padEnd(4, '0');
+    };
+    const abbrPart = updatedBadge.abbreviation && String(updatedBadge.abbreviation).trim() !== ''
+      ? fmtAbbr(updatedBadge.abbreviation)
+      : (updatedBadge.badgeId ? fmtAbbr(String(updatedBadge.badgeId).slice(0,4)) : fmtAbbr(String(updatedBadge.id)));
+    const badgeIdPart = String(updatedBadge.id);
+    const certificateId = `${abbrPart}${badgeIdPart}${seq}`;
+    console.log(`Generated certificateId ${certificateId} for badge ${updatedBadge._id} (abbreviation=${updatedBadge.abbreviation || ''})`);
 
     // Add badge to existing record with certificateId and store badgeId string
     user.badges.push({ badgeId: updatedBadge.badgeId || String(updatedBadge.id), earnedDate: new Date(), certificateId });

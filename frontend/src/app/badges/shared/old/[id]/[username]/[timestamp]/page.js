@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { cn } from "@/lib/utils";
 import { Marquee } from "@/components/magicui/marquee";
 
-const SharedBadgePage = () => {
+const SharedBadgePage1 = () => {
   const { id, username, timestamp } = useParams();
   const [isLoading, setIsLoading] = useState(true);
   const [badge, setBadge] = useState(null);
@@ -339,4 +339,4 @@ const BadgeMetrics = ({ badge }) => (
   );
 };
 
-export default SharedBadgePage;
+export default SharedBadgePage1;

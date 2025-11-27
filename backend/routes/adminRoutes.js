@@ -211,6 +211,15 @@ router.put(
     const { id, course, name, description, level, vertical, skillsEarned, requires } = req.body;
     var existingBadge = null;
     var existingBadgeImage = null;
+    // Normalize skillsEarned if sent as JSON string (FormData behavior)
+    let parsedSkills = [];
+    if (typeof skillsEarned !== 'undefined') {
+      if (typeof skillsEarned === 'string') {
+        try { parsedSkills = JSON.parse(skillsEarned); } catch (e) { parsedSkills = []; }
+      } else if (Array.isArray(skillsEarned)) {
+        parsedSkills = skillsEarned;
+      }
+    }
     if (!id){
       return res.status(401).json({ message: "Badge Id required" });
     }
@@ -223,7 +232,8 @@ router.put(
     }
 
 
-    if (skillsEarned && Array.isArray(skillsEarned) && skillsEarned.length > 0) { existingBadge["skillsEarned"] = skillsEarned }
+    // If skills were provided (even empty array), replace them. If not provided, leave unchanged.
+    if (typeof skillsEarned !== 'undefined') { existingBadge["skillsEarned"] = parsedSkills }
     if (typeof requires !== 'undefined') {
       try {
         existingBadge.requires = typeof requires === 'string' ? JSON.parse(requires) : requires;
@@ -231,15 +241,16 @@ router.put(
         existingBadge.requires = requires;
       }
     }
-    if (vertical) { existingBadge["vertical"] = vertical } 
-    if (level) { existingBadge["level"] = level } 
-    if (description) { existingBadge["description"] = description } 
-    if (name) { existingBadge["name"] = name } 
-    if (course) { existingBadge["course"] = course } 
+    // Set fields when present (allow empty string to clear values)
+    if (typeof vertical !== 'undefined') { existingBadge["vertical"] = vertical }
+    if (typeof level !== 'undefined') { existingBadge["level"] = level }
+    if (typeof description !== 'undefined') { existingBadge["description"] = description }
+    if (typeof name !== 'undefined') { existingBadge["name"] = name }
+    if (typeof course !== 'undefined') { existingBadge["course"] = course }
 
     if (req.file){
-    console.log("resizing");
-    console.log(existingBadge);
+      console.log("resizing");
+      console.log(existingBadge);
 
       const image = sharp(req.file.path);
       image.metadata() // get image metadata for size
@@ -250,7 +261,7 @@ router.put(
             return image.toBuffer();
           }
         })
-        .then(function(data) { // upload to s3 storage
+        .then(async function(data) { // upload to s3 storage
           const badgeImageObj = {
             id, name: req.body.name || existingBadge["name"],
             image: data,
@@ -261,13 +272,22 @@ router.put(
             existingBadgeImage =  new BadgeImage(badgeImageObj);
           } else {
             existingBadgeImage["image"] = data;            
-            existingBadge["contentType"]= req.file.mimetype;
+            existingBadgeImage["contentType"] = req.file.mimetype;
           }
           console.log('badeImageObj', badgeImageObj);
-          existingBadgeImage.save();
+          await existingBadge.save();
+          await existingBadgeImage.save();
+          return res.status(200).json({ message: 'Badge Modified successfully', data: existingBadge });
         })
+        .catch(err => {
+          console.error('Error processing image:', err);
+          return res.status(500).json({ message: 'Internal Server Error' });
+        });
+      return; // response will be sent after image processing
     }
-    existingBadge.save();
+
+    // No image: save badge updates and respond
+    await existingBadge.save();
     res.status(200).json({ message: 'Badge Modified successfully', data: existingBadge });
 
   } catch (error) {
@@ -283,10 +303,18 @@ router.post(
   uploadImage.single('image'), 
   asyncWrapper(async (req, res, next) => {
     try {
-      const { id, name, description, level, vertical, skillsEarned, course, badgeId, requires } = req.body;
-      if ( !id || !name || !description || !level || !vertical || skillsEarned.length === 0 ){
-        return res.status(401).json({ message: "Missing Fields!" });
-      }
+        const { id, name, description, level, vertical, skillsEarned, course, badgeId, requires, abbreviation } = req.body;
+        // Normalize optional fields coming from multipart/form-data (they may be JSON strings)
+        let parsedSkills = [];
+        if (typeof skillsEarned === 'string') {
+          try { parsedSkills = JSON.parse(skillsEarned); } catch (e) { parsedSkills = []; }
+        } else if (Array.isArray(skillsEarned)) {
+          parsedSkills = skillsEarned;
+        }
+        // Require only id, name and description from the client; other fields are optional
+        if (!id || !name || !description) {
+          return res.status(401).json({ message: "Missing Fields!" });
+        }
       const badgeExist = await Badge.findOne({ id }) || await Badge.findOne({ badgeId: String(badgeId || '') });
       const badgeImageExist = await BadgeImage.findOne({id});
 
@@ -299,8 +327,9 @@ router.post(
       }
 
 
-      // Construct badge object. Accept `badgeId` from client or build from name+id fallback
-      const badgeObj = { id, name, description, level, vertical, skillsEarned };
+      // Construct badge object. Accept `badgeId` and `abbreviation` from client or build from name+id fallback
+      const badgeObj = { id, name, description, level, vertical, skillsEarned: parsedSkills };
+      if (typeof abbreviation !== 'undefined') { badgeObj.abbreviation = String(abbreviation || '').trim(); }
       if (badgeId) { badgeObj.badgeId = String(badgeId); }
       // Parse requires if provided
       if (typeof requires !== 'undefined') {
@@ -311,11 +340,16 @@ router.post(
         }
       }
       else if (name && id) {
-        // derive prefix from first two words' initials
-        const parts = String(name).trim().split(/\s+/);
-        let prefix = (parts[0] || '').charAt(0) + (parts[1] ? parts[1].charAt(0) : (parts[0] || '').charAt(1) || 'X');
-        prefix = prefix.toUpperCase().replace(/[^A-Z]/g, '').padEnd(2, 'X').slice(0,2);
-        badgeObj.badgeId = `${prefix}${String(id).padStart(6,'0')}`;
+        // derive prefix from provided abbreviation if present, otherwise from first two words' initials
+        const padded = String(id).padStart(6,'0');
+        if (badgeObj.abbreviation && badgeObj.abbreviation.length > 0) {
+          badgeObj.badgeId = `${String(badgeObj.abbreviation).trim()}${padded}`;
+        } else {
+          const parts = String(name).trim().split(/\s+/);
+          let prefix = (parts[0] || '').charAt(0) + (parts[1] ? parts[1].charAt(0) : (parts[0] || '').charAt(1) || 'X');
+          prefix = prefix.toUpperCase().replace(/[^A-Z]/g, '').padEnd(2, 'X').slice(0,2);
+          badgeObj.badgeId = `${prefix}${padded}`;
+        }
       }
       if (course) { badgeObj['course'] = course }
 
@@ -330,7 +364,7 @@ router.post(
               return image.toBuffer();
             }
           })
-          .then(function(data) { // upload to s3 storage
+          .then(async function(data) { // upload to s3 storage
             const badgeImageObj = {
               id, name,
               image:  data,
@@ -339,12 +373,17 @@ router.post(
             const newBadge = new Badge(badgeObj);
             const newBadgeImage = new BadgeImage(badgeImageObj);
             console.log('badeImageObj', badgeImageObj);
-            newBadge.save();
-            newBadgeImage.save();
+            await newBadge.save();
+            await newBadgeImage.save();
             return res.status(200).json({ message: 'Badge created successfully', data: newBadge });
           })
-
+        return; // response will be sent in the promise handler
       }
+
+      // No file uploaded: create badge only
+      const newBadge = new Badge(badgeObj);
+      await newBadge.save();
+      return res.status(200).json({ message: 'Badge created successfully', data: newBadge });
 
       // const badgeImageObj = {
       //   id, name,
@@ -649,9 +688,18 @@ router.post("/users/import/:jobId",authenticateJWT, async (req, res) => {
         // increment certificateCounter and build certificateId
         const updated = await Badge.findOneAndUpdate({ _id: badgeDoc._id }, { $inc: { certificateCounter: 1 } }, { new: true });
         const counter = updated.certificateCounter || 1;
-        const seq = String(counter).padStart(3, '0');
-        const baseBadgeId = updated.badgeId || String(updated.id).padStart(6, '0');
-        const certificateId = `${baseBadgeId}${seq}`;
+        const seq = String(counter).padStart(4, '0');
+        const fmtAbbr = (val) => {
+          if (!val) return ''.padEnd(4, '0');
+          const s = String(val).toUpperCase().replace(/[^A-Z0-9]/g, '');
+          return s.length >= 4 ? s.slice(0,4) : s.padEnd(4, '0');
+        };
+        const abbrPart = updated.abbreviation && String(updated.abbreviation).trim() !== ''
+          ? fmtAbbr(updated.abbreviation)
+          : (updated.badgeId ? fmtAbbr(String(updated.badgeId).slice(0,4)) : fmtAbbr(String(updated.id)));
+        const badgeIdPart = String(updated.id);
+        const certificateId = `${abbrPart}${badgeIdPart}${seq}`;
+        console.log(`Generated certificateId ${certificateId} for bulk-assigned badge ${updated._id} (abbreviation=${updated.abbreviation || ''})`);
         badges.push({ badgeId: updated.badgeId || String(updated.id), earnedDate: new Date(), certificateId });
       }
 
@@ -696,9 +744,17 @@ router.post("/users/import/:jobId",authenticateJWT, async (req, res) => {
             // increment certificateCounter and build certificateId
             const updated = await Badge.findOneAndUpdate({ _id: badgeDoc._id }, { $inc: { certificateCounter: 1 } }, { new: true });
             const counter = updated.certificateCounter || 1;
-            const seq = String(counter).padStart(3, '0');
-            const baseBadgeId = updated.badgeId || String(updated.id).padStart(6, '0');
-            const certificateId = `${baseBadgeId}${seq}`;
+            const seq = String(counter).padStart(4, '0');
+            const fmtAbbr = (val) => {
+              if (!val) return ''.padEnd(4, '0');
+              const s = String(val).toUpperCase().replace(/[^A-Z0-9]/g, '');
+              return s.length >= 4 ? s.slice(0,4) : s.padEnd(4, '0');
+            };
+            const abbrPart = updated.abbreviation && String(updated.abbreviation).trim() !== ''
+              ? fmtAbbr(updated.abbreviation)
+              : (updated.badgeId ? fmtAbbr(String(updated.badgeId).slice(0,4)) : fmtAbbr(String(updated.id)));
+            const badgeIdPart = String(updated.id);
+            const certificateId = `${abbrPart}${badgeIdPart}${seq}`;
             newBadges.push({ badgeId: updated.badgeId || String(updated.id), earnedDate: new Date(), certificateId });
           }
 
