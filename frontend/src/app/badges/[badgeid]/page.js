@@ -282,6 +282,13 @@ useEffect(() => {
     }, [formData])
 
     useEffect(() => {
+      // Prefer the outerEarnedBadge passed from parent (fresh, merged from /auth/me).
+      if (outerEarnedBadge) {
+        setEarnedBadge(outerEarnedBadge);
+        return;
+      }
+
+      // Fallback: read from localStorage if parent did not provide earned badge info
       const userStr = localStorage.getItem('user');
       if (!userStr) return;
 
@@ -296,7 +303,7 @@ useEffect(() => {
       } catch (err) {
         console.error('Failed to parse user from localStorage', err);
       }
-    }, [currentBadge?.id, currentBadge?.badgeId]);
+    }, [currentBadge?.id, currentBadge?.badgeId, outerEarnedBadge]);
 
     function convertToFormData(jsonObject) {
   const form = new FormData();
