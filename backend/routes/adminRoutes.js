@@ -725,9 +725,15 @@ router.post("/users/import/:jobId",authenticateJWT, async (req, res) => {
 
     if ( upsert ) { 
       for ( const u of jobStatusDoc.result.invalidUsers){
-          if (u.error.includes('Badge')){
-            return res.status(401)
-              .json({message: 'Badge related Errors need resolution.'});
+          // u.error may be undefined for some rows; guard before calling includes
+          if (typeof u.error === 'string') {
+            if (u.error.includes('Badge')){
+              return res.status(401)
+                .json({message: 'Badge related Errors need resolution.'});
+            }
+          } else {
+            // log unexpected invalidUser shape for debugging and continue
+            console.warn('Invalid user entry missing error field or not a string:', u);
           }
           const { email, firstName, lastName, badgeIds } = u;
 
