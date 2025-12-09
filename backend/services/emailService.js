@@ -1,6 +1,7 @@
 const formData = require('form-data');
 const Mailgun = require('mailgun.js');
 const logger = require('../logger');
+const Badge = require('../models/Badge');
 
 // Initialize Mailgun
 const mailgun = new Mailgun(formData);
@@ -108,7 +109,7 @@ const sendPasswordResetOTP = async (email, otpCode) => {
  */
 const sendBulkUserWelcomeEmail = async (email, password, loginUrl = null) => {
   const { getBulkUserEmail } = require('../emailTemplates/bulkuser');
-  const defaultLoginUrl = loginUrl || process.env.FRONTEND_URL || 'http://localhost:3000/login';
+  const defaultLoginUrl = loginUrl || process.env.FRONTEND || 'http://localhost:3000/login';
   const html = getBulkUserEmail(email, password, defaultLoginUrl);
   
   return sendEmail({
@@ -129,9 +130,55 @@ const sendBulkUserWelcomeEmail = async (email, password, loginUrl = null) => {
  */
 const sendBadgeReceivedEmail = async (email, badgeName, badgeDescription, profileLink = null, certificateId = null, badgeImageUrl = null) => {
   const { getBadgeReceivedEmail } = require('../emailTemplates/badgerecieve');
-  const defaultProfileLink = profileLink || `${process.env.FRONTEND_URL || 'http://localhost:3000'}/profile`;
-  const html = getBadgeReceivedEmail(badgeName, badgeDescription, defaultProfileLink, certificateId, badgeImageUrl);
-  
+  const frontendBase = process.env.FRONTEND || process.env.BACKEND_URL || `http://localhost:${process.env.PORT || '3001'}`;
+  const defaultProfileLink = profileLink || `${frontendBase}/profile`;
+
+  // If caller didn't pass an explicit badgeImageUrl, attempt to derive one from certificateId
+  let finalBadgeImageUrl = badgeImageUrl;
+  if (!finalBadgeImageUrl && certificateId) {
+    try {
+      const digits = String(certificateId).replace(/\D/g, '');
+      let badgeIdCandidate = null;
+
+      // Try interpreting the numeric part by stripping a 4-digit sequence (common generation uses 4-digit seq)
+      if (digits.length > 4) {
+        const tryId = parseInt(digits.slice(0, -4), 10);
+        if (!isNaN(tryId)) {
+          const bd = await Badge.findOne({ id: tryId }).select('id');
+          if (bd) badgeIdCandidate = bd.id;
+        }
+      }
+
+      // Fallback: try stripping a 3-digit sequence (some certificates use 3-digit seq)
+      if (!badgeIdCandidate && digits.length > 3) {
+        const tryId2 = parseInt(digits.slice(0, -3), 10);
+        if (!isNaN(tryId2)) {
+          const bd2 = await Badge.findOne({ id: tryId2 }).select('id');
+          if (bd2) badgeIdCandidate = bd2.id;
+        }
+      }
+
+      // Final fallback: try to find a badge with badgeId equal to the full digits string or containing it
+      if (!badgeIdCandidate) {
+        const bd3 = await Badge.findOne({ badgeId: digits }).select('id') || await Badge.findOne({ badgeId: { $regex: digits } }).select('id');
+        if (bd3) badgeIdCandidate = bd3.id;
+      }
+
+      if (badgeIdCandidate) {
+        finalBadgeImageUrl = `${frontendBase}/api/badge/images/${badgeIdCandidate}`;
+      }
+    } catch (e) {
+      logger.warn('Unable to derive badge image URL from certificateId:', certificateId, e.message || e);
+    }
+  }
+
+  // If still not available, use a placeholder image path under frontend
+  if (!finalBadgeImageUrl) {
+    finalBadgeImageUrl = `${frontendBase}/images/badge-placeholder.png`;
+  }
+
+  const html = getBadgeReceivedEmail(badgeName, badgeDescription, defaultProfileLink, certificateId, finalBadgeImageUrl);
+
   return sendEmail({
     to: email,
     subject: `🎉 Congratulations! You've earned the ${badgeName} badge`,
@@ -149,7 +196,7 @@ const sendBadgeReceivedEmail = async (email, badgeName, badgeDescription, profil
  */
 const sendProfileUpdateEmail = async (email, reasonType, badgeName = '', additionalInfo = '', profileLink = null) => {
   const { getRevokeUpdateEmail } = require('../emailTemplates/revokeUpdate');
-  const defaultProfileLink = profileLink || `${process.env.FRONTEND_URL || 'http://localhost:3000'}/profile`;
+  const defaultProfileLink = profileLink || `${process.env.FRONTEND || 'http://localhost:3000'}/profile`;
   const html = getRevokeUpdateEmail(reasonType, badgeName, additionalInfo, defaultProfileLink);
   
   return sendEmail({

@@ -813,7 +813,7 @@ router.post("/users/import/:jobId",authenticateJWT, async (req, res) => {
               const badgeDoc = await Badge.findOne({ badgeId: String(badgeEntry.badgeId) }) || await Badge.findOne({ id: badgeEntry.badgeId });
               const badgeName = (badgeDoc && badgeDoc.name) ? badgeDoc.name : (badgeEntry.badgeId || 'a badge');
               const badgeDesc = (badgeDoc && badgeDoc.description) ? badgeDoc.description : '';
-              const backendBase = process.env.BACKEND_URL || process.env.FRONTEND_URL || `http://localhost:${process.env.PORT || '3001'}`;
+              const backendBase = process.env.BACKEND_URL || process.env.FRONTEND || `http://localhost:${process.env.PORT || '3001'}`;
               const imageUrl = badgeDoc && badgeDoc.id ? `${backendBase}/api/badge/images/${badgeDoc.id}` : `${backendBase}/api/badge/images/${badgeEntry.badgeId}`;
               const certificateId = badgeEntry.certificateId || null;
               await sendBadgeReceivedEmail(savedUser.email, badgeName, badgeDesc, null, certificateId, imageUrl);
@@ -874,7 +874,7 @@ router.post("/users/import/:jobId",authenticateJWT, async (req, res) => {
               const badgeDoc = await Badge.findOne({ badgeId: String(badgeEntry.badgeId) }) || await Badge.findOne({ id: badgeEntry.badgeId });
               const badgeName = (badgeDoc && badgeDoc.name) ? badgeDoc.name : (badgeEntry.badgeId || 'a badge');
               const badgeDesc = (badgeDoc && badgeDoc.description) ? badgeDoc.description : '';
-              const backendBase = process.env.BACKEND_URL || process.env.FRONTEND_URL || `http://localhost:${process.env.PORT || '3001'}`;
+              const backendBase = process.env.BACKEND_URL || process.env.FRONTEND || `http://localhost:${process.env.PORT || '3001'}`;
               const imageUrl = badgeDoc && badgeDoc.id ? `${backendBase}/api/badge/images/${badgeDoc.id}` : `${backendBase}/api/badge/images/${badgeEntry.badgeId}`;
               const certificateId = badgeEntry.certificateId || null;
               await sendBadgeReceivedEmail(email, badgeName, badgeDesc, null, certificateId, imageUrl);

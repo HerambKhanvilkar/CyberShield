@@ -472,7 +472,7 @@ router.post("/assign-badge", authenticateJWT, async (req, res) => {
     
     // Send badge received email notification (include certificateId and badge image URL)
     try {
-      const backendBase = process.env.BACKEND_URL || process.env.FRONTEND_URL || `http://localhost:${process.env.PORT || '3001'}`;
+      const backendBase = process.env.BACKEND_URL || process.env.FRONTEND || `http://localhost:${process.env.PORT || '3001'}`;
       const imageUrl = updatedBadge && updatedBadge.id ? `${backendBase}/api/badge/images/${updatedBadge.id}` : `${backendBase}/api/badge/images/${badge.badgeId || badge.id}`;
       // Respect user's email preferences (default to true)
       const prefs = user.emailPreferences || {};

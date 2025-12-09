@@ -1,5 +1,5 @@
 function getRevokeUpdateEmail(reasonType, badgeName = '', additionalInfo = '', profileLink = null) {
-  const defaultProfileLink = profileLink || `${process.env.FRONTEND_URL || 'http://localhost:3000'}/profile`;
+  const defaultProfileLink = profileLink || `${process.env.FRONTEND || 'http://localhost:3000'}/profile`;
   let title = 'Profile Update';
   let intro = 'Your profile has been updated.';
 
