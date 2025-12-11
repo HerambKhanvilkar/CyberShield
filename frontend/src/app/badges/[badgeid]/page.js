@@ -1085,7 +1085,6 @@ const RelatedBadges = () => (
                 />
               ))}
             </div>
-
             <button
               aria-label="Next Badge"
               onClick={() => {
