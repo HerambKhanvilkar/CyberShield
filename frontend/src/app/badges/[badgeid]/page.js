@@ -416,6 +416,7 @@ useEffect(() => {
 
     return (
   <div className="flex flex-row flex-wrap gap-2 md:flex-col md:space-y-4">
+
     {hasEarned ? (
       <>
         {/* Share Link Pill */}
@@ -697,6 +698,20 @@ const RelatedBadges = () => (
   return (
     <div className="min-h-screen flex flex-col bg-[url(/background.png)] bg-cover backdrop-blur-md text-white">
       <div className='bg-black/40 backdrop-blur-md print:simulate-blur'>
+      <div className="fixed inset-0 w-full h-full z-0">
+          {/* Main video */}
+          <video
+            className={`absolute -z-10 inset-0 w-full h-full object-cover blur-sm transition-opacity duration-400`}
+            autoPlay
+            loop
+            muted
+            playsInline
+            style={{ pointerEvents: 'none' }}
+          >
+            <source src="/background.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        </div>
         <Navbar />
 
         <AllBadgeMyBadgeFilter/>
@@ -708,14 +723,14 @@ const RelatedBadges = () => (
             className="hidden lg:flex flex-row max-w-7xl min-h-[calc(100vh-250px)] mx-auto p-6 gap-6 
                       print:flex print:flex-row print:gap-6 print:max-w-none print-container print-scale-fit print:w-full print:items-start print:justify-between"
           >
-            <section className="md:w-2/6 print:w-[33.3%] my-auto space-y-6">
+            <section className="md:w-2/6 print:w-[33.3%] my-auto space-y-6 z-10">
               <BadgeDescription />
               <RelatedBadges />
             </section>
             &nbsp;
             &nbsp;
 
-            <section className="md:w-2/6 print:w-[33.3%] flex flex-col items-center">
+            <section className="md:w-2/6 print:w-[33.3%] flex flex-col items-center z-10">
               <div>
                 {/* Top earned badge pill */}
                 {earnedBadge && (
@@ -768,7 +783,7 @@ const RelatedBadges = () => (
             &nbsp;
             &nbsp;
 
-            <section className="md:w-2/6 print:w-[33.3%] my-auto space-y-6">
+            <section className="md:w-2/6 print:w-[33.3%] my-auto space-y-6 z-10">
               <SkillsEarned />
               <h2 className="text-2xl font-semibold border-b border-cyan-500 pb-2">Badge Actions</h2>
               <BadgeActions currentBadge={currentBadge} isAuthenticated={isAuthenticated} outerEarnedBadge={earnedBadge} />
@@ -776,7 +791,7 @@ const RelatedBadges = () => (
           </div>
 
           {/* Tablet Layout */}
-          <section className="hidden md:flex lg:hidden p-2 flex-col print:hidden w-full mx-auto gap-6 text-white">
+          <section className="hidden md:flex lg:hidden p-2 flex-col print:hidden w-full mx-auto gap-6 text-white z-10">
             <div className="flex w-full gap-6">
               {/* Badge and Badge Actions */}
               <div className="flex flex-col items-center w-1/2 space-y-4">
@@ -827,7 +842,7 @@ const RelatedBadges = () => (
                 )}
               </div>
                 <BadgeImage />
-                <div className="flex flex-wrap justify-center gap-2">
+                <div className="flex flex-wrap justify-center gap-2 z-10">
                   <BadgeActions currentBadge={currentBadge} isAuthenticated={isAuthenticated} outerEarnedBadge={earnedBadge} />
                 </div>
                 <BadgeMetrics />
@@ -837,7 +852,7 @@ const RelatedBadges = () => (
               &nbsp;
 
               {/* Description */}
-              <section className="w-1/2 mr-4 space-y-2">
+              <section className="w-1/2 mr-4 space-y-2 z-10">
                 <BadgeDescription />
                 <SkillsEarned />
               </section>
@@ -845,7 +860,7 @@ const RelatedBadges = () => (
           </section>
 
           {/* Mobile Layout */}
-          <div className="flex sm:hidden flex-col max-w-sm mx-auto print:hidden p-4 gap-4">
+          <div className="flex sm:hidden flex-col max-w-sm mx-auto print:hidden p-4 gap-4 z-10">
             {/* Badge Image */}
             <section className="flex flex-col items-center">
               <div className='my-2'>
@@ -935,7 +950,7 @@ const RelatedBadges = () => (
         </main>
 
         {/* Desktop Badge Collection Thumbnails print:block print:flex-col print:items-center print:justify-center */}
-        <div className="hidden md:flex  flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-white/10 via-white/5 to-cyan-400/5 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] p-2 mt-4 mx-auto w-max">
+        <div className="hidden md:flex z-10 flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-white/10 via-white/5 to-cyan-400/5 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] p-2 mt-4 mx-auto w-max">
           
           {/* Scrollable badge row with chevrons */}
           <div className="flex items-center gap-2">
@@ -990,7 +1005,7 @@ const RelatedBadges = () => (
         </div>
 
         {/* Mobile Badge Collection Thumbnails */}
-        <div className="block md:hidden rounded-2xl print:hidden bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] p-2 flex flex-col items-center justify-between mt-4 w-full mx-auto">
+        <div className="block md:hidden z-10 rounded-2xl print:hidden bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] p-2 flex flex-col items-center justify-between mt-4 w-full mx-auto">
           <div className="w-full relative">
             <button
               aria-label="Previous Badge"
