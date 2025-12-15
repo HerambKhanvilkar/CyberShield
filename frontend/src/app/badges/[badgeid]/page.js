@@ -359,7 +359,7 @@ useEffect(() => {
       // Prefer certificateId-based share URL when available
       let shareURL = '';
       try {
-        // First try the local earned badge entry
+        // First try the local earned badgeentry
         const localEarned = earnedBadge;
         if (localEarned && localEarned.certificateId) {
           try {
