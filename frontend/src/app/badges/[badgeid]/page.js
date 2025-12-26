@@ -1,6 +1,8 @@
 "use client";
-import React, { useRef,useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
+import { FastAverageColor } from 'fast-average-color';
 import { ChevronLeft, ChevronRight, Award,Trophy, Share2, Shield, BookOpen} from 'lucide-react';
+import { Renderer, Program, Triangle, Mesh } from 'ogl';
 import { toast } from "react-toastify";
 import axios from 'axios';
 import Navbar from "@/components/Navbar";
@@ -48,6 +50,396 @@ const BadgeId = () => {
     return text.substring(0, maxLength) + '...';
   }
   return text;
+};
+
+
+// ============================================
+// LIGHT RAYS COMPONENT
+// ============================================
+// DEFAULT_COLOR will be replaced by palette color
+const DEFAULT_COLOR = '#04d9ff';
+
+const hexToRgb = hex => {
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (m) {
+    // Use the exact color as provided, no boosting or clamping
+    return [parseInt(m[1], 16) / 255, parseInt(m[2], 16) / 255, parseInt(m[3], 16) / 255];
+  } else {
+    console.warn('hexToRgb fallback: invalid hex', hex);
+    // Fallback to a visible color
+    return [0.5, 0.2, 1]; // bright purple
+  }
+};
+
+const getAnchorAndDir = (origin, w, h) => {
+  const outside = 0.2;
+  switch (origin) {
+    case 'top-left':
+      return { anchor: [0, -outside * h], dir: [0, 1] };
+    case 'top-right':
+      return { anchor: [w, -outside * h], dir: [0, 1] };
+    case 'left':
+      return { anchor: [-outside * w, 0.5 * h], dir: [1, 0] };
+    case 'right':
+      return { anchor: [(1 + outside) * w, 0.5 * h], dir: [-1, 0] };
+    case 'bottom-left':
+      return { anchor: [0, (1 + outside) * h], dir: [0, -1] };
+    case 'bottom-center':
+      return { anchor: [0.5 * w, (1 + outside) * h], dir: [0, -1] };
+    case 'bottom-right':
+      return { anchor: [w, (1 + outside) * h], dir: [0, -1] };
+    default:
+      return { anchor: [0.5 * w, -outside * h], dir: [0, 1] };
+  }
+};
+
+const LightRays = ({
+  raysOrigin = 'top-left',
+  raysColor = DEFAULT_COLOR,
+  raysSpeed = 0.8,
+  lightSpread = 1,
+  rayLength = 2,
+  pulsating = false,
+  fadeDistance = 1.0,
+  saturation = 1.0,
+  followMouse = true,
+  mouseInfluence = 0.1,
+  noiseAmount = 0.0,
+  distortion = 0.0,
+  className = ''
+}) => {
+  const containerRef = useRef(null);
+  const uniformsRef = useRef(null);
+  const rendererRef = useRef(null);
+  const mouseRef = useRef({ x: 0.5, y: 0.5 });
+  const smoothMouseRef = useRef({ x: 0.5, y: 0.5 });
+  const animationIdRef = useRef(null);
+  const meshRef = useRef(null);
+  const cleanupFunctionRef = useRef(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const observerRef = useRef(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    observerRef.current = new IntersectionObserver(
+      entries => {
+        const entry = entries[0];
+        setIsVisible(entry.isIntersecting);
+      },
+      { threshold: 0.1 }
+    );
+
+    observerRef.current.observe(containerRef.current);
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+        observerRef.current = null;
+      }
+    };
+  }, []);
+
+  // Debug: log the color used in the shader
+  useEffect(() => {
+    // Log the color and the rgb array actually used
+    const rgb = hexToRgb(raysColor);
+    console.log('LightRays shader using color:', raysColor, 'rgb:', rgb);
+  }, [raysColor]);
+
+  useEffect(() => {
+    if (!isVisible || !containerRef.current) {
+      if (cleanupFunctionRef.current) {
+        cleanupFunctionRef.current();
+        cleanupFunctionRef.current = null;
+      }
+      return;
+    }
+
+    if (cleanupFunctionRef.current) {
+      cleanupFunctionRef.current();
+      cleanupFunctionRef.current = null;
+    }
+
+    const initializeWebGL = async () => {
+      if (!containerRef.current) return;
+
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      if (!containerRef.current) return;
+
+      const renderer = new Renderer({
+        dpr: Math.min(window.devicePixelRatio, 2),
+        alpha: true
+      });
+      rendererRef.current = renderer;
+
+      const gl = renderer.gl;
+      gl.canvas.style.width = '100%';
+      gl.canvas.style.height = '100%';
+
+      while (containerRef.current.firstChild) {
+        containerRef.current.removeChild(containerRef.current.firstChild);
+      }
+      containerRef.current.appendChild(gl.canvas);
+
+      const vert = `
+attribute vec2 position;
+varying vec2 vUv;
+void main() {
+  vUv = position * 0.5 + 0.5;
+  gl_Position = vec4(position, 0.0, 1.0);
+}`;
+
+      const frag = `precision highp float;
+
+uniform float iTime;
+uniform vec2  iResolution;
+uniform vec2  rayPos;
+uniform vec2  rayDir;
+uniform vec3  raysColor;
+uniform float raysSpeed;
+uniform float lightSpread;
+uniform float rayLength;
+uniform float pulsating;
+uniform float fadeDistance;
+uniform float saturation;
+uniform vec2  mousePos;
+uniform float mouseInfluence;
+uniform float noiseAmount;
+uniform float distortion;
+
+varying vec2 vUv;
+
+float noise(vec2 st) {
+  return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+}
+
+float rayStrength(vec2 raySource, vec2 rayRefDirection, vec2 coord,
+                  float seedA, float seedB, float speed) {
+  vec2 sourceToCoord = coord - raySource;
+  vec2 dirNorm = normalize(sourceToCoord);
+  float cosAngle = dot(dirNorm, rayRefDirection);
+
+  float distortedAngle = cosAngle + distortion * sin(iTime * 2.0 + length(sourceToCoord) * 0.01) * 0.2;
+  
+  float spreadFactor = pow(max(distortedAngle, 0.0), 1.0 / max(lightSpread, 0.001));
+
+  float distance = length(sourceToCoord);
+  float maxDistance = iResolution.x * rayLength;
+  float lengthFalloff = clamp((maxDistance - distance) / maxDistance, 0.0, 1.0);
+  
+  float fadeFalloff = clamp((iResolution.x * fadeDistance - distance) / (iResolution.x * fadeDistance), 0.5, 1.0);
+  float pulse = pulsating > 0.5 ? (0.8 + 0.2 * sin(iTime * speed * 3.0)) : 1.0;
+
+  float baseStrength = clamp(
+    (0.45 + 0.15 * sin(distortedAngle * seedA + iTime * speed)) +
+    (0.3 + 0.2 * cos(-distortedAngle * seedB + iTime * speed)),
+    0.0, 1.0
+  );
+
+  return baseStrength * lengthFalloff * fadeFalloff * spreadFactor * pulse;
+}
+
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+  vec2 coord = vec2(fragCoord.x, iResolution.y - fragCoord.y);
+  
+  vec2 finalRayDir = rayDir;
+  if (mouseInfluence > 0.0) {
+    vec2 mouseScreenPos = mousePos * iResolution.xy;
+    vec2 mouseDirection = normalize(mouseScreenPos - rayPos);
+    finalRayDir = normalize(mix(rayDir, mouseDirection, mouseInfluence));
+  }
+
+  vec4 rays1 = vec4(1.0) *
+              rayStrength(rayPos, finalRayDir, coord, 36.2214, 21.11349,
+                          1.5 * raysSpeed);
+  vec4 rays2 = vec4(1.0) *
+              rayStrength(rayPos, finalRayDir, coord, 22.3991, 18.0234,
+                          1.1 * raysSpeed);
+
+  fragColor = rays1 * 0.5 + rays2 * 0.4;
+
+  if (noiseAmount > 0.0) {
+    float n = noise(coord * 0.01 + iTime * 0.1);
+    fragColor.rgb *= (1.0 - noiseAmount + noiseAmount * n);
+  }
+
+  float brightness = 1.0 - (coord.y / iResolution.y);
+  fragColor.x *= 0.4 + brightness * 0.5;
+  fragColor.y *= 0.1 + brightness * 0.3;
+  fragColor.z *= 0.5 + brightness * 0.5;
+
+  if (saturation != 1.0) {
+    float gray = dot(fragColor.rgb, vec3(0.299, 0.587, 0.114));
+    fragColor.rgb = mix(vec3(gray), fragColor.rgb, saturation);
+  }
+
+  fragColor.rgb *= raysColor;
+
+  float alpha = clamp(fragColor.r + fragColor.g + fragColor.b, 0.0, 1.0);
+  fragColor.a = alpha * 0.9;
+}
+
+void main() {
+  vec4 color;
+  mainImage(color, gl_FragCoord.xy);
+  gl_FragColor = color; 
+}`;
+
+      const program = new Program(gl, {
+        vertex: vert,
+        fragment: frag,
+        uniforms: {
+          iTime: { value: 0 },
+          iResolution: { value: [gl.canvas.width, gl.canvas.height] },
+          rayPos: { value: [0, 0] },
+          rayDir: { value: [0, 1] },
+          raysColor: { value: hexToRgb(raysColor || DEFAULT_COLOR) },
+          raysSpeed: { value: raysSpeed },
+          lightSpread: { value: lightSpread },
+          rayLength: { value: rayLength },
+          pulsating: { value: pulsating ? 1.0 : 0.0 },
+          fadeDistance: { value: fadeDistance },
+          saturation: { value: saturation },
+          mousePos: { value: [smoothMouseRef.current.x, smoothMouseRef.current.y] },
+          mouseInfluence: { value: mouseInfluence },
+          noiseAmount: { value: noiseAmount },
+          distortion: { value: distortion },
+        },
+        transparent: true
+      });
+
+      const mesh = new Mesh(gl, { geometry: new Triangle(gl), program });
+      meshRef.current = mesh;
+      uniformsRef.current = program.uniforms;
+
+      const onResize = () => {
+        const { clientWidth: w, clientHeight: h } = containerRef.current;
+        renderer.setSize(w, h);
+        const dpr = renderer.dpr;
+
+        program.uniforms.iResolution.value = [w * dpr, h * dpr];
+
+        const { anchor, dir } = getAnchorAndDir(raysOrigin, w * dpr, h * dpr);
+        program.uniforms.rayPos.value = anchor;
+        program.uniforms.rayDir.value = dir;
+      };
+
+      const onRaf = (t) => {
+        program.uniforms.iTime.value = t * 0.001;
+
+        const mouseXTarget = followMouse ? mouseRef.current.x : 0.5;
+        const mouseYTarget = followMouse ? mouseRef.current.y : 0.5;
+        smoothMouseRef.current.x += (mouseXTarget - smoothMouseRef.current.x) * 0.1;
+        smoothMouseRef.current.y += (mouseYTarget - smoothMouseRef.current.y) * 0.1;
+
+        program.uniforms.mousePos.value = [smoothMouseRef.current.x, smoothMouseRef.current.y];
+
+        renderer.render({ scene: mesh });
+        animationIdRef.current = requestAnimationFrame(onRaf);
+      };
+
+      onResize();
+      window.addEventListener('resize', onResize);
+      animationIdRef.current = requestAnimationFrame(onRaf);
+
+      cleanupFunctionRef.current = () => {
+        window.removeEventListener('resize', onResize);
+        if (animationIdRef.current) cancelAnimationFrame(animationIdRef.current);
+        renderer.gl.canvas.remove();
+      };
+    };
+
+    initializeWebGL();
+
+    return () => {
+      if (cleanupFunctionRef.current) {
+        cleanupFunctionRef.current();
+        cleanupFunctionRef.current = null;
+      }
+    };
+  }, [
+    isVisible,
+    raysColor,
+    raysSpeed,
+    lightSpread,
+    raysOrigin,
+    rayLength,
+    pulsating,
+    fadeDistance,
+    saturation,
+    followMouse,
+    mouseInfluence,
+    noiseAmount,
+    distortion
+  ]);
+
+  useEffect(() => {
+    const handleMouseMove = e => {
+      if (!containerRef.current || !followMouse) return;
+
+      const { left, top, width, height } = containerRef.current.getBoundingClientRect();
+
+      let x = (e.clientX - left) / width;
+      let y = (e.clientY - top) / height;
+
+      x = Math.max(0, Math.min(1, x));
+      y = Math.max(0, Math.min(1, y));
+
+      mouseRef.current = { x, y };
+    };
+
+    if (followMouse) {
+      window.addEventListener('mousemove', handleMouseMove);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, [followMouse, raysOrigin]);
+
+  useEffect(() => {
+    const u = uniformsRef.current;
+    if (!u || !rendererRef.current) return;
+
+    // Always use the provided raysColor, do not fallback to DEFAULT_COLOR
+    u.raysColor.value = hexToRgb(raysColor);
+    u.raysSpeed.value = raysSpeed;
+    u.lightSpread.value = lightSpread;
+    u.rayLength.value = rayLength;
+    u.pulsating.value = pulsating ? 1.0 : 0.0;
+    u.fadeDistance.value = fadeDistance;
+    u.saturation.value = saturation;
+    u.mouseInfluence.value = mouseInfluence;
+    u.noiseAmount.value = noiseAmount;
+    u.distortion.value = distortion;
+
+    const { clientWidth: wCSS, clientHeight: hCSS } = containerRef.current;
+    const dpr = rendererRef.current.dpr;
+    const { anchor, dir } = getAnchorAndDir(raysOrigin, wCSS * dpr, hCSS * dpr);
+    u.rayPos.value = anchor;
+    u.rayDir.value = dir;
+  }, [
+    raysColor,
+    raysSpeed,
+    lightSpread,
+    raysOrigin,
+    rayLength,
+    pulsating,
+    fadeDistance,
+    saturation,
+    mouseInfluence,
+    noiseAmount,
+    distortion
+  ]);
+
+  return (
+    <div
+      ref={containerRef}
+      className={`absolute inset-0 w-full h-full ${className}`}
+    />
+  );
 };
 
 useEffect(() => {
@@ -201,6 +593,7 @@ useEffect(() => {
     }
   }, [badges, badgeId]);
 
+
   const currentBadge =
     badges.length > 0
       ? badges[currentBadgeIndex]
@@ -213,6 +606,13 @@ useEffect(() => {
           category: 'Loading...',
           skillsEarned: [],
         };
+
+
+  // Accent color extraction using fast-average-color
+  const badgeImgUrl = currentBadge?.image?.data || `${process.env.SERVER_URL}/badge/images/${currentBadge?.id}`;
+  // Use the bgcolor field from the badge data, fallback to DEFAULT_COLOR
+  const accentColor = currentBadge?.bgcolor || DEFAULT_COLOR;
+  const badgeImgRef = useRef(null);
 
   const earnedBadge = earnedBadges.find((badge) => badge.id === currentBadge?.id);
 
@@ -479,9 +879,6 @@ const BadgeMetrics = () => (
     <div className="flex flex-col gap-2 md:flex-row md:justify-between md:items-stretch print:flex-row print:justify-between print:items-stretch gap-2">
       {/* Level */}
       <div className="relative flex-1 flex flex-col">
-        <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-10">
-          <div className="glint glintcenter" />
-        </div>
         <div className="flex-1 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] p-4 flex flex-col justify-between text-center min-h-[50px] transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)]">
           <div className="text-sm uppercase text-gray-600">Level</div>
           <div className="text-lg font-semibold my-auto text-white">{currentBadge?.level || "N/A"}</div>
@@ -490,9 +887,6 @@ const BadgeMetrics = () => (
 
       {/* Earners */}
       <div className="relative flex-1 flex flex-col">
-        <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-10">
-          <div className="glint glintcenter" />
-        </div>
         <div className="flex-1 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] p-4 flex flex-col justify-between text-center min-h-[50px] transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)]">
           <div className="text-sm uppercase text-gray-600">Earners</div>
           <div className="text-lg font-semibold my-auto text-white">
@@ -503,9 +897,6 @@ const BadgeMetrics = () => (
 
       {/* Vertical */}
       <div className="relative flex-1">
-        <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-10">
-          <div className="glint glintcenter" />
-        </div>
         <div className="flex-1 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] p-4 flex flex-col justify-between text-center min-h-[50px] transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)]">
           <div className="text-sm uppercase text-gray-600">Vertical</div>
           <div className="text-lg font-semibold text-white">
@@ -517,9 +908,6 @@ const BadgeMetrics = () => (
 
     {/* Course Block */}
     <div className="relative w-full">
-      <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-10">
-        <div className="glint glintcenter" />
-      </div>
       <div className="flex-1 p-4 mt-1 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)]">
         <h3 className="text-xl font-semibold text-white flex items-center gap-2 mb-2">
           <BookOpen />
@@ -536,10 +924,6 @@ const BadgeMetrics = () => (
   // Badge Description Block
 const BadgeDescription = () => (
   <div className="relative">
-    {/* Glint overlay */}
-    <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-10">
-      <div className="glint glintleft" />
-    </div>
 
     {/* Badge Details Block */}
     <div className="relative z-20 space-y-4 p-4 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)]">
@@ -565,11 +949,6 @@ const SkillsEarned = () => (
     <div className="grid grid-cols-2 gap-3">
       {currentBadge?.skillsEarned?.map((skill, idx) => (
         <div key={idx} className="relative rounded-2xl h-full">
-          {/* Glint overlay */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-10 w-full h-full">
-            <div className="glint glintright" />
-          </div>
-
           <div
             className="h-full w-full flex items-center text-sm rounded-2xl bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] px-3 py-2 text-white
               transition-shadow duration-300 ease-in-out
@@ -600,11 +979,6 @@ const RelatedBadges = () => (
             key={relatedBadge.id}
             className="mx-2 relative flex-shrink-0 min-w-[6rem] md:min-w-[6.5rem]"
           >
-            {/* Glint overlay */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-10 w-full h-full">
-              <div className="glint glintleft" />
-            </div>
-
             <div
               className="cursor-pointer flex flex-col items-center space-y-2 rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg p-2
               transition-shadow duration-300 ease-in-out
@@ -664,8 +1038,9 @@ const RelatedBadges = () => (
               <div className="glint glintcenter" />
             </div>
               <img
+                ref={badgeImgRef}
                 crossOrigin="anonymous"
-                src={`${process.env.SERVER_URL}/badge/images/${currentBadge?.id}` || currentBadge.image?.data}
+                src={badgeImgUrl}
                 alt={currentBadge?.name}
                 className="max-w-full max-h-full object-contain"
               />
@@ -696,26 +1071,108 @@ const RelatedBadges = () => (
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-[url(/background.png)] bg-cover backdrop-blur-md text-white">
-      <div className='bg-black/40 backdrop-blur-md print:simulate-blur'>
-      <div className="fixed inset-0 w-full h-full z-0">
-          {/* Main video */}
-          <video
-            className={`absolute -z-10 inset-0 w-full h-full object-cover blur-sm transition-opacity duration-400`}
-            autoPlay
-            loop
-            muted
-            playsInline
-            style={{ pointerEvents: 'none' }}
-          >
-            <source src="/background.mp4" type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
-        </div>
+    <div className="min-h-screen flex flex-col text-white relative">
+      {/* Fixed Background */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[#000005]" />
+
+        {/* Dynamic LightRays using accentColor from badge image */}
+        {accentColor && (
+          <>
+            {console.log('LightRays accentColor prop:', accentColor)}
+            <LightRays
+              raysOrigin="top-center"
+              raysColor={accentColor}
+              raysSpeed={0.035}
+              lightSpread={0.09}
+              rayLength={0.3}
+              pulsating={false}
+              fadeDistance={0}
+              saturation={2.8}
+              followMouse={true}
+              mouseInfluence={0.65}
+              noiseAmount={0.01}
+              distortion={0.02}
+            />
+            <LightRays
+              raysOrigin="bottom-center"
+              raysColor={accentColor}
+              raysSpeed={0.04}
+              lightSpread={0.09}
+              rayLength={3}
+              pulsating={true}
+              fadeDistance={4.0}
+              saturation={2.5}
+              followMouse={true}
+              mouseInfluence={0.65}
+              noiseAmount={0.012}
+              distortion={0.02}
+            />
+            <LightRays
+              raysOrigin="left"
+              raysColor={accentColor}
+              raysSpeed={0.045}
+              lightSpread={0.3}
+              rayLength={3}
+              pulsating={true}
+              fadeDistance={4.5}
+              saturation={2.7}
+              followMouse={true}
+              mouseInfluence={0.7}
+              noiseAmount={0.015}
+              distortion={0.02}
+            />
+            <LightRays
+              raysOrigin="right"
+              raysColor={accentColor}
+              raysSpeed={0.045}
+              lightSpread={0.3}
+              rayLength={3}
+              pulsating={true}
+              fadeDistance={4.5}
+              saturation={2.7}
+              followMouse={true}
+              mouseInfluence={0.7}
+              noiseAmount={0.015}
+              distortion={0.02}
+            />
+            <LightRays
+              raysOrigin="bottom-left"
+              raysColor={accentColor}
+              raysSpeed={0.035}
+              lightSpread={0.28}
+              rayLength={3}
+              pulsating={true}
+              fadeDistance={4.0}
+              saturation={2.4}
+              followMouse={true}
+              mouseInfluence={0.7}
+              noiseAmount={0.012}
+              distortion={0.02}
+            />
+            <LightRays
+              raysOrigin="bottom-right"
+              raysColor={accentColor}
+              raysSpeed={0.035}
+              lightSpread={0.28}
+              rayLength={3}
+              pulsating={true}
+              fadeDistance={4.0}
+              saturation={2.4}
+              followMouse={true}
+              mouseInfluence={0.7}
+              noiseAmount={0.012}
+              distortion={0.02}
+            />
+          </>
+        )}
+      </div>
+
+      {/* Content layer */}
+      <div className="relative z-10 flex flex-col min-h-screen">
         <Navbar />
 
         <AllBadgeMyBadgeFilter/>
-        
         {/* Main content with responsive layout */}
         <main className="flex-grow" key={badgeId}>
           {/* Desktop Layout */}
@@ -910,9 +1367,11 @@ const RelatedBadges = () => (
                 )}
               </div>
               <BadgeImage />
-              <div className="text-center text-sm text-gray-400 mt-2">
+
+              {/* <div className="text-center text-sm text-gray-400 mt-2">
                 {currentBadgeIndex + 1} of {badges.length} badges
-              </div>
+              </div> */}
+              
             </section>
             {/* Badge Actions */}
             <section className="space-y-4">
@@ -1100,8 +1559,9 @@ const RelatedBadges = () => (
             {badges.length} Badges — Showing {currentBadgeIndex + 1} of {badges.length}
           </div>
         </div>
+
+        <Footer />
       </div>
-      <Footer />
     </div>
   );
 };

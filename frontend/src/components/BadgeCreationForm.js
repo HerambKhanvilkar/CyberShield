@@ -41,6 +41,7 @@ function BadgeCreationForm () {
     requires: [],
     hasPrereqs: false,
     image: null,
+    bgcolor: '',
   });
   const [nextId, setNextId] = useState(null);
 
@@ -308,6 +309,7 @@ function BadgeCreationForm () {
         file: null,
         hasPrereqs: false,
         requires: [],
+        bgcolor: '',
       })
       setPreview('');
       toast.update(toastId,{
@@ -377,13 +379,14 @@ useEffect(() => {
       name: selectedBadge.name || '',
       description: selectedBadge.description || '',
       abbreviation: selectedBadge.abbreviation || '',
-      level: selectedBadge.level || 'Amateur',
+      level: selectedBadge.level || '',
       course: selectedBadge.course || '',
       vertical: selectedBadge.vertical || '',
       skillsEarned: selectedBadge.skillsEarned || [],
       requires: (selectedBadge.requires || []).map(r => String(r)),
       hasPrereqs: Array.isArray(selectedBadge.requires) && selectedBadge.requires.length > 0,
       image: selectedBadge.image || null,
+      bgcolor: selectedBadge.bgcolor || '',
     });
 
     // Always show preview from badge ID
@@ -394,13 +397,14 @@ useEffect(() => {
       name: '', 
       description: '', 
       abbreviation: '',
-      level: 'Amateur', 
+      level: '', 
       vertical: '', 
         course: '', 
         skillsEarned: [], 
         requires: [],
         hasPrereqs: false,
         image: '', 
+        bgcolor: '',
     });
     setPreview('');
   }
@@ -482,57 +486,87 @@ useEffect(() => {
           </div>
           {/* Id and details section */}
           <div className="w-full md:w-1/3 mr-4 px-2 mt-1 rounded-2xl flex flex-col bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] p-4">
-            {/* Badge Id */}
-            <div className="grid md:grid-cols-2 md:gap-6">
-              <div className="relative z-0 w-full mb-5 group">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+              {/* Badge Id */}
+              <div className="relative z-0 w-full group">
                 <IdInput
                   formData={formData}
                   handleChange={handleChange}
                   nextId={nextId}
                 />
               </div>
+              
               {/* Badge Name */}
-              <div className="relative z-0 w-full mb-5 group">
+              <div className="relative z-0 w-full group">
                 <NameInput
                   formData={formData}
                   handleChange={handleChange}
                 />
-               <div className="mt-2">
-                 <label className="block text-xs text-gray-300 mb-1">Abbreviation (certificate prefix)</label>
-                 <input
-                   name="abbreviation"
-                   value={formData.abbreviation}
-                   onChange={handleChange}
-                   className="w-full px-2 py-1 rounded bg-gray-800 text-white text-sm"
-                   placeholder="e.g. CA, XY"
-                 />
-               </div>
+              </div>
+              
+              {/* Badge Background Color */}
+              <div className="relative z-0 w-full group">
+                <label className="block text-sm font-medium text-white mb-2">Background Color</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    name="bgcolor"
+                    value={formData.bgcolor || '#04d9ff'}
+                    onChange={handleChange}
+                    className="h-10 w-10 flex rounded-lg cursor-pointer bg-transparent"
+                  />
+                  <input
+                    type="text"
+                    name="bgcolor"
+                    value={formData.bgcolor || '#04d9ff'}
+                    onChange={handleChange}
+                    placeholder="#04d9ff"
+                    pattern="^#[0-9A-Fa-f]{6}$"
+                    className="flex px-3 py-2 rounded bg-gray-800 text-white text-sm border border-gray-600 focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+              
+              {/* Badge Abbreviation */}
+              <div className="relative z-0 w-full group">
+                <label className="block text-sm font-medium text-white mb-2">Abbreviation</label>
+                <input
+                  name="abbreviation"
+                  value={formData.abbreviation}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 rounded bg-gray-800 text-white text-sm border border-gray-600 focus:border-blue-500 focus:outline-none"
+                  placeholder="e.g. CA, XY"
+                />
+                <p className="text-xs text-gray-400 mt-1">Certificate prefix</p>
               </div>
             </div>
 
+            {/* Skills */}
             <div className="grid grid-cols-1 md:grid-cols-1 py-2.5 space-y-4">
-              {/* Skills */}
-                <SearchDropdown
-                  skillsEarned={skillsEarned}
-                  formData={formData}
-                  handleChange ={handleChange}
-                />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-1 py-2.5 space-y-4">
-                <VerticalsDropdown 
-                  verticals={verticals}
-                  formData={formData}
-                  handleChange ={handleChange}
-                />
-              </div>
+              <SearchDropdown
+                skillsEarned={skillsEarned}
+                formData={formData}
+                handleChange ={handleChange}
+              />
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-1 py-2.5 space-y-4">
-                <CoursesDropDown 
-                  courses={courses}
-                  formData={formData}
-                  handleChange ={handleChange}
-                />
-              </div>
+            {/* Verticals */}
+            <div className="grid grid-cols-1 md:grid-cols-1 py-2.5 space-y-4">
+              <VerticalsDropdown 
+                verticals={verticals}
+                formData={formData}
+                handleChange ={handleChange}
+              />
+            </div>
+
+            {/* Courses */}
+            <div className="grid grid-cols-1 md:grid-cols-1 py-2.5 space-y-4">
+              <CoursesDropDown 
+                courses={courses}
+                formData={formData}
+                handleChange ={handleChange}
+              />
+            </div>
             
             <div className="relative z-10 w-full mb-5 group">
               <label className="flex items-center gap-2 text-sm font-medium text-white mb-2">
@@ -575,22 +609,24 @@ useEffect(() => {
           {/* Image Preview Section */}
           <div className="w-full md:w-1/3 px-2 mt-1 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 via-cyan-400/10 backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)] p-4">
             <div className="grid md:grid-cols-1 space-y-2 md:gap-6">
-                {preview ? (
-                  <div className="relative flex flex-col items-end w-full rounded-lg border-gray-600">
+              {preview ? (
+                <div className="relative flex flex-col items-end w-full rounded-lg border-gray-600">
                   <button 
-                  onClick={handleRemoveFile} type="button" 
-                  className="absolute z-10 top-0 h-6 w-6 p-0 rounded-full bg-gray-800 overflow-auto"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+                    onClick={handleRemoveFile} type="button" 
+                    className="absolute z-10 top-0 h-6 w-6 p-0 rounded-full bg-gray-800 overflow-auto">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+                  </button>
 
                   <div className="relative flex flex-col items-center w-full rounded-lg border-gray-600">
-                  <img
-                    crossOrigin='anonymous'
-                    src={preview}
-                    width={300}
-                    height={300}
-                    alt='Image Preview'
-                  />
+                    <img
+                      crossOrigin='anonymous'
+                      src={preview}
+                      width={300}
+                      height={300}
+                      alt='Image Preview'
+                    />
                   </div>
-                  </div>
+                </div>
                 ) : (
                   <label
                     htmlFor="dropzone-file"

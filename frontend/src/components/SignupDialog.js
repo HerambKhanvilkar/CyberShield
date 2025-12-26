@@ -21,7 +21,7 @@ import { useRouter } from "next/navigation";
 import { useAuthContext } from "./AuthContext";
 import { toast } from "react-toastify"; // Import toast
 
-const SignupDialog = ({ open, onOpenChange }) => {
+const SignupDialog = ({ open, onOpenChange, onBack }) => {
   // Support controlled open state (when opened from LoginDialog)
   const isControlled = typeof open === 'boolean' && typeof onOpenChange === 'function';
   const [isOpenLocal, setIsOpenLocal] = useState(false);
@@ -120,7 +120,18 @@ const SignupDialog = ({ open, onOpenChange }) => {
         </DialogTrigger>
       )}
       <DialogContent className="sm:max-w-[425px] bg-blue-950/10 backdrop-blur-sm shadow-lg rounded-lg border border-white/20">
-        <DialogHeader>
+        <DialogHeader className={onBack ? "pl-10" : ""}>
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="absolute left-3 top-3 text-gray-400 hover:text-white transition p-1 rounded hover:bg-white/10"
+              aria-label="Go back"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+              </svg>
+            </button>
+          )}
           <DialogTitle>Sign Up</DialogTitle>
           <DialogDescription>
             Enter your details to create an account. After entering your

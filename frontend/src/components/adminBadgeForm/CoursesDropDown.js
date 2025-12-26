@@ -50,14 +50,14 @@ const CoursesDropDown = ({ courses, formData, handleChange }) => {
 
   return (
     <div ref={dropdownRef}>
-    <div id="dropLeveldownSearchButton" data-dropdown-toggle="dropdownSearch" data-dropdown-placement="bottom" className="min-h-10 rounded-md border border-input text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2" type="text" >
+    <div id="dropLeveldownSearchButton" data-dropdown-toggle="dropdownSearch" data-dropdown-placement="bottom" className="min-h-10 rounded-md bg-gray-800/90 border border-gray-600 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-cyan-500 focus-within:ring-offset-0" type="text" >
     <div className="relative flex flex-wrap gap-1" >
       {formData.course !== '' ? (
         <div className="bg-blue-100 text-blue-800 text-xs font-semibold p-2.5 m-2.5 rounded" >
         {formData.course}
         </div>
                 ) : 
-  <input type="text" value={searchTerm} onFocus={handleFocus} onChange={handleSearchChange} className="flex-1 bg-transparent outline-none placeholder:text-muted-foreground px-3 py-2" placeholder="Search course" />
+  <input type="text" value={searchTerm} onFocus={handleFocus} onChange={handleSearchChange} className="flex-1 bg-transparent outline-none text-white placeholder:text-gray-400 px-3 py-2" placeholder="Search course" />
       }
   <input disabled={ true } type="text" className={(formData.course !== '' ? 'display' : 'hidden' ) + " invisible flex-1 bg-transparent outline-none placeholder:text-muted-foreground px-3 py-2"} placeholder="Search course" />
     <button onClick={() => setIsSkillsDropDownOpen(false)} type="button" className={ (isSkillsDropDownOpen ? "display" : "hidden" ) + " relative rounded-sm opacity-70 ring-offset-background transition-opacity p-2 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"}><div className="rounded-sm text-xs border py-2 px-2 hover:bg-muted">Esc</div><span className="sr-only">Close</span></button>

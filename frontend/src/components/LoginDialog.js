@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,14 +17,27 @@ import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify"; // Import toast
 import SignupDialog from "./SignupDialog"; // Import SignupDialog
+import ForgotPasswordDialog from "./ForgotPasswordDialog";
 
-const LoginDialog = () => {
+const LoginDialog = ({ open, onOpenChange, initialShowSignup = false }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [showSignup, setShowSignup] = useState(false); // State to control the SignupDialog visibility
+  const [showForgotPassword, setShowForgotPassword] = useState(false); // State to control ForgotPasswordDialog
   const router = useRouter();
+
+  // Handle external control
+  const dialogOpen = open !== undefined ? open : isOpen;
+  const setDialogOpen = onOpenChange || setIsOpen;
+
+  // Handle initial signup mode
+  useEffect(() => {
+    if (dialogOpen && initialShowSignup) {
+      setShowSignup(true);
+    }
+  }, [dialogOpen, initialShowSignup]);
 
   const handleLogin = async () => {
     try {
@@ -67,20 +80,37 @@ const LoginDialog = () => {
     window.location.reload();
   };
   const handleForgotPassword = () => {
-    router.push("/auth/forgot-password");
+    setDialogOpen(false);
+    setShowForgotPassword(true);
   };
 
   const toggleSignupDialog = () => {
     // Close login dialog and open signup dialog directly
-    setIsOpen(false);
+    setDialogOpen(false);
     setShowSignup(true);
   };
 
   return (
     <>
       {/* Controlled Signup dialog opened from the Login dialog */}
-      <SignupDialog open={showSignup} onOpenChange={setShowSignup} />
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <SignupDialog 
+        open={showSignup} 
+        onOpenChange={setShowSignup}
+        onBack={() => {
+          setShowSignup(false);
+          setDialogOpen(true);
+        }}
+      />
+      {/* Controlled Forgot Password dialog */}
+      <ForgotPasswordDialog 
+        open={showForgotPassword} 
+        onOpenChange={setShowForgotPassword}
+        onBack={() => {
+          setShowForgotPassword(false);
+          setDialogOpen(true);
+        }}
+      />
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
         <Button variant="outline">Login</Button>
       </DialogTrigger>

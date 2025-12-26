@@ -1,17 +1,22 @@
 "use client";
+
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import LoginDialog from "@/components/LoginDialog";
 import React, { useEffect, useRef, useState } from "react";
 import ParticleBackground from "@/components/ParticleBackground";
 import SplineScene from "@/components/SplineScene";
 import SplineScene2 from "@/components/SplineScene2";
 import Count from "@/components/count";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import Snowfall from "react-snowfall";
 
 export default function LandingPage() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [badges, setBadges] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loginDialogOpen, setLoginDialogOpen] = useState(false);
+  const [showSignupOnOpen, setShowSignupOnOpen] = useState(false);
   const carouselRef = useRef(null); // renamed for clarity
 
   const selectBadge = (i) => setActiveIndex(i);
@@ -57,8 +62,22 @@ export default function LandingPage() {
     return () => clearInterval(interval);
   }, [badges.length]);
 
+  // Show snowfall only between Dec 24 and Jan 1 (inclusive)
+  //const now = new Date();
+  //const showSnow =
+  //  (now.getMonth() === 11 && now.getDate() >= 24) || // December 24-31
+  //  (now.getMonth() === 0 && now.getDate() <= 1);     // January 1
+
   return (
     <>
+
+      {/* Snowfall overlay as background, only during holiday period 
+      {showSnow && (
+        <div style={{ position: 'relative', inset: 0, zIndex: 100, pointerEvents: 'none' }}>
+          <Snowfall snowflakeCount={120} style={{ width: '100%', height: '100vh' }} />
+        </div>
+      )} */}
+
       <Navbar />
       <div className="relative min-h-screen bg-[#00040A] text-white font-sans">
         {/* Foreground Content */}
@@ -84,20 +103,29 @@ export default function LandingPage() {
                   className="max-w-[200px] hidden md:block mb-5 drop-shadow-[0_0_20px_rgba(0,212,255,0.5)]"
                 />
                 <h1 className="text-4xl md:text-5xl font-extrabold mb-5">
-                  Cybersecurity Badges
+                  Become a part of Deepcytes
                 </h1>
                 <p className="text-lg md:text-xl mb-10 text-white/80 max-w-lg">
-                  Earn and showcase badges for your cybersecurity skills and achievements.
+                  Join our mission to build a cross border cybersafe force together
                 </p>
                 <div className="flex flex-wrap gap-5">
-                  <button className="px-7 py-3 border border-cyan-400 bg-gradient-to-br from-cyan-300/20 to-cyan-400/20 hover:from-cyan-300/40 hover:to-cyan-400/40 hover:shadow-[0_0_20px_rgba(0,212,255,0.5)] transition rounded">
-                    Get Started
+                  <button 
+                    onClick={() => {
+                      setShowSignupOnOpen(true);
+                      setLoginDialogOpen(true);
+                    }}
+                    className="px-7 py-3 border border-cyan-400 bg-gradient-to-br from-cyan-300/20 to-cyan-400/20 hover:from-cyan-300/40 hover:to-cyan-400/40 hover:shadow-[0_0_20px_rgba(0,212,255,0.5)] transition rounded pointer-events-auto cursor-pointer"
+                  >
+                    Register Now
                   </button>
                   <button
-                    onClick={() => window.open("https://learn.deepcytes.io/", "_blank")}
-                    className="px-7 py-3 border border-white/20 bg-white/10 hover:bg-white/20 transition rounded"
+                    onClick={() => {
+                      setShowSignupOnOpen(false);
+                      setLoginDialogOpen(true);
+                    }}
+                    className="px-7 py-3 border border-white/20 bg-white/10 hover:bg-white/20 transition rounded pointer-events-auto cursor-pointer"
                   >
-                    Learn More
+                    Login
                   </button>
                 </div>
               </div>
@@ -117,9 +145,55 @@ export default function LandingPage() {
             />
           </section>
 
-          {/* Featured Badge */}
+          {/* About Us */}
           <section className="py-2 z-50 bg-[#00040A] pointer-events-auto">
-            <h2 className="text-3xl sm:text-4xl mb-2 md:mb-10 text-center text-cyan-500">Featured Badges</h2>
+            <h2 className="text-3xl sm:text-4xl mb-2 md:mb-10 text-center text-cyan-500">About the DC Community</h2>
+            <div>
+              
+            </div>
+          </section>
+
+          {/* Programs available */}
+          <section className="py-2 z-50 bg-[#00040A] pointer-events-auto relative overflow-hidden">
+            <h2 className="text-3xl sm:text-4xl mb-2 md:mb-10 text-center text-cyan-500 relative z-10">Programs available</h2>
+            <div className="flex flex-wrap justify-center w-5/6 mx-auto gap-8 relative z-10">
+              {[
+                { title: "Fellowship Programs", desc: "A comprehensive program for aspiring cybersecurity professionals to gain hands-on experience and mentorship.",href: "#", img: "https://plus.unsplash.com/premium_photo-1680807869780-e0876a6f3cd5?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8Y2xhc3Nyb29tfGVufDB8fDB8fHww" },
+                { title: "Cyber Titan", desc: "An advanced track for those looking to specialize and lead in the field of cybersecurity.",href: "#", img: "https://thumbs.dreamstime.com/b/serious-black-businessman-manager-boss-mentor-talk-to-diverse-staff-people-teaching-interns-corporate-briefing-table-explaining-156764842.jpg" },
+                { title: "Cyber Warrior", desc: "A foundational program designed to build core skills and awareness in cyber defense.",href: "#", img: "https://thumbs.dreamstime.com/b/elementary-school-kids-sitting-around-teacher-classroom-71526725.jpg" },
+              ].map((program, idx) => (
+                <div
+                  key={program.title}
+                  className="flex flex-col items-stretch justify-end mb-100 bg-gradient-to-br from-cyan-900/40 to-cyan-400/10 border border-cyan-400/30 shadow-lg rounded-2xl min-h-[260px] min-w-[220px] max-w-xs w-full sm:w-[260px] p-0 mx-auto transition-transform hover:scale-105 hover:shadow-cyan-400/30 relative overflow-hidden"
+                  style={{ margin: '0 auto' }}
+                  onClick={program.href}
+                >
+                  {/* Program image only at top 50% with fade */}
+                  <div style={{ position: 'relative', width: '100%', height: '50%' }}>
+                    <img
+                      src={program.img}
+                      alt={program.title + ' background'}
+                      className="w-full h-full object-cover object-center"
+                      style={{ height: '100%', width: '100%', display: 'block', borderTopLeftRadius: '1rem', borderTopRightRadius: '1rem', maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)' }}
+                    />
+                  </div>
+                  {/* Content below image, not blurred */}
+                  <div className="flex flex-col items-center justify-end w-full h-full p-6 bg-black/40 rounded-b-2xl" style={{ minHeight: '50%' }}>
+                    <h1 className="text-xl font-bold text-cyan-200 text-center tracking-wide drop-shadow mb-2">
+                      {program.title}
+                    </h1>
+                    <p className="text-sm text-cyan-100 text-center mt-2 opacity-90">
+                      {program.desc}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Achievements */}
+          <section className="py-2 z-50 bg-[#00040A] pointer-events-auto">
+            <h2 className="text-3xl sm:text-4xl mb-2 md:mb-10 text-center text-cyan-500">Achievements</h2>
             
             {/* Use column-reverse on mobile, row on md+ */}
             <div className="flex flex-col-reverse md:flex-row w-5/6 mx-auto items-center gap-0 md:gap-2 text-text-light">
@@ -164,60 +238,61 @@ export default function LandingPage() {
 
           {/* Badge Carousel */}
           <section className="relative scrollbar pointer-events-auto z-50 bg-[#00040A] py-20 bg-gradient-to-t from-primary-dark to-transparent">
-          {/* Chevron Left */}
-          <button
-            aria-label="Scroll Left"
-            onClick={scrollLeft}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-gray-800 hover:bg-gray-700 p-2 rounded-full shadow-md"
-          >
-            <ChevronLeft className="w-6 h-6 text-white" />
-          </button>
+            {/* Chevron Left */}
+            <button
+              aria-label="Scroll Left"
+              onClick={scrollLeft}
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-gray-800 hover:bg-gray-700 p-2 rounded-full shadow-md"
+            >
+              <ChevronLeft className="w-6 h-6 text-white" />
+            </button>
 
-          {/* Chevron Right */}
-          <button
-            aria-label="Scroll Right"
-            onClick={scrollRight}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-gray-800 hover:bg-gray-700 p-2 rounded-full shadow-md"
-          >
-            <ChevronRight className="w-6 h-6 text-white" />
-          </button>
+            {/* Chevron Right */}
+            <button
+              aria-label="Scroll Right"
+              onClick={scrollRight}
+              className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-gray-800 hover:bg-gray-700 p-2 rounded-full shadow-md"
+            >
+              <ChevronRight className="w-6 h-6 text-white" />
+            </button>
 
-          {/* Scrollable Badges */}
-          <div
-            ref={carouselRef}
-            className="w-5/6 mx-auto px-5 overflow-x-scroll scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900"
-            style={{
-              WebkitOverflowScrolling: "touch",
-              overflowY: "hidden",
-              scrollSnapType: "x mandatory",
-            }}
-          >
-            <div className="flex gap-6 justify-start snap-x snap-mandatory">
-              {badges.map((badge, i) => (
-                <div
-                  key={badge.id}
-                  onClick={() => selectBadge(i)}
-                  className={`w-24 h-24 flex-shrink-0 snap-center cursor-pointer rounded-lg flex items-center justify-center transition transform ${
-                    i === activeIndex
-                      ? "bg-cyan-400/20 shadow-lg scale-110"
-                      : "bg-white/5 hover:bg-white/10 hover:-translate-y-1"
-                  }`}
-                >
-                  <img
-                    crossOrigin="anonymous"
-                    src={`${process.env.SERVER_URL}/badge/images/${badge.id}` || badge.image || badge.img?.data}
-                    alt={badge.title}
-                    className="max-w-[80%] max-h-[80%] object-contain"
-                  />
-                </div>
-              ))}
+            {/* Scrollable Badges */}
+            <div
+              ref={carouselRef}
+              className="w-5/6 mx-auto px-5 overflow-x-scroll scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900"
+              style={{
+                WebkitOverflowScrolling: "touch",
+                overflowY: "hidden",
+                scrollSnapType: "x mandatory",
+              }}
+            >
+              <div className="flex gap-6 justify-start snap-x snap-mandatory">
+                {badges.map((badge, i) => (
+                  <div
+                    key={badge.id}
+                    onClick={() => selectBadge(i)}
+                    className={`w-24 h-24 flex-shrink-0 snap-center cursor-pointer rounded-lg flex items-center justify-center transition transform ${
+                      i === activeIndex
+                        ? "bg-cyan-400/20 shadow-lg scale-110"
+                        : "bg-white/5 hover:bg-white/10 hover:-translate-y-1"
+                    }`}
+                  >
+                    <img
+                      crossOrigin="anonymous"
+                      src={`${process.env.SERVER_URL}/badge/images/${badge.id}` || badge.image || badge.img?.data}
+                      alt={badge.title}
+                      className="max-w-[80%] max-h-[80%] object-contain"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
-          {/* Why Earn Badges */}
+          </section>
+
+          {/* Why join us? */}
           <section className="pointer-events-auto py-20 z-50 bg-[#00040A]">
             <h2 className="text-3xl sm:text-4xl text-center text-white mb-10">
-              Why Earn Badges?
+              Why Join Us?
             </h2>
             <div className="grid grid-cols-1 w-5/6 mx-auto sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {[
