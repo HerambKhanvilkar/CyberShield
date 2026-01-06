@@ -33,16 +33,26 @@ const SignupDialog = ({ open, onOpenChange, onBack }) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [otp, setOtp] = useState(""); // 6-digit OTP
-  const [error, setError] = useState("");
   const [otpSent, setOtpSent] = useState(false);
+  const [error, setError] = useState("");
+  const [hiringRef, setHiringRef] = useState(false);
   const router = useRouter();
   const { fetchUser } = useAuthContext(); // Use context to fetch the user
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('ref') === 'hiring') {
+      setHiringRef(true);
+      if (params.get('email')) setEmail(params.get('email'));
+    }
+  }, []);
+
   // Function to request OTP using Axios
   const handleSendOtp = async () => {
+    const apiUrl = process.env.NEXT_PUBLIC_SERVER_URL || process.env.SERVER_URL || 'http://localhost:3001/api';
     try {
       const response = await axios.post(
-        `${process.env.SERVER_URL}/auth/register/otp`,
+        `${apiUrl}/auth/register/otp`,
         { email }
       );
 
@@ -75,9 +85,10 @@ const SignupDialog = ({ open, onOpenChange, onBack }) => {
       return;
     }
 
+    const apiUrl = process.env.NEXT_PUBLIC_SERVER_URL || process.env.SERVER_URL || 'http://localhost:3001/api';
     try {
       const response = await axios.post(
-        `${process.env.SERVER_URL}/auth/register`,
+        `${apiUrl}/auth/register`,
         {
           firstName,
           lastName,
@@ -102,7 +113,12 @@ const SignupDialog = ({ open, onOpenChange, onBack }) => {
         // Close the signup dialog
         setIsOpen(false);
         toast.success("Registered successfully! Welcome!");
-        router.push("/"); // Redirect to homepage
+
+        if (hiringRef) {
+          router.push("/portal/onboarding");
+        } else {
+          router.push("/"); // Redirect to homepage
+        }
       }
     } catch (err) {
       console.error("Signup error:", err);
@@ -128,7 +144,7 @@ const SignupDialog = ({ open, onOpenChange, onBack }) => {
               aria-label="Go back"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 12H5M12 19l-7-7 7-7"/>
+                <path d="M19 12H5M12 19l-7-7 7-7" />
               </svg>
             </button>
           )}

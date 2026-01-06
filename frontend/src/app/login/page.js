@@ -4,16 +4,14 @@ import Footer from "@/components/Footer";
 
 export default function Page() {
   return (
-    (
-      <>
-        <Navbar />
-        <div className="h-full w-full bg-[url('/background.jpg')] bg-cover bg-center bg-fixed">
-          <div className="text-white w-full justify-center items-center flex flex-col py-4 bg-blue-950/30 backdrop-blur-md shadow-lg rounded-lg">
-            <LoginForm />
-          </div>
-          <Footer/>
+    <>
+      <Navbar />
+      <div className="min-h-screen w-full bg-[#00040A] bg-[url('/background.jpg')] bg-cover bg-center bg-fixed flex flex-col">
+        <div className="flex-1 flex items-center justify-center px-4 py-12 backdrop-blur-sm bg-black/40">
+          <LoginForm />
         </div>
-      </>
-    )
+        <Footer />
+      </div>
+    </>
   );
 }

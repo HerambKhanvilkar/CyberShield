@@ -5,9 +5,9 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const router = express.Router();
-const { 
-  sendRegistrationOTP, 
-  sendPasswordResetOTP 
+const {
+  sendRegistrationOTP,
+  sendPasswordResetOTP
 } = require("../services/emailService");
 const { generateToken, generateRefreshToken, authenticateJWT, isAdmin } = require('../middleware/auth');
 const { body, validationResult } = require("express-validator");
@@ -47,95 +47,96 @@ const resetPasswordValidationRules = [
 const validateRequest = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ error: errors.array() });
+    return res.status(400).json({ msg: errors.array()[0].msg });
   }
   req.body = mongoSanitize(req.body);
   next();
 };
 
 // Route for registration with email OTP verification
-router.post("/register", validateRequest, async (req, res) => {
+router.post("/register", registerValidationRules, validateRequest, async (req, res) => {
   try {
     const { email, firstName, lastName, otp, password } = req.body;
     const userExist = await User.findOne({ email });
     if (userExist) {
-      return res.status(400).json({ 
-        message: "User already exists! Please log in." 
+      return res.status(400).json({
+        msg: "User already exists! Please log in."
       });
     }
-    const otpExist = await Otp.findOne({ email});
-    if (!otpExist || otpExist.expiry < Date.now()){
-      return res.status(400).json({ error: "Invalid or expired OTP" });
+    const otpExist = await Otp.findOne({ email });
+
+    if (!otpExist || otpExist.otp !== String(otp) || otpExist.expiry < Date.now()) {
+      return res.status(400).json({ msg: "Invalid or expired OTP" });
     }
 
     // Hash the password before storing
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Save new user
-    const newUser = new User({ 
-      email, 
-      firstName, 
-      lastName, 
+    const newUser = new User({
+      email,
+      firstName,
+      lastName,
       password: hashedPassword,
       isAdmin: false // Default to non-admin
     });
     await newUser.save();
 
-/*       [OPTIONAL] await db.collection("otps").deleteOne({ email, otp });
- *
- *         TODO
- *           console.log("REGISTER: sending Welcome mail....");
- *           await sendWelcomeEmail(email, name);
- *
- *         TODO
- *           const refreshToken = generateRefreshToken(insertResult.insertedId);
- */
+    /*       [OPTIONAL] await db.collection("otps").deleteOne({ email, otp });
+     *
+     *         TODO
+     *           console.log("REGISTER: sending Welcome mail....");
+     *           await sendWelcomeEmail(email, name);
+     *
+     *         TODO
+     *           const refreshToken = generateRefreshToken(insertResult.insertedId);
+     */
 
     // Generate JWT token
     const token = generateToken(newUser);
 
-    res.json({ 
-      message: "Signup successful!", 
-      token, // Send token to client
-      user: { 
-          username: newUser.id,
-          firstName: newUser.firstName,
-          email: newUser.email,
-          isAdmin: newUser.isAdmin,
-          badges: [],
-      } 
+    res.json({
+      msg: "Signup successful!",
+      token,
+      user: {
+        username: newUser.id,
+        firstName: newUser.firstName,
+        email: newUser.email,
+        isAdmin: newUser.isAdmin,
+        badges: [],
+      }
     });
   } catch (error) {
-    console.error("Signup error:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error("Signup msg:", error);
+    res.status(500).json({ msg: "Internal Server Error" });
   }
 });
 
 // Route to request OTP for registration
 router.post("/register/otp", [body("email").isEmail().withMessage("Invalid email").normalizeEmail()], validateRequest, async (req, res) => {
-    try {
+  try {
     const { email } = req.body;
     const otp = crypto.randomInt(100000, 999999).toString();
 
-      await Otp.updateOne(
-        { email },
-        { $set: { otp, expiry: Date.now() + 10 * 60 * 1000 } },
-        { upsert: true }
-      );
+    await Otp.updateOne(
+      { email },
+      { $set: { otp, expiry: Date.now() + 10 * 60 * 1000 } },
+      { upsert: true }
+    );
 
-      // Send OTP email
-      try {
-        await sendRegistrationOTP(email, otp);
-        res.status(200).json({ message: "OTP sent to email" });
-      } catch (emailError) {
-        console.error("Failed to send OTP email:", emailError);
-        // Still return success to prevent email enumeration attacks
-        res.status(200).json({ message: "OTP sent to email" });
-      }
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: "Server error" });
+    // Send OTP email
+    try {
+      await sendRegistrationOTP(email, otp);
+      res.status(200).json({ msg: "OTP sent to email" });
+    } catch (emailError) {
+      console.error("Failed to send OTP email:", emailError);
+      // Still return success to prevent email enumeration attacks
+      res.status(200).json({ msg: "OTP sent to email" });
     }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: "Server error" });
+  }
 });
 
 
@@ -148,14 +149,14 @@ router.post("/login", loginValidationRules, validateRequest, async (req, res) =>
       $or: [{ email }, { username: email }]
     }).select('+password');
 
-    if (!user) return res.status(400).json({ message: " No User Invalid Credentials" });
+    if (!user) return res.status(400).json({ msg: " No User Invalid Credentials" });
 
     // Verify password
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: "No password match Invalid Credentials" });
+    if (!isMatch) return res.status(400).json({ msg: "No password match Invalid Credentials" });
 
     // Generate JWT token
-    const token =  generateToken(user);
+    const token = generateToken(user);
     const refreshToken = generateRefreshToken(user);
 
     // Save refresh token on the user document
@@ -185,19 +186,19 @@ router.post("/login", loginValidationRules, validateRequest, async (req, res) =>
     }));
 
     res.status(200).json({
-        message: "Login Successful!",
-        token, // Send token to client
-        user: {
-          username: user.id,
-          firstName: user.firstName,
-          email: user.email,
-          isAdmin: user.isAdmin,
-          badges: earnedBadges,
-        },
-      });
+      msg: "Login Successful!",
+      token, // Send token to client
+      user: {
+        username: user.id,
+        firstName: user.firstName,
+        email: user.email,
+        isAdmin: user.isAdmin,
+        badges: earnedBadges,
+      },
+    });
   } catch (error) {
-    console.error("Login error:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error("Login msg:", error);
+    res.status(500).json({ msg: "Internal Server Error" });
   }
 });
 
@@ -205,7 +206,7 @@ router.post("/login", loginValidationRules, validateRequest, async (req, res) =>
 router.get("/me", async (req, res) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "Unauthorized: No token provided" });
+    return res.status(401).json({ msg: "Unauthorized: No token provided" });
   }
 
   const token = authHeader.split(" ")[1];
@@ -217,13 +218,13 @@ router.get("/me", async (req, res) => {
     });
 
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(404).json({ msg: "User not found" });
     }
 
     res.status(200).json({ user });
   } catch (error) {
     console.error("Error verifying token:", error);
-    res.status(401).json({ error: "Unauthorized: Invalid token" });
+    res.status(401).json({ msg: "Unauthorized: Invalid token" });
   }
 });
 // 
@@ -244,7 +245,7 @@ router.get("/me", async (req, res) => {
 //       });
 // 
 //       if (!user) {
-//         return res.status(403).json({ error: "Invalid refresh token" });
+//         return res.status(403).json({ msg: "Invalid refresh token" });
 //       }
 // 
 //       const newAccessToken = generateAccessToken(user._id);
@@ -252,7 +253,7 @@ router.get("/me", async (req, res) => {
 //       res.json({ accessToken: newAccessToken });
 //     } catch (error) {
 //       console.error(error);
-//       return res.status(403).json({ error: "Invalid refresh token" });
+//       return res.status(403).json({ msg: "Invalid refresh token" });
 //     }
 // });
 // 
@@ -268,10 +269,10 @@ router.get("/me", async (req, res) => {
 //       { $unset: { refreshToken: "" } }
 //     );
 // 
-//     res.status(200).json({ message: "Logged out successfully" });
+//     res.status(200).json({ msg: "Logged out successfully" });
 //   } catch (error) {
 //     console.error(error);
-//     res.status(500).json({ error: "Server error" });
+//     res.status(500).json({ msg: "Server error" });
 //   }
 // });
 // 
@@ -283,7 +284,7 @@ router.post("/reset-password/otp", async (req, res) => {
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ error: "Email not found" });
+      return res.status(400).json({ msg: "Email not found" });
     }
 
     await Otp.updateOne(
@@ -295,34 +296,140 @@ router.post("/reset-password/otp", async (req, res) => {
     // Send password reset OTP email
     try {
       await sendPasswordResetOTP(email, otp);
-      res.status(200).json({ message: "OTP sent to email" });
+      res.status(200).json({ msg: "OTP sent to email" });
     } catch (emailError) {
       console.error("Failed to send password reset OTP email:", emailError);
       // Still return success to prevent email enumeration attacks
-      res.status(200).json({ message: "OTP sent to email" });
+      res.status(200).json({ msg: "OTP sent to email" });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ msg: "Server error" });
   }
 });
 
-router.post("/reset-password", async (req, res) => {
-    const { email, otp, newPassword } = req.body;
+router.post("/reset-password", resetPasswordValidationRules, validateRequest, async (req, res) => {
+  const { email, otp, newPassword } = req.body;
 
-    try {
-      const otpRecord = await Otp.findOne({ email });
-      if (!otpRecord || otpRecord.expiry < Date.now())
-        return res.status(400).json({ error: "Invalid or expired OTP" });
+  try {
+    const otpRecord = await Otp.findOne({ email });
+    if (!otpRecord || otpRecord.expiry < Date.now())
+      return res.status(400).json({ msg: "Invalid or expired OTP" });
 
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
-      await User.updateOne({ email }, { $set: { password: hashedPassword } });
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await User.updateOne({ email }, { $set: { password: hashedPassword } });
 
-      res.status(200).json({ message: "Password reset successfully" });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: "Server error" });
+    res.status(200).json({ msg: "Password reset successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: "Server error" });
+  }
+});
+
+// --- OTP Login Flow for Portal ---
+
+// 1. Request OTP for Login
+router.post("/login-otp", [body("email").isEmail().withMessage("Invalid email").normalizeEmail()], validateRequest, async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Check if user exists (User must be pre-seeded by Admin)
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ msg: "User not found. Please contact support." });
     }
+
+    const otp = crypto.randomInt(100000, 999999).toString();
+
+    // Upsert OTP
+    await Otp.updateOne(
+      { email },
+      { $set: { otp, expiry: Date.now() + 10 * 60 * 1000 } },
+      { upsert: true }
+    );
+
+    // Send OTP (Reusing registration email function for now, or use a generic one)
+    try {
+      await sendRegistrationOTP(email, otp);
+      res.status(200).json({ msg: "OTP sent to your email." });
+    } catch (emailError) {
+      console.error("Failed to send OTP:", emailError);
+      res.status(500).json({ msg: "Failed to send email." });
+    }
+  } catch (error) {
+    console.error("Login OTP msg:", error);
+    res.status(500).json({ msg: "Server error" });
+  }
+});
+
+// 2. Verify OTP and Login
+router.post("/verify-login-otp", [
+  body("email").isEmail().withMessage("Invalid email").normalizeEmail(),
+  body("otp").isNumeric().withMessage("OTP must be numeric")
+], validateRequest, async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    const otpRecord = await Otp.findOne({ email });
+    if (!otpRecord || otpRecord.otp !== otp || otpRecord.expiry < Date.now()) {
+      return res.status(400).json({ msg: "Invalid or expired OTP" });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ msg: "User record missing." });
+    }
+
+    // Clear OTP after successful use
+    await Otp.deleteOne({ email });
+
+    // Generate Tokens
+    const token = generateToken(user);
+    const refreshToken = generateRefreshToken(user);
+
+    user.refreshToken = refreshToken;
+    await user.save();
+
+    // Return same structure as normal login
+    res.status(200).json({
+      msg: "Login Successful",
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        isAdmin: user.isAdmin,
+        // Portal specific fields
+        ndaDateTimeUser: user.ndaDateTimeUser,
+        pid: user.pid
+      }
+    });
+
+  } catch (error) {
+    console.error("Verify OTP msg:", error);
+    res.status(500).json({ msg: "Server error" });
+  }
+});
+
+
+
+// Generic OTP Validation (for forms like Application)
+router.post("/validate-otp", [
+  body("email").isEmail(),
+  body("otp").isNumeric()
+], validateRequest, async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const otpRecord = await Otp.findOne({ email });
+    if (!otpRecord || otpRecord.otp !== otp || otpRecord.expiry < Date.now()) {
+      return res.status(400).json({ msg: "Invalid or expired OTP" });
+    }
+    res.status(200).json({ msg: "OTP valid" });
+  } catch (error) {
+    res.status(500).json({ msg: "Server error" });
+  }
 });
 
 module.exports = router;
+

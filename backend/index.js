@@ -43,23 +43,24 @@ const looseLimiter = rateLimit({
 const speedLimiter = slowDown({
   windowMs: 5 * 60 * 1000,
   delayAfter: 100,
-  delayMs:()=> 700,
+  delayMs: () => 700,
 });
 
-app.use(helmet({contentSecurityPolicy: false}));
+app.use(helmet({ contentSecurityPolicy: false }));
 
 // Add additional security headers (CSP intentionally disabled per request)
 app.use(securityHeaders);
 
 app.use(express.json());
 
-app.use(express.urlencoded({extended:true}))
+app.use(express.urlencoded({ extended: true }))
+app.use('/uploads', express.static('uploads'));
 
 
 // Configure CORS more explicitly to avoid common CORS errors
 const frontendOrigin = process.env.FRONTEND || "http://localhost:3000";
 const corsOptions = {
-  origin: function(origin, callback) {
+  origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps, curl, server-to-server)
     if (!origin) return callback(null, true);
     // Always allow localhost during local development (covers http://localhost:3000)
@@ -126,12 +127,12 @@ app.use((err, req, res, next) => {
 (async () => {
   try {
     // Connect to MongoDB Atlas
-    mongoose.connect(process.env.MONGO_URI, { 
-      useNewUrlParser: true, 
-      useUnifiedTopology: true 
+    mongoose.connect(process.env.MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
     })
-    .then(() => console.log("MongoDB Atlas Connected"))
-    .catch(err => console.error("MongoDB Connection Error:", err));
+      .then(() => console.log("MongoDB Atlas Connected"))
+      .catch(err => console.error("MongoDB Connection Error:", err));
 
     app.listen(PORT, () => {
       logger.info(`Application initialized successfully on port ${PORT}`);
@@ -149,6 +150,12 @@ app.use((err, req, res, next) => {
   app.use("/api", jobRoutes);
   app.use("/api", adminRoutes);
   app.use("/api", serverRoutes);
+
+  // New Routes for Portal and Application
+  const portalRoutes = require("./routes/portalRoutes");
+  const applicationRoutes = require("./routes/applicationRoutes");
+  app.use("/api/portal", portalRoutes);
+  app.use("/api/application", applicationRoutes);
   // app.use("/api/dashboard", strictLimiter, dashboardRoutes);
   // app.use("/api", strictLimiter, watchlistRoutes);
   // app.use("/api/audit", strictLimiter, auditRoutes);

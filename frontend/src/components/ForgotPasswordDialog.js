@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "react-toastify";
 import axios from "axios";
+import { Eye, EyeOff } from "lucide-react";
 
 const ForgotPasswordDialog = ({ open, onOpenChange, onBack }) => {
   const [step, setStep] = useState(1); // 1 = email, 2 = OTP & password reset
@@ -23,19 +24,22 @@ const ForgotPasswordDialog = ({ open, onOpenChange, onBack }) => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleSendOtp = async () => {
     setLoading(true);
     setError("");
+    const apiUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api';
     try {
       const response = await axios.post(
-        `${process.env.SERVER_URL}/api/auth/forgot-password`,
+        `${apiUrl}/auth/reset-password/otp`,
         { email }
       );
-      toast.success(response.data.message || "OTP sent successfully!");
+      toast.success(response.data.msg || "OTP sent successfully!");
       setStep(2);
     } catch (err) {
-      const errorMsg = err.response?.data?.error || "Failed to send OTP";
+      const errorMsg = err.response?.data?.msg || "Failed to send OTP";
       setError(errorMsg);
       toast.error(errorMsg);
     } finally {
@@ -51,15 +55,16 @@ const ForgotPasswordDialog = ({ open, onOpenChange, onBack }) => {
     }
     setLoading(true);
     setError("");
+    const apiUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api';
     try {
       const response = await axios.post(
-        `${process.env.SERVER_URL}/api/auth/reset-password`,
+        `${apiUrl}/auth/reset-password`,
         { email, otp, newPassword }
       );
-      toast.success(response.data.message || "Password reset successfully!");
+      toast.success(response.data.msg || "Password reset successfully!");
       handleClose();
     } catch (err) {
-      const errorMsg = err.response?.data?.error || "Failed to reset password";
+      const errorMsg = err.response?.data?.msg || "Failed to reset password";
       setError(errorMsg);
       toast.error(errorMsg);
     } finally {
@@ -88,7 +93,7 @@ const ForgotPasswordDialog = ({ open, onOpenChange, onBack }) => {
               aria-label="Go back"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 12H5M12 19l-7-7 7-7"/>
+                <path d="M19 12H5M12 19l-7-7 7-7" />
               </svg>
             </button>
           )}
@@ -99,7 +104,7 @@ const ForgotPasswordDialog = ({ open, onOpenChange, onBack }) => {
               aria-label="Go back"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 12H5M12 19l-7-7 7-7"/>
+                <path d="M19 12H5M12 19l-7-7 7-7" />
               </svg>
             </button>
           )}
@@ -114,7 +119,7 @@ const ForgotPasswordDialog = ({ open, onOpenChange, onBack }) => {
         </DialogHeader>
         <div className="grid gap-4 py-4">
           {error && <div className="text-red-500 font-medium">{error}</div>}
-          
+
           {step === 1 ? (
             <>
               <div className="grid grid-cols-4 items-center gap-4">
@@ -127,7 +132,7 @@ const ForgotPasswordDialog = ({ open, onOpenChange, onBack }) => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
-                  className="col-span-3"
+                  className="col-span-3 bg-black/30 border-white/10 text-white"
                 />
               </div>
             </>
@@ -143,34 +148,52 @@ const ForgotPasswordDialog = ({ open, onOpenChange, onBack }) => {
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
                   placeholder="Enter OTP"
-                  className="col-span-3"
+                  className="col-span-3 bg-black/30 border-white/10 text-white"
                 />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="newPassword" className="text-right">
+              <div className="grid grid-cols-4 items-center gap-4 text-white">
+                <Label htmlFor="newPassword" classname="text-right">
                   Password
                 </Label>
-                <Input
-                  id="newPassword"
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="New password"
-                  className="col-span-3"
-                />
+                <div className="col-span-3 relative">
+                  <Input
+                    id="newPassword"
+                    type={showNewPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="New password"
+                    className="pr-10 bg-black/30 border-white/10 text-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-cyan-400 transition-colors"
+                  >
+                    {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="confirmPassword" className="text-right">
+              <div className="grid grid-cols-4 items-center gap-4 text-white">
+                <Label htmlFor="confirmPassword" classname="text-right">
                   Confirm
                 </Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm password"
-                  className="col-span-3"
-                />
+                <div className="col-span-3 relative">
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm password"
+                    className="pr-10 bg-black/30 border-white/10 text-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-cyan-400 transition-colors"
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
             </>
           )}

@@ -26,6 +26,7 @@ const LoginDialog = ({ open, onOpenChange, initialShowSignup = false }) => {
   const [error, setError] = useState("");
   const [showSignup, setShowSignup] = useState(false); // State to control the SignupDialog visibility
   const [showForgotPassword, setShowForgotPassword] = useState(false); // State to control ForgotPasswordDialog
+  const [hiringRef, setHiringRef] = useState(false);
   const router = useRouter();
 
   // Handle external control
@@ -34,6 +35,10 @@ const LoginDialog = ({ open, onOpenChange, initialShowSignup = false }) => {
 
   // Handle initial signup mode
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('ref') === 'hiring') {
+      setHiringRef(true);
+    }
     if (dialogOpen && initialShowSignup) {
       setShowSignup(true);
     }
@@ -62,6 +67,11 @@ const LoginDialog = ({ open, onOpenChange, initialShowSignup = false }) => {
 
         toast.success("Logged in successfully!");
         handleRefresh();
+
+        if (hiringRef) {
+          router.push("/portal/onboarding");
+        }
+
         setIsOpen(false); // Close the dialog
       } else {
         const error = await response.json();
@@ -93,8 +103,8 @@ const LoginDialog = ({ open, onOpenChange, initialShowSignup = false }) => {
   return (
     <>
       {/* Controlled Signup dialog opened from the Login dialog */}
-      <SignupDialog 
-        open={showSignup} 
+      <SignupDialog
+        open={showSignup}
         onOpenChange={setShowSignup}
         onBack={() => {
           setShowSignup(false);
@@ -102,8 +112,8 @@ const LoginDialog = ({ open, onOpenChange, initialShowSignup = false }) => {
         }}
       />
       {/* Controlled Forgot Password dialog */}
-      <ForgotPasswordDialog 
-        open={showForgotPassword} 
+      <ForgotPasswordDialog
+        open={showForgotPassword}
         onOpenChange={setShowForgotPassword}
         onBack={() => {
           setShowForgotPassword(false);
@@ -111,17 +121,17 @@ const LoginDialog = ({ open, onOpenChange, initialShowSignup = false }) => {
         }}
       />
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline">Login</Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] bg-blue-950/10 backdrop-blur-sm shadow-lg rounded-lg border border-white/20">
-        <DialogHeader>
-          <DialogTitle>Login</DialogTitle>
-          <DialogDescription>Enter your credentials to log in.</DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          {error && <div className="text-red-500 font-medium">{error}</div>}
-          <>
+        <DialogTrigger asChild>
+          <Button variant="outline">Login</Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[425px] bg-blue-950/10 backdrop-blur-sm shadow-lg rounded-lg border border-white/20">
+          <DialogHeader>
+            <DialogTitle>Login</DialogTitle>
+            <DialogDescription>Enter your credentials to log in.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            {error && <div className="text-red-500 font-medium">{error}</div>}
+            <>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="email" className="text-right">
                   Email
@@ -164,23 +174,23 @@ const LoginDialog = ({ open, onOpenChange, initialShowSignup = false }) => {
                   Sign up
                 </button>
               </div>
-          </>
-        </div>
-        <DialogFooter>
-          {!showSignup ? (
-            <Button
-              className="w-full bg-[#3DB5DA] hover:bg-[#0592be] font-bold"
-              type="submit"
-              onClick={handleLogin}
-            >
-              Login
-            </Button>
-          ) : (
-            <></> // No button in the footer while showing signup form
-          )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+            </>
+          </div>
+          <DialogFooter>
+            {!showSignup ? (
+              <Button
+                className="w-full bg-[#3DB5DA] hover:bg-[#0592be] font-bold"
+                type="submit"
+                onClick={handleLogin}
+              >
+                Login
+              </Button>
+            ) : (
+              <></> // No button in the footer while showing signup form
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

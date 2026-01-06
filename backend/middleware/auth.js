@@ -25,13 +25,13 @@ const generateRefreshToken = (user) => {
 // Verify JWT token middleware
 const authenticateJWT = (req, res, next) => {
   const authHeader = req.headers.authorization;
-  
+
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ message: "Authentication required" });
+    return res.status(401).json({ msg: "Authentication required" });
   }
-  
+
   const token = authHeader.split(' ')[1];
-  
+
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded;
@@ -44,23 +44,23 @@ const authenticateJWT = (req, res, next) => {
     if (error && error.name === 'TokenExpiredError') {
       // Don't print full stack for expired tokens; log minimal info at debug level.
       console.warn('JWT expired:', error.message);
-      return res.status(401).json({ error: 'token_expired', message: 'Token expired' });
+      return res.status(401).json({ error: 'token_expired', msg: 'Token expired' });
     }
     if (error && error.name === 'JsonWebTokenError') {
       console.warn('Invalid JWT:', error.message);
-      return res.status(401).json({ error: 'invalid_token', message: 'Invalid token' });
+      return res.status(401).json({ error: 'invalid_token', msg: 'Invalid token' });
     }
 
-    // Unexpected error: log message but avoid noisy stack traces in production.
-    console.warn('JWT verification error:', error && error.message ? error.message : error);
-    return res.status(401).json({ error: 'authentication_failed', message: 'Invalid or expired token' });
+    // Unexpected msg: log message but avoid noisy stack traces in production.
+    console.warn('JWT verification msg:', error && error.message ? error.message : error);
+    return res.status(401).json({ error: 'authentication_failed', msg: 'Invalid or expired token' });
   }
 };
 
 // Admin verification middleware
 const isAdmin = (req, res, next) => {
   if (!req.user.isAdmin) {
-    return res.status(403).json({ message: "Admin privileges required" });
+    return res.status(403).json({ msg: "Admin privileges required" });
   }
   next();
 };
