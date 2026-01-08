@@ -7,7 +7,7 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
 // Generate JWT token
 const generateToken = (user) => {
   return jwt.sign(
-    { id: user._id, username: user.username, isAdmin: user.isAdmin },
+    { id: user._id, username: user.username, email: user.email, isAdmin: user.isAdmin },
     JWT_SECRET,
     { expiresIn: JWT_EXPIRES_IN }
   );
@@ -16,7 +16,7 @@ const generateToken = (user) => {
 // Generate JWT token
 const generateRefreshToken = (user) => {
   return jwt.sign(
-    { id: user._id, username: user.username, isAdmin: user.isAdmin },
+    { id: user._id, username: user.username, email: user.email, isAdmin: user.isAdmin },
     JWT_SECRET,
     { expiresIn: JWT_EXPIRES_IN }
   );
@@ -57,6 +57,8 @@ const authenticateJWT = (req, res, next) => {
   }
 };
 
+const FellowshipProfile = require('../models/FellowshipProfile');
+
 // Admin verification middleware
 const isAdmin = (req, res, next) => {
   if (!req.user.isAdmin) {
@@ -65,4 +67,38 @@ const isAdmin = (req, res, next) => {
   next();
 };
 
-module.exports = { generateRefreshToken, generateToken, authenticateJWT, isAdmin };
+// Check if user is a Fellow (Active/Completed/etc, NOT Pending)
+const isFellow = async (req, res, next) => {
+  try {
+    const profile = await FellowshipProfile.findOne({ email: req.user.email });
+    // If no profile, or status is PENDING/REJECTED, they are NOT a fellow yet
+    if (!profile || profile.status === 'PENDING' || profile.status === 'REJECTED') {
+      return res.status(403).json({ msg: "Fellow access required. Please complete onboarding first." });
+    }
+    req.fellow = profile;
+    next();
+  } catch (err) {
+    console.error("isFellow check error:", err);
+    res.status(500).json({ msg: "Server error checking fellow status" });
+  }
+};
+
+// Check if user is an Applicant (or Pending Fellow) - should NOT access Fellowship Dashboard
+const isApplicant = async (req, res, next) => {
+  try {
+    const profile = await FellowshipProfile.findOne({ email: req.user.email });
+    // If they ARE a fellow (Active+), they should go to dashboard, not portal
+    if (profile && (profile.status === 'ACTIVE' || profile.status === 'COMPLETED' || profile.status === 'FROZEN')) {
+      return res.status(403).json({
+        msg: "You are a Fellow. Please use /FellowshipProfile",
+        redirect: "/FellowshipProfile"
+      });
+    }
+    next();
+  } catch (err) {
+    console.error("isApplicant check error:", err);
+    res.status(500).json({ msg: "Server error checking applicant status" });
+  }
+};
+
+module.exports = { generateRefreshToken, generateToken, authenticateJWT, isAdmin, isFellow, isApplicant };

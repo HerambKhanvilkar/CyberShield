@@ -212,37 +212,19 @@ function Navbar() {
                 <span>Badges</span>
               </Link>
 
-              {/* More dropdown */}
-              <div className="relative" ref={moreDropdownRef}>
-                <button
-                  onClick={toggleMoreDropdown}
-                  className="hover:text-[#3DB5DA] transition-colors flex items-center gap-2 focus:outline-none"
+              {user && (
+                <Link
+                  href={
+                    user.fellowshipStatus === 'FELLOW' ? '/FellowshipProfile' :
+                      user.fellowshipStatus === 'ONBOARDING' ? '/portal/onboarding' :
+                        '/portal'
+                  }
+                  className="px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500 hover:text-white transition-all text-xs font-black uppercase tracking-widest"
                 >
-                  <span>More</span>
-                </button>
-                {isMoreDropdownOpen && (
-                  <ul className="absolute right-0 mt-2 w-36 bg-white text-black rounded-lg shadow-md z-50">
-                    <li>
-                      <Link
-                        href="/about"
-                        onClick={() => setIsMoreDropdownOpen(false)}
-                        className="block px-4 py-2 hover:bg-gray-200 rounded-t-lg"
-                      >
-                        About Us
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        href="/contact"
-                        onClick={() => setIsMoreDropdownOpen(false)}
-                        className="block px-4 py-2 hover:bg-gray-200 rounded-b-lg"
-                      >
-                        Contact
-                      </Link>
-                    </li>
-                  </ul>
-                )}
-              </div>
+                  {user.fellowshipStatus === 'FELLOW' ? 'Fellowship Dashboard' : 'Fellowship Portal'}
+                </Link>
+              )}
+
             </div>
           </div>
 
@@ -316,9 +298,8 @@ function Navbar() {
 
         {/* Mobile SideNav Menu */}
         <div
-          className={`fixed top-0 left-0 h-full bg-black/50 backdrop-blur-sm z-50 overflow-x-hidden transition-all duration-500 ${
-            isSidenavOpen ? "w-[250px]" : "w-0"
-          }`}
+          className={`fixed top-0 left-0 h-full bg-black/50 backdrop-blur-sm z-50 overflow-x-hidden transition-all duration-500 ${isSidenavOpen ? "w-[250px]" : "w-0"
+            }`}
         >
           <button
             className="absolute top-4 right-4 text-white text-4xl"
@@ -353,6 +334,20 @@ function Navbar() {
             >
               Badges
             </Link>
+
+            {user && (
+              <Link
+                href={
+                  user.fellowshipStatus === 'FELLOW' ? '/FellowshipProfile' :
+                    user.fellowshipStatus === 'ONBOARDING' ? '/portal/onboarding' :
+                      '/portal'
+                }
+                onClick={() => setIsSidenavOpen(false)}
+                className="text-cyan-400 text-2xl font-black italic uppercase tracking-tighter"
+              >
+                {user.fellowshipStatus === 'FELLOW' ? 'Fellowship Dashboard' : 'Fellowship'}
+              </Link>
+            )}
 
             <Link
               href="/about"

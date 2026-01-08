@@ -34,10 +34,6 @@ const ApplicantSchema = new mongoose.Schema({
         type: Object, // Any other form data
         default: {}
     },
-    dob: {
-        type: String, // DDMMYYYY
-        default: ""
-    },
     assignedEmail: {
         type: String,
         default: ""
@@ -59,6 +55,10 @@ const ApplicantSchema = new mongoose.Schema({
     resume: {
         type: String, // Path to resume file
         default: null
+    },
+    processedBy: {
+        type: String, // Email of the admin who accepted/rejected
+        default: ""
     },
     submittedAt: {
         type: Date,

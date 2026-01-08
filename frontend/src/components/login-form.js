@@ -55,7 +55,9 @@ export function LoginForm() {
         toast.success("Logged in successfully!");
         await fetchUser();
 
-        if (hiringRef) {
+        if (data.user.fellowshipStatus === 'FELLOW') {
+          router.push("/FellowshipProfile");
+        } else if (hiringRef || data.user.fellowshipStatus === 'ONBOARDING') {
           router.push("/portal/onboarding");
         } else {
           router.push("/");

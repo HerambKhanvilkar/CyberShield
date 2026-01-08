@@ -1,4 +1,4 @@
-const { authenticateJWT } = require('../middleware/auth');
+const { authenticateJWT, isAdmin } = require('../middleware/auth');
 const express = require("express");
 const router = express.Router();
 const multer = require('multer');
@@ -15,49 +15,51 @@ const { Parser } = require('json2csv');
 const agenda = require('../worker.js'); // path to your agenda initialization module
 const { validateMIMEType } = require("validate-image-type");
 const sharp = require('sharp');
-const { 
+const {
   sendBulkUserWelcomeEmail,
   sendBadgeReceivedEmail,
-  sendProfileUpdateEmail 
+  sendProfileUpdateEmail
 } = require("../services/emailService");
 const { awardCompositeBadgesForUser } = require('../services/badgeService');
+const FellowshipProfile = require('../models/FellowshipProfile');
+const LifecycleManager = require('../services/LifecycleManager');
 
-const uploadImage = multer({ 
+const uploadImage = multer({
   limits: { fileSize: 5 * 1000 * 1000 }, // 5MB max file size
-  fileFilter: function(req, file, callback) {
-    let fileExtension = (file.originalname.split('.')[file.originalname.split('.').length-1]).toLowerCase(); // convert extension to lower case
+  fileFilter: function (req, file, callback) {
+    let fileExtension = (file.originalname.split('.')[file.originalname.split('.').length - 1]).toLowerCase(); // convert extension to lower case
     if (["png", "jpg", "jpeg"].indexOf(fileExtension) === -1) {
       return callback('Wrong file type', false);
     }
     file.extension = fileExtension.replace(/jpeg/i, 'jpg'); // all jpeg images to end .jpg
     callback(null, true);
   },
-  dest: 'badges/' 
+  dest: 'badges/'
 });
 
-const uploadCsv = multer({ 
+const uploadCsv = multer({
   limits: { fileSize: 5 * 1000 * 1000 }, // 5MB max file size
-  fileFilter: function(req, file, callback) {
-    let fileExtension = (file.originalname.split('.')[file.originalname.split('.').length-1]).toLowerCase(); // convert extension to lower case
+  fileFilter: function (req, file, callback) {
+    let fileExtension = (file.originalname.split('.')[file.originalname.split('.').length - 1]).toLowerCase(); // convert extension to lower case
     if (["csv", "xlsx"].indexOf(fileExtension) === -1) {
       return callback('Wrong file type', false);
     }
     file.extension = fileExtension.replace(/jpeg/i, 'jpg'); // all jpeg images to end .jpg
     callback(null, true);
   },
-  dest: 'csv-files/' 
+  dest: 'csv-files/'
 });
 
 const asyncWrapper = fn => {
-    return (req, res, next) => {
-        return fn(req, res, next).catch(next);
-    }
+  return (req, res, next) => {
+    return fn(req, res, next).catch(next);
+  }
 };
 
 const getUsername = async (authHeader) => {
   const token = authHeader.split(" ")[1];
   const decoded = jwt.verify(token, process.env.JWT_SECRET);
- 
+
   const user = await User.findOne({
     _id: decoded.id,
   });
@@ -82,60 +84,60 @@ const nameRegex = /^[A-Za-z]+$/; // Allow only letters for names (adjust the reg
 
 // Add Course
 router.post('/users/courses', authenticateJWT, async (req, res) => {
-    const { email, course } = req.body;
+  const { email, course } = req.body;
 
-    try {
-        const user = await User.findOne({email});
-        if (!user) return res.status(404).send('User not found');
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).send('User not found');
 
-        user.courses.push(course);
-        await user.save();
-        res.status(201).send(user);
-    } catch (error) {
-        res.status(500).send(error.message);
-    }
+    user.courses.push(course);
+    await user.save();
+    res.status(201).send(user);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
 });
 
 // Update course
 router.put('/users/courses/:courseIndex', authenticateJWT, async (req, res) => {
-    const { courseIndex } = req.params;
-    const { email, course } = req.body;
+  const { courseIndex } = req.params;
+  const { email, course } = req.body;
 
-    try {
-        const user = await User.findOne({email});
-        if (!user) return res.status(404).send('User not found');
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).send('User not found');
 
-        if (user.courses[courseIndex] === undefined) {
-            return res.status(404).send('Course not found');
-        }
-
-        user.courses[courseIndex] = course;
-        await user.save();
-        res.send(user);
-    } catch (error) {
-        res.status(500).send(error.message);
+    if (user.courses[courseIndex] === undefined) {
+      return res.status(404).send('Course not found');
     }
+
+    user.courses[courseIndex] = course;
+    await user.save();
+    res.send(user);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
 });
 
 // Delete course
 router.delete('/users/courses/:courseIndex', authenticateJWT, async (req, res) => {
-    const { courseIndex } = req.params;
-    const { email } = req.body;
+  const { courseIndex } = req.params;
+  const { email } = req.body;
 
-    try {
-        const user = await User.findOne({email});
-        if (!user) return res.status(404).send('User not found');
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).send('User not found');
 
-        if (user.courses[courseIndex] === undefined) {
-            return res.status(404).send('Course not found');
-        }
-
-        user.courses.splice(courseIndex, 1);
-        await user.save();
-        res.send(user);
-    } catch (error) {
-        res.status(500).send(error.message);
+    if (user.courses[courseIndex] === undefined) {
+      return res.status(404).send('Course not found');
     }
+
+    user.courses.splice(courseIndex, 1);
+    await user.save();
+    res.send(user);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
 });
 
 
@@ -143,186 +145,186 @@ router.delete('/users/courses/:courseIndex', authenticateJWT, async (req, res) =
 
 // Add achievement
 router.post('/users/achievements', authenticateJWT, async (req, res) => {
-    const { email, achievement } = req.body;
+  const { email, achievement } = req.body;
 
-    try {
-        const user = await User.findOne({email});
-        if (!user) return res.status(404).send('User not found');
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).send('User not found');
 
-        user.achievements.push(achievement);
-        await user.save();
-        res.status(201).send(user);
-    } catch (error) {
-        res.status(500).send(error.message);
-    }
+    user.achievements.push(achievement);
+    await user.save();
+    res.status(201).send(user);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
 });
 
 // Update achievement
 router.put('/users/achievements/:achievementIndex', authenticateJWT, async (req, res) => {
-    const { achievementIndex } = req.params;
-    const { email, achievement } = req.body;
+  const { achievementIndex } = req.params;
+  const { email, achievement } = req.body;
 
-    try {
-        const user = await User.findOne({email});
-        if (!user) return res.status(404).send('User not found');
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).send('User not found');
 
-        if (user.achievements[achievementIndex] === undefined) {
-            return res.status(404).send('Achievement not found');
-        }
-
-        user.achievements[achievementIndex] = achievement;
-        await user.save();
-        res.send(user);
-    } catch (error) {
-        res.status(500).send(error.message);
+    if (user.achievements[achievementIndex] === undefined) {
+      return res.status(404).send('Achievement not found');
     }
+
+    user.achievements[achievementIndex] = achievement;
+    await user.save();
+    res.send(user);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
 });
 
 // Delete achievement
 router.delete('/users/achievements/:achievementIndex', authenticateJWT, async (req, res) => {
-    const { achievementIndex } = req.params;
-    const { email } = req.body;
+  const { achievementIndex } = req.params;
+  const { email } = req.body;
 
-    try {
-        const user = await User.findOne({email});
-        if (!user) return res.status(404).send('User not found');
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).send('User not found');
 
-        if (user.achievements[achievementIndex] === undefined) {
-            return res.status(404).send('Achievement not found');
-        }
-
-        user.achievements.splice(achievementIndex, 1);
-        await user.save();
-        res.send(user);
-    } catch (error) {
-        res.status(500).send(error.message);
+    if (user.achievements[achievementIndex] === undefined) {
+      return res.status(404).send('Achievement not found');
     }
+
+    user.achievements.splice(achievementIndex, 1);
+    await user.save();
+    res.send(user);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
 });
 
 
 
 router.put(
-  "/badge/import", 
-  authenticateJWT, 
-  uploadImage.single('image'), 
+  "/badge/import",
+  authenticateJWT,
+  uploadImage.single('image'),
   async (req, res, next) => {
-  try {
-
-    const { id, course, name, description, level, vertical, skillsEarned, requires } = req.body;
-    var existingBadge = null;
-    var existingBadgeImage = null;
-    // Normalize skillsEarned if sent as JSON string (FormData behavior)
-    let parsedSkills = [];
-    if (typeof skillsEarned !== 'undefined') {
-      if (typeof skillsEarned === 'string') {
-        try { parsedSkills = JSON.parse(skillsEarned); } catch (e) { parsedSkills = []; }
-      } else if (Array.isArray(skillsEarned)) {
-        parsedSkills = skillsEarned;
-      }
-    }
-    if (!id){
-      return res.status(401).json({ message: "Badge Id required" });
-    }
-    // allow lookup by numeric id or badgeId
-    existingBadge = await Badge.findOne({ id }) || await Badge.findOne({ badgeId: String(id) });
-    existingBadgeImage = await BadgeImage.findOne({ id });
-
-    if (!existingBadge){
-      return res.status(401).json({ message: "Badge yet to be created" });
-    }
-
-
-    // If skills were provided (even empty array), replace them. If not provided, leave unchanged.
-    if (typeof skillsEarned !== 'undefined') { existingBadge["skillsEarned"] = parsedSkills }
-    if (typeof requires !== 'undefined') {
-      try {
-        existingBadge.requires = typeof requires === 'string' ? JSON.parse(requires) : requires;
-      } catch (e) {
-        existingBadge.requires = requires;
-      }
-    }
-    // Set fields when present (allow empty string to clear values)
-    if (typeof vertical !== 'undefined') { existingBadge["vertical"] = vertical }
-    if (typeof level !== 'undefined') { existingBadge["level"] = level }
-    if (typeof description !== 'undefined') { existingBadge["description"] = description }
-    if (typeof name !== 'undefined') { existingBadge["name"] = name }
-    if (typeof course !== 'undefined') { existingBadge["course"] = course }
-
-    if (req.file){
-      console.log("resizing");
-      console.log(existingBadge);
-
-      const image = sharp(req.file.path);
-      image.metadata() // get image metadata for size
-        .then(function(metadata) {
-          if (metadata.width > 400 || metadata.height > 400) {
-            return image.resize({ width: 400, height: 400 }).toBuffer(); // resize if too big
-          } else {
-            return image.toBuffer();
-          }
-        })
-        .then(async function(data) { // upload to s3 storage
-          const badgeImageObj = {
-            id, name: req.body.name || existingBadge["name"],
-            image: data,
-            contentType: req.file.mimetype // Use the uploaded file's mimetype
-          };
-
-          if (!existingBadgeImage){
-            existingBadgeImage =  new BadgeImage(badgeImageObj);
-          } else {
-            existingBadgeImage["image"] = data;            
-            existingBadgeImage["contentType"] = req.file.mimetype;
-          }
-          console.log('badeImageObj', badgeImageObj);
-          await existingBadge.save();
-          await existingBadgeImage.save();
-          return res.status(200).json({ message: 'Badge Modified successfully', data: existingBadge });
-        })
-        .catch(err => {
-          console.error('Error processing image:', err);
-          return res.status(500).json({ message: 'Internal Server Error' });
-        });
-      return; // response will be sent after image processing
-    }
-
-    // No image: save badge updates and respond
-    await existingBadge.save();
-    res.status(200).json({ message: 'Badge Modified successfully', data: existingBadge });
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-});
-
-// upload badge
-router.post(
-  "/badge/import", 
-  authenticateJWT, 
-  uploadImage.single('image'), 
-  asyncWrapper(async (req, res, next) => {
     try {
-        const { id, name, description, level, vertical, skillsEarned, course, badgeId, requires, abbreviation } = req.body;
-        // Normalize optional fields coming from multipart/form-data (they may be JSON strings)
-        let parsedSkills = [];
+
+      const { id, course, name, description, level, vertical, skillsEarned, requires } = req.body;
+      var existingBadge = null;
+      var existingBadgeImage = null;
+      // Normalize skillsEarned if sent as JSON string (FormData behavior)
+      let parsedSkills = [];
+      if (typeof skillsEarned !== 'undefined') {
         if (typeof skillsEarned === 'string') {
           try { parsedSkills = JSON.parse(skillsEarned); } catch (e) { parsedSkills = []; }
         } else if (Array.isArray(skillsEarned)) {
           parsedSkills = skillsEarned;
         }
-        // Require only id, name and description from the client; other fields are optional
-        if (!id || !name || !description) {
-          return res.status(401).json({ message: "Missing Fields!" });
-        }
-      const badgeExist = await Badge.findOne({ id }) || await Badge.findOne({ badgeId: String(badgeId || '') });
-      const badgeImageExist = await BadgeImage.findOne({id});
+      }
+      if (!id) {
+        return res.status(401).json({ message: "Badge Id required" });
+      }
+      // allow lookup by numeric id or badgeId
+      existingBadge = await Badge.findOne({ id }) || await Badge.findOne({ badgeId: String(id) });
+      existingBadgeImage = await BadgeImage.findOne({ id });
 
-      if (badgeExist){
+      if (!existingBadge) {
+        return res.status(401).json({ message: "Badge yet to be created" });
+      }
+
+
+      // If skills were provided (even empty array), replace them. If not provided, leave unchanged.
+      if (typeof skillsEarned !== 'undefined') { existingBadge["skillsEarned"] = parsedSkills }
+      if (typeof requires !== 'undefined') {
+        try {
+          existingBadge.requires = typeof requires === 'string' ? JSON.parse(requires) : requires;
+        } catch (e) {
+          existingBadge.requires = requires;
+        }
+      }
+      // Set fields when present (allow empty string to clear values)
+      if (typeof vertical !== 'undefined') { existingBadge["vertical"] = vertical }
+      if (typeof level !== 'undefined') { existingBadge["level"] = level }
+      if (typeof description !== 'undefined') { existingBadge["description"] = description }
+      if (typeof name !== 'undefined') { existingBadge["name"] = name }
+      if (typeof course !== 'undefined') { existingBadge["course"] = course }
+
+      if (req.file) {
+        console.log("resizing");
+        console.log(existingBadge);
+
+        const image = sharp(req.file.path);
+        image.metadata() // get image metadata for size
+          .then(function (metadata) {
+            if (metadata.width > 400 || metadata.height > 400) {
+              return image.resize({ width: 400, height: 400 }).toBuffer(); // resize if too big
+            } else {
+              return image.toBuffer();
+            }
+          })
+          .then(async function (data) { // upload to s3 storage
+            const badgeImageObj = {
+              id, name: req.body.name || existingBadge["name"],
+              image: data,
+              contentType: req.file.mimetype // Use the uploaded file's mimetype
+            };
+
+            if (!existingBadgeImage) {
+              existingBadgeImage = new BadgeImage(badgeImageObj);
+            } else {
+              existingBadgeImage["image"] = data;
+              existingBadgeImage["contentType"] = req.file.mimetype;
+            }
+            console.log('badeImageObj', badgeImageObj);
+            await existingBadge.save();
+            await existingBadgeImage.save();
+            return res.status(200).json({ message: 'Badge Modified successfully', data: existingBadge });
+          })
+          .catch(err => {
+            console.error('Error processing image:', err);
+            return res.status(500).json({ message: 'Internal Server Error' });
+          });
+        return; // response will be sent after image processing
+      }
+
+      // No image: save badge updates and respond
+      await existingBadge.save();
+      res.status(200).json({ message: 'Badge Modified successfully', data: existingBadge });
+
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  });
+
+// upload badge
+router.post(
+  "/badge/import",
+  authenticateJWT,
+  uploadImage.single('image'),
+  asyncWrapper(async (req, res, next) => {
+    try {
+      const { id, name, description, level, vertical, skillsEarned, course, badgeId, requires, abbreviation } = req.body;
+      // Normalize optional fields coming from multipart/form-data (they may be JSON strings)
+      let parsedSkills = [];
+      if (typeof skillsEarned === 'string') {
+        try { parsedSkills = JSON.parse(skillsEarned); } catch (e) { parsedSkills = []; }
+      } else if (Array.isArray(skillsEarned)) {
+        parsedSkills = skillsEarned;
+      }
+      // Require only id, name and description from the client; other fields are optional
+      if (!id || !name || !description) {
+        return res.status(401).json({ message: "Missing Fields!" });
+      }
+      const badgeExist = await Badge.findOne({ id }) || await Badge.findOne({ badgeId: String(badgeId || '') });
+      const badgeImageExist = await BadgeImage.findOne({ id });
+
+      if (badgeExist) {
         return res.status(401).json({ message: "Badge already exists" });
       }
 
-      if (badgeImageExist){
+      if (badgeImageExist) {
         return res.status(401).json({ message: "Badge Image already exists" });
       }
 
@@ -341,22 +343,22 @@ router.post(
       }
       else if (name && id) {
         // derive prefix from provided abbreviation if present, otherwise from first two words' initials
-        const padded = String(id).padStart(6,'0');
+        const padded = String(id).padStart(6, '0');
         if (badgeObj.abbreviation && badgeObj.abbreviation.length > 0) {
           badgeObj.badgeId = `${String(badgeObj.abbreviation).trim()}${padded}`;
         } else {
           const parts = String(name).trim().split(/\s+/);
           let prefix = (parts[0] || '').charAt(0) + (parts[1] ? parts[1].charAt(0) : (parts[0] || '').charAt(1) || 'X');
-          prefix = prefix.toUpperCase().replace(/[^A-Z]/g, '').padEnd(2, 'X').slice(0,2);
+          prefix = prefix.toUpperCase().replace(/[^A-Z]/g, '').padEnd(2, 'X').slice(0, 2);
           badgeObj.badgeId = `${prefix}${padded}`;
         }
       }
       if (course) { badgeObj['course'] = course }
 
-      if (req.file){
+      if (req.file) {
         const image = sharp(req.file.path);
         image.metadata() // get image metadata for size
-          .then(function(metadata) {
+          .then(function (metadata) {
             if (metadata.width > 400 || metadata.height > 400) {
               console.log('resizing Image');
               return image.resize({ width: 400, height: 400 }).toBuffer(); // resize if too big
@@ -364,10 +366,10 @@ router.post(
               return image.toBuffer();
             }
           })
-          .then(async function(data) { // upload to s3 storage
+          .then(async function (data) { // upload to s3 storage
             const badgeImageObj = {
               id, name,
-              image:  data,
+              image: data,
               contentType: req.file.mimetype // Use the uploaded file's mimetype
             };
             const newBadge = new Badge(badgeObj);
@@ -487,7 +489,7 @@ router.get("/badges/courses", async (req, res) => {
       { $project: { course: "$_id", _id: 0 } } // Project the results to a more readable format
     ]);
 
-    res.status(200).json({ message: 'All Unique Courses.', data: uniqueCourses.map(course => course.course)});
+    res.status(200).json({ message: 'All Unique Courses.', data: uniqueCourses.map(course => course.course) });
 
   } catch (error) {
     console.error(error);
@@ -505,7 +507,7 @@ router.get("/badges/skills", async (req, res) => {
       { $project: { skill: "$_id", _id: 0 } } // Project the results to a more readable format
     ]);
 
-    res.status(200).json({ message: 'All Unique Skills.', data: uniqueSkills.map(skill => skill.skill)});
+    res.status(200).json({ message: 'All Unique Skills.', data: uniqueSkills.map(skill => skill.skill) });
 
   } catch (error) {
     console.error(error);
@@ -516,11 +518,11 @@ router.get("/badges/skills", async (req, res) => {
 // Get Verticals 
 router.get("/badges/verticals", async (req, res) => {
   try {
-     const uniqueVerticals = await Badge.aggregate([
+    const uniqueVerticals = await Badge.aggregate([
       { $group: { _id: "$vertical" } }, // Group by vertical to get unique values
       { $project: { vertical: "$_id", _id: 0 } } // Project the results to a more readable format
     ]);
-    res.status(200).json({ message: 'All Unique Verticals.', data: uniqueVerticals.map(vertical => vertical.vertical)});
+    res.status(200).json({ message: 'All Unique Verticals.', data: uniqueVerticals.map(vertical => vertical.vertical) });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -537,20 +539,20 @@ router.post("/user/delete", authenticateJWT, async (req, res) => {
     const adminUsername = await getUsername(authHeader);
 
     const adminUser = await User.findOne({ email: adminUsername });
-    
+
     if (!adminUser || !adminUser.isAdmin) {
       return res.status(403).json({ message: "Unauthorized. Admin access required." });
     }
-    
+
     // Check if user exists
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    await User.deleteOne({email});
+    await User.deleteOne({ email });
 
-    res.status(200).json({ message: 'User Removed Successfly', email});
+    res.status(200).json({ message: 'User Removed Successfly', email });
 
   } catch (error) {
     console.error(error);
@@ -568,11 +570,11 @@ router.post("/user/create", authenticateJWT, async (req, res) => {
     const adminUsername = await getUsername(authHeader);
 
     const adminUser = await User.findOne({ email: adminUsername });
-    
+
     if (!adminUser || !adminUser.isAdmin) {
       return res.status(403).json({ message: "Unauthorized. Admin access required." });
     }
-    
+
     // Check if user exists
     const user = await User.findOne({ email });
     if (user) {
@@ -583,16 +585,16 @@ router.post("/user/create", authenticateJWT, async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Save new user
-    const newUser = new User({ 
-      email, 
-      firstName, 
-      lastName, 
+    const newUser = new User({
+      email,
+      firstName,
+      lastName,
       password: hashedPassword,
       isAdmin: false // Default to non-admin
     });
     await newUser.save();
 
-    res.status(200).json({ message: 'User created Successfly', email});
+    res.status(200).json({ message: 'User created Successfly', email });
 
   } catch (error) {
     console.error(error);
@@ -607,7 +609,7 @@ router.post("/users/import/preview", authenticateJWT, uploadCsv.single('file'), 
     if (!req.file || !req.file.path) {
       return res.status(400).json({ message: "No file uploaded." });
     }
-    
+
     const authHeader = req.headers.authorization;
     const email = await getUsername(authHeader);
 
@@ -634,18 +636,18 @@ router.post("/users/import/preview", authenticateJWT, uploadCsv.single('file'), 
 });
 
 //file upload
-router.post("/users/import/:jobId",authenticateJWT, async (req, res) => {
+router.post("/users/import/:jobId", authenticateJWT, async (req, res) => {
   try {
     const { jobId } = req.params;
-    const  { upsert }  = req.body;
+    const { upsert } = req.body;
     const authHeader = req.headers.authorization;
     const userId = await getUsername(authHeader);
-    const jobStatusDoc = await JobResult.findOne({ jobId, userId});
+    const jobStatusDoc = await JobResult.findOne({ jobId, userId });
 
     if (!jobStatusDoc) {
       return res.status(404).json({ message: "Job not found." });
     }
-    
+
     // Generate random password function
     const generateRandomPassword = () => {
       const length = 12;
@@ -654,26 +656,26 @@ router.post("/users/import/:jobId",authenticateJWT, async (req, res) => {
       const numbers = '0123456789';
       const special = '!@#$%^&*';
       const allChars = uppercase + lowercase + numbers + special;
-      
+
       let password = '';
       // Ensure at least one of each type
       password += uppercase[Math.floor(Math.random() * uppercase.length)];
       password += lowercase[Math.floor(Math.random() * lowercase.length)];
       password += numbers[Math.floor(Math.random() * numbers.length)];
       password += special[Math.floor(Math.random() * special.length)];
-      
+
       // Fill the rest randomly
       for (let i = 4; i < length; i++) {
         password += allChars[Math.floor(Math.random() * allChars.length)];
       }
-      
+
       // Shuffle the password
       return password.split('').sort(() => Math.random() - 0.5).join('');
     };
 
     // Store plain text passwords temporarily to send in emails
     const userPasswordMap = new Map();
-    
+
     const usersToBeInserted = await Promise.all(jobStatusDoc.result.validUsers.map(async u => {
       const badgeIdsArray = JSON.parse("[" + u.badgeIds + "]");
       const badges = [];
@@ -692,11 +694,11 @@ router.post("/users/import/:jobId",authenticateJWT, async (req, res) => {
         const fmtAbbr = (val) => {
           if (!val) return ''.padEnd(4, '0');
           const s = String(val).toUpperCase().replace(/[^A-Z0-9]/g, '');
-          return s.length >= 4 ? s.slice(0,4) : s.padEnd(4, '0');
+          return s.length >= 4 ? s.slice(0, 4) : s.padEnd(4, '0');
         };
         const abbrPart = updated.abbreviation && String(updated.abbreviation).trim() !== ''
           ? fmtAbbr(updated.abbreviation)
-          : (updated.badgeId ? fmtAbbr(String(updated.badgeId).slice(0,4)) : fmtAbbr(String(updated.id)));
+          : (updated.badgeId ? fmtAbbr(String(updated.badgeId).slice(0, 4)) : fmtAbbr(String(updated.id)));
         const badgeIdPart = String(updated.id);
         const certificateId = `${abbrPart}${badgeIdPart}${seq}`;
         console.log(`Generated certificateId ${certificateId} for bulk-assigned badge ${updated._id} (abbreviation=${updated.abbreviation || ''})`);
@@ -706,7 +708,7 @@ router.post("/users/import/:jobId",authenticateJWT, async (req, res) => {
       // Generate unique random password for this user
       const plainPassword = generateRandomPassword();
       const hashedPassword = await bcrypt.hash(plainPassword, 10);
-      
+
       // Store for email sending
       userPasswordMap.set(u.email, plainPassword);
 
@@ -723,68 +725,68 @@ router.post("/users/import/:jobId",authenticateJWT, async (req, res) => {
     // map email -> newBadges (with certificateId) for notifications after updates
     const updateBadgeMap = new Map();
 
-    if ( upsert ) { 
-      for ( const u of jobStatusDoc.result.invalidUsers){
-          // u.error may be undefined for some rows; guard before calling includes
-          if (typeof u.error === 'string') {
-            if (u.error.includes('Badge')){
-              return res.status(401)
-                .json({message: 'Badge related Errors need resolution.'});
-            }
-          } else {
-            // log unexpected invalidUser shape for debugging and continue
-            console.warn('Invalid user entry missing error field or not a string:', u);
+    if (upsert) {
+      for (const u of jobStatusDoc.result.invalidUsers) {
+        // u.error may be undefined for some rows; guard before calling includes
+        if (typeof u.error === 'string') {
+          if (u.error.includes('Badge')) {
+            return res.status(401)
+              .json({ message: 'Badge related Errors need resolution.' });
           }
-          const { email, firstName, lastName, badgeIds } = u;
+        } else {
+          // log unexpected invalidUser shape for debugging and continue
+          console.warn('Invalid user entry missing error field or not a string:', u);
+        }
+        const { email, firstName, lastName, badgeIds } = u;
 
-          const rawBadgeIds = JSON.parse("[" + badgeIds + "]");
-          const newBadges = [];
-          for (const b of rawBadgeIds) {
-            // Find badge by numeric id or badgeId string
-            let badgeDoc = await Badge.findOne({ id: b }) || await Badge.findOne({ badgeId: String(b) });
-            if (!badgeDoc) {
-              // push raw badge id if not found (validation elsewhere should catch)
-              newBadges.push({ badgeId: b, earnedDate: new Date() });
-              continue;
-            }
-            // increment certificateCounter and build certificateId
-            const updated = await Badge.findOneAndUpdate({ _id: badgeDoc._id }, { $inc: { certificateCounter: 1 } }, { new: true });
-            const counter = updated.certificateCounter || 1;
-            const seq = String(counter).padStart(4, '0');
-            const fmtAbbr = (val) => {
-              if (!val) return ''.padEnd(4, '0');
-              const s = String(val).toUpperCase().replace(/[^A-Z0-9]/g, '');
-              return s.length >= 4 ? s.slice(0,4) : s.padEnd(4, '0');
-            };
-            const abbrPart = updated.abbreviation && String(updated.abbreviation).trim() !== ''
-              ? fmtAbbr(updated.abbreviation)
-              : (updated.badgeId ? fmtAbbr(String(updated.badgeId).slice(0,4)) : fmtAbbr(String(updated.id)));
-            const badgeIdPart = String(updated.id);
-            const certificateId = `${abbrPart}${badgeIdPart}${seq}`;
-            newBadges.push({ badgeId: updated.badgeId || String(updated.id), earnedDate: new Date(), certificateId });
+        const rawBadgeIds = JSON.parse("[" + badgeIds + "]");
+        const newBadges = [];
+        for (const b of rawBadgeIds) {
+          // Find badge by numeric id or badgeId string
+          let badgeDoc = await Badge.findOne({ id: b }) || await Badge.findOne({ badgeId: String(b) });
+          if (!badgeDoc) {
+            // push raw badge id if not found (validation elsewhere should catch)
+            newBadges.push({ badgeId: b, earnedDate: new Date() });
+            continue;
           }
+          // increment certificateCounter and build certificateId
+          const updated = await Badge.findOneAndUpdate({ _id: badgeDoc._id }, { $inc: { certificateCounter: 1 } }, { new: true });
+          const counter = updated.certificateCounter || 1;
+          const seq = String(counter).padStart(4, '0');
+          const fmtAbbr = (val) => {
+            if (!val) return ''.padEnd(4, '0');
+            const s = String(val).toUpperCase().replace(/[^A-Z0-9]/g, '');
+            return s.length >= 4 ? s.slice(0, 4) : s.padEnd(4, '0');
+          };
+          const abbrPart = updated.abbreviation && String(updated.abbreviation).trim() !== ''
+            ? fmtAbbr(updated.abbreviation)
+            : (updated.badgeId ? fmtAbbr(String(updated.badgeId).slice(0, 4)) : fmtAbbr(String(updated.id)));
+          const badgeIdPart = String(updated.id);
+          const certificateId = `${abbrPart}${badgeIdPart}${seq}`;
+          newBadges.push({ badgeId: updated.badgeId || String(updated.id), earnedDate: new Date(), certificateId });
+        }
 
-          usersToBeUpdated.push({
-            updateOne: {
-              filter: { email },
-              update: { 
-                '$set': { email, firstName, lastName, },
-                '$push': { badges: { $each: newBadges } },
-              },
-              upsert: false,
-            }
-          });
+        usersToBeUpdated.push({
+          updateOne: {
+            filter: { email },
+            update: {
+              '$set': { email, firstName, lastName, },
+              '$push': { badges: { $each: newBadges } },
+            },
+            upsert: false,
+          }
+        });
 
-          // store newBadges for later notifications
-          updateBadgeMap.set(email, newBadges);
-        };
+        // store newBadges for later notifications
+        updateBadgeMap.set(email, newBadges);
+      };
     }
 
 
-    if ( usersToBeInserted.length > 0){
+    if (usersToBeInserted.length > 0) {
       const inserted = await User.insertMany(usersToBeInserted);
       console.log("insert");
-      
+
       // Send welcome emails to new users with their unique passwords
       for (const user of usersToBeInserted) {
         try {
@@ -837,10 +839,10 @@ router.post("/users/import/:jobId",authenticateJWT, async (req, res) => {
       // Clear the password map for security
       userPasswordMap.clear();
     }
-    if ( usersToBeUpdated.length > 0){
+    if (usersToBeUpdated.length > 0) {
       await User.bulkWrite(usersToBeUpdated);
       console.log("update");
-      
+
       // Send profile update + badge received notification to updated users
       for (const [email, newBadges] of updateBadgeMap.entries()) {
         try {
@@ -906,11 +908,64 @@ router.post("/users/import/:jobId",authenticateJWT, async (req, res) => {
     jobStatusDoc.result.invalidUsers = [];
 
     await jobStatusDoc.save();
-    return res.status(200).json({result: jobStatusDoc.importedUsers});
-    
+    return res.status(200).json({ result: jobStatusDoc.importedUsers });
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// --- FELLOWSHIP ADMIN ROUTES ---
+
+// 1. List All Fellows
+router.get('/admin/fellows', authenticateJWT, isAdmin, async (req, res) => {
+  try {
+    const fellows = await FellowshipProfile.find().sort({ 'tenures.0.startDate': -1 });
+    res.json(fellows);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// 2. Fetch Single Fellow with Full History
+router.get('/admin/fellows/:id', authenticateJWT, isAdmin, async (req, res) => {
+  try {
+    const fellow = await FellowshipProfile.findById(req.params.id);
+    if (!fellow) return res.status(404).json({ message: "Fellow not found" });
+    res.json(fellow);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// 3. Promote Fellow (Admin Triggered)
+router.post('/admin/fellows/:id/promote', authenticateJWT, isAdmin, async (req, res) => {
+  try {
+    const { newRole, newStatus, newCohort, completionStatus } = req.body;
+    const fellow = await FellowshipProfile.findById(req.params.id);
+    if (!fellow) return res.status(404).json({ message: "Fellow not found" });
+
+    const updated = await LifecycleManager.promoteFellow(fellow._id, {
+      role: newRole,
+      status: newStatus,
+      cohort: newCohort,
+      completionStatus
+    });
+
+    res.json({ message: "Fellow promoted successfully", fellow: updated });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// 4. Update Fellow Basic Info (Admin Override)
+router.put('/admin/fellows/:id', authenticateJWT, isAdmin, async (req, res) => {
+  try {
+    const fellow = await FellowshipProfile.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(fellow);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
   }
 });
 

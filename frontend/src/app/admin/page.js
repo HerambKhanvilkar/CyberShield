@@ -19,7 +19,8 @@ export default function AdminLogin() {
     useEffect(() => {
         // If already logged in as admin, redirect
         const user = JSON.parse(localStorage.getItem("user") || "null");
-        if (user && user.isAdmin) {
+        const token = localStorage.getItem("accessToken");
+        if (user && user.isAdmin && token) {
             router.push("/admin/applications");
         }
     }, [router]);

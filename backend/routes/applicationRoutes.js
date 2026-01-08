@@ -9,6 +9,7 @@ const crypto = require('crypto');
 const Otp = require('../models/Otp'); // We will use a separate Otp if we want strictly separate DB, but for now let's use the hiringDb connection or separate Otp model
 const multer = require('multer');
 const path = require('path');
+const FellowshipProfile = require('../models/FellowshipProfile');
 
 // Multer Storage Configuration
 const storage = multer.diskStorage({
@@ -36,22 +37,24 @@ const upload = multer({
 // 1. Get Organization Details by Code (Public)
 router.get('/org/:code', async (req, res) => {
     try {
-        const org = await Organization.findOne({ code: req.params.code, isActive: true });
+        const org = await Organization.findOne({
+            code: { $regex: new RegExp(`^${req.params.code}$`, 'i') },
+            isActive: true
+        });
+
         if (!org) {
             return res.status(404).json({ message: "Organization Code not found or inactive." });
         }
         // Check end date
         if (org.endDate) {
             const endDate = new Date(org.endDate);
-            if (endDate.getTime() !== 0 && new Date() > endDate) {
+            const now = new Date();
+
+            // If the date is valid and in the past, it's closed
+            // We ignore 0/1970 as it's the default "No End Date" representation
+            if (endDate.getTime() > 0 && now > endDate) {
                 return res.status(400).json({ message: "Applications have closed for this organization." });
             }
-            // If it is exactly 0 (1970), treat as closed per requirement "default:0, applications closed"
-            if (endDate.getTime() === 0) {
-                return res.status(400).json({ message: "Applications are currently closed for this organization." });
-            }
-        } else if (org.endDate === 0) {
-            return res.status(400).json({ message: "Applications are closed." });
         }
 
         // Return only necessary fields
@@ -88,7 +91,7 @@ router.post('/apply', upload.single('resumeFile'), [
     try {
         console.log("Submission Body:", req.body);
         console.log("Submission File:", req.file);
-        const { orgCode, email, firstName, lastName, role, dob, data: dataRaw } = req.body;
+        const { orgCode, email, firstName, lastName, role, data: dataRaw } = req.body;
 
         let data = {};
         try {
@@ -98,7 +101,6 @@ router.post('/apply', upload.single('resumeFile'), [
         const org = await Organization.findOne({ code: orgCode });
         if (!org) return res.status(404).json({ message: "Invalid Organization Code" });
 
-        // Domain Whitelist Check
         if (org.emailDomainWhitelist && org.emailDomainWhitelist.length > 0) {
             const domain = email.split('@')[1];
             if (!org.emailDomainWhitelist.includes(domain) && !org.emailDomainWhitelist.includes("@" + domain)) {
@@ -110,6 +112,16 @@ router.post('/apply', upload.single('resumeFile'), [
             }
         }
 
+        // Duplicate Check
+        const existingApplicant = await Applicant.findOne({ email });
+        if (existingApplicant) {
+            return res.status(400).json({ message: "Application already exists for this email." });
+        }
+        const existingFellow = await FellowshipProfile.findOne({ email });
+        if (existingFellow) {
+            return res.status(400).json({ message: "User is already an active Fellow." });
+        }
+
         // Create Applicant
         const applicant = new Applicant({
             orgCode,
@@ -118,7 +130,6 @@ router.post('/apply', upload.single('resumeFile'), [
             firstName,
             lastName,
             role,
-            dob,
             data: data,
             resume: req.file ? `/uploads/resumes/${req.file.filename}` : (data.resume || null)
         });
@@ -155,21 +166,110 @@ router.patch('/admin/status', authenticateJWT, isAdmin, [
     check('applicantId').notEmpty(),
     check('status').isIn(['ACCEPTED', 'REJECTED'])
 ], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array(), message: "Validation failed: " + errors.array().map(e => e.msg).join(", ") });
+    }
+
     try {
-        const { applicantId, status } = req.body;
+        const { applicantId, status, tenureEndDate } = req.body;
+        console.log(`[StatusUpdate] ID: ${applicantId}, Status: ${status}, tenureEndDate: ${tenureEndDate}`);
+
         const applicant = await Applicant.findById(applicantId);
-        if (!applicant) return res.status(404).json({ message: "Applicant not found" });
+        if (!applicant) {
+            console.error(`[StatusUpdate] Applicant not found: ${applicantId}`);
+            return res.status(404).json({ message: "Applicant not found" });
+        }
 
         applicant.status = status;
+        applicant.processedBy = req.user?.email || "Unknown Admin";
         await applicant.save();
+        console.log(`[StatusUpdate] Applicant status saved: ${status}`);
+
+        // If ACCEPTED, create or update FellowshipProfile
+        if (status === 'ACCEPTED') {
+            console.log(`[StatusUpdate] Creating/Updating FellowshipProfile for ${applicant.email}`);
+            let profile = await FellowshipProfile.findOne({ email: applicant.email.toLowerCase() });
+
+            if (!profile) {
+                console.log(`[StatusUpdate] No profile found, creating new for ${applicant.email}`);
+                profile = new FellowshipProfile({
+                    email: applicant.email,
+                    firstName: applicant.firstName,
+                    lastName: applicant.lastName,
+                    status: 'PENDING',
+                    onboardingState: 'PROFILE',
+                    tenures: [{
+                        role: applicant.role,
+                        orgCode: applicant.orgCode,
+                        startDate: new Date().toLocaleDateString('en-GB').replace(/\//g, ''),
+                        endDate: tenureEndDate || "",
+                        status: 'ACTIVE',
+                        cohort: 'C1'
+                    }]
+                });
+            } else {
+                console.log(`[StatusUpdate] Profile exists for ${applicant.email}, adding tenure`);
+                profile.tenures.push({
+                    role: applicant.role,
+                    orgCode: applicant.orgCode,
+                    startDate: new Date().toLocaleDateString('en-GB').replace(/\//g, ''),
+                    endDate: tenureEndDate || "",
+                    status: 'ACTIVE',
+                    cohort: 'C1'
+                });
+            }
+            await profile.save();
+            console.log(`[StatusUpdate] FellowshipProfile saved for ${applicant.email}`);
+        }
 
         await HiringAuditLog.create({
             action: "STATUS_UPDATE",
-            details: `Admin ${req.user.email} updated ${applicant.email} to ${status}`,
+            details: `Admin ${req.user?.email || 'System'} updated ${applicant.email} to ${status} (Tenure End: ${tenureEndDate || 'N/A'})`,
             ipAddress: req.ip
         });
 
-        res.json({ message: `Applicant ${status}` });
+        res.json({ message: `Applicant ${status} successfully.` });
+    } catch (err) {
+        console.error("Status Update Critical Error:", err);
+        res.status(500).json({ message: "Internal server error: " + err.message });
+    }
+});
+
+// 5. Admin: List Organizations
+router.get('/admin/orgs', authenticateJWT, isAdmin, async (req, res) => {
+    try {
+        const orgs = await Organization.find().sort({ createdAt: -1 });
+        res.json(orgs);
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+// 6. Admin: Create/Update Organization
+router.post('/admin/orgs', authenticateJWT, isAdmin, async (req, res) => {
+    try {
+        const { id, name, code, emailDomainWhitelist, endDate, formVar1, isActive } = req.body;
+
+        let org;
+        if (id) {
+            org = await Organization.findById(id);
+            if (!org) return res.status(404).json({ message: "Org not found" });
+        } else {
+            const existing = await Organization.findOne({ code });
+            if (existing) return res.status(400).json({ message: "Code already exists" });
+            org = new Organization({ code });
+        }
+
+        org.name = name;
+        org.emailDomainWhitelist = emailDomainWhitelist;
+        // If endDate is incoming as "0" or 0, set to 0 (indefinite)
+        org.endDate = (endDate === "0" || endDate === 0) ? 0 : new Date(endDate);
+        org.formVar1 = formVar1;
+        org.isActive = isActive;
+
+        await org.save();
+        res.json(org);
     } catch (err) {
         res.status(500).json({ message: "Server error" });
     }

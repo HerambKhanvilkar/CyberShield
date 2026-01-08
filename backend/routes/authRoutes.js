@@ -16,6 +16,7 @@ const mongoSanitize = require("mongo-sanitize");
 const User = require("../models/User");
 const Otp = require("../models/Otp");
 const Badge = require("../models/Badge");
+const FellowshipProfile = require("../models/FellowshipProfile");
 
 const JWT_SECRET_KEY = process.env.JWT_SECRET || 'your_secret_key_change_in_production';
 
@@ -185,6 +186,17 @@ router.post("/login", loginValidationRules, validateRequest, async (req, res) =>
       earnedDate: userBadges?.badges.find(b => String(b.badgeId) === String(badge.badgeId) || String(b.badgeId) === String(badge.id))?.earnedDate
     }));
 
+    // Fetch fellowship status for routing
+    const fellowProfile = await FellowshipProfile.findOne({ email: user.email });
+    let fellowshipStatus = 'APPLICANT';
+    if (fellowProfile) {
+      if (fellowProfile.status === 'ACTIVE' || fellowProfile.status === 'COMPLETED' || fellowProfile.status === 'FROZEN') {
+        fellowshipStatus = 'FELLOW';
+      } else if (fellowProfile.status === 'PENDING' || fellowProfile.status === 'REJECTED') {
+        fellowshipStatus = 'ONBOARDING';
+      }
+    }
+
     res.status(200).json({
       msg: "Login Successful!",
       token, // Send token to client
@@ -194,6 +206,7 @@ router.post("/login", loginValidationRules, validateRequest, async (req, res) =>
         email: user.email,
         isAdmin: user.isAdmin,
         badges: earnedBadges,
+        fellowshipStatus: fellowshipStatus,
       },
     });
   } catch (error) {
@@ -221,7 +234,32 @@ router.get("/me", async (req, res) => {
       return res.status(404).json({ msg: "User not found" });
     }
 
-    res.status(200).json({ user });
+    // Also fetch fellowship data if exists
+    const profile = await FellowshipProfile.findOne({ email: user.email });
+
+    // Convert to object to add virtuals/fields safely
+    const userRes = user.toObject();
+    if (profile) {
+      userRes.onboardingState = profile.onboardingState;
+      userRes.globalPid = profile.globalPid;
+      userRes.ndaDateTimeUser = profile.nda.dateTimeUser;
+      userRes.socials = profile.socials;
+      userRes.tenures = profile.tenures; // Missing field
+      userRes.status = profile.status;   // Missing field
+
+      // Determine Route Logic
+      if (profile.status === 'ACTIVE' || profile.status === 'COMPLETED' || profile.status === 'FROZEN') {
+        userRes.fellowshipStatus = 'FELLOW';
+      } else if (profile.status === 'PENDING' || profile.status === 'REJECTED') {
+        userRes.fellowshipStatus = 'ONBOARDING'; // or APPLICANT depending on nuance
+      } else {
+        userRes.fellowshipStatus = 'APPLICANT';
+      }
+    } else {
+      userRes.fellowshipStatus = 'APPLICANT';
+    }
+
+    res.status(200).json({ user: userRes });
   } catch (error) {
     console.error("Error verifying token:", error);
     res.status(401).json({ msg: "Unauthorized: Invalid token" });
@@ -333,9 +371,11 @@ router.post("/login-otp", [body("email").isEmail().withMessage("Invalid email").
   try {
     const { email } = req.body;
 
-    // Check if user exists (User must be pre-seeded by Admin)
+    // Check both main User DB and FellowshipProfile (Hiring DB)
     const user = await User.findOne({ email });
-    if (!user) {
+    const profile = await FellowshipProfile.findOne({ email });
+
+    if (!user && !profile) {
       return res.status(404).json({ msg: "User not found. Please contact support." });
     }
 
@@ -348,8 +388,9 @@ router.post("/login-otp", [body("email").isEmail().withMessage("Invalid email").
       { upsert: true }
     );
 
-    // Send OTP (Reusing registration email function for now, or use a generic one)
+    // Send OTP
     try {
+      const { sendRegistrationOTP } = require('../services/emailService');
       await sendRegistrationOTP(email, otp);
       res.status(200).json({ msg: "OTP sent to your email." });
     } catch (emailError) {
@@ -375,8 +416,15 @@ router.post("/verify-login-otp", [
       return res.status(400).json({ msg: "Invalid or expired OTP" });
     }
 
-    const user = await User.findOne({ email });
-    if (!user) {
+    // Try to find in main User DB first, then FellowshipProfile
+    let user = await User.findOne({ email });
+    const profile = await FellowshipProfile.findOne({ email });
+
+    // If only exists in FellowshipProfile, we might want to create a shadow user or just return profile
+    // For flow purposes, we return a token based on whatever we found.
+    // Use User ID if available, otherwise FellowshipProfile ID.
+    const identity = user || profile;
+    if (!identity) {
       return res.status(404).json({ msg: "User record missing." });
     }
 
@@ -384,25 +432,29 @@ router.post("/verify-login-otp", [
     await Otp.deleteOne({ email });
 
     // Generate Tokens
-    const token = generateToken(user);
-    const refreshToken = generateRefreshToken(user);
+    const { generateToken, generateRefreshToken } = require('../middleware/auth');
+    const token = generateToken(identity);
+    const refreshToken = generateRefreshToken(identity);
 
-    user.refreshToken = refreshToken;
-    await user.save();
+    if (user) {
+      user.refreshToken = refreshToken;
+      await user.save();
+    }
 
     // Return same structure as normal login
     res.status(200).json({
       msg: "Login Successful",
       token,
       user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        isAdmin: user.isAdmin,
+        id: identity._id || identity.id,
+        email: identity.email,
+        firstName: identity.firstName,
+        lastName: identity.lastName,
+        isAdmin: user ? user.isAdmin : false, // Fellowship-only profiles are not admins
         // Portal specific fields
-        ndaDateTimeUser: user.ndaDateTimeUser,
-        pid: user.pid
+        ndaDateTimeUser: profile ? profile.nda.dateTimeUser : "0",
+        pid: profile ? profile.globalPid : "",
+        onboardingState: profile ? profile.onboardingState : "COMPLETED"
       }
     });
 
