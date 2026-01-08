@@ -20,7 +20,7 @@ export default function PortalLogin() {
         e.preventDefault();
         setLoading(true);
         try {
-            await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api'}/auth/login-otp`, { email });
+            await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/auth/login-otp`, { email });
             toast.success("OTP sent to your email!");
             setStep(2);
         } catch (error) {
@@ -35,7 +35,7 @@ export default function PortalLogin() {
         e.preventDefault();
         setLoading(true);
         try {
-            const response = await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api'}/auth/verify-login-otp`, { email, otp });
+            const response = await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/auth/verify-login-otp`, { email, otp });
 
             const { token, user } = response.data;
             localStorage.setItem("accessToken", token);

@@ -15,7 +15,7 @@ export default function OfferPage() {
     const handleProceed = async () => {
         try {
             const token = localStorage.getItem("token");
-            await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api'}/portal/advance-state`, {
+            await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/portal/advance-state`, {
                 targetState: 'RESOURCES'
             }, { headers: { Authorization: `Bearer ${token}` } });
             router.push('/portal/onboarding/resources');
@@ -27,7 +27,7 @@ export default function OfferPage() {
     const handleDownload = async (endpoint, filename) => {
         try {
             const token = localStorage.getItem("token");
-            const response = await axios.get(`${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api'}/portal/${endpoint}?tenureIndex=${selectedTenureIndex}`, {
+            const response = await axios.get(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/portal/${endpoint}?tenureIndex=${selectedTenureIndex}`, {
                 headers: { Authorization: `Bearer ${token}` },
                 responseType: 'blob'
             });

@@ -35,7 +35,7 @@ export default function OnboardingLayout({ children }) {
             const token = localStorage.getItem("token");
             if (!token) return router.push("/portal");
 
-            const res = await axios.get(`${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api'}/auth/me`, {
+            const res = await axios.get(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/auth/me`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             const userData = res.data.user;

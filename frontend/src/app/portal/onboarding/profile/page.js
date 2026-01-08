@@ -30,7 +30,7 @@ export default function ProfilePage() {
         setSaving(true);
         try {
             const token = localStorage.getItem("token");
-            await axios.put(`${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api'}/portal/complete-profile`, formData, {
+            await axios.put(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/portal/complete-profile`, formData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             toast.success("Profile Updated! Proceed to NDA.");

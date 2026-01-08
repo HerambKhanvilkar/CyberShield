@@ -107,7 +107,7 @@ export default function FeedbackPage() {
         setLoading(true);
         try {
             const token = localStorage.getItem("token");
-            await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api'}/portal/submit-feedback`, { feedback: formData }, {
+            await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/portal/submit-feedback`, { feedback: formData }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             toast.success("Feedback Submitted! Welcome to Graduation.");

@@ -49,7 +49,7 @@ const SignupDialog = ({ open, onOpenChange, onBack }) => {
 
   // Function to request OTP using Axios
   const handleSendOtp = async () => {
-    const apiUrl = process.env.NEXT_PUBLIC_SERVER_URL || process.env.SERVER_URL || 'http://localhost:3001/api';
+    const apiUrl = process.env.SERVER_URL || process.env.SERVER_URL || 'http://localhost:3001/api';
     try {
       const response = await axios.post(
         `${apiUrl}/auth/register/otp`,
@@ -85,7 +85,7 @@ const SignupDialog = ({ open, onOpenChange, onBack }) => {
       return;
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_SERVER_URL || process.env.SERVER_URL || 'http://localhost:3001/api';
+    const apiUrl = process.env.SERVER_URL || process.env.SERVER_URL || 'http://localhost:3001/api';
     try {
       const response = await axios.post(
         `${apiUrl}/auth/register`,

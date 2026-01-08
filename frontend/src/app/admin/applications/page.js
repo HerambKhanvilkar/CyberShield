@@ -66,7 +66,7 @@ function AdminDashboardContent() {
             const token = localStorage.getItem("accessToken");
             if (!token) { router.push("/admin"); return; }
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api';
+            const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
             const [appsRes, fellowsRes, orgsRes] = await Promise.all([
                 axios.get(`${serverUrl}/application/admin/list`, config),
                 axios.get(`${serverUrl}/admin/fellows`, config),
@@ -87,7 +87,7 @@ function AdminDashboardContent() {
         setActionLoading(true);
         try {
             const token = localStorage.getItem("accessToken");
-            await axios.patch(`${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api'}/application/admin/status`, {
+            await axios.patch(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/application/admin/status`, {
                 applicantId: selectedItem._id,
                 status,
                 tenureEndDate: status === 'ACCEPTED' ? tenureEndDate : undefined
@@ -103,7 +103,7 @@ function AdminDashboardContent() {
         setActionLoading(true);
         try {
             const token = localStorage.getItem("accessToken");
-            await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api'}/admin/fellows/${selectedItem._id}/promote`, promotionData, {
+            await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/admin/fellows/${selectedItem._id}/promote`, promotionData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             toast.success("Fellow Promoted!");
@@ -117,7 +117,7 @@ function AdminDashboardContent() {
         try {
             const token = localStorage.getItem("accessToken");
             const res = await axios.get(
-                `${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api'}/fellowship/admin/download/${fellowId}/${tenureIndex}/${docType}`,
+                `${process.env.SERVER_URL || 'http://localhost:3001/api'}/fellowship/admin/download/${fellowId}/${tenureIndex}/${docType}`,
                 {
                     headers: { Authorization: `Bearer ${token}` },
                     responseType: 'blob'
@@ -140,7 +140,7 @@ function AdminDashboardContent() {
     const handleUpdateState = async (state) => {
         try {
             const token = localStorage.getItem("accessToken");
-            await axios.put(`${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api'}/admin/fellows/${selectedItem._id}`,
+            await axios.put(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/admin/fellows/${selectedItem._id}`,
                 { onboardingState: state },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -195,7 +195,7 @@ function AdminDashboardContent() {
             // If ID exists, it would be an update, but let's stick to Create for "Add" request.
             // Adjusting payload for arrays if needed (split by comma if input is string)
 
-            await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api'}/application/admin/orgs`, payload, {
+            await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/application/admin/orgs`, payload, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -613,7 +613,7 @@ function AdminDashboardContent() {
                                                 {selectedItem.resume && (
                                                     <button
                                                         onClick={() => {
-                                                            const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001';
+                                                            const serverUrl = process.env.SERVER_URL || 'http://localhost:3001';
                                                             const url = selectedItem.resume.startsWith('http') ? selectedItem.resume : `${serverUrl}${selectedItem.resume}`;
                                                             window.open(url, '_blank');
                                                         }}

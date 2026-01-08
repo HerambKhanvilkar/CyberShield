@@ -22,7 +22,7 @@ export default function ApplicationStatus() {
         e.preventDefault();
         setLoading(true);
         try {
-            await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api'}/auth/register/otp`, { email });
+            await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/auth/register/otp`, { email });
             toast.success("OTP sent to your email!");
             setStep(2);
         } catch (error) {
@@ -36,7 +36,7 @@ export default function ApplicationStatus() {
         e.preventDefault();
         setLoading(true);
         try {
-            const res = await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api'}/application/check-status`, { email, otp });
+            const res = await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/application/check-status`, { email, otp });
             setResult(res.data);
             setStep(3);
         } catch (error) {

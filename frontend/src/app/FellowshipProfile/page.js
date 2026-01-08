@@ -35,7 +35,7 @@ export default function FellowshipProfile() {
                 return;
             }
 
-            const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api';
+            const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
 
             // Fetch Profile & Stats
             const profileRes = await axios.get(`${serverUrl}/fellowship/profile`, {
@@ -78,7 +78,7 @@ export default function FellowshipProfile() {
         setIsSigning(true);
         try {
             const token = localStorage.getItem('token');
-            const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api';
+            const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
             await axios.post(
                 `${serverUrl}/fellowship/sign-document`,
                 {
@@ -104,7 +104,7 @@ export default function FellowshipProfile() {
     const handleDownloadRequest = async (index, type) => {
         try {
             const token = localStorage.getItem('token');
-            const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api';
+            const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
             const res = await axios.get(
                 `${serverUrl}/fellowship/download-document/${index}/${type}`,
                 {

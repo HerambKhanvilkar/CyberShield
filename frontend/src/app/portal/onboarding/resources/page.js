@@ -11,7 +11,7 @@ export default function ResourcesPage() {
     const handleProceed = async () => {
         try {
             const token = localStorage.getItem("token");
-            await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api'}/portal/advance-state`, {
+            await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/portal/advance-state`, {
                 targetState: 'RESEARCH'
             }, { headers: { Authorization: `Bearer ${token}` } });
             router.push('/portal/onboarding/research');

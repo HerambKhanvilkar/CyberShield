@@ -22,7 +22,7 @@ export default function NDAPage() {
         setNdaLoading(true);
         try {
             const token = localStorage.getItem("token");
-            await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api'}/portal/sign-nda`, {
+            await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/portal/sign-nda`, {
                 legalName
             }, { headers: { Authorization: `Bearer ${token}` } });
             toast.success("NDA Signed!");

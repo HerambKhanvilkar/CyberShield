@@ -37,7 +37,7 @@ export default function ApplicationForm() {
     useEffect(() => {
         const fetchOrg = async () => {
             try {
-                const res = await axios.get(`${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api'}/application/org/${code}`);
+                const res = await axios.get(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/application/org/${code}`);
                 setOrg(res.data);
             } catch (error) {
                 console.error("Org fetch error:", error);
@@ -53,7 +53,7 @@ export default function ApplicationForm() {
         if (!formData.email) return toast.error("Please enter email");
         setOtpLoading(true);
         try {
-            await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api'}/auth/register/otp`, { email: formData.email });
+            await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/auth/register/otp`, { email: formData.email });
             setEmailStep("otp_sent");
             toast.success("OTP sent to your email");
         } catch (error) {
@@ -66,7 +66,7 @@ export default function ApplicationForm() {
     const handleVerifyOtp = async () => {
         setOtpLoading(true);
         try {
-            await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api'}/auth/validate-otp`, {
+            await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/auth/validate-otp`, {
                 email: formData.email,
                 otp: formData.otp
             });
@@ -95,7 +95,7 @@ export default function ApplicationForm() {
             if (resumeFile) data.append("resumeFile", resumeFile);
             data.append("data", JSON.stringify({ resumeLink: formData.resume }));
 
-            await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api'}/application/apply`, data, {
+            await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/application/apply`, data, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             toast.success("Application Received!");

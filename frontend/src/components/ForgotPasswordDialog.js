@@ -30,7 +30,7 @@ const ForgotPasswordDialog = ({ open, onOpenChange, onBack }) => {
   const handleSendOtp = async () => {
     setLoading(true);
     setError("");
-    const apiUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api';
+    const apiUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
     try {
       const response = await axios.post(
         `${apiUrl}/auth/reset-password/otp`,
@@ -55,7 +55,7 @@ const ForgotPasswordDialog = ({ open, onOpenChange, onBack }) => {
     }
     setLoading(true);
     setError("");
-    const apiUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api';
+    const apiUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
     try {
       const response = await axios.post(
         `${apiUrl}/auth/reset-password`,

@@ -63,7 +63,7 @@ export default function SignupForm() {
         setLoading(true);
         try {
             const response = await axios.post(
-                `${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api'}/auth/register/otp`,
+                `${process.env.SERVER_URL || 'http://localhost:3001/api'}/auth/register/otp`,
                 { email }
             );
             setOtpSent(true);
@@ -80,7 +80,7 @@ export default function SignupForm() {
         setLoading(true);
         try {
             const response = await axios.post(
-                `${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api'}/auth/register`,
+                `${process.env.SERVER_URL || 'http://localhost:3001/api'}/auth/register`,
                 { firstName, lastName, email, password, otp }
             );
 
