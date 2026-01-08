@@ -862,16 +862,21 @@ router.put('/user/profile', authenticateJWT, uploadImage.single('profileImage'),
       }
     }
     if (password){
-      // Verify password
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch){
-        console.log(new Date() + "Incorrect password during password update for user" + user.email);
-        return res.status(404).json({ message: "Incorrect password." });
-      }
+        // Verify password only if both password and user.password are defined
+        if (typeof password !== 'undefined' && typeof user.password !== 'undefined' && password && user.password) {
+          const isMatch = await bcrypt.compare(password, user.password);
+          if (!isMatch){
+            console.log(new Date() + " Incorrect password during password update for user " + user.email);
+            return res.status(404).json({ message: "Incorrect password." });
+          }
 
-      // Hash the password before storing
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
-      user.password = hashedPassword;
+          // Hash the password before storing
+          const hashedPassword = await bcrypt.hash(newPassword, 10);
+          user.password = hashedPassword;
+        } else {
+          console.log("Password or hash missing during profile update", { password, hash: user.password });
+          return res.status(400).json({ message: "Password or hash missing." });
+        }
     }
 
     if (req.file) {
