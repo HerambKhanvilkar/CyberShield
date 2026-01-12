@@ -311,4 +311,46 @@ router.post('/check-status', [
     }
 });
 
+// ============================================
+// ROLES MANAGEMENT
+// ============================================
+
+// GET all active roles
+router.get('/admin/roles', authenticateJWT, isAdmin, async (req, res) => {
+    try {
+        const roles = await RolesMaster.find({ isActive: true }).sort({ name: 1 });
+        res.json(roles.map(r => r.name));
+    } catch (error) {
+        console.error('Roles fetch error:', error);
+        res.status(500).json({ message: 'Failed to fetch roles' });
+    }
+});
+
+// POST add new role
+router.post('/admin/roles', authenticateJWT, isAdmin, async (req, res) => {
+    try {
+        const { name, category } = req.body;
+
+        if (!name || !name.trim()) {
+            return res.status(400).json({ message: 'Role name is required' });
+        }
+
+        const existing = await RolesMaster.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
+        if (existing) {
+            return res.status(400).json({ message: 'Role already exists' });
+        }
+
+        const newRole = new RolesMaster({
+            name: name.trim(),
+            category: category || 'Custom'
+        });
+
+        await newRole.save();
+        res.status(201).json({ message: 'Role added successfully', role: newRole.name });
+    } catch (error) {
+        console.error('Role add error:', error);
+        res.status(500).json({ message: 'Failed to add role' });
+    }
+});
+
 module.exports = router;
