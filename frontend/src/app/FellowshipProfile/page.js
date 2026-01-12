@@ -25,6 +25,12 @@ export default function FellowshipProfile() {
 
     useEffect(() => {
         fetchData();
+
+        // Redirect admins to applications dashboard
+        const user = JSON.parse(localStorage.getItem('user') || 'null');
+        if (user && user.isAdmin) {
+            router.push('/applications');
+        }
     }, []);
 
     const fetchData = async () => {

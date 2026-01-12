@@ -154,11 +154,13 @@ app.use((err, req, res, next) => {
   // New Routes for Portal and Application
   const portalRoutes = require("./routes/portalRoutes");
   const applicationRoutes = require("./routes/applicationRoutes");
-  const fellowshipRoutes = require("./routes/fellowshipRoutes"); // NEW
+  const fellowshipRoutes = require("./routes/fellowshipRoutes");
+  const otpRoutes = require("./routes/otpRoutes"); // NEW
 
   app.use("/api/portal", portalRoutes);
   app.use("/api/application", applicationRoutes);
-  app.use("/api/fellowship", fellowshipRoutes); // NEW
+  app.use("/api/fellowship", fellowshipRoutes);
+  app.use("/api/auth", otpRoutes); // Resend/Change email routes
   // app.use("/api/dashboard", strictLimiter, dashboardRoutes);
   // app.use("/api", strictLimiter, watchlistRoutes);
   // app.use("/api/audit", strictLimiter, auditRoutes);

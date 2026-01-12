@@ -117,22 +117,84 @@ router.post("/register", registerValidationRules, validateRequest, async (req, r
 router.post("/register/otp", [body("email").isEmail().withMessage("Invalid email").normalizeEmail()], validateRequest, async (req, res) => {
   try {
     const { email } = req.body;
+
+    // 1. Check if email already registered
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        msg: "Email already registered",
+        action: "login",
+        loginUrl: "/login"
+      });
+    }
+
+    // 2. Extract domain and validate against organization whitelist
+    const Organization = require('../models/Organization');
+    const emailDomain = email.split('@')[1];
+    const org = await Organization.findOne({
+      emailDomainWhitelist: emailDomain,
+      isActive: true
+    });
+
+    if (!org) {
+      return res.status(400).json({
+        msg: `Email domain @${emailDomain} is not authorized. Please contact your organization administrator.`
+      });
+    }
+
+    // 3. Check existing OTP for rate limiting
+    const existingOtp = await Otp.findOne({ email });
+    const now = Date.now();
+
+    if (existingOtp) {
+      // Rate limiting: Max 3 attempts per hour
+      if (existingOtp.attemptCount >= 3 && existingOtp.lastAttemptAt && (now - existingOtp.lastAttemptAt.getTime() < 60 * 60 * 1000)) {
+        const remainingTime = Math.ceil((60 * 60 * 1000 - (now - existingOtp.lastAttemptAt.getTime())) / 60000);
+        return res.status(429).json({
+          msg: `Too many OTP requests. Please try again in ${remainingTime} minutes.`
+        });
+      }
+
+      // Cooldown: Minimum 2 minutes between requests
+      if (existingOtp.lastAttemptAt && (now - existingOtp.lastAttemptAt.getTime() < 2 * 60 * 1000)) {
+        const remainingTime = Math.ceil((2 * 60 * 1000 - (now - existingOtp.lastAttemptAt.getTime())) / 1000);
+        return res.status(429).json({
+          msg: `Please wait ${remainingTime} seconds before requesting a new OTP.`
+        });
+      }
+    }
+
     const otp = crypto.randomInt(100000, 999999).toString();
+    const expiryTime = now + 10 * 60 * 1000; // 10 minutes
 
     await Otp.updateOne(
       { email },
-      { $set: { otp, expiry: Date.now() + 10 * 60 * 1000 } },
+      {
+        $set: {
+          otp,
+          expiry: expiryTime,
+          expiresAt: new Date(expiryTime),
+          lastAttemptAt: new Date(now)
+        },
+        $inc: { attemptCount: 1 }
+      },
       { upsert: true }
     );
 
     // Send OTP email
     try {
       await sendRegistrationOTP(email, otp);
-      res.status(200).json({ msg: "OTP sent to email" });
+      res.status(200).json({
+        msg: "OTP sent to email",
+        expiresIn: 600 // seconds
+      });
     } catch (emailError) {
       console.error("Failed to send OTP email:", emailError);
       // Still return success to prevent email enumeration attacks
-      res.status(200).json({ msg: "OTP sent to email" });
+      res.status(200).json({
+        msg: "OTP sent to email",
+        expiresIn: 600
+      });
     }
   } catch (error) {
     console.error(error);
