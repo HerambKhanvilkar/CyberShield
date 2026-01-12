@@ -349,20 +349,20 @@ function Navbar() {
               </Link>
             )}
 
-            <Link
-              href="/about"
-              onClick={() => setIsSidenavOpen(false)}
-              className="text-gray-400 text-2xl hover:text-white"
-            >
-              About Us
-            </Link>
-            <Link
-              href="/Contact"
-              onClick={() => setIsSidenavOpen(false)}
-              className="text-gray-400 text-2xl hover:text-white"
-            >
-              Contact Us
-            </Link>
+            // <Link
+            //   href="/about"
+            //   onClick={() => setIsSidenavOpen(false)}
+            //   className="text-gray-400 text-2xl hover:text-white"
+            // >
+            //   About Us
+            // </Link>
+            // <Link
+            //   href="/Contact"
+            //   onClick={() => setIsSidenavOpen(false)}
+            //   className="text-gray-400 text-2xl hover:text-white"
+            // >
+            //   Contact Us
+            // </Link>
             {user && user.isAdmin && (
               <Link
                 href="/badgeadmin"
