@@ -10,6 +10,7 @@ const Otp = require('../models/Otp'); // We will use a separate Otp if we want s
 const multer = require('multer');
 const path = require('path');
 const FellowshipProfile = require('../models/FellowshipProfile');
+const RolesMaster = require('../models/RolesMaster');
 
 // Multer Storage Configuration
 const storage = multer.diskStorage({

@@ -107,20 +107,45 @@ router.post('/sign-document', authenticateJWT, isFellow, async (req, res) => {
 
         const templatePath = path.join(templatesDir, templateNameMap[documentType]);
 
-        // Generate PDF
-        const pdfResult = await DocumentService.generateSecurePDF(
-            templatePath,
-            {
-                fullName: `${fellow.firstName} ${fellow.lastName}`,
-                role: fellow.tenures[tenureIndex].role || "Fellow",
-                globalPid: fellow.globalPid,
-                email: fellow.email
-            },
-            { type: signatureType, data: signatureData },
-            fellow.email,
-            fellow.lastName,
-            fellow.globalPid
-        );
+        // Generate Premium PDF based on document type
+        let pdfResult;
+        if (documentType === 'nda') {
+            const applicantData = {
+                firstName: fellow.firstName,
+                lastName: fellow.lastName,
+                email: fellow.email,
+                globalPid: fellow.globalPid
+            };
+            pdfResult = await DocumentService.generateNDA(applicantData, { type: signatureType, data: signatureData });
+        } else if (documentType === 'offerLetter') {
+            const fellowData = {
+                firstName: fellow.firstName,
+                lastName: fellow.lastName,
+                email: fellow.email,
+                globalPid: fellow.globalPid
+            };
+            const tenureData = {
+                role: fellow.tenures[tenureIndex].role || 'Fellow',
+                startDate: fellow.tenures[tenureIndex].startDate || new Date().toLocaleDateString('en-GB'),
+                endDate: fellow.tenures[tenureIndex].endDate || 'Ongoing'
+            };
+            pdfResult = await DocumentService.generateOfferLetter(fellowData, tenureData);
+        } else {
+            // Use generic for other document types (completion letter, etc.)
+            pdfResult = await DocumentService.generateSecurePDF(
+                templatePath,
+                {
+                    fullName: `${fellow.firstName} ${fellow.lastName}`,
+                    role: fellow.tenures[tenureIndex].role || "Fellow",
+                    globalPid: fellow.globalPid,
+                    email: fellow.email
+                },
+                { type: signatureType, data: signatureData },
+                fellow.email,
+                fellow.lastName,
+                fellow.globalPid
+            );
+        }
 
         // Update Tenure
         if (!fellow.tenures[tenureIndex].signedDocuments) {
