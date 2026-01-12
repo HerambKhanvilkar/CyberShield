@@ -121,6 +121,7 @@ export default function LandingPage() {
                   <button
                     onClick={() => {
                       setShowSignupOnOpen(false);
+                      
                       setLoginDialogOpen(true);
                     }}
                     className="px-7 py-3 border border-white/20 bg-white/10 hover:bg-white/20 transition rounded pointer-events-auto cursor-pointer"
@@ -131,7 +132,7 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Desktop-only background image gradient */}
+            {/* Desktop-onlybackground image gradient */}
             <div
               className="hidden md:block absolute inset-0 bg-no-repeat bg-right bg-contain pointer-events-none"
               style={{
