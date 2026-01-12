@@ -249,7 +249,7 @@ router.get('/admin/orgs', authenticateJWT, isAdmin, async (req, res) => {
 // 6. Admin: Create/Update Organization
 router.post('/admin/orgs', authenticateJWT, isAdmin, async (req, res) => {
     try {
-        const { id, name, code, emailDomainWhitelist, endDate, formVar1, isActive } = req.body;
+        const { id, name, code, emailDomainWhitelist, endDate, formVar1, availableRoles, isActive } = req.body;
 
         let org;
         if (id) {
@@ -265,7 +265,8 @@ router.post('/admin/orgs', authenticateJWT, isAdmin, async (req, res) => {
         org.emailDomainWhitelist = emailDomainWhitelist;
         // If endDate is incoming as "0" or 0, set to 0 (indefinite)
         org.endDate = (endDate === "0" || endDate === 0) ? 0 : new Date(endDate);
-        org.formVar1 = formVar1;
+        org.formVar1 = formVar1 || availableRoles || [];
+        org.availableRoles = availableRoles || formVar1 || [];
         org.isActive = isActive;
 
         await org.save();
