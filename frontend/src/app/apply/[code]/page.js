@@ -144,7 +144,7 @@ export default function ApplicationForm() {
                                 <ShieldCheck className="w-3 h-3" /> Secure Application
                             </div>
                             <h1 className="text-4xl font-extrabold tracking-tight italic mb-2">{org.name}</h1>
-                            <p className="text-gray-500 font-medium">Fellowship Intake — Ref: <span className="text-white font-mono">{code}</span></p>
+                            <p className="text-gray-500 font-medium">Application Reference — <span className="text-white font-mono">{code}</span></p>
                         </header>
 
                         <form onSubmit={handleSubmit} className="space-y-8 relative z-10">
@@ -231,7 +231,7 @@ export default function ApplicationForm() {
                                         </div>
                                     </div>
                                     <div className="h-24 bg-white/5 rounded-2xl p-4 border border-white/5">
-                                        <span className="text-[10px] font-black uppercase text-gray-600 mb-1 block">External Link</span>
+                                        <span className="text-[10px] font-black uppercase text-gray-600 mb-1 block">Portfolio Link</span>
                                         <Input
                                             value={formData.resume}
                                             onChange={e => setFormData({ ...formData, resume: e.target.value })}

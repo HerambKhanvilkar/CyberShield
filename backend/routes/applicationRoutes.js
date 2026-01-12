@@ -10,6 +10,7 @@ const Otp = require('../models/Otp'); // We will use a separate Otp if we want s
 const multer = require('multer');
 const path = require('path');
 const FellowshipProfile = require('../models/FellowshipProfile');
+const RolesMaster = require('../models/RolesMaster');
 
 // Multer Storage Configuration
 const storage = multer.diskStorage({
@@ -249,7 +250,7 @@ router.get('/admin/orgs', authenticateJWT, isAdmin, async (req, res) => {
 // 6. Admin: Create/Update Organization
 router.post('/admin/orgs', authenticateJWT, isAdmin, async (req, res) => {
     try {
-        const { id, name, code, emailDomainWhitelist, endDate, formVar1, isActive } = req.body;
+        const { id, name, code, emailDomainWhitelist, endDate, formVar1, availableRoles, isActive } = req.body;
 
         let org;
         if (id) {
@@ -265,7 +266,8 @@ router.post('/admin/orgs', authenticateJWT, isAdmin, async (req, res) => {
         org.emailDomainWhitelist = emailDomainWhitelist;
         // If endDate is incoming as "0" or 0, set to 0 (indefinite)
         org.endDate = (endDate === "0" || endDate === 0) ? 0 : new Date(endDate);
-        org.formVar1 = formVar1;
+        org.formVar1 = formVar1 || availableRoles || [];
+        org.availableRoles = availableRoles || formVar1 || [];
         org.isActive = isActive;
 
         await org.save();
@@ -307,6 +309,48 @@ router.post('/check-status', [
 
     } catch (err) {
         res.status(500).json({ message: "Server error" });
+    }
+});
+
+// ============================================
+// ROLES MANAGEMENT
+// ============================================
+
+// GET all active roles
+router.get('/admin/roles', authenticateJWT, isAdmin, async (req, res) => {
+    try {
+        const roles = await RolesMaster.find({ isActive: true }).sort({ name: 1 });
+        res.json(roles.map(r => r.name));
+    } catch (error) {
+        console.error('Roles fetch error:', error);
+        res.status(500).json({ message: 'Failed to fetch roles' });
+    }
+});
+
+// POST add new role
+router.post('/admin/roles', authenticateJWT, isAdmin, async (req, res) => {
+    try {
+        const { name, category } = req.body;
+
+        if (!name || !name.trim()) {
+            return res.status(400).json({ message: 'Role name is required' });
+        }
+
+        const existing = await RolesMaster.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
+        if (existing) {
+            return res.status(400).json({ message: 'Role already exists' });
+        }
+
+        const newRole = new RolesMaster({
+            name: name.trim(),
+            category: category || 'Custom'
+        });
+
+        await newRole.save();
+        res.status(201).json({ message: 'Role added successfully', role: newRole.name });
+    } catch (error) {
+        console.error('Role add error:', error);
+        res.status(500).json({ message: 'Failed to add role' });
     }
 });
 

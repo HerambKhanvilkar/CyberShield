@@ -215,13 +215,14 @@ function Navbar() {
               {user && (
                 <Link
                   href={
-                    user.fellowshipStatus === 'FELLOW' ? '/FellowshipProfile' :
-                      user.fellowshipStatus === 'ONBOARDING' ? '/portal/onboarding' :
-                        '/portal'
+                    user.isAdmin ? '/applications' :
+                      user.fellowshipStatus === 'FELLOW' ? '/FellowshipProfile' :
+                        user.fellowshipStatus === 'ONBOARDING' ? '/portal/onboarding' :
+                          '/portal'
                   }
                   className="px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500 hover:text-white transition-all text-xs font-black uppercase tracking-widest"
                 >
-                  {user.fellowshipStatus === 'FELLOW' ? 'Fellowship Dashboard' : 'Fellowship Portal'}
+                  {user.isAdmin ? 'Applications' : user.fellowshipStatus === 'FELLOW' ? 'Fellowship Dashboard' : 'Fellowship Portal'}
                 </Link>
               )}
 
@@ -338,14 +339,15 @@ function Navbar() {
             {user && (
               <Link
                 href={
-                  user.fellowshipStatus === 'FELLOW' ? '/FellowshipProfile' :
-                    user.fellowshipStatus === 'ONBOARDING' ? '/portal/onboarding' :
-                      '/portal'
+                  user.isAdmin ? '/applications' :
+                    user.fellowshipStatus === 'FELLOW' ? '/FellowshipProfile' :
+                      user.fellowshipStatus === 'ONBOARDING' ? '/portal/onboarding' :
+                        '/portal'
                 }
                 onClick={() => setIsSidenavOpen(false)}
                 className="text-cyan-400 text-2xl font-black italic uppercase tracking-tighter"
               >
-                {user.fellowshipStatus === 'FELLOW' ? 'Fellowship Dashboard' : 'Fellowship'}
+                {user.isAdmin ? 'Applications' : user.fellowshipStatus === 'FELLOW' ? 'Fellowship Dashboard' : 'Fellowship'}
               </Link>
             )}
 

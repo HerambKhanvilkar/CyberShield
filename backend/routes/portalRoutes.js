@@ -105,24 +105,24 @@ router.get('/download-nda', authenticateJWT, async (req, res) => {
             return res.status(403).json({ message: "NDA not signed yet" });
         }
 
-        const templatePath = path.join(__dirname, '../uploads/templates/NDA_TEMPLATE.pdf');
+        const applicantData = {
+            firstName: profile.firstName,
+            lastName: profile.lastName,
+            email: profile.email,
+            globalPid: profile.globalPid
+        };
 
-        const { buffer, hash } = await DocumentService.generateSecurePDF(
-            templatePath,
-            {
-                legalName: profile.nda.signedName,
-                pid: profile.globalPid,
-                date: profile.nda.dateTimeUser
-            },
-            profile.email,
-            profile.lastName,
-            profile.globalPid
-        );
+        const signatureInfo = {
+            type: 'TYPED',
+            data: profile.nda.signedName
+        };
+
+        const { buffer, hash } = await DocumentService.generateNDA(applicantData, signatureInfo);
 
         profile.nda.pdfHash = hash;
         await profile.save();
 
-        await logAction(profile._id, 'NDA_DOWNLOAD', 'Downloaded Secure NDA PDF', req);
+        await logAction(profile._id, 'NDA_DOWNLOAD', 'Downloaded Premium NDA PDF', req);
 
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', 'attachment; filename=DC_NDA_SIGNED.pdf');
@@ -141,26 +141,25 @@ router.get('/download-offer', authenticateJWT, async (req, res) => {
             return res.status(403).json({ message: "Offer letter not available yet. Please sign NDA." });
         }
 
-        const templatePath = path.join(__dirname, '../uploads/templates/OFFER_TEMPLATE.pdf');
-
-        // Handle tenure index from query, default to last
         const tenureIndex = parseInt(req.query.tenureIndex) || 0;
         const selectedTenure = profile.tenures[tenureIndex] || profile.tenures[profile.tenures.length - 1];
 
-        const { buffer } = await DocumentService.generateSecurePDF(
-            templatePath,
-            {
-                legalName: profile.firstName + ' ' + profile.lastName,
-                pid: profile.globalPid,
-                role: selectedTenure.role,
-                startDate: selectedTenure.startDate
-            },
-            profile.email,
-            profile.lastName,
-            profile.globalPid
-        );
+        const fellowData = {
+            firstName: profile.firstName,
+            lastName: profile.lastName,
+            email: profile.email,
+            globalPid: profile.globalPid
+        };
 
-        await logAction(profile._id, 'OFFER_DOWNLOAD', 'Downloaded Secure Offer Letter', req);
+        const tenureData = {
+            role: selectedTenure.role,
+            startDate: selectedTenure.startDate,
+            endDate: selectedTenure.endDate || 'Ongoing'
+        };
+
+        const { buffer } = await DocumentService.generateOfferLetter(fellowData, tenureData);
+
+        await logAction(profile._id, 'OFFER_DOWNLOAD', 'Downloaded Premium Offer Letter', req);
 
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', 'attachment; filename=DC_OFFER_LETTER.pdf');
