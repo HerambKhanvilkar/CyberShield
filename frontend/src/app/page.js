@@ -147,12 +147,12 @@ export default function LandingPage() {
           </section>
 
           {/* About Us */}
-          // <section className="py-2 z-50 bg-[#00040A] pointer-events-auto">
-          //   <h2 className="text-3xl sm:text-4xl mb-2 md:mb-10 text-center text-cyan-500">About the DC Community</h2>
-          //   <div>
+          {/*  <section className="py-2 z-50 bg-[#00040A] pointer-events-auto">
+             <h2 className="text-3xl sm:text-4xl mb-2 md:mb-10 text-center text-cyan-500">About the DC Community</h2>
+             <div>
               
-          //   </div>
-          // </section>
+             </div>
+          section> */}
 
           {/* Programs available */}
           <section className="py-2 z-50 bg-[#00040A] pointer-events-auto relative overflow-hidden">
