@@ -53,6 +53,8 @@ function AdminDashboardContent() {
     const [isEditingOrg, setIsEditingOrg] = useState(false);
     const [orgData, setOrgData] = useState({ name: '', code: '', emailDomainWhitelist: [], endDate: 0, formVar1: [], isActive: true });
     const [tenureEndDate, setTenureEndDate] = useState("");
+    const [availableRoles, setAvailableRoles] = useState([]);
+    const [newRole, setNewRole] = useState("");
 
     // Promotion State
     const [promotionData, setPromotionData] = useState({ newRole: "", newStatus: "ACTIVE", newCohort: "", completionStatus: "PROMOTED" });
@@ -67,18 +69,36 @@ function AdminDashboardContent() {
             if (!token) { router.push("/admin"); return; }
             const config = { headers: { Authorization: `Bearer ${token}` } };
             const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
-            const [appsRes, fellowsRes, orgsRes] = await Promise.all([
+            const [appsRes, fellowsRes, orgsRes, rolesRes] = await Promise.all([
                 axios.get(`${serverUrl}/application/admin/list`, config),
                 axios.get(`${serverUrl}/admin/fellows`, config),
-                axios.get(`${serverUrl}/application/admin/orgs`, config)
+                axios.get(`${serverUrl}/application/admin/orgs`, config),
+                axios.get(`${serverUrl}/application/admin/roles`, config)
             ]);
             setApps(appsRes.data);
             setFellows(fellowsRes.data);
             setOrgs(orgsRes.data);
+            setAvailableRoles(rolesRes.data);
         } catch (error) {
             if (error.response?.status === 401) { router.push("/admin"); }
             toast.error("Failed to load dashboard data");
         } finally { setLoading(false); }
+    };
+
+    const handleAddRole = async () => {
+        if (!newRole.trim()) return;
+        try {
+            const token = localStorage.getItem("accessToken");
+            await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/admin/roles`,
+                { name: newRole },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            toast.success(`Role "${newRole}" added!`);
+            setNewRole("");
+            fetchData(); // Refresh roles
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to add role");
+        }
     };
 
     useEffect(() => { fetchData(); }, []);
@@ -775,7 +795,7 @@ function AdminDashboardContent() {
                                         <div className="space-y-2">
                                             <label className="text-[10px] uppercase font-mono text-gray-500">Available_Roles (Select Multiple)</label>
                                             <div className="grid grid-cols-2 gap-2 p-3 bg-white/5 border border-white/10 max-h-32 overflow-y-auto">
-                                                {['Developer', 'Security Researcher', 'Data Analyst', 'UI/UX Designer', 'Project Manager', 'DevOps Engineer', 'ML Engineer', 'Technical Writer'].map(role => (
+                                                {availableRoles.map(role => (
                                                     <label key={role} className="flex items-center gap-2 cursor-pointer group hover:bg-white/5 p-1.5 transition-colors">
                                                         <input
                                                             type="checkbox"
@@ -792,6 +812,22 @@ function AdminDashboardContent() {
                                                         <span className="text-[10px] text-gray-300 group-hover:text-white">{role}</span>
                                                     </label>
                                                 ))}
+                                            </div>
+                                            {/* Add custom role input */}
+                                            <div className="flex gap-2 mt-3">
+                                                <Input
+                                                    value={newRole}
+                                                    onChange={(e) => setNewRole(e.target.value)}
+                                                    onKeyPress={(e) => { if (e.key === 'Enter') handleAddRole(); }}
+                                                    placeholder="Add new role..."
+                                                    className="bg-black border-white/20 h-8 text-xs font-mono text-white focus:border-green-500 flex-1"
+                                                />
+                                                <button
+                                                    onClick={handleAddRole}
+                                                    className="px-3 h-8 bg-green-900/20 border border-green-500/50 text-green-500 hover:bg-green-500/10 text-[10px] font-bold uppercase tracking-wider transition-colors"
+                                                >
+                                                    ADD
+                                                </button>
                                             </div>
                                         </div>
 
