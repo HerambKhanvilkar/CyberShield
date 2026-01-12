@@ -20,7 +20,11 @@ const OrganizationSchema = new mongoose.Schema({
         default: 0 // 0 means open indefinitely or logic to handle
     },
     formVar1: {
-        type: [String], // Array of Roles e.g. ["Developer", "Designer"]
+        type: [String], // Array of Roles e.g. ["Developer", "Designer"] - LEGACY, use availableRoles
+        default: []
+    },
+    availableRoles: {
+        type: [String], // Selected roles from master list for this organization
         default: []
     },
     formVar2: {
