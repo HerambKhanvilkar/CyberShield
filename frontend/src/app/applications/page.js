@@ -509,11 +509,33 @@ function AdminDashboardContent() {
                                                 <div className="flex gap-4 text-xs font-mono text-gray-500 items-center">
                                                     <span className="text-green-500 border border-green-500/20 bg-green-500/5 px-2 py-0.5 rounded-none">{org.code}</span>
                                                     <span className="text-xs">{org.emailDomainWhitelist.length} DOMAINS</span>
+                                                    <span className="text-xs">{(org.availableRoles || org.formVar1 || []).length} ROLES</span>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className={`px-4 py-1.5 border text-xs font-bold uppercase tracking-widest ${org.isActive ? 'border-green-500/50 text-green-500' : 'border-red-500/50 text-red-500'}`}>
-                                            {org.isActive ? 'ONLINE' : 'OFFLINE'}
+                                        <div className="flex items-center gap-3">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setOrgData({
+                                                        id: org._id,
+                                                        name: org.name,
+                                                        code: org.code,
+                                                        emailDomainWhitelist: org.emailDomainWhitelist || [],
+                                                        endDate: org.endDate || 0,
+                                                        formVar1: org.availableRoles || org.formVar1 || [],
+                                                        isActive: org.isActive
+                                                    });
+                                                    setIsEditingOrg(true);
+                                                }}
+                                                className="opacity-0 group-hover:opacity-100 p-2 hover:bg-green-500/10 border border-transparent hover:border-green-500/30 transition-all"
+                                                title="Edit Organization"
+                                            >
+                                                <Settings className="w-4 h-4 text-green-500" />
+                                            </button>
+                                            <div className={`px-4 py-1.5 border text-xs font-bold uppercase tracking-widest ${org.isActive ? 'border-green-500/50 text-green-500' : 'border-red-500/50 text-red-500'}`}>
+                                                {org.isActive ? 'ONLINE' : 'OFFLINE'}
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
@@ -750,6 +772,29 @@ function AdminDashboardContent() {
                                             />
                                         </div>
 
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] uppercase font-mono text-gray-500">Available_Roles (Select Multiple)</label>
+                                            <div className="grid grid-cols-2 gap-2 p-3 bg-white/5 border border-white/10 max-h-32 overflow-y-auto">
+                                                {['Developer', 'Security Researcher', 'Data Analyst', 'UI/UX Designer', 'Project Manager', 'DevOps Engineer', 'ML Engineer', 'Technical Writer'].map(role => (
+                                                    <label key={role} className="flex items-center gap-2 cursor-pointer group hover:bg-white/5 p-1.5 transition-colors">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={(orgData.formVar1 || []).includes(role)}
+                                                            onChange={(e) => {
+                                                                const current = orgData.formVar1 || [];
+                                                                const updated = e.target.checked
+                                                                    ? [...current, role]
+                                                                    : current.filter(r => r !== role);
+                                                                setOrgData({ ...orgData, formVar1: updated });
+                                                            }}
+                                                            className="w-3 h-3 accent-green-500"
+                                                        />
+                                                        <span className="text-[10px] text-gray-300 group-hover:text-white">{role}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                                 <label className="text-[10px] uppercase font-mono text-gray-500">Termination_Date</label>
@@ -777,7 +822,7 @@ function AdminDashboardContent() {
                                         disabled={actionLoading}
                                         className="w-full h-12 bg-green-900/20 border border-green-500/50 text-green-500 hover:bg-green-500 hover:text-black font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 text-sm"
                                     >
-                                        {actionLoading ? 'UPLOADING...' : 'INITIALIZE_NODE'}
+                                        {actionLoading ? 'UPLOADING...' : (orgData.id ? 'UPDATE_NODE' : 'INITIALIZE_NODE')}
                                     </button>
                                 </div>
                             </motion.div>
