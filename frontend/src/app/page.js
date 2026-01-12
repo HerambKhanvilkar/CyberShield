@@ -159,7 +159,7 @@ export default function LandingPage() {
             <div className="flex flex-wrap justify-center w-5/6 mx-auto gap-8 relative z-10">
               {[
                 { title: "Fellowship Programs", desc: "A comprehensive program for aspiring cybersecurity professionals to gain hands-on experience and mentorship.",href: "#", img: "https://plus.unsplash.com/premium_photo-1680807869780-e0876a6f3cd5?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8Y2xhc3Nyb29tfGVufDB8fDB8fHww" },
-                { title: "Cyber Titan", desc: "An advanced track for those looking to specialize and lead in the field of cybersecurity.",href: "#", img: "https://thumbs.dreamstime.com/b/serious-black-businessman-manager-boss-mentor-talk-to-diverse-staff-people-teaching-interns-corporate-briefing-table-explaining-156764842.jpg" },
+                { title: "Cyber Titan", desc: "Cyber Titan is an initiative dedicated to fortify 65,000+ schools, training students & empowering communities against cyber threats",href: "#", img: "https://thumbs.dreamstime.com/b/serious-black-businessman-manager-boss-mentor-talk-to-diverse-staff-people-teaching-interns-corporate-briefing-table-explaining-156764842.jpg" },
                 { title: "Cyber Warrior", desc: "A foundational program designed to build core skills and awareness in cyber defense.",href: "#", img: "https://thumbs.dreamstime.com/b/elementary-school-kids-sitting-around-teacher-classroom-71526725.jpg" },
               ].map((program, idx) => (
                 <div
