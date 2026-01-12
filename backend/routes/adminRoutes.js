@@ -1,3 +1,26 @@
+// Helper to rate-limit async operations (e.g., sending emails)
+function rateLimitAsync(items, perSec, asyncFn) {
+  return new Promise((resolve, reject) => {
+    let idx = 0;
+    let results = [];
+    function nextBatch() {
+      const batch = items.slice(idx, idx + perSec);
+      if (batch.length === 0) return resolve(results);
+      Promise.all(batch.map(asyncFn))
+        .then(res => {
+          results = results.concat(res);
+          idx += perSec;
+          if (idx < items.length) {
+            setTimeout(nextBatch, 1000);
+          } else {
+            resolve(results);
+          }
+        })
+        .catch(reject);
+    }
+    nextBatch();
+  });
+}
 const { authenticateJWT, isAdmin } = require('../middleware/auth');
 const express = require("express");
 const router = express.Router();
@@ -787,31 +810,30 @@ router.post("/users/import/:jobId", authenticateJWT, async (req, res) => {
       const inserted = await User.insertMany(usersToBeInserted);
       console.log("insert");
 
-      // Send welcome emails to new users with their unique passwords
-      for (const user of usersToBeInserted) {
+
+      // Send welcome emails to new users with their unique passwords (rate-limited)
+      const mailsPerSec = parseInt(process.env.MAILS_PER_SEC || '1', 10);
+      await rateLimitAsync(usersToBeInserted, mailsPerSec, async (user) => {
         try {
           const plainPassword = userPasswordMap.get(user.email);
           await sendBulkUserWelcomeEmail(user.email, plainPassword);
           console.log(`Welcome email sent to ${user.email}`);
         } catch (emailError) {
           console.error(`Failed to send welcome email to ${user.email}:`, emailError);
-          // Continue processing other users even if one email fails
         }
-      }
+      });
 
-      // Send badge received emails for badges assigned during insert
-      // Use the actually inserted/saved documents so we can read their preferences
-      for (const savedUser of inserted) {
+      // Send badge received emails for badges assigned during insert (rate-limited)
+      await rateLimitAsync(inserted, mailsPerSec, async (savedUser) => {
         try {
-          if (!savedUser.badges || savedUser.badges.length === 0) continue;
+          if (!savedUser.badges || savedUser.badges.length === 0) return;
           const prefs = savedUser.emailPreferences || {};
           if (prefs.badgeReceived === false) {
             console.log(`Skipping badge emails for ${savedUser.email} due to preferences`);
-            continue;
+            return;
           }
           for (const badgeEntry of savedUser.badges) {
             try {
-              // Try to resolve badge name/description from Badge collection
               const badgeDoc = await Badge.findOne({ badgeId: String(badgeEntry.badgeId) }) || await Badge.findOne({ id: badgeEntry.badgeId });
               const badgeName = (badgeDoc && badgeDoc.name) ? badgeDoc.name : (badgeEntry.badgeId || 'a badge');
               const badgeDesc = (badgeDoc && badgeDoc.description) ? badgeDoc.description : '';
@@ -822,7 +844,6 @@ router.post("/users/import/:jobId", authenticateJWT, async (req, res) => {
               console.log(`Badge received email sent to ${savedUser.email} for ${badgeName}`);
             } catch (emailError) {
               console.error(`Failed to send badge email to ${savedUser.email} for badge ${badgeEntry.badgeId}:`, emailError);
-              // Don't fail the whole import if email sending fails
             }
           }
           // After initial badges, check for composite badges to auto-award
@@ -834,7 +855,7 @@ router.post("/users/import/:jobId", authenticateJWT, async (req, res) => {
         } catch (err) {
           console.error(`Error processing badge emails for inserted user ${savedUser.email}:`, err);
         }
-      }
+      });
 
       // Clear the password map for security
       userPasswordMap.clear();
