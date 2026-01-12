@@ -108,18 +108,24 @@ export default function ApplicationForm() {
     };
 
     if (loading) return (
-        <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-            <div className="w-10 h-10 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="min-h-screen bg-[#050505] flex flex-col">
+            <Navbar />
+            <div className="flex-1 flex items-center justify-center">
+                <div className="w-10 h-10 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+            <Footer />
         </div>
     );
 
     if (!org) return (
-        <div className="min-h-screen bg-[#050505] text-white flex flex-col items-center justify-center p-4">
+        <div className="min-h-screen bg-[#050505] text-white flex flex-col">
             <Navbar />
-            <div className="max-w-md text-center space-y-6">
-                <h1 className="text-4xl font-black italic text-red-500">ACCESS DENIED</h1>
-                <p className="text-gray-400">{errorMsg || `The organization code ${code} was not found or has expired.`}</p>
-                <Button onClick={() => router.push("/apply")} className="bg-white text-black hover:bg-gray-200 rounded-xl px-8 h-12 font-bold uppercase tracking-widest text-xs">Try Another Code</Button>
+            <div className="flex-1 flex flex-col items-center justify-center p-4">
+                <div className="max-w-md w-full text-center space-y-6">
+                    <h1 className="text-4xl font-black italic text-red-500">ACCESS DENIED</h1>
+                    <p className="text-gray-400">{errorMsg || `The organization code ${code} was not found or has expired.`}</p>
+                    <Button onClick={() => router.push("/apply")} className="bg-white text-black hover:bg-gray-200 rounded-xl px-8 h-12 font-bold uppercase tracking-widest text-xs">Try Another Code</Button>
+                </div>
             </div>
             <Footer />
         </div>
@@ -128,27 +134,22 @@ export default function ApplicationForm() {
     return (
         <div className="min-h-screen bg-[#050505] text-white flex flex-col font-sans">
             <Navbar />
-
-            <main className="flex-1 py-16 px-4">
-                <div className="max-w-3xl mx-auto">
-
+            <main className="flex-1 flex items-center justify-center px-2 sm:px-6 py-8 sm:py-16">
+                <div className="w-full max-w-3xl">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="bg-white/[0.02] border border-white/5 rounded-[3rem] p-10 sm:p-16 shadow-2xl relative overflow-hidden"
+                        className="bg-white/[0.02] border border-white/5 rounded-[2rem] sm:rounded-[3rem] p-4 sm:p-10 md:p-16 shadow-2xl relative overflow-hidden"
                     >
                         <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-600/10 blur-[100px] rounded-full" />
-
-                        <header className="mb-12 border-b border-white/5 pb-8 relative z-10">
+                        <header className="mb-8 sm:mb-12 border-b border-white/5 pb-6 sm:pb-8 relative z-10">
                             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-cyan-400 mb-4">
                                 <ShieldCheck className="w-3 h-3" /> Secure Application
                             </div>
-                            <h1 className="text-4xl font-extrabold tracking-tight italic mb-2">{org.name}</h1>
+                            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight italic mb-2">{org.name}</h1>
                             <p className="text-gray-500 font-medium">Application Reference — <span className="text-white font-mono">{code}</span></p>
                         </header>
-
                         <form onSubmit={handleSubmit} className="space-y-8 relative z-10">
-
                             {/* Personal Info */}
                             <div className="grid md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
@@ -160,12 +161,10 @@ export default function ApplicationForm() {
                                     <Input value={formData.lastName} onChange={e => setFormData({ ...formData, lastName: e.target.value })} required className="bg-black/50 border-white/10 h-12 rounded-xl focus:border-cyan-500/50" />
                                 </div>
                             </div>
-
-
                             {/* Email Verification */}
-                            <div className="p-6 bg-white/5 rounded-3xl border border-white/10 space-y-4">
+                            <div className="p-4 sm:p-6 bg-white/5 rounded-2xl sm:rounded-3xl border border-white/10 space-y-4">
                                 <Label className="text-gray-400 flex items-center gap-2"><Mail className="w-4 h-4" /> Identity Verification (Email)</Label>
-                                <div className="flex gap-2">
+                                <div className="flex gap-2 flex-wrap">
                                     <Input
                                         type="email"
                                         value={formData.email}
@@ -173,7 +172,7 @@ export default function ApplicationForm() {
                                         disabled={emailStep !== "start"}
                                         required
                                         placeholder="institutional-email@domain.com"
-                                        className="bg-black/40 border-white/10 h-12 rounded-xl"
+                                        className="bg-black/40 border-white/10 h-12 rounded-xl min-w-[180px]"
                                     />
                                     {emailStep === "start" && (
                                         <Button type="button" onClick={handleSendOtp} disabled={otpLoading} className="h-12 bg-cyan-600 hover:bg-cyan-500 px-6 rounded-xl">
@@ -186,11 +185,10 @@ export default function ApplicationForm() {
                                         </div>
                                     )}
                                 </div>
-
                                 <AnimatePresence>
                                     {emailStep === "otp_sent" && (
-                                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="flex gap-2">
-                                            <Input placeholder="Enter 6-digit OTP" value={formData.otp} onChange={e => setFormData({ ...formData, otp: e.target.value })} className="bg-black/40 border-white/10 h-12 text-center tracking-[0.2em] rounded-xl" />
+                                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="flex gap-2 flex-wrap">
+                                            <Input placeholder="Enter 6-digit OTP" value={formData.otp} onChange={e => setFormData({ ...formData, otp: e.target.value })} className="bg-black/40 border-white/10 h-12 text-center tracking-[0.2em] rounded-xl min-w-[120px]" />
                                             <Button type="button" onClick={handleVerifyOtp} disabled={otpLoading} className="h-12 bg-green-600 hover:bg-green-500 px-6 rounded-xl">
                                                 Confirm
                                             </Button>
@@ -198,7 +196,6 @@ export default function ApplicationForm() {
                                     )}
                                 </AnimatePresence>
                             </div>
-
                             {/* Role Selection */}
                             <div className="space-y-2">
                                 <Label className="text-gray-400">Target Role</Label>
@@ -213,7 +210,6 @@ export default function ApplicationForm() {
                                     </SelectContent>
                                 </Select>
                             </div>
-
                             {/* Resume */}
                             <div className="space-y-4 border-t border-white/10 pt-8">
                                 <Label className="text-gray-400 flex items-center gap-2"><FileText className="w-4 h-4" /> Academic Record / Portfolio</Label>
@@ -241,7 +237,6 @@ export default function ApplicationForm() {
                                     </div>
                                 </div>
                             </div>
-
                             <Button
                                 type="submit"
                                 disabled={submitLoading || emailStep !== "verified"}
@@ -250,12 +245,10 @@ export default function ApplicationForm() {
                                 {submitLoading ? "TRANSMITTING DATA..." : "TRANSMIT APPLICATION"}
                                 <Send className="ml-2 w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                             </Button>
-
                         </form>
                     </motion.div>
                 </div>
             </main>
-
             <Footer />
         </div>
     );
