@@ -92,7 +92,7 @@ jobs:
             unzip -o /home/${{ secrets.PROD_SERVER_USER }}/deploy.zip
 
             # Set ownership and permissions for the entire Badge-Viewer directory
-            sudo chown -R $USER:$USER /home/${{ secrets.PROD_SERVER_USER }}/Badge-Viewer
+            sudo chown -R ${{ secrets.PROD_SERVER_USER }}:${{ secrets.PROD_SERVER_USER }} /home/${{ secrets.PROD_SERVER_USER }}/Badge-Viewer
             sudo chmod -R 755 /home/${{ secrets.PROD_SERVER_USER }}/Badge-Viewer
 
             # First run the backend
