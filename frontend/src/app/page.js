@@ -218,11 +218,11 @@ export default function LandingPage() {
                 {/* Stats */}
                 <div className="flex gap-4 justify-center md:justify-start flex-nowrap">
                   <div className="bg-white/5 rounded-lg p-4 text-center w-[140px] md:flex-1 md:min-w-[150px]">
-                    <Count endValue={12345} format="number" direction="up" />
+                    <Count endValue={badges[activeIndex]?.holders || 12345} format="number" direction="up" />
                     <p className="text-sm text-text-medium">Holders</p>
                   </div>
                   <div className="bg-white/5 rounded-lg p-4 text-center w-[140px] md:flex-1 md:min-w-[150px]">
-                    <Count endValue={2024} format="year" direction="up" />
+                    <Count endValue={badges[activeIndex]?.yearLaunched || 2024} format="year" direction="down" duration={500} startValue={new Date().getFullYear()} />
                     <p className="text-sm text-text-medium">Year Launched</p>
                   </div>
                 </div>

@@ -1,3 +1,4 @@
+
 name: Deploy to Azure VM
 
 on:
@@ -6,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  setup:
+  deploy-run-and-cleanup:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,25 +15,7 @@ jobs:
       - name: Create zip file of the repo to transfer
         run: |
           zip -r deploy.zip . -x "*.git*" "node_modules/*" ".next/*" "coverage/*"
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: deploy-package
-          path: deploy.zip
-  
-  deploy-run-and-cleanup:
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
 
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: deploy-package
       - name: Copy files to Azure VM
         uses: appleboy/scp-action@master
         with:
@@ -51,28 +34,17 @@ jobs:
           script: |
             # Install Node.js and npm
             if ! command -v node &> /dev/null; then
-                # installs nvm (Node Version Manager)
                 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
-
                 export NVM_DIR="$HOME/.nvm"
-                [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+                [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
                 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-                # download and install Node.js (you may need to restart the terminal)
                 nvm install 20
-                # verifies the right Node.js version is in the environment
-                node -v # should print `v20`
-                # verifies the right npm version is in the environment
-                npm -v # should print `10.8`
+                node -v
+                npm -v
             fi
 
             # Install PM2
-            npm install pm2 -g
-
-            # Install dependencies
-            npm ci
-             
-            #pm2 path
-            export PATH="$HOME/.nvm/versions/node/v20.18.1/bin:$PATH"
+            sudo npm install -g pm2
 
             # Create app directory if it doesn't exist
             mkdir -p /home/${{ secrets.PROD_SERVER_USER }}/Badge-Viewer
@@ -87,53 +59,46 @@ jobs:
                 sudo apt-get install -y unzip
             fi
 
-
             # Unzip the deployment package
             unzip -o /home/${{ secrets.PROD_SERVER_USER }}/deploy.zip
 
-            # Set ownership and permissions for the entire Badge-Viewer directory
-            sudo chown -R $USER:$USER /home/${{ secrets.PROD_SERVER_USER }}/Badge-Viewer
+            # Set ownership and permissions
+            sudo chown -R ${{ secrets.PROD_SERVER_USER }}:${{ secrets.PROD_SERVER_USER }} /home/${{ secrets.PROD_SERVER_USER }}/Badge-Viewer
             sudo chmod -R 755 /home/${{ secrets.PROD_SERVER_USER }}/Badge-Viewer
 
             # First run the backend
-
             cd backend
-
-            # Start or restart your Node.js application with PM2
-            pm2 describe Badge-Viewer-Backend > /dev/null
-            if [ $? -eq 0 ]; then
-              # Restart the application if it exists
-              pm2 restart Badge-Viewer-Backend
+            if [ -f package-lock.json ]; then
+              npm ci
             else
-              #Start the application if it doesn't exist
-              pm2 start npm --name "Badge-Viewer-Backend" -- start
+              npm install
             fi
 
-            # Save the PM2 process list and set it to start on system startup
+            pm2 describe Badge-Viewer-Backend > /dev/null
+            if [ $? -eq 0 ]; then
+              pm2 restart Badge-Viewer-Backend
+            else
+              pm2 start npm --name "Badge-Viewer-Backend" -- start
+            fi
             pm2 save
             pm2 startup
 
             # Now move to frontend, build and start the PM2 process
             cd ../frontend
-
-            # Install dependencies
-            npm i
-
-            # Build the frontend
-            npm run build
-
-            # Start or restart your Next.js application with PM2
-            pm2 describe Badge-Viewer-Frontend > /dev/null
-            if [ $? -eq 0 ]; then
+            if [ -f package-lock.json ]; then
               npm ci
-              # Restart the application if it exists
-              pm2 restart Badge-Viewer-Frontend
             else
-              # Start the application if it doesn't exist
-              pm2 start npm --name "Badge-Viewer-Frontend" -- start
+              npm install
             fi
 
-            # Save the PM2 process list and set it to start on system startup
+            npm run build
+
+            pm2 describe Badge-Viewer-Frontend > /dev/null
+            if [ $? -eq 0 ]; then
+              pm2 restart Badge-Viewer-Frontend
+            else
+              pm2 start npm --name "Badge-Viewer-Frontend" -- start
+            fi
             pm2 save
             pm2 startup
 

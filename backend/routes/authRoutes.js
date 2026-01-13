@@ -153,17 +153,16 @@ router.post("/register/otp", [body("email").isEmail().withMessage("Invalid email
       }
 
       // Check if domain is in this org's whitelist
-      // Match both with and without @ for robustness
       const isAllowed = org.emailDomainWhitelist.some(d =>
         d.replace('@', '').toLowerCase() === emailDomain.toLowerCase()
       );
 
       if (!isAllowed) {
         return res.status(400).json({
-          msg: `Email domain @${emailDomain} is not authorized for ${org.name}. Authorized: ${org.emailDomainWhitelist.join(', ')}`
+          msg: `Email domain @${emailDomain} is not authorized for ${org.name}. If you believe this is an error, try using your institutional email or reach out for support.`
         });
       }
-    } else if (!existingApplicant) {
+    } else {
       // Global check if no orgCode provided AND not an existing applicant
       org = await Organization.findOne({
         $or: [
@@ -175,7 +174,7 @@ router.post("/register/otp", [body("email").isEmail().withMessage("Invalid email
 
       if (!org) {
         return res.status(400).json({
-          msg: `Email domain @${emailDomain} is not authorized. Please contact your organization administrator.`
+          msg: `Email domain @${emailDomain} is not authorized. If you believe this is an error, try using your institutional email or reach out for support.`
         });
       }
     }
@@ -229,16 +228,34 @@ router.post("/register/otp", [body("email").isEmail().withMessage("Invalid email
     // Send OTP email
     try {
       await sendRegistrationOTP(email, otp);
+      const expiresInSec = 600;
+      let expiresText = "";
+      if (expiresInSec >= 60) {
+        const mins = Math.floor(expiresInSec / 60);
+        const secs = expiresInSec % 60;
+        expiresText = secs > 0 ? `${mins} minute${mins > 1 ? 's' : ''} ${secs} second${secs > 1 ? 's' : ''}` : `${mins} minute${mins > 1 ? 's' : ''}`;
+      } else {
+        expiresText = `${expiresInSec} second${expiresInSec > 1 ? 's' : ''}`;
+      }
       res.status(200).json({
-        msg: "OTP sent to email",
-        expiresIn: 600 // seconds
+        msg: `OTP sent to email. It will expire in ${expiresText}.`,
+        expiresIn: expiresInSec
       });
     } catch (emailError) {
       console.error("Failed to send OTP email:", emailError);
       // Still return success to prevent email enumeration attacks
+      const expiresInSec = 600;
+      let expiresText = "";
+      if (expiresInSec >= 60) {
+        const mins = Math.floor(expiresInSec / 60);
+        const secs = expiresInSec % 60;
+        expiresText = secs > 0 ? `${mins} minute${mins > 1 ? 's' : ''} ${secs} second${secs > 1 ? 's' : ''}` : `${mins} minute${mins > 1 ? 's' : ''}`;
+      } else {
+        expiresText = `${expiresInSec} second${expiresInSec > 1 ? 's' : ''}`;
+      }
       res.status(200).json({
-        msg: "OTP sent to email",
-        expiresIn: 600
+        msg: `OTP sent to email. It will expire in ${expiresText}.`,
+        expiresIn: expiresInSec
       });
     }
   } catch (error) {

@@ -59,24 +59,27 @@ export default function ApplicationStatus() {
     return (
         <>
             <Navbar />
-            <div className="min-h-screen bg-[#00040A] text-white flex flex-col items-center justify-center p-4">
+            <div className="min-h-screen bg-gradient-to-br from-[#050505] via-[#0a1a2f] to-[#0a0a23] text-white flex flex-col items-center justify-center p-4 font-sans relative overflow-hidden">
+                {/* Blurred color blobs for background */}
                 <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
-                    <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px]"></div>
-                    <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[120px]"></div>
+                    <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px]" />
+                    <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[120px]" />
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-400/10 blur-[100px] rounded-full" />
+                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-pink-400/10 blur-[100px] rounded-full" />
                 </div>
 
-                <div className="w-full max-w-lg bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+                <div className="w-full max-w-lg bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 shadow-2xl relative overflow-hidden">
                     {/* Header */}
                     <div className="text-center mb-10">
-                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-cyan-600/20 border border-cyan-500/30 mb-4">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-cyan-600/20 border border-cyan-500/30 mb-4 shadow-lg">
                             <Search className="text-cyan-400 w-8 h-8" />
                         </div>
-                        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">Application Status</h1>
-                        <p className="text-gray-400 text-sm mt-2">Track your progress in the DeepCytes Network</p>
+                        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight italic mb-2 bg-clip-text text-transparent bg-gradient-to-r from-white to-cyan-400">Application Status</h1>
+                        <p className="text-gray-400 text-base sm:text-lg mt-2">Track your progress in the DeepCytes Fellowship</p>
                     </div>
 
                     {step === 1 && (
-                        <form onSubmit={handleSendOtp} className="space-y-6">
+                        <form onSubmit={handleSendOtp} className="space-y-7">
                             <div className="space-y-2">
                                 <label className="text-xs font-bold uppercase tracking-widest text-gray-500 ml-1">Registered Email</label>
                                 <Input
@@ -85,19 +88,19 @@ export default function ApplicationStatus() {
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
                                     placeholder="Enter your application email"
-                                    className="bg-black/40 border-white/10 text-white h-12 rounded-xl"
+                                    className="bg-black/40 border-white/10 text-white h-12 rounded-xl text-base"
                                 />
                             </div>
-                            <Button type="submit" disabled={loading} className="w-full h-12 bg-cyan-600 hover:bg-cyan-500 rounded-xl font-bold transition-all">
+                            <Button type="submit" disabled={loading} className="w-full h-12 bg-gradient-to-r from-cyan-600 to-cyan-400 hover:from-cyan-500 hover:to-cyan-300 rounded-xl font-bold transition-all shadow-lg">
                                 {loading ? "Finding Application..." : "Check My Status"}
                             </Button>
                         </form>
                     )}
 
                     {step === 2 && (
-                        <form onSubmit={handleVerifyOtp} className="space-y-6">
+                        <form onSubmit={handleVerifyOtp} className="space-y-7">
                             <div className="text-center mb-6">
-                                <p className="text-sm text-gray-400">An OTP has been sent to <span className="text-white font-semibold">{email}</span></p>
+                                <p className="text-base text-gray-400">An OTP has been sent to <span className="text-white font-semibold">{email}</span></p>
                             </div>
                             <div className="space-y-2">
                                 <label className="text-xs font-bold uppercase tracking-widest text-gray-500 ml-1">Enter Verification Code</label>
@@ -109,7 +112,7 @@ export default function ApplicationStatus() {
                                     className="bg-black/40 border-white/10 text-white h-12 text-center text-2xl tracking-[0.5em] font-mono rounded-xl"
                                 />
                             </div>
-                            <Button type="submit" disabled={loading} className="w-full h-12 bg-green-600 hover:bg-green-500 rounded-xl font-bold transition-all">
+                            <Button type="submit" disabled={loading} className="w-full h-12 bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 rounded-xl font-bold transition-all shadow-lg">
                                 {loading ? "Verifying..." : "View Result"}
                             </Button>
                             <button type="button" onClick={() => setStep(1)} className="w-full text-xs text-gray-500 hover:text-white transition-colors">Using a different email?</button>
@@ -120,7 +123,7 @@ export default function ApplicationStatus() {
                         <div className="text-center animate-in fade-in zoom-in duration-500">
                             {result.status === "PENDING" && (
                                 <div className="space-y-6">
-                                    <div className="w-20 h-20 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto border border-yellow-500/30">
+                                    <div className="w-20 h-20 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto border border-yellow-500/30 shadow-lg">
                                         <Clock className="text-yellow-400 w-10 h-10 animate-pulse" />
                                     </div>
                                     <div className="space-y-2">
@@ -132,7 +135,7 @@ export default function ApplicationStatus() {
 
                             {result.status === "REJECTED" && (
                                 <div className="space-y-6">
-                                    <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto border border-red-500/30">
+                                    <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto border border-red-500/30 shadow-lg">
                                         <XCircle className="text-red-400 w-10 h-10" />
                                     </div>
                                     <div className="space-y-2">
@@ -145,7 +148,7 @@ export default function ApplicationStatus() {
 
                             {result.status === "ACCEPTED" && (
                                 <div className="space-y-6">
-                                    <div className="w-24 h-24 bg-green-500/20 rounded-full flex items-center justify-center mx-auto border border-green-500/40 relative">
+                                    <div className="w-24 h-24 bg-green-500/20 rounded-full flex items-center justify-center mx-auto border border-green-500/40 relative shadow-lg">
                                         <CheckCircle className="text-green-400 w-12 h-12" />
                                         <div className="absolute inset-0 bg-green-400/20 rounded-full animate-ping"></div>
                                     </div>
@@ -154,7 +157,7 @@ export default function ApplicationStatus() {
                                         <p className="text-gray-300">Congratulations {result.firstName}! Your expertise has been verified for the DeepCytes Network.</p>
                                     </div>
 
-                                    <div className="bg-black/40 border border-white/10 rounded-2xl p-6 text-left space-y-4">
+                                    <div className="bg-black/40 border border-white/10 rounded-2xl p-6 text-left space-y-4 shadow-lg">
                                         <h3 className="text-xs font-bold uppercase tracking-widest text-cyan-400">Next Step: Account Activation</h3>
                                         <p className="text-sm text-gray-400">Please create your official member account using the email address from your application:</p>
                                         <div className="space-y-3">

@@ -45,7 +45,7 @@ export default function AdminLogin() {
             localStorage.setItem("user", JSON.stringify(user));
 
             toast.success("Admin Login Successful!");
-            router.push("/admin/applications");
+            router.push("/applications");
         } catch (error) {
             console.error(error);
             toast.error(error.response?.data?.message || "Invalid credentials");
