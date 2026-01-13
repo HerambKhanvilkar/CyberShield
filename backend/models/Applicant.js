@@ -24,7 +24,16 @@ const ApplicantSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        required: true
+        default: 'Unspecified'
+    },
+    preferredRoles: {
+        type: [String],
+        default: []
+    },
+    whyJoinDeepCytes: {
+        type: String,
+        required: true,
+        minlength: 100
     },
     project: {
         type: String,
@@ -60,7 +69,7 @@ const ApplicantSchema = new mongoose.Schema({
         type: String, // Email of the admin who accepted/rejected
         default: ""
     },
-    submittedAt: {
+    appliedAt: {
         type: Date,
         default: Date.now
     }

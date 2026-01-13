@@ -72,7 +72,7 @@ export default function ApplicationStatus() {
                             <Search className="text-cyan-400 w-8 h-8" />
                         </div>
                         <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">Application Status</h1>
-                        <p className="text-gray-400 text-sm mt-2">Track your progress in the DeepCytes Fellowship</p>
+                        <p className="text-gray-400 text-sm mt-2">Track your progress in the DeepCytes Network</p>
                     </div>
 
                     {step === 1 && (
@@ -151,12 +151,12 @@ export default function ApplicationStatus() {
                                     </div>
                                     <div className="space-y-2">
                                         <h2 className="text-3xl font-extrabold text-green-400">Welcome to the Team!</h2>
-                                        <p className="text-gray-300">Congratulations {result.firstName}! You have been selected for the DeepCytes Fellowship.</p>
+                                        <p className="text-gray-300">Congratulations {result.firstName}! Your expertise has been verified for the DeepCytes Network.</p>
                                     </div>
 
                                     <div className="bg-black/40 border border-white/10 rounded-2xl p-6 text-left space-y-4">
                                         <h3 className="text-xs font-bold uppercase tracking-widest text-cyan-400">Next Step: Account Activation</h3>
-                                        <p className="text-sm text-gray-400">Please create your official account using the email address from your application:</p>
+                                        <p className="text-sm text-gray-400">Please create your official member account using the email address from your application:</p>
                                         <div className="space-y-3">
                                             <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
                                                 <Mail className="w-4 h-4 text-cyan-400" />
@@ -166,7 +166,7 @@ export default function ApplicationStatus() {
                                     </div>
 
                                     <Button onClick={handleActivate} className="w-full h-14 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 rounded-2xl font-bold shadow-xl shadow-green-900/20 text-lg group">
-                                        Create Fellowship Account
+                                        Create Member Account
                                         <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                     </Button>
                                 </div>

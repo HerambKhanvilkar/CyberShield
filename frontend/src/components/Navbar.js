@@ -222,7 +222,7 @@ function Navbar() {
                   }
                   className="px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500 hover:text-white transition-all text-xs font-black uppercase tracking-widest"
                 >
-                  {user.isAdmin ? 'Applications' : user.fellowshipStatus === 'FELLOW' ? 'Fellowship Dashboard' : 'Fellowship Portal'}
+                  {user.isAdmin ? 'Admin Console' : user.fellowshipStatus === 'FELLOW' ? 'Member Console' : 'Application Portal'}
                 </Link>
               )}
 
@@ -347,7 +347,7 @@ function Navbar() {
                 onClick={() => setIsSidenavOpen(false)}
                 className="text-cyan-400 text-2xl font-black italic uppercase tracking-tighter"
               >
-                {user.isAdmin ? 'Applications' : user.fellowshipStatus === 'FELLOW' ? 'Fellowship Dashboard' : 'Fellowship'}
+                {user.isAdmin ? 'Admin Console' : user.fellowshipStatus === 'FELLOW' ? 'Member Console' : 'Application'}
               </Link>
             )}
 
