@@ -71,7 +71,7 @@ export default function TenureTimeline({ tenures, onSignRequest, onDownloadReque
                             <div className="flex justify-between items-start mb-6">
                                 <div>
                                     <div className="flex items-center gap-3 mb-2">
-                                        <h3 className="text-lg font-bold text-white font-mono">{tenure.role}</h3>
+                                        <h3 className="text-lg font-bold text-white font-mono">{typeof tenure.role === 'object' ? tenure.role?.name : tenure.role}</h3>
                                         {tenure.status === 'ACTIVE' && (
                                             <span className="px-2 py-0.5 rounded text-[10px] bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 uppercase tracking-wide font-bold">
                                                 Active

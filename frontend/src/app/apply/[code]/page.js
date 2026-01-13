@@ -249,35 +249,17 @@ export default function ApplicationForm() {
                                     </AnimatePresence>
                                 </div>
                                 {/* Role Selection */}
-                                <div className="space-y-2">
-                                    <Label className="text-gray-400 text-sm sm:text-base">Target Roles (Select up to 2)</Label>
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 w-full">
-                                        {org.formVars?.roles?.map((r, idx) => {
-                                            const selected = formData.roles?.includes(r);
-                                            return (
-                                                <button
-                                                    type="button"
-                                                    key={r}
-                                                    className={`border rounded-xl p-3 sm:p-4 flex items-center justify-center h-12 sm:h-16 text-base sm:text-lg font-bold transition-all w-full min-w-0 ${selected ? 'bg-cyan-600/30 border-cyan-400 text-cyan-200' : 'bg-black/50 border-white/10 text-white'}`}
-                                                    onClick={() => {
-                                                        let roles = formData.roles || [];
-                                                        if (selected) {
-                                                            roles = roles.filter(role => role !== r);
-                                                        } else {
-                                                            if (roles.length < 2) {
-                                                                roles = [...roles, r];
-                                                            } else {
-                                                                // Remove the first selected role and add the new one
-                                                                roles = [roles[1], r];
-                                                            }
-                                                        }
-                                                        setFormData({ ...formData, roles });
-                                                    }}
-                                                >
-                                                    {r}
-                                                </button>
-                                            );
-                                        })}
+                                <div className="space-y-4">
+                                    <Label className="text-gray-400 text-sm sm:text-base flex items-center gap-2">
+                                        Target Roles (Select up to 2)
+                                    </Label>
+
+                                    <div className="p-6 bg-white/[0.03] border border-white/10 rounded-2xl">
+                                        <RoleAutocomplete
+                                            roles={org.formVars?.roles || []}
+                                            selected={formData.roles}
+                                            onChange={(roles) => setFormData({ ...formData, roles: roles.slice(0, 2) })}
+                                        />
                                     </div>
                                 </div>
                                 {/* Resume */}

@@ -244,7 +244,7 @@ function OrgDashboardContent() {
                                             </td>
                                             <td className="p-4">
                                                 <span className="text-[10px] font-mono text-cyan-400 bg-cyan-400/5 px-2 py-0.5 border border-cyan-400/20">
-                                                    {app.role || 'UNSPECIFIED'}
+                                                    {typeof app.role === 'object' ? app.role?.name : app.role || 'UNSPECIFIED'}
                                                 </span>
                                             </td>
                                             <td className="p-4">
@@ -312,12 +312,12 @@ function ApplicantDetailsModal({ applicant, onClose }) {
                     <div className="space-y-6">
                         <div className="space-y-1">
                             <span className="text-[10px] uppercase text-gray-500 block font-black tracking-widest">Protocol Assignment</span>
-                            <p className="text-white font-bold text-sm">{applicant.role}</p>
+                            <p className="text-white font-bold text-sm">{typeof applicant.role === 'object' ? applicant.role?.name : applicant.role}</p>
                             {applicant.preferredRoles && applicant.preferredRoles.length > 0 && (
                                 <div className="mt-2 flex flex-wrap gap-1">
-                                    {applicant.preferredRoles.map(r => (
-                                        <span key={r} className="text-[9px] text-cyan-400 bg-cyan-400/5 px-2 py-0.5 border border-cyan-400/20 font-mono uppercase">
-                                            {r}
+                                    {applicant.preferredRoles.map((r, idx) => (
+                                        <span key={idx} className="text-[9px] text-cyan-400 bg-cyan-400/5 px-2 py-0.5 border border-cyan-400/20 font-mono uppercase">
+                                            {typeof r === 'object' ? r?.name : r}
                                         </span>
                                     ))}
                                 </div>

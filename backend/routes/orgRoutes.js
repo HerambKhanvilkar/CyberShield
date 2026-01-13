@@ -83,10 +83,10 @@ router.get('/stats', authenticateJWT, isOrgAdmin, async (req, res) => {
     try {
         const orgCode = req.user.orgCode;
         // Count stats using referralCode matching orgCode
-        const totalApplicants = await Applicant.countDocuments({ referralCode: orgCode });
-        const pending = await Applicant.countDocuments({ referralCode: orgCode, status: 'PENDING' });
-        const accepted = await Applicant.countDocuments({ referralCode: orgCode, status: { $in: ['ACCEPTED', 'SHORTLISTED'] } });
-        const rejected = await Applicant.countDocuments({ referralCode: orgCode, status: 'REJECTED' });
+        const totalApplicants = await Applicant.countDocuments({ orgCode: orgCode });
+        const pending = await Applicant.countDocuments({ orgCode: orgCode, status: 'PENDING' });
+        const accepted = await Applicant.countDocuments({ orgCode: orgCode, status: { $in: ['ACCEPTED', 'SHORTLISTED'] } });
+        const rejected = await Applicant.countDocuments({ orgCode: orgCode, status: 'REJECTED' });
 
         res.json({
             metrics: { totalApplicants, pending, accepted, rejected },

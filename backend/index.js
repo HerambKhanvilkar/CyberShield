@@ -55,6 +55,7 @@ app.use(express.json());
 
 app.use(express.urlencoded({ extended: true }))
 app.use('/uploads', express.static('uploads'));
+app.use('/api/uploads', express.static('uploads'));
 
 
 // Configure CORS more explicitly to avoid common CORS errors

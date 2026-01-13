@@ -510,7 +510,7 @@ function AdminDashboardContent() {
                                                 <h3 className="font-bold text-xl text-white group-hover:text-cyan-400 transition-colors uppercase tracking-widest mb-1.5">{app.firstName} {app.lastName}</h3>
                                                 <div className="flex gap-6 text-xs font-mono text-gray-500 items-center">
                                                     <span className="text-white/60">{app.email}</span>
-                                                    <span className="text-cyan-600 uppercase">REQ: {app.role}</span>
+                                                    <span className="text-cyan-600 uppercase text-[10px] font-bold">REQ: {typeof app.role === 'object' ? app.role?.name : app.role}</span>
                                                     {app.processedBy && (
                                                         <span className="text-gray-400 border border-white/10 px-2 py-0.5 text-[10px] bg-white/5">AUTH: {app.processedBy}</span>
                                                     )}
@@ -535,7 +535,12 @@ function AdminDashboardContent() {
                                                 <h3 className="font-bold text-xl text-white group-hover:text-purple-400 transition-colors uppercase tracking-widest mb-1.5">{fellow.firstName} {fellow.lastName}</h3>
                                                 <div className="flex gap-6 text-xs font-mono text-gray-500 items-center">
                                                     <span className="bg-white/10 px-2 py-0.5 text-white">{fellow.globalPid || 'NO_ID'}</span>
-                                                    <span className="text-purple-400/80 uppercase">{fellow.tenures[fellow.tenures.length - 1]?.role || 'UNASSIGNED'}</span>
+                                                    <span className="text-purple-400/80 uppercase">
+                                                        {(() => {
+                                                            const r = fellow.tenures[fellow.tenures.length - 1]?.role;
+                                                            return typeof r === 'object' ? r?.name : r || 'UNASSIGNED';
+                                                        })()}
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
@@ -802,13 +807,13 @@ function AdminDashboardContent() {
                                                             <div className="text-[10px] text-gray-500 uppercase font-mono tracking-widest">Preferred_Specializations</div>
                                                             <div className="flex flex-wrap gap-2">
                                                                 {(selectedItem.preferredRoles || []).length > 0 ? (
-                                                                    selectedItem.preferredRoles.map(role => (
-                                                                        <span key={role} className="px-2 py-1 bg-cyan-900/30 border border-cyan-500/30 text-cyan-400 text-[9px] font-bold uppercase tracking-wider">
-                                                                            {role}
+                                                                    selectedItem.preferredRoles.map((role, idx) => (
+                                                                        <span key={idx} className="px-2 py-1 bg-cyan-900/30 border border-cyan-500/30 text-cyan-400 text-[9px] font-bold uppercase tracking-wider">
+                                                                            {typeof role === 'object' ? role?.name : role}
                                                                         </span>
                                                                     ))
                                                                 ) : (
-                                                                    <span className="px-2 py-1 border border-white/10 text-gray-600 text-[9px] uppercase">LEGACY_ROLE: {selectedItem.role}</span>
+                                                                    <span className="px-2 py-1 border border-white/10 text-gray-600 text-[9px] uppercase">LEGACY_ROLE: {typeof selectedItem.role === 'object' ? selectedItem.role?.name : selectedItem.role}</span>
                                                                 )}
                                                             </div>
                                                         </div>
@@ -889,7 +894,7 @@ function AdminDashboardContent() {
                                                             {selectedItem.tenures.map((tenure, idx) => (
                                                                 <div key={idx} className="space-y-2">
                                                                     <div className="flex justify-between items-center text-[10px] text-gray-400 font-mono">
-                                                                        <span>TENURE_{idx + 1}: {tenure.role}</span>
+                                                                        <span>TENURE_{idx + 1}: {typeof tenure.role === 'object' ? tenure.role?.name : tenure.role}</span>
                                                                         <span>{tenure.status}</span>
                                                                     </div>
                                                                     <div className="grid gap-2">

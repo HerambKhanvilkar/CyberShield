@@ -99,14 +99,18 @@ router.post('/apply', upload.single('resumeFile'), [
     check('email').isEmail().normalizeEmail(),
     check('firstName').notEmpty().trim().escape(),
     check('lastName').notEmpty().trim().escape(),
-    check('role').notEmpty().trim().escape(),
+    check('role').optional().trim().escape(),
     check('whyJoin').optional().trim().escape(),
     check('ideas').optional().trim().escape()
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+        const errorMsgs = errors.array().map(err => `${err.param || err.path}: ${err.msg}`).join(', ');
         console.error("Validation Errors:", errors.array());
-        return res.status(400).json({ errors: errors.array(), message: "Validation failed" });
+        return res.status(400).json({
+            errors: errors.array(),
+            message: `Validation failed: ${errorMsgs}`
+        });
     }
 
     try {
