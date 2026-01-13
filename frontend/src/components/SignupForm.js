@@ -69,7 +69,7 @@ export default function SignupForm() {
             setOtpSent(true);
             toast.success("OTP sent successfully to your email.");
         } catch (err) {
-            toast.error(err.response?.data?.msg || "Failed to send OTP.");
+            toast.error(err.response?.data?.msg || err.response?.data?.message || "Failed to send OTP.");
         } finally {
             setLoading(false);
         }

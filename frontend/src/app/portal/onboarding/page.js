@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import Loader from "@/components/Loader";
 
 export default function OnboardingGateway() {
     const router = useRouter();
@@ -26,10 +27,5 @@ export default function OnboardingGateway() {
         checkState();
     }, []);
 
-    return (
-        <div className="flex flex-col items-center justify-center p-20 text-center space-y-4">
-            <div className="w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-gray-500 text-sm font-mono animate-pulse uppercase tracking-widest">Sycing Fellowship State...</p>
-        </div>
-    );
+    return <Loader text="SYNCING APPLICATION STATE..." />;
 }

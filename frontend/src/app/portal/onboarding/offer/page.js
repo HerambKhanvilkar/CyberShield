@@ -52,7 +52,7 @@ export default function OfferPage() {
             </div>
 
             <div className="space-y-4">
-                <h2 className="text-4xl font-black uppercase tracking-tighter text-white">Fellowship_<span className="text-green-500">Activated</span></h2>
+                <h2 className="text-4xl font-black uppercase tracking-tighter text-white">Network_<span className="text-green-500">Activated</span></h2>
                 <p className="text-gray-500 text-[10px] uppercase tracking-[0.2em] max-w-sm mx-auto font-bold leading-relaxed">
                     Credentials verified. Assignment initialized. Your personalized offer letter is ready for retrieval.
                 </p>

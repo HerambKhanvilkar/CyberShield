@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { BookOpen, Shield, FlaskConical, MessageSquare, Download, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 
 export default function ResourcesPage() {
     const router = useRouter();
@@ -24,12 +25,12 @@ export default function ResourcesPage() {
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-12">
             <div className="border-l-4 border-cyan-500 pl-6">
                 <h2 className="text-3xl font-black uppercase tracking-tighter text-white">Resource_<span className="text-cyan-500">Hub</span></h2>
-                <p className="text-gray-500 text-[10px] uppercase tracking-widest mt-2 font-bold">Secure Retrieval of Fellowship Assets & Guidelines.</p>
+                <p className="text-gray-500 text-[10px] uppercase tracking-widest mt-2 font-bold">Secure Retrieval of Network Assets & Guidelines.</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
-                    { title: 'Fellowship_Handbook', icon: <BookOpen className="w-5 h-5" />, type: 'PDF' },
+                    { title: 'Member_Handbook', icon: <BookOpen className="w-5 h-5" />, type: 'PDF' },
                     { title: 'Brand_Identity_Kit', icon: <Shield className="w-5 h-5" />, type: 'ZIP' },
                     { title: 'Internal_Ethics_v1', icon: <FlaskConical className="w-5 h-5" />, type: 'PDF' },
                     { title: 'Comm_Protocols', icon: <MessageSquare className="w-5 h-5" />, type: 'DOCX' }

@@ -8,17 +8,17 @@ const { Parser } = require('json2csv');
 const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
-const { 
+const {
   sendBadgeReceivedEmail,
-  sendProfileUpdateEmail 
+  sendProfileUpdateEmail
 } = require("../services/emailService");
 const { awardCompositeBadgesForUser, revokeDependentBadgesForUser } = require('../services/badgeService');
 // Set up multer for image Preview (use memory storage)
 const uploadPreviewImage = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1000 * 1000 }, // 5MB max file size
-  fileFilter: function(req, file, callback) {
-    let fileExtension = (file.originalname.split('.')[file.originalname.split('.').length-1]).toLowerCase(); // convert extension to lower case
+  fileFilter: function (req, file, callback) {
+    let fileExtension = (file.originalname.split('.')[file.originalname.split('.').length - 1]).toLowerCase(); // convert extension to lower case
     if (["png", "jpg", "jpeg"].indexOf(fileExtension) === -1) {
       return callback('Wrong file type', false);
     }
@@ -28,11 +28,11 @@ const uploadPreviewImage = multer({
 });
 
 // Profile update (use memory storage to avoid temporary disk files)
-const uploadImage = multer({ 
+const uploadImage = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1000 * 1000 }, // 5MB max file size
-  fileFilter: function(req, file, callback) {
-    let fileExtension = (file.originalname.split('.')[file.originalname.split('.').length-1]).toLowerCase(); // convert extension to lower case
+  fileFilter: function (req, file, callback) {
+    let fileExtension = (file.originalname.split('.')[file.originalname.split('.').length - 1]).toLowerCase(); // convert extension to lower case
     if (["png", "jpg", "jpeg"].indexOf(fileExtension) === -1) {
       return callback('Wrong file type', false);
     }
@@ -50,7 +50,7 @@ const BadgesEarned = require("../models/BadgesEarned");
 const { generateToken, authenticateJWT, isAdmin } = require('../middleware/auth');
 
 const getUsername = async (authHeader) => {
-  if(!authHeader){
+  if (!authHeader) {
     console.log('No auth Header');
     return null;
   }
@@ -81,28 +81,28 @@ router.get("/badges", async (req, res) => {
 
 // Endpoint to get badge images
 router.get("/badge/images/:id", async (req, res) => {
-    try {
-      const rawId = req.params.id;
-      if (!rawId || rawId === 'undefined' || rawId === 'null') {
+  try {
+    const rawId = req.params.id;
+    if (!rawId || rawId === 'undefined' || rawId === 'null') {
+      return res.status(404).json({ message: "Image not found" });
+    }
+
+    // Prefer numeric lookup (BadgeImage.id is Number). If a non-numeric badgeId
+    // string was provided, try to resolve it to a numeric Badge.id first.
+    let lookupId = null;
+    const maybeNum = parseInt(rawId);
+    if (!isNaN(maybeNum)) {
+      lookupId = maybeNum;
+    } else {
+      // Try resolving by Badge.badgeId -> get its numeric id
+      const badgeDoc = await Badge.findOne({ badgeId: rawId }).select('id');
+      if (!badgeDoc || typeof badgeDoc.id === 'undefined') {
         return res.status(404).json({ message: "Image not found" });
       }
+      lookupId = badgeDoc.id;
+    }
 
-      // Prefer numeric lookup (BadgeImage.id is Number). If a non-numeric badgeId
-      // string was provided, try to resolve it to a numeric Badge.id first.
-      let lookupId = null;
-      const maybeNum = parseInt(rawId);
-      if (!isNaN(maybeNum)) {
-        lookupId = maybeNum;
-      } else {
-        // Try resolving by Badge.badgeId -> get its numeric id
-        const badgeDoc = await Badge.findOne({ badgeId: rawId }).select('id');
-        if (!badgeDoc || typeof badgeDoc.id === 'undefined') {
-          return res.status(404).json({ message: "Image not found" });
-        }
-        lookupId = badgeDoc.id;
-      }
-
-      const badgeImage = await BadgeImage.findOne({ id: lookupId });
+    const badgeImage = await BadgeImage.findOne({ id: lookupId });
     if (!badgeImage || !badgeImage.image) {
       return res.status(404).json({ message: "Image not found" });
     }
@@ -110,26 +110,26 @@ router.get("/badge/images/:id", async (req, res) => {
     const contentType = badgeImage.contentType || 'application/octet-stream';
     res.set('Content-Type', contentType);
     res.send(badgeImage.image);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Internal Server Error" });
-    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
 });
 
 // Endpoint to get badge earners
 router.get("/badge/earners/:id", async (req, res) => {
-    try {
-      if (!req.params.id) 
-        return res.status(404).json({ message: "Badge not found" });
-        const earners = await User.countDocuments({ 'badges.badgeId': req.params.id });
-        if (!earners) {
-            return res.status(404).json({ message: "Badge not found" });
-        }
-      res.json({earners});
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Internal Server Error" });
+  try {
+    if (!req.params.id)
+      return res.status(404).json({ message: "Badge not found" });
+    const earners = await User.countDocuments({ 'badges.badgeId': req.params.id });
+    if (!earners) {
+      return res.status(404).json({ message: "Badge not found" });
     }
+    res.json({ earners });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
 });
 
 
@@ -157,7 +157,7 @@ router.get("/badge/:id", async (req, res) => {
 router.get("/verify-badge/:id/:username/:timestamp", async (req, res) => {
   try {
     const { id, username, timestamp } = req.params;
-    
+
     // Support either _id or email passed as "username". Try _id first, otherwise email.
     let user = null;
     try {
@@ -282,7 +282,7 @@ router.post("/generate-share-link", authenticateJWT, async (req, res) => {
     if (!badgeId) {
       return res.status(400).json({ message: "Badge ID is required" });
     }
-    
+
     // Fetch earned badges from User record
     const user = await User.findOne({ email: username }).lean();
 
@@ -296,10 +296,10 @@ router.post("/generate-share-link", authenticateJWT, async (req, res) => {
     if (!hasBadge) {
       return res.status(403).json({ message: "You can only share badges you've earned" });
     }
-    
+
     // Generate timestamp for the link
-    const timestamp = Math.floor(Date.now()/1000);
-    
+    const timestamp = Math.floor(Date.now() / 1000);
+
     // Prefer certificate-based share link when possible
     const badgeEntry = user.badges.find(badge => String(badge.badgeId) === String(badgeId));
     let shareLink;
@@ -351,12 +351,12 @@ router.get("/badges-earned", authenticateJWT, async (req, res) => {
 
     // Fetch earned badges
     const user = await User.findOne({ email }).lean();
-    
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    
-    if (user.badges.lenght === 0) {
+
+    if (user.badges.length === 0) {
       return res.json({ badges: [] });
     }
 
@@ -381,9 +381,9 @@ router.get("/badges-earned", authenticateJWT, async (req, res) => {
     res.json({ badges: earnedBadges });
   } catch (error) {
     console.error("Error fetching badges:", error);
-    res.status(500).json({ 
-      message: "Error loading badges", 
-      error: error.message 
+    res.status(500).json({
+      message: "Error loading badges",
+      error: error.message
     });
   }
 });
@@ -398,7 +398,7 @@ router.get("/user", authenticateJWT, async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    
+
     res.json(user);
   } catch (error) {
     console.error("Error fetching user:", error);
@@ -416,17 +416,17 @@ router.post("/assign-badge", authenticateJWT, async (req, res) => {
     const adminUsername = await getUsername(authHeader);
 
     const adminUser = await User.findOne({ email: adminUsername });
-    
+
     if (!adminUser || !adminUser.isAdmin) {
       return res.status(403).json({ message: "Unauthorized. Admin access required." });
     }
-    
+
     // Check if user exists
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    
+
     // Check if badge exists
     // Support badge lookup by numeric id or string badgeId
     let badge = await Badge.findOne({ id: badgeId });
@@ -436,7 +436,7 @@ router.post("/assign-badge", authenticateJWT, async (req, res) => {
     if (!badge) {
       return res.status(404).json({ message: "Badge not found" });
     }
-    
+
     // Check if user already has this badge
     const hasBadge = user.badges.some(b => b.badgeId == badgeId);
 
@@ -457,11 +457,11 @@ router.post("/assign-badge", authenticateJWT, async (req, res) => {
     const fmtAbbr = (val) => {
       if (!val) return ''.padEnd(4, '0');
       const s = String(val).toUpperCase().replace(/[^A-Z0-9]/g, '');
-      return s.length >= 4 ? s.slice(0,4) : s.padEnd(4, '0');
+      return s.length >= 4 ? s.slice(0, 4) : s.padEnd(4, '0');
     };
     const abbrPart = updatedBadge.abbreviation && String(updatedBadge.abbreviation).trim() !== ''
       ? fmtAbbr(updatedBadge.abbreviation)
-      : (updatedBadge.badgeId ? fmtAbbr(String(updatedBadge.badgeId).slice(0,4)) : fmtAbbr(String(updatedBadge.id)));
+      : (updatedBadge.badgeId ? fmtAbbr(String(updatedBadge.badgeId).slice(0, 4)) : fmtAbbr(String(updatedBadge.id)));
     const badgeIdPart = String(updatedBadge.id);
     const certificateId = `${abbrPart}${badgeIdPart}${seq}`;
     console.log(`Generated certificateId ${certificateId} for badge ${updatedBadge._id} (abbreviation=${updatedBadge.abbreviation || ''})`);
@@ -469,7 +469,7 @@ router.post("/assign-badge", authenticateJWT, async (req, res) => {
     // Add badge to existing record with certificateId and store badgeId string
     user.badges.push({ badgeId: updatedBadge.badgeId || String(updatedBadge.id), earnedDate: new Date(), certificateId });
     await user.save();
-    
+
     // Send badge received email notification (include certificateId and badge image URL)
     try {
       const backendBase = process.env.BACKEND_URL || process.env.FRONTEND || `http://localhost:${process.env.PORT || '3001'}`;
@@ -497,20 +497,20 @@ router.post("/assign-badge", authenticateJWT, async (req, res) => {
     try {
       const awarded = await awardCompositeBadgesForUser(user);
       if (awarded && awarded.length > 0) {
-        console.log(`Auto-awarded composite badges to ${user.email}: ${awarded.map(a=>a.name).join(', ')}`);
+        console.log(`Auto-awarded composite badges to ${user.email}: ${awarded.map(a => a.name).join(', ')}`);
       }
     } catch (compErr) {
       console.error('Error while checking/awarding composite badges:', compErr);
     }
-    
-    res.json({ 
-      message: "Badge assigned successfully", 
+
+    res.json({
+      message: "Badge assigned successfully",
       user: {
-        email: user.email, 
-        firstName: user.firstName, 
-        lastName: user.lastName, 
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
         badges: user.badges
-      } 
+      }
     });
   } catch (error) {
     console.error(error);
@@ -519,15 +519,15 @@ router.post("/assign-badge", authenticateJWT, async (req, res) => {
 });
 
 // Check admin status
-router.get("/check-admin",authenticateJWT, async (req, res) => {
+router.get("/check-admin", authenticateJWT, async (req, res) => {
   try {
     const { username } = req.query;
     const user = await User.findOne({ username });
-    
+
     if (!user) {
       return res.status(404).json({ isAdmin: false });
     }
-    
+
     res.json({ isAdmin: user.isAdmin || false });
   } catch (error) {
     console.error("Error checking admin status:", error);
@@ -552,7 +552,7 @@ router.get("/users", authenticateJWT, async (req, res) => {
     }
 
     // Check if admin user exists and is actually an admin
-    const adminUser = await User.findOne({ email: adminUsername});
+    const adminUser = await User.findOne({ email: adminUsername });
 
     if (!adminUser || !adminUser.isAdmin) {
       return res.status(403).json({ message: "Unauthorized. Admin access required." });
@@ -562,13 +562,13 @@ router.get("/users", authenticateJWT, async (req, res) => {
 
     filter["isAdmin"] = false;
 
-      // console.log("email", email);
-    if (email){
+    // console.log("email", email);
+    if (email) {
       filter["email"] = email;
     }
 
     const users = await User.find(filter).select("-_id");
-    
+
     res.status(200).json(users);
 
   } catch (error) {
@@ -592,7 +592,7 @@ router.get("/users/autocomplete", async (req, res) => {
     }
 
     // Check if admin user exists and is actually an admin
-    const adminUser = await User.findOne({ email: adminUsername});
+    const adminUser = await User.findOne({ email: adminUsername });
 
     if (!adminUser || !adminUser.isAdmin) {
       return res.status(403).json({ message: "Unauthorized. Admin access required." });
@@ -603,20 +603,20 @@ router.get("/users/autocomplete", async (req, res) => {
     const normalizedQuery = query.replace(/\s+/g, "").toLowerCase();
 
     const users = await User.find({
-      isAdmin: false, 
+      isAdmin: false,
       $or: [
-        { email: new RegExp(normalizedQuery, "i")},
-        { firstName: new RegExp(normalizedQuery, "i")},
-        { lastName: new RegExp(normalizedQuery, "i")},
+        { email: new RegExp(normalizedQuery, "i") },
+        { firstName: new RegExp(normalizedQuery, "i") },
+        { lastName: new RegExp(normalizedQuery, "i") },
       ]
-      });
+    });
 
     const sortedUsers = users.sort(
       (a, b) => a.email.length - b.email.length
     );
 
-    res.json(sortedUsers.map( (user) => {
-      return { 
+    res.json(sortedUsers.map((user) => {
+      return {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
@@ -644,7 +644,7 @@ router.post("/user/info", authenticateJWT, async (req, res) => {
     }
 
     // Check if admin user exists and is actually an admin
-    const adminUser = await User.findOne({ email: adminUsername});
+    const adminUser = await User.findOne({ email: adminUsername });
 
     if (!adminUser || !adminUser.isAdmin) {
       return res.status(403).json({ message: "Unauthorized. Admin access required." });
@@ -652,37 +652,37 @@ router.post("/user/info", authenticateJWT, async (req, res) => {
 
     const { email, firstName, lastName, password } = req.body;
 
-    if (!email){
+    if (!email) {
       return res.status(402).json({ message: "No email found. Email required to perform action." });
     }
     const filter = { email };
     const update = {};
-    if (firstName){
+    if (firstName) {
       update["firstName"] = firstName;
     }
-    if (lastName){
+    if (lastName) {
       update["lastName"] = lastName;
     }
-    if (password){
+    if (password) {
       // Hash the password before storing
       const hashedPassword = await bcrypt.hash(password, 10);
       update["password"] = hashedPassword;
     }
 
     // console.log(filter);
-    const user = await User.findOneAndUpdate(filter, update, { returnDocument:'after'});
+    const user = await User.findOneAndUpdate(filter, update, { returnDocument: 'after' });
 
     await user.save();
     // console.log("updated user", user);
-    
-    res.json({ 
+
+    res.json({
       message: "User Info Updated Successfully.",
       user: {
-        email: user.email, 
-        firstName: user.firstName, 
-        lastName: user.lastName, 
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
         badges: user.badges
-      } 
+      }
     });
 
   } catch (error) {
@@ -701,17 +701,17 @@ router.post("/revoke-badge", authenticateJWT, async (req, res) => {
     const adminUsername = await getUsername(authHeader);
 
     const adminUser = await User.findOne({ email: adminUsername });
-    
+
     if (!adminUser || !adminUser.isAdmin) {
       return res.status(403).json({ message: "Unauthorized. Admin access required." });
     }
-    
+
     // Check if user exists
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    
+
     // Support numeric id or string badgeId for lookup
     let badge = await Badge.findOne({ id: badgeId });
     if (!badge) {
@@ -720,10 +720,10 @@ router.post("/revoke-badge", authenticateJWT, async (req, res) => {
     if (!badge) {
       return res.status(404).json({ message: "Badge not found" });
     }
-    
+
     // Check if user already has this badge
     const hasBadge = user.badges.some((b) => b.badgeId == badgeId);
-    user.badges.forEach(b => { 
+    user.badges.forEach(b => {
       // console.log("users.badges", b.badgeId);
     })
 
@@ -739,10 +739,10 @@ router.post("/revoke-badge", authenticateJWT, async (req, res) => {
     }
     await user.save();
     // console.log("after");
-    user.badges.forEach(b => { 
+    user.badges.forEach(b => {
       // console.log("users.badges", b.badgeId);
     })
-    
+
     // Send badge revocation email notification
     try {
       // Respect user's profileUpdate preference (default true)
@@ -770,24 +770,24 @@ router.post("/revoke-badge", authenticateJWT, async (req, res) => {
     } catch (err) {
       console.error('Error during composite cascade revocation:', err);
     }
-    
-      // After assigning this badge, check for any composite badges that should be auto-awarded
-      try {
-        const awarded = await awardCompositeBadgesForUser(user);
-        if (awarded && awarded.length > 0) {
-          console.log(`Auto-awarded composite badges to ${user.email}: ${awarded.map(a=>a.name).join(', ')}`);
-        }
-      } catch (compErr) {
-        console.error('Error while checking/awarding composite badges:', compErr);
-      }
 
-      res.json({ 
+    // After assigning this badge, check for any composite badges that should be auto-awarded
+    try {
+      const awarded = await awardCompositeBadgesForUser(user);
+      if (awarded && awarded.length > 0) {
+        console.log(`Auto-awarded composite badges to ${user.email}: ${awarded.map(a => a.name).join(', ')}`);
+      }
+    } catch (compErr) {
+      console.error('Error while checking/awarding composite badges:', compErr);
+    }
+
+    res.json({
       user: {
-        email: user.email, 
-        firstName: user.firstName, 
-        lastName: user.lastName, 
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
         badges: user.badges
-      } 
+      }
     });
   } catch (error) {
     console.error(error);
@@ -799,9 +799,9 @@ router.post("/revoke-badge", authenticateJWT, async (req, res) => {
 router.get('/users/sample', authenticateJWT, async (req, res) => {
   // Create dummy data
   const sampleData = [
-    { _id: '1', email: 'user1@example.com', firstName: 'John', lastName: 'Doe', badgeIds: ['CA000100','CA000101'].toString() },
+    { _id: '1', email: 'user1@example.com', firstName: 'John', lastName: 'Doe', badgeIds: ['CA000100', 'CA000101'].toString() },
     { _id: '2', email: 'user2@example.com', firstName: 'Jane', lastName: 'Smith', badgeIds: ['CA000100'].toString() },
-    { _id: '3', email: 'user3@example.com', firstName: 'Alice', lastName: 'Johnson', badgeIds: ['CA000104','CA000111'].toString() },
+    { _id: '3', email: 'user3@example.com', firstName: 'Alice', lastName: 'Johnson', badgeIds: ['CA000104', 'CA000111'].toString() },
   ];
 
   // Convert JSON to CSV
@@ -821,22 +821,22 @@ router.put('/user/profile', authenticateJWT, uploadImage.single('profileImage'),
     const authHeader = req.headers.authorization;
     const email = await getUsername(authHeader);
     const user = await User.findOne({ email });
-    var userImage = await UserImage.findOne({email});
+    var userImage = await UserImage.findOne({ email });
     var imageData = null;
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const { firstName, lastName, password, newPassword, badges, emailPreferences }  = req.body;
+    const { firstName, lastName, password, newPassword, badges, emailPreferences } = req.body;
 
     // Allow updating emailPreferences alone, or any of the other profile fields
     if (!firstName && !lastName && !password && !req.file && !badges && !emailPreferences) {
       return res.status(404).json({ message: "No data sent for Update. Try again." });
     }
 
-    if(firstName) { user.firstName = firstName }
-    if(lastName) { user.lastName = lastName }
+    if (firstName) { user.firstName = firstName }
+    if (lastName) { user.lastName = lastName }
     if (badges) {
       console.log('raw badges payload:', badges);
       // badges may be sent as a JSON string or an actual array. Normalize it.
@@ -861,22 +861,22 @@ router.put('/user/profile', authenticateJWT, uploadImage.single('profileImage'),
         });
       }
     }
-    if (password){
-        // Verify password only if both password and user.password are defined
-        if (typeof password !== 'undefined' && typeof user.password !== 'undefined' && password && user.password) {
-          const isMatch = await bcrypt.compare(password, user.password);
-          if (!isMatch){
-            console.log(new Date() + " Incorrect password during password update for user " + user.email);
-            return res.status(404).json({ message: "Incorrect password." });
-          }
-
-          // Hash the password before storing
-          const hashedPassword = await bcrypt.hash(newPassword, 10);
-          user.password = hashedPassword;
-        } else {
-          console.log("Password or hash missing during profile update", { password, hash: user.password });
-          return res.status(400).json({ message: "Password or hash missing." });
+    if (password) {
+      // Verify password only if both password and user.password are defined
+      if (typeof password !== 'undefined' && typeof user.password !== 'undefined' && password && user.password) {
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+          console.log(new Date() + " Incorrect password during password update for user " + user.email);
+          return res.status(404).json({ message: "Incorrect password." });
         }
+
+        // Hash the password before storing
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedPassword;
+      } else {
+        console.log("Password or hash missing during profile update", { password, hash: user.password });
+        return res.status(400).json({ message: "Password or hash missing." });
+      }
     }
 
     if (req.file) {

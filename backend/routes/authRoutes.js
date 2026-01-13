@@ -128,18 +128,56 @@ router.post("/register/otp", [body("email").isEmail().withMessage("Invalid email
       });
     }
 
+    // 1.5 Check if an applicant exists (bypass domain check for status tracking)
+    const Applicant = require('../models/Applicant');
+    const existingApplicant = await Applicant.findOne({ email: email.toLowerCase() });
+
     // 2. Extract domain and validate against organization whitelist
     const Organization = require('../models/Organization');
     const emailDomain = email.split('@')[1];
-    const org = await Organization.findOne({
-      emailDomainWhitelist: emailDomain,
-      isActive: true
-    });
+    const { orgCode } = req.body;
 
-    if (!org) {
-      return res.status(400).json({
-        msg: `Email domain @${emailDomain} is not authorized. Please contact your organization administrator.`
+    let org;
+    if (existingApplicant) {
+      // Allow existing applicants to receive OTP regardless of current domain whitelist
+      // This is crucial for /portal status checks
+    } else if (orgCode) {
+      // If orgCode is provided (e.g. from apply page), validate strictly against that org
+      org = await Organization.findOne({
+        code: { $regex: new RegExp(`^${orgCode}$`, 'i') },
+        isActive: true
       });
+
+      if (!org) {
+        return res.status(404).json({ msg: "Organization not found or inactive." });
+      }
+
+      // Check if domain is in this org's whitelist
+      // Match both with and without @ for robustness
+      const isAllowed = org.emailDomainWhitelist.some(d =>
+        d.replace('@', '').toLowerCase() === emailDomain.toLowerCase()
+      );
+
+      if (!isAllowed) {
+        return res.status(400).json({
+          msg: `Email domain @${emailDomain} is not authorized for ${org.name}. Authorized: ${org.emailDomainWhitelist.join(', ')}`
+        });
+      }
+    } else if (!existingApplicant) {
+      // Global check if no orgCode provided AND not an existing applicant
+      org = await Organization.findOne({
+        $or: [
+          { emailDomainWhitelist: emailDomain.toLowerCase() },
+          { emailDomainWhitelist: `@${emailDomain.toLowerCase()}` }
+        ],
+        isActive: true
+      });
+
+      if (!org) {
+        return res.status(400).json({
+          msg: `Email domain @${emailDomain} is not authorized. Please contact your organization administrator.`
+        });
+      }
     }
 
     // 3. Check existing OTP for rate limiting
@@ -147,17 +185,17 @@ router.post("/register/otp", [body("email").isEmail().withMessage("Invalid email
     const now = Date.now();
 
     if (existingOtp) {
-      // Rate limiting: Max 3 attempts per hour
-      if (existingOtp.attemptCount >= 3 && existingOtp.lastAttemptAt && (now - existingOtp.lastAttemptAt.getTime() < 60 * 60 * 1000)) {
+      // Rate limiting: Max 10 attempts per hour (Relaxed for testing/UX)
+      if (existingOtp.attemptCount >= 10 && existingOtp.lastAttemptAt && (now - existingOtp.lastAttemptAt.getTime() < 60 * 60 * 1000)) {
         const remainingTime = Math.ceil((60 * 60 * 1000 - (now - existingOtp.lastAttemptAt.getTime())) / 60000);
         return res.status(429).json({
           msg: `Too many OTP requests. Please try again in ${remainingTime} minutes.`
         });
       }
 
-      // Cooldown: Minimum 2 minutes between requests
-      if (existingOtp.lastAttemptAt && (now - existingOtp.lastAttemptAt.getTime() < 2 * 60 * 1000)) {
-        const remainingTime = Math.ceil((2 * 60 * 1000 - (now - existingOtp.lastAttemptAt.getTime())) / 1000);
+      // Cooldown: Minimum 30 seconds between requests
+      if (existingOtp.lastAttemptAt && (now - existingOtp.lastAttemptAt.getTime() < 30 * 1000)) {
+        const remainingTime = Math.ceil((30 * 1000 - (now - existingOtp.lastAttemptAt.getTime())) / 1000);
         return res.status(429).json({
           msg: `Please wait ${remainingTime} seconds before requesting a new OTP.`
         });
@@ -167,6 +205,12 @@ router.post("/register/otp", [body("email").isEmail().withMessage("Invalid email
     const otp = crypto.randomInt(100000, 999999).toString();
     const expiryTime = now + 10 * 60 * 1000; // 10 minutes
 
+    // Reset attempt count if last attempt was more than 1 hour ago
+    let resetCount = false;
+    if (existingOtp && existingOtp.lastAttemptAt && (now - existingOtp.lastAttemptAt.getTime() > 60 * 60 * 1000)) {
+      resetCount = true;
+    }
+
     await Otp.updateOne(
       { email },
       {
@@ -174,9 +218,10 @@ router.post("/register/otp", [body("email").isEmail().withMessage("Invalid email
           otp,
           expiry: expiryTime,
           expiresAt: new Date(expiryTime),
-          lastAttemptAt: new Date(now)
+          lastAttemptAt: new Date(now),
+          ...(resetCount ? { attemptCount: 1 } : {})
         },
-        $inc: { attemptCount: 1 }
+        ...(!resetCount ? { $inc: { attemptCount: 1 } } : {})
       },
       { upsert: true }
     );

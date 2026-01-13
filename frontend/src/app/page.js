@@ -89,6 +89,7 @@ export default function LandingPage() {
               <img
                 src="/cyber-security-concept-digital-art.jpg"
                 alt="Cyber Background"
+                loading="lazy"
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-b from-black/0 via-black/50 to-black" />
@@ -100,6 +101,7 @@ export default function LandingPage() {
                 <img
                   src="https://static.wixstatic.com/media/e48a18_c949f6282e6a4c8e9568f40916a0c704~mv2.png/v1/crop/x_0,y_151,w_1920,h_746/fill/w_203,h_79,fp_0.50_0.50,q_85,usm_0.66_1.00_0.01,enc_auto/For%20Dark%20Theme.png"
                   alt="Logo"
+                  loading="lazy"
                   className="max-w-[200px] hidden md:block mb-5 drop-shadow-[0_0_20px_rgba(0,212,255,0.5)]"
                 />
                 <h1 className="text-4xl md:text-5xl font-extrabold mb-5">
@@ -109,7 +111,7 @@ export default function LandingPage() {
                   Join our mission to build a cross border cybersafe force together
                 </p>
                 <div className="flex flex-wrap gap-5">
-                  <button 
+                  <button
                     onClick={() => {
                       setShowSignupOnOpen(true);
                       setLoginDialogOpen(true);
@@ -121,7 +123,7 @@ export default function LandingPage() {
                   <button
                     onClick={() => {
                       setShowSignupOnOpen(false);
-                      
+
                       setLoginDialogOpen(true);
                     }}
                     className="px-7 py-3 border border-white/20 bg-white/10 hover:bg-white/20 transition rounded pointer-events-auto cursor-pointer"
@@ -159,9 +161,9 @@ export default function LandingPage() {
             <h2 className="text-3xl sm:text-4xl mb-2 md:mb-10 text-center text-cyan-500 relative z-10">Programs available</h2>
             <div className="flex flex-wrap justify-center w-5/6 mx-auto gap-8 relative z-10">
               {[
-                { title: "Fellowship Programs", desc: "A comprehensive program for aspiring cybersecurity professionals to gain hands-on experience and mentorship.",href: "#", img: "https://plus.unsplash.com/premium_photo-1680807869780-e0876a6f3cd5?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8Y2xhc3Nyb29tfGVufDB8fDB8fHww" },
-                { title: "Cyber Titan", desc: "Cyber Titan is an initiative dedicated to fortify 65,000+ schools, training students & empowering communities against cyber threats",href: "#", img: "https://thumbs.dreamstime.com/b/serious-black-businessman-manager-boss-mentor-talk-to-diverse-staff-people-teaching-interns-corporate-briefing-table-explaining-156764842.jpg" },
-                { title: "Cyber Warrior", desc: "A foundational program designed to build core skills and awareness in cyber defense.",href: "#", img: "https://thumbs.dreamstime.com/b/elementary-school-kids-sitting-around-teacher-classroom-71526725.jpg" },
+                { title: "Network Programs", desc: "A comprehensive program for aspiring cybersecurity professionals to gain hands-on experience and mentorship.", href: "#", img: "https://plus.unsplash.com/premium_photo-1680807869780-e0876a6f3cd5?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8Y2xhc3Nyb29tfGVufDB8fDB8fHww" },
+                { title: "Cyber Titan", desc: "Cyber Titan is an initiative dedicated to fortify 65,000+ schools, training students & empowering communities against cyber threats", href: "#", img: "https://thumbs.dreamstime.com/b/serious-black-businessman-manager-boss-mentor-talk-to-diverse-staff-people-teaching-interns-corporate-briefing-table-explaining-156764842.jpg" },
+                { title: "Cyber Warrior", desc: "A foundational program designed to build core skills and awareness in cyber defense.", href: "#", img: "https://thumbs.dreamstime.com/b/elementary-school-kids-sitting-around-teacher-classroom-71526725.jpg" },
               ].map((program, idx) => (
                 <div
                   key={program.title}
@@ -174,6 +176,7 @@ export default function LandingPage() {
                     <img
                       src={program.img}
                       alt={program.title + ' background'}
+                      loading="lazy"
                       className="w-full h-full object-cover object-center"
                       style={{ height: '100%', width: '100%', display: 'block', borderTopLeftRadius: '1rem', borderTopRightRadius: '1rem', maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)' }}
                     />
@@ -195,7 +198,7 @@ export default function LandingPage() {
           {/* Achievements */}
           <section className="py-2 z-50 bg-[#00040A] pointer-events-auto">
             <h2 className="text-3xl sm:text-4xl mb-2 md:mb-10 text-center text-cyan-500">Achievements</h2>
-            
+
             {/* Use column-reverse on mobile, row on md+ */}
             <div className="flex flex-col-reverse md:flex-row w-5/6 mx-auto items-center gap-0 md:gap-2 text-text-light">
               {/* Text content */}
@@ -211,7 +214,7 @@ export default function LandingPage() {
                 <p className="block md:hidden text-text-medium text-base sm:text-lg leading-relaxed text-left mb-0 md:mb-8 max-w-lg mx-auto md:mx-0">
                   {truncateText(badges[activeIndex]?.description, 150)}
                 </p>
-                
+
                 {/* Stats */}
                 <div className="flex gap-4 justify-center md:justify-start flex-nowrap">
                   <div className="bg-white/5 rounded-lg p-4 text-center w-[140px] md:flex-1 md:min-w-[150px]">
@@ -272,11 +275,10 @@ export default function LandingPage() {
                   <div
                     key={badge.id}
                     onClick={() => selectBadge(i)}
-                    className={`w-24 h-24 flex-shrink-0 snap-center cursor-pointer rounded-lg flex items-center justify-center transition transform ${
-                      i === activeIndex
-                        ? "bg-cyan-400/20 shadow-lg scale-110"
-                        : "bg-white/5 hover:bg-white/10 hover:-translate-y-1"
-                    }`}
+                    className={`w-24 h-24 flex-shrink-0 snap-center cursor-pointer rounded-lg flex items-center justify-center transition transform ${i === activeIndex
+                      ? "bg-cyan-400/20 shadow-lg scale-110"
+                      : "bg-white/5 hover:bg-white/10 hover:-translate-y-1"
+                      }`}
                   >
                     <img
                       crossOrigin="anonymous"

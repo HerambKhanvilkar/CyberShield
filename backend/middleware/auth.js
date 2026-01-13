@@ -90,8 +90,8 @@ const isApplicant = async (req, res, next) => {
     // If they ARE a fellow (Active+), they should go to dashboard, not portal
     if (profile && (profile.status === 'ACTIVE' || profile.status === 'COMPLETED' || profile.status === 'FROZEN')) {
       return res.status(403).json({
-        msg: "You are a Fellow. Please use /FellowshipProfile",
-        redirect: "/FellowshipProfile"
+        msg: "You are a Member. Please use /MemberProfile",
+        redirect: "/MemberProfile"
       });
     }
     next();

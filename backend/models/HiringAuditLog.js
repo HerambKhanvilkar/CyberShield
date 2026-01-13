@@ -15,6 +15,8 @@ const HiringAuditLogSchema = new mongoose.Schema({
             'ADMIN_REVIEW',
             'STATUS_UPDATE',
             'ACCOUNT_ACTIVATE',
+            'STATE_ADVANCE',
+            'FEEDBACK_SUBMIT',
             'OTHER'
         ]
     },

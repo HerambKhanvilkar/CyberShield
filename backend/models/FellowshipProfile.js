@@ -39,7 +39,7 @@ const FellowshipProfileSchema = new mongoose.Schema({
         pdfHash: { type: String, default: "" }
     },
     tenures: [{
-        type: { type: String, default: "Fellowship" },
+        type: { type: String, default: "Network" },
         role: { type: String, default: "" },
         orgCode: { type: String, default: "" },
         status: { type: String, enum: ['ACTIVE', 'COMPLETED', 'FROZEN', 'UPGRADED'], default: 'ACTIVE' },

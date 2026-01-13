@@ -216,7 +216,7 @@ function Navbar() {
                 <Link
                   href={
                     user.isAdmin ? '/applications' :
-                      user.fellowshipStatus === 'FELLOW' ? '/FellowshipProfile' :
+                      user.fellowshipStatus === 'FELLOW' ? '/MemberProfile' :
                         user.fellowshipStatus === 'ONBOARDING' ? '/portal/onboarding' :
                           '/portal'
                   }
@@ -340,7 +340,7 @@ function Navbar() {
               <Link
                 href={
                   user.isAdmin ? '/applications' :
-                    user.fellowshipStatus === 'FELLOW' ? '/FellowshipProfile' :
+                    user.fellowshipStatus === 'FELLOW' ? '/MemberProfile' :
                       user.fellowshipStatus === 'ONBOARDING' ? '/portal/onboarding' :
                         '/portal'
                 }

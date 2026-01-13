@@ -59,11 +59,14 @@ export default function ApplicationForm() {
         if (!formData.email) return toast.error("Please enter email");
         setOtpLoading(true);
         try {
-            await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/auth/register/otp`, { email: formData.email });
+            await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/auth/register/otp`, {
+                email: formData.email,
+                orgCode: code
+            });
             setEmailStep("otp_sent");
             toast.success("OTP sent to your email");
         } catch (error) {
-            toast.error("Failed to send OTP");
+            toast.error(error.response?.data?.msg || error.response?.data?.message || "Failed to send OTP");
         } finally {
             setOtpLoading(false);
         }
@@ -186,7 +189,7 @@ export default function ApplicationForm() {
                                             disabled={emailStep !== "start"}
                                             required
                                             placeholder="institutional-email@domain.com"
-                                            className="bg-black/40 border-white/10 h-12 rounded-xl"
+                                            className={`bg-black/40 border-white/10 h-12 rounded-xl ${emailStep !== 'start' ? 'opacity-50' : ''}`}
                                         />
                                         {emailStep === "start" && (
                                             <Button type="button" onClick={handleSendOtp} disabled={otpLoading} className="h-12 bg-cyan-600 hover:bg-cyan-500 px-6 rounded-xl">
@@ -199,6 +202,15 @@ export default function ApplicationForm() {
                                             </div>
                                         )}
                                     </div>
+
+                                    {org.emailDomainWhitelist && org.emailDomainWhitelist.length > 0 && emailStep === "start" && (
+                                        <div className="mt-2 flex flex-wrap gap-2 px-1">
+                                            <span className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Authorized Domains:</span>
+                                            {org.emailDomainWhitelist.map(domain => (
+                                                <span key={domain} className="text-[10px] text-cyan-500/70 font-mono">@{domain}</span>
+                                            ))}
+                                        </div>
+                                    )}
 
                                     <AnimatePresence>
                                         {emailStep === "otp_sent" && (

@@ -26,7 +26,7 @@ export default function ApplicationStatus() {
             toast.success("OTP sent to your email!");
             setStep(2);
         } catch (error) {
-            toast.error(error.response?.data?.message || "Failed to send OTP");
+            toast.error(error.response?.data?.msg || error.response?.data?.message || "Failed to send OTP");
         } finally {
             setLoading(false);
         }
@@ -40,7 +40,7 @@ export default function ApplicationStatus() {
             setResult(res.data);
             setStep(3);
         } catch (error) {
-            toast.error(error.response?.data?.message || "Invalid OTP or application not found");
+            toast.error(error.response?.data?.msg || error.response?.data?.message || "Invalid OTP or application not found");
         } finally {
             setLoading(false);
         }

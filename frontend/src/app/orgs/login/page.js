@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Lock, Shield, Server, ArrowRight } from 'lucide-react';
 import axios from 'axios';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 export default function OrgLoginPage() {
@@ -120,7 +120,6 @@ export default function OrgLoginPage() {
                 </motion.form>
             </div>
 
-            <ToastContainer position="bottom-right" theme="dark" toastClassName="!bg-black !text-green-500 !border !border-green-500/20 !font-mono" />
         </div>
     );
 }

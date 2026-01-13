@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { FlaskConical, ExternalLink, ChevronRight, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 
 export default function ResearchGatewayPage() {
     const router = useRouter();

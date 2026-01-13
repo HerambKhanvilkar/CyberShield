@@ -10,7 +10,7 @@ import {
     Search, Filter, ChevronRight
 } from 'lucide-react';
 import Loader from '@/components/Loader';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -44,7 +44,7 @@ function OrgDashboardContent() {
 
         setUser(JSON.parse(userData));
         fetchDashboardData(token);
-    }, []);
+    }, [router]);
 
     const fetchDashboardData = async (token) => {
         try {

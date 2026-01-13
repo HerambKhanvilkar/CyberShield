@@ -9,9 +9,10 @@ import OverviewStats from "./components/OverviewStats";
 import TenureTimeline from "./components/TenureTimeline";
 import SignatureModal from "./components/SignatureModal";
 import { toast } from "react-toastify";
-import { Loader2, ShieldCheck, AlertCircle } from "lucide-react";
+import { ShieldCheck, AlertCircle } from "lucide-react";
+import Loader from "@/components/Loader";
 
-export default function FellowshipProfile() {
+export default function MemberProfile() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState(null);
@@ -44,12 +45,12 @@ export default function FellowshipProfile() {
             const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
 
             // Fetch Profile & Stats
-            const profileRes = await axios.get(`${serverUrl}/fellowship/profile`, {
+            const profileRes = await axios.get(`${serverUrl}/member/profile`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
             // Fetch Tenures (Full history)
-            const tenuresRes = await axios.get(`${serverUrl}/fellowship/tenures`, {
+            const tenuresRes = await axios.get(`${serverUrl}/member/tenures`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -67,7 +68,7 @@ export default function FellowshipProfile() {
                     router.push('/login');
                 }
             } else {
-                toast.error("Failed to load fellowship data");
+                toast.error("Failed to load member data");
             }
             setLoading(false);
         }
@@ -86,7 +87,7 @@ export default function FellowshipProfile() {
             const token = localStorage.getItem('token');
             const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
             await axios.post(
-                `${serverUrl}/fellowship/sign-document`,
+                `${serverUrl}/member/sign-document`,
                 {
                     tenureIndex: currentSigningDoc.index,
                     documentType: currentSigningDoc.type,
@@ -112,7 +113,7 @@ export default function FellowshipProfile() {
             const token = localStorage.getItem('token');
             const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
             const res = await axios.get(
-                `${serverUrl}/fellowship/download-document/${index}/${type}`,
+                `${serverUrl}/member/download-document/${index}/${type}`,
                 {
                     headers: { Authorization: `Bearer ${token}` },
                     responseType: 'blob'
@@ -134,14 +135,7 @@ export default function FellowshipProfile() {
     };
 
     if (loading) {
-        return (
-            <div className="min-h-screen bg-black flex items-center justify-center">
-                <div className="text-cyan-500 animate-pulse flex flex-col items-center gap-4">
-                    <Loader2 className="animate-spin" size={48} />
-                    <p className="font-mono tracking-widest uppercase text-sm">Initializing Secure Connection...</p>
-                </div>
-            </div>
-        );
+        return <Loader text="INITIALIZING CONSOLE..." />;
     }
 
     if (!profile) return null;
@@ -167,7 +161,7 @@ export default function FellowshipProfile() {
                                 <ShieldCheck size={28} />
                             </div>
                             <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent font-mono">
-                                Fellowship Portal
+                                Member Console
                             </h1>
                         </div>
                         <p className="text-zinc-500 font-mono pl-14">

@@ -11,13 +11,18 @@ const AuditLogSchema = new mongoose.Schema({
     required: true,
     enum: [
       'LOGIN_OTP',
-      'NAME_CONFIRM', 
+      'NAME_CONFIRM',
       'NDA_SIGN',
       'NDA_DOWNLOAD',
       'OFFER_UNLOCK',
       'OFFER_DOWNLOAD',
       'PROFILE_UPDATE',
+      'PROFILE_COMPLETE',
       'APPLICATION_SUBMIT',
+      'STATUS_UPDATE',
+      'ACCOUNT_ACTIVATE',
+      'STATE_ADVANCE',
+      'FEEDBACK_SUBMIT',
       'OTHER'
     ]
   },

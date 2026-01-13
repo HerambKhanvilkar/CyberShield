@@ -19,17 +19,17 @@ router.post('/resend-otp', async (req, res) => {
             return res.status(404).json({ msg: "No OTP request found for this email" });
         }
 
-        // Check cooldown (2 minutes)
-        if (existingOtp.lastAttemptAt && (now - existingOtp.lastAttemptAt.getTime() < 2 * 60 * 1000)) {
-            const remainingTime = Math.ceil((2 * 60 * 1000 - (now - existingOtp.lastAttemptAt.getTime())) / 1000);
+        // Check cooldown (30 seconds)
+        if (existingOtp.lastAttemptAt && (now - existingOtp.lastAttemptAt.getTime() < 30 * 1000)) {
+            const remainingTime = Math.ceil((30 * 1000 - (now - existingOtp.lastAttemptAt.getTime())) / 1000);
             return res.status(429).json({
                 msg: `Please wait ${remainingTime} seconds before resending OTP.`,
                 remainingTime
             });
         }
 
-        // Check hourly limit
-        if (existingOtp.attemptCount >= 3 && existingOtp.lastAttemptAt && (now - existingOtp.lastAttemptAt.getTime() < 60 * 60 * 1000)) {
+        // Check hourly limit (Relaxed to 10)
+        if (existingOtp.attemptCount >= 10 && existingOtp.lastAttemptAt && (now - existingOtp.lastAttemptAt.getTime() < 60 * 60 * 1000)) {
             const remainingTime = Math.ceil((60 * 60 * 1000 - (now - existingOtp.lastAttemptAt.getTime())) / 60000);
             return res.status(429).json({
                 msg: `Too many attempts. Please try again in ${remainingTime} minutes.`
@@ -40,6 +40,12 @@ router.post('/resend-otp', async (req, res) => {
         const newOtp = crypto.randomInt(100000, 999999).toString();
         const expiryTime = now + 10 * 60 * 1000;
 
+        // Reset attempt count if last attempt was more than 1 hour ago
+        let resetCount = false;
+        if (existingOtp.lastAttemptAt && (now - existingOtp.lastAttemptAt.getTime() > 60 * 60 * 1000)) {
+            resetCount = true;
+        }
+
         await Otp.updateOne(
             { email },
             {
@@ -47,9 +53,10 @@ router.post('/resend-otp', async (req, res) => {
                     otp: newOtp,
                     expiry: expiryTime,
                     expiresAt: new Date(expiryTime),
-                    lastAttemptAt: new Date(now)
+                    lastAttemptAt: new Date(now),
+                    ...(resetCount ? { attemptCount: 1 } : {})
                 },
-                $inc: { attemptCount: 1 }
+                ...(!resetCount ? { $inc: { attemptCount: 1 } } : {})
             }
         );
 

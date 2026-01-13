@@ -56,7 +56,7 @@ export function LoginForm() {
         await fetchUser();
 
         if (data.user.fellowshipStatus === 'FELLOW') {
-          router.push("/FellowshipProfile");
+          router.push("/MemberProfile");
         } else if (hiringRef || data.user.fellowshipStatus === 'ONBOARDING') {
           router.push("/portal/onboarding");
         } else {
@@ -64,7 +64,7 @@ export function LoginForm() {
         }
       } else {
         const error = await response.json();
-        toast.error(error.msg || "Invalid credentials.");
+        toast.error(error.msg || error.message || "Invalid credentials.");
       }
     } catch (err) {
       console.error("Login error:", err);

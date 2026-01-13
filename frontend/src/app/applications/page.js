@@ -142,7 +142,7 @@ function AdminDashboardContent() {
         try {
             const token = localStorage.getItem("accessToken");
             const res = await axios.get(
-                `${process.env.SERVER_URL || 'http://localhost:3001/api'}/fellowship/admin/download/${fellowId}/${tenureIndex}/${docType}`,
+                `${process.env.SERVER_URL || 'http://localhost:3001/api'}/member/admin/download/${fellowId}/${tenureIndex}/${docType}`,
                 {
                     headers: { Authorization: `Bearer ${token}` },
                     responseType: 'blob'
