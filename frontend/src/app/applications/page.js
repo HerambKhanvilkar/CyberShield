@@ -191,6 +191,26 @@ function AdminDashboardContent() {
         }
     }, [loading, searchParams]);
 
+    const handleDownloadCSV = async () => {
+        try {
+            const token = localStorage.getItem("accessToken");
+            const response = await axios.get(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/application/admin/export-csv`, {
+                headers: { Authorization: `Bearer ${token}` },
+                responseType: 'blob',
+            });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `all-applicants-${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (error) {
+            console.error("CSV Export failed", error);
+            toast.error("Failed to export CSV");
+        }
+    };
+
     const filteredApps = apps.filter(a => {
         const matchesSearch = a.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
             a.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -410,8 +430,19 @@ function AdminDashboardContent() {
                             <h2 className="text-lg md:text-2xl font-bold tracking-tighter text-white uppercase flex items-center gap-2">
                                 <span className="text-cyan-500">/</span> {activeTab}_CONSOLE
                             </h2>
-                            <span className="text-xs bg-cyan-900/20 border border-cyan-500/30 text-cyan-400 px-2 md:px-3 py-1 rounded-none font-bold">
-                                CNT: {activeTab === 'applications' ? filteredApps.length : activeTab === 'fellows' ? fellows.length : orgs.length}
+                            <div className="flex gap-2 ml-4">
+                                {['applications', 'fellows', 'orgs', 'roles'].map(tab => (
+                                    <button
+                                        key={tab}
+                                        onClick={() => setActiveTab(tab)}
+                                        className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest border border-transparent hover:border-white/20 transition-all ${activeTab === tab ? 'bg-white/10 text-white border-white/20' : 'text-gray-500'}`}
+                                    >
+                                        {tab}
+                                    </button>
+                                ))}
+                            </div>
+                            <span className="text-xs bg-cyan-900/20 border border-cyan-500/30 text-cyan-400 px-3 py-1 rounded-none font-bold">
+                                CNT: {activeTab === 'applications' ? filteredApps.length : activeTab === 'fellows' ? fellows.length : activeTab === 'roles' ? availableRoles.length : orgs.length}
                             </span>
                         </div>
 
@@ -447,6 +478,14 @@ function AdminDashboardContent() {
                                     {activeSubTab === st && <motion.div layoutId="app-sub-tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500 shadow-[0_0_10px_#06b6d4]" />}
                                 </button>
                             ))}
+                            <div className="flex-1" />
+                            <button
+                                onClick={handleDownloadCSV}
+                                className="flex items-center gap-2 px-3 py-1.5 border border-cyan-500/30 bg-cyan-500/5 text-cyan-400 text-[10px] font-bold uppercase tracking-widest hover:bg-cyan-500/10 transition-all"
+                            >
+                                <Download className="w-3.5 h-3.5" />
+                                Export_Applicants
+                            </button>
                         </div>
                     )}
 
@@ -564,6 +603,117 @@ function AdminDashboardContent() {
                                         </div>
                                     </div>
                                 ))}
+
+                                {activeTab === 'roles' && (
+                                    <div className="p-8">
+                                        {/* Create Role Form */}
+                                        <div className="mb-8 p-6 bg-white/5 border border-white/10 rounded-sm">
+                                            <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-4">Initialize New Role Protocol</h3>
+                                            <div className="flex gap-4 items-start">
+                                                <div className="flex-1 space-y-2">
+                                                    <Input
+                                                        placeholder="ROLE_DESIGNATION (e.g. Senior Security Analyst)"
+                                                        value={newRole}
+                                                        onChange={e => setNewRole(e.target.value)}
+                                                        className="bg-black border-white/20 text-xs font-mono text-white"
+                                                    />
+                                                    <textarea
+                                                        placeholder="ROLE_DESCRIPTION_PAYLOAD..."
+                                                        value={orgData.roleDescription || ''} // Reusing orgData state for temp role desc to avoid new state var
+                                                        onChange={e => setOrgData({ ...orgData, roleDescription: e.target.value })}
+                                                        className="w-full h-20 bg-black border border-white/20 p-3 text-xs font-mono text-gray-300 focus:border-cyan-500 focus:outline-none"
+                                                    />
+                                                </div>
+                                                <button
+                                                    onClick={async () => {
+                                                        if (!newRole.trim()) return;
+                                                        try {
+                                                            const token = localStorage.getItem("accessToken");
+                                                            const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
+                                                            await axios.post(`${serverUrl}/application/admin/roles`,
+                                                                { name: newRole, description: orgData.roleDescription },
+                                                                { headers: { Authorization: `Bearer ${token}` } }
+                                                            );
+                                                            toast.success(`Role "${newRole}" initialized!`);
+                                                            setNewRole("");
+                                                            setOrgData({ ...orgData, roleDescription: '' });
+                                                            fetchData();
+                                                        } catch (error) {
+                                                            toast.error("Failed to initialize role");
+                                                        }
+                                                    }}
+                                                    className="h-full px-6 bg-cyan-900/20 border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500 hover:text-black font-bold uppercase tracking-widest text-xs transition-colors"
+                                                >
+                                                    INITIALIZE
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Roles List */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {availableRoles.map((role) => (
+                                                <div key={role._id || role.name || role} className="p-6 border border-white/10 bg-white/[0.02] hover:bg-white/5 transition-all group relative">
+                                                    <div className="flex justify-between items-start mb-4">
+                                                        <h4 className="font-bold text-lg text-white group-hover:text-cyan-400 transition-colors uppercase tracking-wider">{role.name}</h4>
+                                                        <span className="text-[10px] font-mono text-gray-600 border border-white/10 px-2 py-0.5">{role.category || 'CUSTOM'}</span>
+                                                    </div>
+
+                                                    {orgData.editingRoleId === role._id ? (
+                                                        <div className="space-y-3">
+                                                            <textarea
+                                                                value={orgData.editingRoleDesc ?? role.description}
+                                                                onChange={e => setOrgData({ ...orgData, editingRoleDesc: e.target.value })}
+                                                                className="w-full bg-black/50 border border-cyan-500/50 p-2 text-xs text-gray-300 focus:outline-none"
+                                                                autoFocus
+                                                            />
+                                                            <div className="flex justify-end gap-2">
+                                                                <button
+                                                                    onClick={() => setOrgData({ ...orgData, editingRoleId: null })}
+                                                                    className="text-[10px] uppercase text-gray-500 hover:text-white"
+                                                                >
+                                                                    Cancel
+                                                                </button>
+                                                                <button
+                                                                    onClick={async () => {
+                                                                        try {
+                                                                            const token = localStorage.getItem("accessToken");
+                                                                            await axios.put(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/application/admin/roles/${role._id}`,
+                                                                                { description: orgData.editingRoleDesc },
+                                                                                { headers: { Authorization: `Bearer ${token}` } }
+                                                                            );
+                                                                            toast.success("Role description updated");
+                                                                            setOrgData({ ...orgData, editingRoleId: null });
+                                                                            fetchData();
+                                                                        } catch (e) {
+                                                                            toast.error("Update failed");
+                                                                        }
+                                                                    }}
+                                                                    className="text-[10px] uppercase text-cyan-400 hover:text-cyan-300 font-bold"
+                                                                >
+                                                                    Save Changes
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div
+                                                            onClick={() => setOrgData({ ...orgData, editingRoleId: role._id, editingRoleDesc: role.description })}
+                                                            className="text-sm text-gray-500 line-clamp-3 hover:text-gray-300 cursor-pointer min-h-[3rem] border border-transparent hover:border-white/5 p-1 rounded-sm -m-1"
+                                                            title="Click to edit description"
+                                                        >
+                                                            {role.description || <span className="italic opacity-50">No description payload defined. Click to initialize.</span>}
+                                                        </div>
+                                                    )}
+
+                                                    {/* Stats logic could go here: count of fellows with this role */}
+                                                    <div className="mt-4 pt-4 border-t border-white/5 flex gap-4 text-[10px] font-mono text-gray-600">
+                                                        <span>ACTIVE_UNITS: {fellows.filter(f => f.tenures?.some(t => t.role === role.name)).length}</span>
+                                                        <span>APPLICANTS: {apps.filter(a => (a.roles || []).includes(role.name) || a.role === role.name).length}</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
@@ -627,6 +777,43 @@ function AdminDashboardContent() {
                                             <div className="space-y-8">
                                                 <div className="p-8 border border-white/10 bg-white/[0.02] space-y-6">
                                                     <h4 className="text-xs font-bold text-cyan-500 uppercase tracking-widest border-b border-cyan-900/30 pb-3">Authorization_Protocol</h4>
+
+                                                    <div className="space-y-4">
+                                                        <div className="space-y-2">
+                                                            <div className="text-[10px] text-gray-500 uppercase font-mono tracking-widest flex justify-between">
+                                                                <span>Motivation_Payload</span>
+                                                                <span className={selectedItem.whyJoinDeepCytes?.length < 100 ? "text-red-500" : "text-green-500"}>
+                                                                    LEN_{selectedItem.whyJoinDeepCytes?.length || 0}
+                                                                </span>
+                                                            </div>
+                                                            <div className="p-4 bg-black/40 border border-white/5 text-xs text-gray-400 font-mono leading-relaxed max-h-40 overflow-y-auto custom-scrollbar">
+                                                                {selectedItem.whyJoinDeepCytes || selectedItem.data?.whyJoin || "NO_DATA_FOUND"}
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="space-y-2">
+                                                            <div className="text-[10px] text-gray-500 uppercase font-mono tracking-widest">Initial_Proposal</div>
+                                                            <div className="p-4 bg-black/40 border border-white/5 text-xs text-gray-400 font-mono leading-relaxed max-h-40 overflow-y-auto custom-scrollbar">
+                                                                {selectedItem.data?.ideas || "NO_PROPOSAL_SUBMITTED"}
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="space-y-2">
+                                                            <div className="text-[10px] text-gray-500 uppercase font-mono tracking-widest">Preferred_Specializations</div>
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {(selectedItem.preferredRoles || []).length > 0 ? (
+                                                                    selectedItem.preferredRoles.map(role => (
+                                                                        <span key={role} className="px-2 py-1 bg-cyan-900/30 border border-cyan-500/30 text-cyan-400 text-[9px] font-bold uppercase tracking-wider">
+                                                                            {role}
+                                                                        </span>
+                                                                    ))
+                                                                ) : (
+                                                                    <span className="px-2 py-1 border border-white/10 text-gray-600 text-[9px] uppercase">LEGACY_ROLE: {selectedItem.role}</span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
 
                                                     {selectedItem.processedBy && (
                                                         <div className="flex justify-between items-center text-[10px] text-gray-500 font-mono mt-2">
@@ -801,7 +988,11 @@ function AdminDashboardContent() {
                                         <div className="space-y-2">
                                             <label className="text-[10px] uppercase font-mono text-gray-500">Available_Roles (Select Multiple)</label>
                                             <div className="grid grid-cols-2 gap-2 p-3 bg-white/5 border border-white/10 max-h-32 overflow-y-auto">
-                                                {['Developer', 'Security Researcher', 'Data Analyst', 'UI/UX Designer', 'Project Manager', 'DevOps Engineer', 'ML Engineer', 'Technical Writer', ...availableRoles.filter(r => !['Developer', 'Security Researcher', 'Data Analyst', 'UI/UX Designer', 'Project Manager', 'DevOps Engineer', 'ML Engineer', 'Technical Writer'].includes(r))].map(role => (
+                                                {/* Merge hardcoded roles + dynamic roles, ensure uniqueness */}
+                                                {Array.from(new Set([
+                                                    'Developer', 'Security Researcher', 'Data Analyst', 'UI/UX Designer', 'Project Manager', 'DevOps Engineer', 'ML Engineer', 'Technical Writer',
+                                                    ...availableRoles.map(r => r.name || r)
+                                                ])).map(role => (
                                                     <label key={role} className="flex items-center gap-2 cursor-pointer group hover:bg-white/5 p-1.5 transition-colors">
                                                         <input
                                                             type="checkbox"

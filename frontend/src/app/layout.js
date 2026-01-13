@@ -6,8 +6,8 @@ import { WatchlistProvider } from "@/context/WatchlistContext";
 import "./globals.css";
 
 export const metadata = {
-  title: "DeepCytes",
-  description: "DeepCytes Badge Viewer",
+  title: "DeepCytes | Secure Protocol Hub",
+  description: "Official submission and management portal for DeepCytes. Revolutionizing the intersection of AI and Cybersecurity.",
 };
 
 export default function RootLayout({ children }) {

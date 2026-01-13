@@ -43,7 +43,7 @@ export default function ApplyLanding() {
                             UNLOCK YOUR <br />FUTURE.
                         </h1>
                         <p className="text-gray-500 text-lg max-w-sm mx-auto">
-                            Enter the unique Organization Code provided by your institution to begin your DeepCytes Fellowship application.
+                            Enter the unique Organization Code provided by your institution to begin your DeepCytes Network application.
                         </p>
                     </div>
 
