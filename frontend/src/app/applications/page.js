@@ -89,7 +89,8 @@ function AdminDashboardContent() {
         if (!newRole.trim()) return;
         try {
             const token = localStorage.getItem("accessToken");
-            await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/admin/roles`,
+            const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
+            await axios.post(`${serverUrl}/application/admin/roles`,
                 { name: newRole },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -97,7 +98,11 @@ function AdminDashboardContent() {
             setNewRole("");
             fetchData(); // Refresh roles
         } catch (error) {
-            toast.error(error.response?.data?.message || "Failed to add role");
+            console.error("Add Role Error:", error);
+            const errMsg = error.response?.data?.message || error.response?.data?.msg || "Failed to add role";
+            const status = error.response?.status;
+            toast.error(status === 401 ? "Session expired. Please login again." : errMsg);
+            if (status === 401) router.push("/admin");
         }
     };
 

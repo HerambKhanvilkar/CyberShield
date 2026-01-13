@@ -336,8 +336,14 @@ router.post('/admin/roles', authenticateJWT, isAdmin, async (req, res) => {
             return res.status(400).json({ message: 'Role name is required' });
         }
 
-        const existing = await RolesMaster.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
+        console.log(`[Admin] Adding role: "${name}"`);
+
+        // Escape regex special characters to prevent crashes (e.g. "C++")
+        const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const existing = await RolesMaster.findOne({ name: { $regex: new RegExp(`^${escapedName}$`, 'i') } });
+
         if (existing) {
+            console.log(`[Admin] Role "${name}" already exists`);
             return res.status(400).json({ message: 'Role already exists' });
         }
 
