@@ -351,6 +351,31 @@ export default function ApplicationForm() {
                             </Button>
                         </form>
                     </motion.div>
+                    {/* Application Status Box - unified style */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mt-8 mb-4 bg-white/[0.02] border border-white/5 rounded-[2rem] sm:rounded-[3rem] p-4 sm:p-10 md:p-16 shadow-2xl relative overflow-hidden"
+                    >
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-600/10 blur-[100px] rounded-full" />
+                        <header className="mb-4 border-b border-white/5 pb-4 relative z-10">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-black uppercase tracking-widest text-cyan-400 mb-2">
+                                <ShieldCheck className="w-3 h-3" /> Application Status
+                            </div>
+                            <h2 className="text-lg sm:text-xl font-bold tracking-tight italic mb-2 leading-tight text-cyan-500">Applied already?</h2>
+                        </header>
+                        <div className="text-center space-y-4 relative z-10">
+                            <p className="text-gray-300 text-sm sm:text-base mb-2">Check your application status here and track your progress in the DeepCytes Fellowship.</p>
+                            <Button
+                                type="button"
+                                onClick={() => router.push('/portal')}
+                                className="w-full h-12 sm:h-14 text-base sm:text-lg font-black italic tracking-[0.05em] sm:tracking-[0.1em] bg-white text-black hover:bg-cyan-500 transition-all rounded-[2rem] shadow-2xl shadow-cyan-500/10 group flex items-center justify-center px-3 sm:px-6 whitespace-normal"
+                            >
+                                <span className="flex-1 text-center truncate">CHECK APPLICATION STATUS</span>
+                                <ChevronRight className="ml-2 sm:ml-3 w-4 sm:w-5 h-4 sm:h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform flex-shrink-0" />
+                            </Button>
+                        </div>
+                    </motion.div>
                 </div>
             </main>
             <Footer />

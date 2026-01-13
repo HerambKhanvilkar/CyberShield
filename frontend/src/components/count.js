@@ -5,7 +5,8 @@ const Count = ({
   duration = 2000,
   className = "",
   format = "number", // "number" | "year"
-  direction = "up" // "up" | "down"
+  direction = "up", // "up" | "down"
+  startValue // optional, for custom start
 }) => {
   const ref = useRef(null);
   const [hasAnimated, setHasAnimated] = useState(false);
@@ -30,16 +31,22 @@ const Count = ({
     if (!hasAnimated) return;
 
     let startTime = null;
+    const actualStart = typeof startValue === "number"
+      ? startValue
+      : direction === "up"
+        ? 0
+        : endValue < new Date().getFullYear() ? new Date().getFullYear() : endValue;
 
     const step = (timestamp) => {
       if (!startTime) startTime = timestamp;
       const progress = timestamp - startTime;
       const progressRatio = Math.min(progress / duration, 1);
-      const interpolatedValue =
-        direction === "up"
-          ? progressRatio * endValue
-          : endValue - progressRatio * endValue;
-
+      let interpolatedValue;
+      if (direction === "up") {
+        interpolatedValue = actualStart + progressRatio * (endValue - actualStart);
+      } else {
+        interpolatedValue = actualStart - progressRatio * (actualStart - endValue);
+      }
       const currentValue = Math.floor(interpolatedValue);
       const formatted =
         format === "number"
@@ -64,7 +71,9 @@ const Count = ({
 
   return (
     <div ref={ref} className={`text-4xl font-bold text-white ${className}`}>
-      {format === "number" ? "0" : endValue.toString()}
+      {format === "number"
+        ? (typeof startValue === "number" ? startValue.toLocaleString() : "0")
+        : (typeof startValue === "number" ? startValue.toString() : endValue.toString())}
     </div>
   );
 };

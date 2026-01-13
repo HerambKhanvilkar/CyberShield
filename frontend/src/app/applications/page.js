@@ -366,14 +366,14 @@ function AdminDashboardContent() {
         <div className="min-h-screen bg-black text-white flex flex-col font-mono selection:bg-cyan-500/50 selection:text-black">
             <Navbar />
 
-            <div className="flex-1 flex overflow-hidden">
+            <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
                 {/* Cyber Sidebar */}
-                <div className="w-16 bg-black border-r border-white/10 flex flex-col items-center py-6 gap-6 shrink-0 relative z-30">
-                    <div className="w-12 h-12 border border-cyan-500 flex items-center justify-center text-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+                <div className="w-full md:w-16 bg-black border-r border-white/10 flex md:flex-col flex-row items-center md:py-6 py-2 gap-2 md:gap-6 shrink-0 relative z-30">
+                    <div className="w-10 h-10 md:w-12 md:h-12 border border-cyan-500 flex items-center justify-center text-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
                         <Terminal className="w-6 h-6" />
                     </div>
 
-                    <nav className="flex flex-col gap-4 w-full px-2 mt-4">
+                    <nav className="flex md:flex-col flex-row gap-2 md:gap-4 w-full px-2 md:mt-4 mt-0">
                         {[
                             { id: 'applications', icon: <FileText className="w-6 h-6" />, label: 'REQ' },
                             { id: 'fellows', icon: <Users className="w-6 h-6" />, label: 'OPS' },
@@ -382,10 +382,10 @@ function AdminDashboardContent() {
                             <button
                                 key={t.id}
                                 onClick={() => { setActiveTab(t.id); setSelectedItem(null); }}
-                                className={`w-12 h-12 flex items-center justify-center transition-all relative group border ${activeTab === t.id ? 'bg-white/10 border-white text-white' : 'border-transparent text-gray-600 hover:text-cyan-400 hover:border-cyan-900/50'}`}
+                                className={`w-10 h-10 md:w-12 md:h-12 flex items-center justify-center transition-all relative group border ${activeTab === t.id ? 'bg-white/10 border-white text-white' : 'border-transparent text-gray-600 hover:text-cyan-400 hover:border-cyan-900/50'}`}
                             >
                                 {t.icon}
-                                <span className="absolute left-full ml-4 bg-black border border-white/20 px-3 py-1.5 text-xs text-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-xl">
+                                <span className="hidden md:block absolute left-full ml-4 bg-black border border-white/20 px-3 py-1.5 text-xs text-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-xl">
                                     {t.label}
                                 </span>
                             </button>
@@ -393,10 +393,10 @@ function AdminDashboardContent() {
                     </nav>
 
                     <div className="flex-1" />
-                    <button onClick={fetchData} className="w-12 h-12 border border-white/10 hover:border-cyan-500 hover:text-cyan-500 transition-colors flex items-center justify-center">
+                    <button onClick={fetchData} className="w-10 h-10 md:w-12 md:h-12 border border-white/10 hover:border-cyan-500 hover:text-cyan-500 transition-colors flex items-center justify-center">
                         <History className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
                     </button>
-                    <div className="h-4" />
+                    <div className="h-2 md:h-4" />
                 </div>
 
                 {/* Main Viewport */}
@@ -405,25 +405,25 @@ function AdminDashboardContent() {
                     <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none opacity-20" />
 
                     {/* Header */}
-                    <header className="h-20 border-b border-white/10 flex items-center justify-between px-8 bg-black z-20">
-                        <div className="flex items-center gap-6">
-                            <h2 className="text-2xl font-bold tracking-tighter text-white uppercase flex items-center gap-2">
+                    <header className="h-16 md:h-20 border-b border-white/10 flex flex-col md:flex-row items-center justify-between px-2 md:px-8 bg-black z-20 gap-2 md:gap-0">
+                        <div className="flex items-center gap-4 md:gap-6 w-full md:w-auto">
+                            <h2 className="text-lg md:text-2xl font-bold tracking-tighter text-white uppercase flex items-center gap-2">
                                 <span className="text-cyan-500">/</span> {activeTab}_CONSOLE
                             </h2>
-                            <span className="text-xs bg-cyan-900/20 border border-cyan-500/30 text-cyan-400 px-3 py-1 rounded-none font-bold">
+                            <span className="text-xs bg-cyan-900/20 border border-cyan-500/30 text-cyan-400 px-2 md:px-3 py-1 rounded-none font-bold">
                                 CNT: {activeTab === 'applications' ? filteredApps.length : activeTab === 'fellows' ? fellows.length : orgs.length}
                             </span>
                         </div>
 
-                        <div className="flex items-center gap-4 w-96">
+                        <div className="flex items-center gap-2 md:gap-4 w-full md:w-96">
                             <div className="relative w-full group">
-                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-cyan-500" />
+                                <Search className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-cyan-500" />
                                 <input
                                     type="text"
                                     placeholder="SEARCH_QUERY..."
                                     value={searchTerm}
                                     onChange={e => setSearchTerm(e.target.value)}
-                                    className="w-full h-10 bg-black border border-white/20 pl-11 pr-4 text-sm focus:border-cyan-500 focus:outline-none transition-all placeholder:text-gray-700 font-mono text-cyan-100 uppercase"
+                                    className="w-full h-10 bg-black border border-white/20 pl-9 md:pl-11 pr-4 text-sm focus:border-cyan-500 focus:outline-none transition-all placeholder:text-gray-700 font-mono text-cyan-100 uppercase"
                                 />
                             </div>
                             {activeTab === 'orgs' && (
@@ -436,7 +436,7 @@ function AdminDashboardContent() {
 
                     {/* Sub-tabs for Applications */}
                     {activeTab === 'applications' && (
-                        <div className="flex bg-black border-b border-white/10 px-8 h-12 items-center gap-8 relative z-20">
+                        <div className="flex bg-black border-b border-white/10 px-2 md:px-8 h-10 md:h-12 items-center gap-4 md:gap-8 relative z-20 overflow-x-auto">
                             {['PENDING', 'ARCHIVED', 'ALL'].map(st => (
                                 <button
                                     key={st}
@@ -766,17 +766,18 @@ function AdminDashboardContent() {
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
-                                className="w-[500px] bg-black border border-white/20 shadow-[0_0_50px_rgba(4,120,87,0.2)] p-0"
+                                className="w-full max-w-[500px] bg-black border border-white/20 shadow-[0_0_50px_rgba(4,120,87,0.2)] p-0 max-h-[100dvh] sm:max-h-[90vh] flex flex-col overflow-y-auto rounded-2xl"
+                                style={{ margin: 'env(safe-area-inset-top, 0) auto env(safe-area-inset-bottom, 0) auto' }}
                             >
-                                <div className="h-14 flex items-center justify-between px-6 border-b border-white/10 bg-white/5">
+                                <div className="h-14 flex items-center justify-between px-4 sm:px-6 border-b border-white/10 bg-white/5 shrink-0 sticky top-0 z-20">
                                     <h3 className="text-sm font-bold text-green-500 uppercase tracking-widest flex items-center gap-2">
                                         <Database className="w-4 h-4" /> NETWORK_NODE_CONFIGURATION
                                     </h3>
-                                    <button onClick={() => setIsEditingOrg(false)} className="text-gray-500 hover:text-white"><XCircle className="w-5 h-5" /></button>
+                                    <button onClick={() => setIsEditingOrg(false)} className="text-gray-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-green-500"><XCircle className="w-5 h-5" /></button>
                                 </div>
-                                <div className="p-8 space-y-6">
+                                <div className="flex-1 overflow-y-auto p-2 sm:p-8 space-y-6">
                                     <div className="space-y-4">
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                                 <label className="text-[10px] uppercase font-mono text-gray-500">Node_Name</label>
                                                 <Input value={orgData.name} onChange={e => setOrgData({ ...orgData, name: e.target.value })} className="bg-black border-white/20 h-10 text-xs font-mono text-white focus:border-green-500" placeholder="ENTER_NAME" />
@@ -836,7 +837,7 @@ function AdminDashboardContent() {
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                                 <label className="text-[10px] uppercase font-mono text-gray-500">Termination_Date</label>
                                                 <Input
