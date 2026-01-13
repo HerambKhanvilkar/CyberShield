@@ -109,7 +109,7 @@ export default function SignupForm() {
             <CardHeader>
                 <CardTitle className="text-2xl font-bold text-cyan-400 text-center">Sign Up</CardTitle>
                 <CardDescription className="text-gray-400 text-center">
-                    Join the DeepCytes Network to start your application process.
+                    Join the DeepCytes Fellowship program today.
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

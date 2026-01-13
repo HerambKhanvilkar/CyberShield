@@ -58,33 +58,14 @@ router.get('/org/:code', async (req, res) => {
             }
         }
 
-        // Fetch role details for the enabled roles
-        const masterRoles = await RolesMaster.find({
-            name: { $in: org.formVar1 || [] },
-            isActive: true
-        }).select('name description category');
-
-        // Create a map for quick lookup
-        const roleMap = new Map(masterRoles.map(r => [r.name, r]));
-
-        // Ensure every role in org.formVar1 is returned, even if not in master list
-        const finalRoles = (org.formVar1 || []).map(roleName => {
-            const master = roleMap.get(roleName);
-            if (master) return master;
-            return {
-                name: roleName,
-                description: "DeepCytes Standard Protocol Engagement.", // Fallback
-                category: "Custom"
-            };
-        });
-
         // Return only necessary fields
         res.json({
             name: org.name,
             code: org.code,
             emailDomainWhitelist: org.emailDomainWhitelist,
             formVars: {
-                roles: finalRoles, // Return full objects including fallbacks
+                roles: org.formVar1,
+                // projects removed per request
             }
         });
     } catch (err) {
@@ -95,13 +76,12 @@ router.get('/org/:code', async (req, res) => {
 
 // 2. Submit Application (Public)
 router.post('/apply', upload.single('resumeFile'), [
-    check('orgCode').notEmpty().trim().escape(),
-    check('email').isEmail().normalizeEmail(),
-    check('firstName').notEmpty().trim().escape(),
-    check('lastName').notEmpty().trim().escape(),
-    check('role').notEmpty().trim().escape(),
-    check('whyJoin').optional().trim().escape(),
-    check('ideas').optional().trim().escape()
+    check('orgCode').notEmpty(),
+    check('email').isEmail(),
+    check('firstName').notEmpty(),
+    check('lastName').notEmpty(),
+    check('role').notEmpty()
+    // project removed per request
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -110,23 +90,14 @@ router.post('/apply', upload.single('resumeFile'), [
     }
 
     try {
-        const { orgCode, email, firstName, lastName, role, whyJoin, ideas, data: dataRaw, roles: rolesRaw } = req.body;
+        console.log("Submission Body:", req.body);
+        console.log("Submission File:", req.file);
+        const { orgCode, email, firstName, lastName, role, data: dataRaw } = req.body;
 
-        let extraData = {};
+        let data = {};
         try {
-            extraData = typeof dataRaw === 'string' ? JSON.parse(dataRaw) : (dataRaw || {});
+            data = typeof dataRaw === 'string' ? JSON.parse(dataRaw) : (dataRaw || {});
         } catch (e) { }
-
-        let roles = [];
-        try {
-            roles = typeof rolesRaw === 'string' ? JSON.parse(rolesRaw) : (rolesRaw || []);
-        } catch (e) {
-            roles = role ? [role] : [];
-        }
-
-        // Add the new questions to data object
-        extraData.whyJoin = whyJoin;
-        extraData.ideas = ideas;
 
         const org = await Organization.findOne({ code: orgCode });
         if (!org) return res.status(404).json({ message: "Invalid Organization Code" });
@@ -153,20 +124,18 @@ router.post('/apply', upload.single('resumeFile'), [
         }
 
         // Create Applicant
-        const newApplicant = new Applicant({
-            orgCode: org.code, // Normalize case
+        const applicant = new Applicant({
+            orgCode,
             organizationId: org._id,
             email,
             firstName,
             lastName,
-            role: roles[0] || "Unspecified", // Legacy primary role
-            preferredRoles: roles, // New Array Field
-            whyJoinDeepCytes: whyJoin || "No answer provided.", // Map whyJoin to Schema Field
-            data: extraData,
-            resume: req.file ? `/uploads/resumes/${req.file.filename}` : (extraData.resumeLink || null)
+            role,
+            data: data,
+            resume: req.file ? `/uploads/resumes/${req.file.filename}` : (data.resume || null)
         });
 
-        await newApplicant.save();
+        await applicant.save();
 
         // Audit Log (Hiring)
         await HiringAuditLog.create({
@@ -180,30 +149,6 @@ router.post('/apply', upload.single('resumeFile'), [
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Server error: " + err.message });
-    }
-});
-
-// 2.5 Admin: Export All CSV
-router.get('/admin/export-csv', authenticateJWT, isAdmin, async (req, res) => {
-    try {
-        const applicants = await Applicant.find().sort({ appliedAt: -1 });
-
-        let csv = 'First Name,Last Name,Email,Org Code,Primary Role,Preferred Roles,Status,Applied At,Why Join DC,Project ideas\n';
-
-        applicants.forEach(app => {
-            const whyJoin = (app.whyJoinDeepCytes || app.data?.whyJoin || '').replace(/"/g, '""');
-            const ideas = (app.data?.ideas || '').replace(/"/g, '""');
-            const pRoles = (app.preferredRoles || []).join('; ').replace(/"/g, '""');
-
-            csv += `"${app.firstName}","${app.lastName}","${app.email}","${app.orgCode}","${app.role}","${pRoles}","${app.status}","${app.appliedAt?.toISOString()}","${whyJoin}","${ideas}"\n`;
-        });
-
-        res.setHeader('Content-Type', 'text/csv');
-        res.setHeader('Content-Disposition', 'attachment; filename=all-applicants.csv');
-        res.send(csv);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Server error" });
     }
 });
 
@@ -372,11 +317,10 @@ router.post('/check-status', [
 // ============================================
 
 // GET all active roles
-// GET all active roles (Full Details)
 router.get('/admin/roles', authenticateJWT, isAdmin, async (req, res) => {
     try {
         const roles = await RolesMaster.find({ isActive: true }).sort({ name: 1 });
-        res.json(roles);
+        res.json(roles.map(r => r.name));
     } catch (error) {
         console.error('Roles fetch error:', error);
         res.status(500).json({ message: 'Failed to fetch roles' });
@@ -386,7 +330,7 @@ router.get('/admin/roles', authenticateJWT, isAdmin, async (req, res) => {
 // POST add new role
 router.post('/admin/roles', authenticateJWT, isAdmin, async (req, res) => {
     try {
-        const { name, category, description } = req.body;
+        const { name, category } = req.body;
 
         if (!name || !name.trim()) {
             return res.status(400).json({ message: 'Role name is required' });
@@ -405,32 +349,14 @@ router.post('/admin/roles', authenticateJWT, isAdmin, async (req, res) => {
 
         const newRole = new RolesMaster({
             name: name.trim(),
-            category: category || 'Custom',
-            description: description || ''
+            category: category || 'Custom'
         });
 
         await newRole.save();
-        res.status(201).json({ message: 'Role added successfully', role: newRole });
+        res.status(201).json({ message: 'Role added successfully', role: newRole.name });
     } catch (error) {
         console.error('Role add error:', error);
         res.status(500).json({ message: 'Failed to add role' });
-    }
-});
-
-// PUT update role
-router.put('/admin/roles/:id', authenticateJWT, isAdmin, async (req, res) => {
-    try {
-        const { description, category } = req.body;
-        const role = await RolesMaster.findByIdAndUpdate(
-            req.params.id,
-            { description, category },
-            { new: true }
-        );
-        if (!role) return res.status(404).json({ message: "Role not found" });
-        res.json(role);
-    } catch (error) {
-        console.error("Role update error:", error);
-        res.status(500).json({ message: "Failed to update role" });
     }
 });
 

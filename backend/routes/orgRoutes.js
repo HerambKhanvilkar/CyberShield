@@ -100,74 +100,16 @@ router.get('/stats', authenticateJWT, isOrgAdmin, async (req, res) => {
 
 // @route   GET /api/org/applicants
 // @desc    Get list of applicants
-// @route   GET /api/org/applicants
-// @desc    Get list of applicants
 router.get('/applicants', authenticateJWT, isOrgAdmin, async (req, res) => {
     try {
         const orgCode = req.user.orgCode;
-        // Updated to use orgCode field in ApplicantSchema (it was referralCode in some legacy code, but schema says 'orgCode')
-        // Wait, schema says `orgCode`. Previous code used `referralCode`.
-        // Let's check Schema. `orgCode` IS the field.
-        // Wait, line 106 says `find({ referralCode: orgCode })`.
-        // I need to check if `referralCode` exists in Applicant Schema.
-        // I viewed Applicant.js earlier: `orgCode` exists. `referralCode` does NOT. 
-        // THIS IS A BUG in `orgRoutes.js`. It should be `find({ orgCode: orgCode })`.
-        // I will fix this bug right now.
-        const applicants = await Applicant.find({ orgCode: orgCode })
-            .select('firstName lastName email status role preferredRoles appliedAt data whyJoinDeepCytes')
+        const applicants = await Applicant.find({ referralCode: orgCode })
+            .select('firstName lastName email status role appliedAt')
             .sort({ appliedAt: -1 });
         res.json(applicants);
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error' });
-    }
-});
-
-// @route   GET /api/org/export-csv
-// @desc    Download applicants as CSV
-router.get('/export-csv', authenticateJWT, isOrgAdmin, async (req, res) => {
-    try {
-        const orgCode = req.user.orgCode;
-        const applicants = await Applicant.find({ orgCode: orgCode }).sort({ appliedAt: -1 });
-
-        const fields = [
-            'First Name', 'Last Name', 'Email', 'Role', 'Preferred Roles', 'Status', 'Applied At',
-            'Why Join DC', 'Project Ideas', 'Resume Link'
-        ];
-
-        let csv = fields.join(',') + '\n';
-
-        applicants.forEach(app => {
-            // Handle Preferred Roles (Array)
-            const rolesStr = (app.preferredRoles && app.preferredRoles.length > 0)
-                ? app.preferredRoles.join('; ')
-                : app.role;
-
-            // Handle Why Join (New field -> Old field fallback -> Data field)
-            const whyJoin = app.whyJoinDeepCytes || app.data?.whyJoin || '';
-
-            const row = [
-                `"${app.firstName}"`,
-                `"${app.lastName}"`,
-                `"${app.email}"`,
-                `"${app.role}"`, // Primary
-                `"${rolesStr}"`, // All
-                `"${app.status}"`,
-                `"${new Date(app.appliedAt).toISOString()}"`,
-                `"${whyJoin.replace(/"/g, '""')}"`, // Escape quotes
-                `"${(app.data?.ideas || '').replace(/"/g, '""')}"`,
-                `"${(app.data?.resumeLink || '')}"`
-            ];
-            csv += row.join(',') + '\n';
-        });
-
-        res.header('Content-Type', 'text/csv');
-        res.header('Content-Disposition', `attachment; filename=applicants-${orgCode}-${Date.now()}.csv`);
-        res.send(csv);
-
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Server error generating CSV' });
     }
 });
 

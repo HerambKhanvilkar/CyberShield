@@ -12,9 +12,6 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { motion, AnimatePresence } from "framer-motion";
 import { User, Calendar, Mail, FileText, Send, ChevronRight, CheckCircle2, ShieldCheck } from "lucide-react";
-import Loader from "@/components/Loader";
-import ErrorBoundary from "@/components/ErrorBoundary";
-import RoleAutocomplete from "@/components/RoleAutocomplete";
 
 export default function ApplicationForm() {
     const [showConfetti, setShowConfetti] = useState(false);
@@ -32,10 +29,7 @@ export default function ApplicationForm() {
         email: "",
         otp: "",
         roles: [],
-        roles: [],
         resume: "",
-        whyJoin: "",
-        ideas: "",
         whyHireYou: "",
         whyFellowship: "",
         innovativeIdeas: "",
@@ -104,9 +98,7 @@ export default function ApplicationForm() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (emailStep !== "verified") return toast.error("Please verify your email.");
-        if (!formData.roles || formData.roles.length === 0) return toast.error("Please select at least one role.");
-        if (formData.whyJoin.length < 100) return toast.error("Motivation must be at least 100 characters.");
-        if (!resumeFile && !formData.resume) return toast.error("Resume/Portfolio is mandatory.");
+        if (!resumeFile && !formData.resume) return toast.error("Resume is mandatory.");
         if (!formData.roles || formData.roles.length === 0) return toast.error("Please select at least one role.");
         if (formData.roles.length > 2) return toast.error("You can select up to 2 roles only.");
 
@@ -117,13 +109,7 @@ export default function ApplicationForm() {
             data.append("email", formData.email);
             data.append("firstName", formData.firstName);
             data.append("lastName", formData.lastName);
-            // Primary Role for backward compatibility and validation
-            data.append("roles", JSON.stringify(formData.roles)?.[0] || "");
-            // All Roles
-            data.append("roles", JSON.stringify(formData.roles || []));
-
-            data.append("whyJoin", formData.whyJoin);
-            data.append("ideas", formData.ideas);
+            data.append("roles", JSON.stringify(formData.roles));
             if (resumeFile) data.append("resumeFile", resumeFile);
             data.append("data", JSON.stringify({ resumeLink: formData.resume }));
 
@@ -139,7 +125,15 @@ export default function ApplicationForm() {
         }
     };
 
-    if (loading) return <Loader text="VERIFYING CREDENTIALS..." />;
+    if (loading) return (
+        <div className="min-h-screen bg-[#050505] flex flex-col">
+            <Navbar />
+            <div className="flex-1 flex items-center justify-center">
+                <div className="w-10 h-10 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+            <Footer />
+        </div>
+    );
 
     if (!org) return (
         <div className="min-h-screen bg-[#050505] text-white flex flex-col font-sans">

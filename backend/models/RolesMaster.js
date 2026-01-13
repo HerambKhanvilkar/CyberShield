@@ -8,10 +8,6 @@ const RolesMasterSchema = new mongoose.Schema({
         unique: true,
         trim: true
     },
-    description: {
-        type: String,
-        default: ''
-    },
     category: {
         type: String,
         default: 'Custom',
