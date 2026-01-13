@@ -48,6 +48,27 @@ function getOTPEmail(otpCode) {
       margin: 20px 0;
       display: inline-block;
     }
+    .copy-btn {
+      display: inline-block;
+      margin-left: 10px;
+      padding: 8px 16px;
+      font-size: 15px;
+      background: #00bcd4;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .copy-btn:active {
+      background: #008c9e;
+    }
+    .copy-success {
+      color: #00e676;
+      font-size: 13px;
+      margin-left: 8px;
+      display: none;
+    }
   </style>
 </head>
 <body style="
@@ -58,7 +79,6 @@ function getOTPEmail(otpCode) {
 ">
   <div style="background: url('/stacked-waves-haikei.png') no-repeat center center; background-size: cover; padding: 20px; text-align: center;">
     <div class="container glass" style="max-width: 600px; width: 100%; margin: 0 auto; padding: 20px; box-sizing: border-box;">
-      
       <!-- Logo -->
       <div style="text-align: center; padding-bottom: 10px;">
         <img class="logo" src="https://static.wixstatic.com/media/e48a18_c949f6282e6a4c8e9568f40916a0c704~mv2.png/v1/crop/x_0,y_151,w_1920,h_746/fill/w_310,h_120,fp_0.50_0.50,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/For%20Dark%20Theme.png" alt="DeepCytes Logo" width="100" style="display: block; margin: 0 auto;">
@@ -68,10 +88,38 @@ function getOTPEmail(otpCode) {
       <h1 style="font-family: 'Playfair Display', serif; font-size: 22px; margin-bottom: 10px;">🔐 Email Verification</h1>
       <p style="color: #b0b0b0;">Use the OTP below to verify your email address:</p>
 
-      <!-- OTP -->
-      <div class="otp">
-        ${otpCode}
+      <!-- OTP and Copy Button -->
+      <div style="display: flex; align-items: center; justify-content: center;">
+        <div class="otp" id="otp-value">${otpCode}</div>
+        <button class="copy-btn" onclick="copyOTP()">Copy OTP</button>
+        <span class="copy-success" id="copy-success">Copied!</span>
       </div>
+
+      <script>
+        function copyOTP() {
+          var otp = document.getElementById('otp-value').innerText;
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(otp).then(function() {
+              var success = document.getElementById('copy-success');
+              success.style.display = 'inline';
+              setTimeout(function() { success.style.display = 'none'; }, 1500);
+            });
+          } else {
+            // fallback for older browsers
+            var textarea = document.createElement('textarea');
+            textarea.value = otp;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+              document.execCommand('copy');
+              var success = document.getElementById('copy-success');
+              success.style.display = 'inline';
+              setTimeout(function() { success.style.display = 'none'; }, 1500);
+            } catch (err) {}
+            document.body.removeChild(textarea);
+          }
+        }
+      </script>
 
       <!-- Info -->
       <p style="color: #aaaaaa; margin-top: 20px;">This OTP is valid for 10 minutes. Do not share this code with anyone.</p>

@@ -47,8 +47,8 @@ const sendEmail = async ({ to, subject, html, from = null }) => {
     throw new Error('Email service not configured');
   }
 
-  // Prefer MAILGUN_FROM (new) then MAILGUN_FROM_EMAIL (legacy), then default to noreply@<domain>
-  const fromEmail = from || process.env.MAILGUN_FROM || process.env.MAILGUN_FROM_EMAIL || `noreply@${process.env.MAILGUN_DOMAIN}`;
+  // Default: use MAILGUN_FROM_noreply, fallback to noreply@<domain>
+  const fromEmail = from || process.env.MAILGUN_FROM_noreply || `noreply@${process.env.MAILGUN_DOMAIN}`;
 
   try {
     const messageData = {
@@ -115,7 +115,8 @@ const sendBulkUserWelcomeEmail = async (email, password, loginUrl = null) => {
   return sendEmail({
     to: email,
     subject: '👤 Welcome to DeepCytes - Your Account is Ready!',
-    html: html
+    html: html,
+    from: process.env.MAILGUN_FROM
   });
 };
 
@@ -182,7 +183,8 @@ const sendBadgeReceivedEmail = async (email, badgeName, badgeDescription, profil
   return sendEmail({
     to: email,
     subject: `🎉 Congratulations! You've earned the ${badgeName} badge`,
-    html: html
+    html: html,
+    from: process.env.MAILGUN_FROM
   });
 };
 
@@ -220,7 +222,8 @@ const sendAdminDailyReport = async (email, adminName, date, logs) => {
   return sendEmail({
     to: email,
     subject: `🛡️ Admin Daily Report - ${date}`,
-    html: html
+    html: html,
+    from: process.env.MAILGUN_FROM
   });
 };
 

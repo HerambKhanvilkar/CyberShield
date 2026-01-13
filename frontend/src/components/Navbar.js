@@ -4,23 +4,11 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react"; // Retain for Google sessions if used elsewhere
 import axios from "axios";
-import SearchBox from "./SearchBox";
 import LoginDialog from "./LoginDialog";
-import SignupDialog from "./SignupDialog";
 import { FaUserCircle } from "react-icons/fa"; // Default icon for missing profile picture
 import { useAuthContext } from "./AuthContext";
 import { useRouter } from "next/navigation"; // Next.js navigation hook
-import {
-  House,
-  Menu,
-  SquareActivity,
-  LayoutDashboard,
-  Calendar,
-  Wrench,
-  Newspaper,
-  ShoppingBag,
-  Gem,
-} from "lucide-react";
+import {Menu} from "lucide-react";
 
 function Navbar() {
   const { user, loading, logout } = useAuthContext();
@@ -173,9 +161,11 @@ function Navbar() {
 
   return (
     <>
-      <nav className="z-500 bg-gradient-to-br from-[#0a0a0f] to-[#0f111a] relative z-30 border-b-2 border-[#38C8F8] border-opacity-70 flex flex-wrap items-center">
-        <div className="mx-auto flex flex-nowrap sm:flex-nowrap items-center justify-between">
-          <div className="flex items-center justify-between w-full sm:w-auto">
+
+      <nav className="z-500 bg-gradient-to-br from-[#0a0a0f] to-[#0f111a] relative z-30 border-b-2 border-[#38C8F8] border-opacity-70 flex items-center w-full min-h-[72px]">
+        <div className="flex items-center w-full px-2 sm:px-6 min-h-[72px]">
+          {/* Logo Always Visible, left-aligned */}
+          <div className="flex items-center flex-shrink-0">
             <div className="sm:hidden md:block lg:hidden">
               <button
                 type="button"
@@ -186,7 +176,6 @@ function Navbar() {
                 <span className="sr-only">Open Menu</span>
               </button>
             </div>
-            {/* Logo Always Visible */}
             <Link href="/">
               <img
                 src="https://static.wixstatic.com/media/e48a18_c949f6282e6a4c8e9568f40916a0c704~mv2.png/v1/crop/x_0,y_151,w_1920,h_746/fill/w_203,h_79,fp_0.50_0.50,q_85,usm_0.66_1.00_0.01,enc_auto/For%20Dark%20Theme.png"
@@ -196,15 +185,23 @@ function Navbar() {
             </Link>
           </div>
 
-          {/* Desktop Menu Links */}
+          {/* Desktop Menu Links, center-aligned (optional, can be removed if not needed) */}
           <div className="hidden sm:block md:hidden lg:block flex-1">
-            <div className="flex space-x-4 text-white font-medium justify-end">
+            <div className="flex space-x-4 text-white font-medium justify-center">
               <Link
                 href="/"
                 className="hover:text-[#3DB5DA] transition-colors flex items-center gap-2"
               >
                 <span>Home</span>
               </Link>
+              <a
+                href="https://learn.deepcytes.io/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-[#3DB5DA] transition-colors flex items-center gap-2"
+              >
+                <span>Learn</span>
+              </a>
               <Link
                 href="/allbadges"
                 className="hover:text-[#3DB5DA] transition-colors flex items-center gap-2"
@@ -225,12 +222,11 @@ function Navbar() {
                   {user.isAdmin ? 'Applications' : user.fellowshipStatus === 'FELLOW' ? 'Fellowship Dashboard' : 'Fellowship Portal'}
                 </Link>
               )}
-
             </div>
           </div>
 
-          {/* User Authentication */}
-          <div className="flex items-center gap-4 whitespace-nowrap shrink-0 m-4">
+          {/* User Authentication, right-aligned */}
+          <div className="flex items-center gap-4 whitespace-nowrap shrink-0 ml-auto">
             {status === "loading" ? (
               <p className="text-white">Loading...</p>
             ) : user ? (
