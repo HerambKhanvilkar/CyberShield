@@ -32,10 +32,17 @@ const OrganizationSchema = new mongoose.Schema({
         of: [String],
         default: {}
     },
+    adminPassword: {
+        type: String,
+        select: false
+    },
+    adminLastLogin: {
+        type: Date
+    },
     isActive: {
         type: Boolean,
         default: true
     }
 }, { timestamps: true });
 
-module.exports = hiringDbConnection.model('Organization', OrganizationSchema);
+module.exports = hiringDbConnection.model('Organization', OrganizationSchema, 'organizations');

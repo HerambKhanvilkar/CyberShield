@@ -157,12 +157,14 @@ app.use((err, req, res, next) => {
   const fellowshipRoutes = require("./routes/fellowshipRoutes");
   const otpRoutes = require("./routes/otpRoutes"); // NEW
   const testRoutes = require("./routes/testRoutes"); // NEW
+  const orgRoutes = require("./routes/orgRoutes"); // Sprint 4: Org Portal
 
   app.use("/api/portal", portalRoutes);
   app.use("/api/application", applicationRoutes);
   app.use("/api/fellowship", fellowshipRoutes);
   app.use("/api/auth", otpRoutes); // Resend/Change email routes
   app.use("/api/test", testRoutes); // PDF generation testing
+  app.use("/api/org", orgRoutes); // Org Portal routes
   // app.use("/api/dashboard", strictLimiter, dashboardRoutes);
   // app.use("/api", strictLimiter, watchlistRoutes);
   // app.use("/api/audit", strictLimiter, auditRoutes);
