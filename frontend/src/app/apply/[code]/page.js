@@ -26,7 +26,7 @@ export default function ApplicationForm() {
         lastName: "",
         email: "",
         otp: "",
-        role: "",
+        roles: [],
         resume: ""
     });
     const [resumeFile, setResumeFile] = useState(null);
@@ -83,6 +83,8 @@ export default function ApplicationForm() {
         e.preventDefault();
         if (emailStep !== "verified") return toast.error("Please verify your email.");
         if (!resumeFile && !formData.resume) return toast.error("Resume is mandatory.");
+        if (!formData.roles || formData.roles.length === 0) return toast.error("Please select at least one role.");
+        if (formData.roles.length > 2) return toast.error("You can select up to 2 roles only.");
 
         setSubmitLoading(true);
         try {
@@ -91,7 +93,7 @@ export default function ApplicationForm() {
             data.append("email", formData.email);
             data.append("firstName", formData.firstName);
             data.append("lastName", formData.lastName);
-            data.append("role", formData.role);
+            data.append("roles", JSON.stringify(formData.roles));
             if (resumeFile) data.append("resumeFile", resumeFile);
             data.append("data", JSON.stringify({ resumeLink: formData.resume }));
 
@@ -147,7 +149,7 @@ export default function ApplicationForm() {
                                 <ShieldCheck className="w-3 h-3" /> Secure Application
                             </div>
                             <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight italic mb-2">{org.name}</h1>
-                            <p className="text-gray-500 font-medium">Application Reference — <span className="text-white font-mono">{code}</span></p>
+                            {/* <p className="text-gray-500 font-medium">Application Reference — <span className="text-white font-mono">{code}</span></p> */}
                         </header>
                         <form onSubmit={handleSubmit} className="space-y-8 relative z-10">
                             {/* Personal Info */}
@@ -198,17 +200,35 @@ export default function ApplicationForm() {
                             </div>
                             {/* Role Selection */}
                             <div className="space-y-2">
-                                <Label className="text-gray-400">Target Role</Label>
-                                <Select onValueChange={val => setFormData({ ...formData, role: val })} required>
-                                    <SelectTrigger className="bg-black/50 border-white/10 h-12 rounded-xl text-white">
-                                        <SelectValue placeholder="Select Specialization" />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-[#0f0f0f] text-white border-white/10">
-                                        {org.formVars?.roles?.map(r => (
-                                            <SelectItem key={r} value={r} className="hover:bg-white/10">{r}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <Label className="text-gray-400">Target Roles (Select up to 2)</Label>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-3 sm:gap-4 w-full">
+                                    {org.formVars?.roles?.map((r, idx) => {
+                                        const selected = formData.roles?.includes(r);
+                                        return (
+                                            <button
+                                                type="button"
+                                                key={r}
+                                                className={`border rounded-xl p-3 sm:p-4 flex items-center justify-center h-16 sm:h-20 text-base sm:text-lg font-bold transition-all w-full min-w-0 ${selected ? 'bg-cyan-600/30 border-cyan-400 text-cyan-200' : 'bg-black/50 border-white/10 text-white'}`}
+                                                onClick={() => {
+                                                    let roles = formData.roles || [];
+                                                    if (selected) {
+                                                        roles = roles.filter(role => role !== r);
+                                                    } else {
+                                                        if (roles.length < 2) {
+                                                            roles = [...roles, r];
+                                                        } else {
+                                                            // Remove the first selected role and add the new one
+                                                            roles = [roles[1], r];
+                                                        }
+                                                    }
+                                                    setFormData({ ...formData, roles });
+                                                }}
+                                            >
+                                                {r}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
                             </div>
                             {/* Resume */}
                             <div className="space-y-4 border-t border-white/10 pt-8">
@@ -240,10 +260,10 @@ export default function ApplicationForm() {
                             <Button
                                 type="submit"
                                 disabled={submitLoading || emailStep !== "verified"}
-                                className="w-full h-16 text-xl font-black italic tracking-[0.1em] bg-white text-black hover:bg-cyan-400 transition-all rounded-[2rem] shadow-2xl shadow-cyan-500/10 group"
+                                className="w-full h-14 sm:h-16 text-base sm:text-xl font-black italic tracking-[0.05em] sm:tracking-[0.1em] bg-white text-black hover:bg-cyan-400 transition-all rounded-[2rem] shadow-2xl shadow-cyan-500/10 group flex items-center justify-center px-2 sm:px-6 whitespace-normal"
                             >
-                                {submitLoading ? "TRANSMITTING DATA..." : "TRANSMIT APPLICATION"}
-                                <Send className="ml-2 w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                                <span className="flex-1 text-center truncate">{submitLoading ? "TRANSMITTING DATA..." : "TRANSMIT APPLICATION"}</span>
+                                <Send className="ml-1 sm:ml-2 w-4 sm:w-5 h-4 sm:h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform flex-shrink-0" />
                             </Button>
                         </form>
                     </motion.div>
