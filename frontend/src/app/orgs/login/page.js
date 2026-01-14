@@ -9,7 +9,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 export default function OrgLoginPage() {
     const router = useRouter();
-    const [formData, setFormData] = useState({ email: '', password: '' });
+    const [formData, setFormData] = useState({ orgCode: '', password: '' });
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e) => {
@@ -51,7 +51,7 @@ export default function OrgLoginPage() {
                         <Shield className="w-8 h-8 text-green-400" />
                     </div>
                     <div className="space-y-2">
-                        <h1 className="text-2xl font-bold tracking-tighter text-white">DEEPCYTES <span className="text-green-500">NETWORK</span></h1>
+                        <h1 className="text-2xl font-bold tracking-tighter text-white">DEEPCYTES <span className="text-green-500">FELLOWSHIP</span></h1>
                         <p className="text-xs text-green-500/60 uppercase tracking-widest">Secure Node Access Portal</p>
                     </div>
                 </div>

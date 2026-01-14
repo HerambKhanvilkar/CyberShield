@@ -15,7 +15,7 @@ const STEPS = [
     { id: 'profile', title: 'Complete Profile', icon: <Shield className="w-5 h-5" />, description: 'Enter your basic details and social links.' },
     { id: 'nda', title: 'NDA Agreement', icon: <ScrollText className="w-5 h-5" />, description: 'Electronically sign the non-disclosure agreement.' },
     { id: 'offer', title: 'Offer Letter', icon: <Award className="w-5 h-5" />, description: 'View and download your official offer.' },
-    { id: 'resources', title: 'Resources', icon: <BookOpen className="w-5 h-5" />, description: 'Access essential member documents.' },
+    { id: 'resources', title: 'Resources', icon: <BookOpen className="w-5 h-5" />, description: 'Access essential fellow documents.' },
     { id: 'research', title: 'R&D Showcase', icon: <FlaskConical className="w-5 h-5" />, description: 'Explore DeepCytes R&D projects.' },
     { id: 'feedback', title: 'Tenure Feedback', icon: <MessageSquare className="w-5 h-5" />, description: 'Provide feedback after your tenure.' },
     { id: 'completion', title: 'Completion', icon: <CheckCircle className="w-5 h-5" />, description: 'Download your completion certificate.' }
@@ -96,7 +96,7 @@ export default function OnboardingLayout({ children }) {
                                 animate={{ opacity: 1, scale: 1 }}
                                 className="inline-block px-4 py-1.5 border border-cyan-500/30 bg-cyan-500/5 text-[10px] uppercase font-black tracking-[0.4em] text-cyan-500 mb-6"
                             >
-                                DeepCytes_Network_Portal_v2.0
+                                DeepCytes_Fellowship_Portal_v2.0
                             </motion.div>
                             <motion.h1
                                 initial={{ opacity: 0, y: -20 }}

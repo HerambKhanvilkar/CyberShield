@@ -97,12 +97,28 @@ router.post('/apply', upload.single('resumeFile'), [
     try {
         console.log("Submission Body:", req.body);
         console.log("Submission File:", req.file);
-        const { orgCode, email, firstName, lastName, role, data: dataRaw } = req.body;
+        const { orgCode, email, firstName, lastName, role: roleRaw, roles: rolesRaw, whyJoin, ideas, data: dataRaw } = req.body;
 
         let data = {};
         try {
             data = typeof dataRaw === 'string' ? JSON.parse(dataRaw) : (dataRaw || {});
         } catch (e) { }
+
+        // Incorporate separate fields if they exist
+        if (whyJoin) data.whyJoin = whyJoin;
+        if (ideas) data.ideas = ideas;
+
+        // Handle roles
+        let roles = [];
+        try {
+            if (rolesRaw) {
+                roles = typeof rolesRaw === 'string' ? JSON.parse(rolesRaw) : rolesRaw;
+            }
+        } catch (e) { }
+
+        const finalRole = roles.length > 0 ? roles[0] : (roleRaw || "UNSPECIFIED");
+        data.preferredRoles = roles;
+
 
         const org = await Organization.findOne({ code: orgCode });
         if (!org) return res.status(404).json({ message: "Invalid Organization Code" });
@@ -135,7 +151,7 @@ router.post('/apply', upload.single('resumeFile'), [
             email,
             firstName,
             lastName,
-            role,
+            role: finalRole,
             data: data,
             resume: req.file ? `/uploads/resumes/${req.file.filename}` : (data.resume || null)
         });

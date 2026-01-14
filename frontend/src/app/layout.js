@@ -1,6 +1,6 @@
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
 import { AuthProvider } from "@/components/AuthContext";
-import ErrorBoundary from "@/components/ErrorBoundary";
+
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer, Slide } from "react-toastify";
 import { WatchlistProvider } from "@/context/WatchlistContext";
@@ -18,9 +18,7 @@ export default function RootLayout({ children }) {
         <SessionProviderWrapper>
           <AuthProvider>
             <WatchlistProvider>
-              <ErrorBoundary>
-                {children}
-              </ErrorBoundary>
+              {children}
               <ToastContainer
                 position="bottom-left"
                 autoClose={5000}

@@ -16,7 +16,7 @@ const PROJECTS = [
 const DOCUMENTS = [
     { id: 1, name: "NDA", preview: "Strict Confidentiality Agreement" },
     { id: 2, name: "Offer Letter", preview: "Terms of Engagement & Benefits" },
-    { id: 3, name: "Completion Letter", preview: "Member Accreditation & Badges" }
+    { id: 3, name: "Completion Letter", preview: "Fellow Accreditation & Badges" }
 ];
 
 export default function ResearchPage() {
@@ -67,7 +67,7 @@ export default function ResearchPage() {
             {/* Document Roller */}
             <section className="py-20 bg-white/[0.02] border-y border-white/5 overflow-hidden">
                 <div className="max-w-7xl mx-auto px-4">
-                    <h2 className="text-sm font-bold text-gray-500 uppercase tracking-[0.3em] mb-12 text-center">Member Credentials</h2>
+                    <h2 className="text-sm font-bold text-gray-500 uppercase tracking-[0.3em] mb-12 text-center">Fellow Credentials</h2>
 
                     <div className="flex justify-center items-center gap-12 sm:gap-24 relative h-64">
                         <AnimatePresence mode="wait">

@@ -162,7 +162,7 @@ app.use((err, req, res, next) => {
 
   app.use("/api/portal", portalRoutes);
   app.use("/api/application", applicationRoutes);
-  app.use("/api/member", fellowshipRoutes);
+  app.use("/api/fellowship", fellowshipRoutes);
   app.use("/api/auth", otpRoutes); // Resend/Change email routes
   app.use("/api/test", testRoutes); // PDF generation testing
   app.use("/api/org", orgRoutes); // Org Portal routes

@@ -127,9 +127,9 @@ export default function FeedbackPage() {
                 return (
                     <div className="space-y-6">
                         <div className="p-4 bg-cyan-900/10 border border-cyan-500/20 rounded-xl mb-6">
-                            <h3 className="text-xl font-bold text-cyan-400 mb-2">Welcome to the DeepCytes Network Experience Form!</h3>
+                            <h3 className="text-xl font-bold text-cyan-400 mb-2">Welcome to the DeepCytes Fellowship Experience Form!</h3>
                             <p className="text-sm text-gray-400">
-                                The DeepCytes Network Program (DCNP) is more than just a training ground—it’s a movement uniting passionate minds from across the world to tackle the most pressing challenges in cybersecurity.
+                                The DeepCytes Fellowship Program (DCFP) is more than just a training ground—it’s a movement uniting passionate minds from across the world to tackle the most pressing challenges in cybersecurity.
                             </p>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
@@ -147,8 +147,8 @@ export default function FeedbackPage() {
             case 2: // Plans
                 return (
                     <div className="space-y-6">
-                        <h3 className="text-lg font-bold text-white">Your Plans with the Network</h3>
-                        <p className="text-sm text-gray-500">Are you planning to continue with the DeepCytes Network for the next phase?</p>
+                        <h3 className="text-lg font-bold text-white">Your Plans with the Fellowship</h3>
+                        <p className="text-sm text-gray-500">Are you planning to continue with the DeepCytes Fellowship for the next phase?</p>
                         <div className="space-y-3">
                             {['Yes', 'No'].map(opt => (
                                 <div
@@ -202,7 +202,7 @@ export default function FeedbackPage() {
 
                         {/* Skills Before */}
                         <div className="space-y-2">
-                            <label className="text-xs text-gray-400 uppercase">Skill Level BEFORE Network Engagement (1-5)</label>
+                            <label className="text-xs text-gray-400 uppercase">Skill Level BEFORE Fellowship Engagement (1-5)</label>
                             <div className="flex gap-2">
                                 {[1, 2, 3, 4, 5].map(n => (
                                     <button

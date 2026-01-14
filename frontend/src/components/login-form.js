@@ -56,7 +56,7 @@ export function LoginForm() {
         await fetchUser();
 
         if (data.user.fellowshipStatus === 'FELLOW') {
-          router.push("/MemberProfile");
+          router.push("/FellowshipProfile");
         } else if (hiringRef || data.user.fellowshipStatus === 'ONBOARDING') {
           router.push("/portal/onboarding");
         } else {

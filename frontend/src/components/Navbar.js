@@ -8,7 +8,7 @@ import LoginDialog from "./LoginDialog";
 import { FaUserCircle } from "react-icons/fa"; // Default icon for missing profile picture
 import { useAuthContext } from "./AuthContext";
 import { useRouter } from "next/navigation"; // Next.js navigation hook
-import {Menu} from "lucide-react";
+import { Menu } from "lucide-react";
 
 function Navbar() {
   const { user, loading, logout } = useAuthContext();
@@ -213,7 +213,7 @@ function Navbar() {
                 <Link
                   href={
                     user.isAdmin ? '/applications' :
-                      user.fellowshipStatus === 'FELLOW' ? '/MemberProfile' :
+                      user.fellowshipStatus === 'FELLOW' ? '/FellowshipProfile' :
                         user.fellowshipStatus === 'ONBOARDING' ? '/portal/onboarding' :
                           '/portal'
                   }
@@ -336,7 +336,7 @@ function Navbar() {
               <Link
                 href={
                   user.isAdmin ? '/applications' :
-                    user.fellowshipStatus === 'FELLOW' ? '/MemberProfile' :
+                    user.fellowshipStatus === 'FELLOW' ? '/FellowshipProfile' :
                       user.fellowshipStatus === 'ONBOARDING' ? '/portal/onboarding' :
                         '/portal'
                 }

@@ -325,7 +325,7 @@ export default function ApplicationForm() {
                             {/* Questions */}
                             <div className="border-t border-white/10 pt-7 space-y-5">
                                 <div>
-                                    <Label className="text-gray-400 font-bold mb-2 block text-base sm:text-lg">Why should we select you for the DeepCytes Network?</Label>
+                                    <Label className="text-gray-400 font-bold mb-2 block text-base sm:text-lg">Why should we select you for the DeepCytes Fellowship?</Label>
                                     <textarea
                                         className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white min-h-[120px] focus:border-cyan-500/50 focus:ring-0 resize-none text-sm sm:text-base"
                                         placeholder="In 100-200 words, tell us about your skills, research abilities, and why you’re passionate about the field of cybersecurity."
@@ -353,7 +353,7 @@ export default function ApplicationForm() {
                             {/* Consent Checkbox */}
                             <div className="flex flex-col items-start gap-2 mb-3">
                                 <span className="text-white text-sm sm:text-base mb-1">
-                                    <span className="font-semibold">By submitting this form, you agree to the use of your data for selection purposes and potential future opportunities within the DeepCytes network.</span>
+                                    <span className="font-semibold">By submitting this form, you agree to the use of your data for selection purposes and potential future opportunities within the DeepCytes.</span>
                                 </span>
                                 <label className="flex items-center gap-2 cursor-pointer select-none text-sm sm:text-base">
                                     <input
@@ -391,7 +391,7 @@ export default function ApplicationForm() {
                             <h2 className="text-lg sm:text-xl font-bold tracking-tight italic mb-2 leading-tight text-cyan-500">Applied already?</h2>
                         </header>
                         <div className="text-center space-y-4 relative z-10">
-                            <p className="text-gray-300 text-sm sm:text-base mb-2">Check your application status here and track your progress in the DeepCytes Network.</p>
+                            <p className="text-gray-300 text-sm sm:text-base mb-2">Check your application status here and track your progress in the DeepCytes Fellowship.</p>
                             <Button
                                 type="button"
                                 onClick={() => router.push('/portal')}

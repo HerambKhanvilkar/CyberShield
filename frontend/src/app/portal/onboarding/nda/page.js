@@ -46,8 +46,8 @@ export default function NDAPage() {
                 <p className="mb-4">This Non-Disclosure Agreement (the "Agreement") is entered into by and between DeepCytes R&D and the undersigned Participant...</p>
                 <div className="space-y-4 opacity-70">
                     <p>1. <span className="text-white font-bold">CONFIDENTIALITY:</span> The Participant acknowledges that in the course of the tenure, they may have access to confidential and proprietary information, including but not limited to source code, research data, product roadmaps, and internal methodologies.</p>
-                    <p>2. <span className="text-white font-bold">IP_PROTECTION:</span> All intellectual property generated during the tenure remains the sole property of DeepCytes Network.</p>
-                    <p>3. <span className="text-white font-bold">LEGAL_ACTION:</span> Unauthorized disclosure may result in legal action, intellectual property theft charges, and immediate termination of the network engagement.</p>
+                    <p>2. <span className="text-white font-bold">IP_PROTECTION:</span> All intellectual property generated during the tenure remains the sole property of DeepCytes Fellowship.</p>
+                    <p>3. <span className="text-white font-bold">LEGAL_ACTION:</span> Unauthorized disclosure may result in legal action, intellectual property theft charges, and immediate termination of the fellowship engagement.</p>
                 </div>
             </div>
 

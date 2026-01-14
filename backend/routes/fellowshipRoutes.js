@@ -6,7 +6,7 @@ const DocumentService = require('../services/DocumentService');
 const path = require('path');
 const fs = require('fs');
 
-// 1. Get Member Profile (Dashboard Overview)
+// 1. Get Fellow Profile (Dashboard Overview)
 router.get('/profile', authenticateJWT, isFellow, async (req, res) => {
     try {
         const profile = req.fellow; // Attached by isFellow middleware

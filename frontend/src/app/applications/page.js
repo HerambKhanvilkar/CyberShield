@@ -142,7 +142,7 @@ function AdminDashboardContent() {
         try {
             const token = localStorage.getItem("accessToken");
             const res = await axios.get(
-                `${process.env.SERVER_URL || 'http://localhost:3001/api'}/member/admin/download/${fellowId}/${tenureIndex}/${docType}`,
+                `${process.env.SERVER_URL || 'http://localhost:3001/api'}/fellowship/admin/download/${fellowId}/${tenureIndex}/${docType}`,
                 {
                     headers: { Authorization: `Bearer ${token}` },
                     responseType: 'blob'
@@ -344,7 +344,7 @@ function AdminDashboardContent() {
                 </div>
 
                 <div className="pt-8 border-t border-white/10">
-                    <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4">Network_Config</h3>
+                    <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4">Fellowship_Config</h3>
                     <div className="grid grid-cols-2 gap-4">
                         <div className="p-4 bg-white/5 border border-white/10">
                             <span className="text-[10px] text-gray-500 uppercase block mb-1">Termination_Date</span>
@@ -811,7 +811,7 @@ function AdminDashboardContent() {
                             >
                                 <div className="h-14 flex items-center justify-between px-4 sm:px-6 border-b border-white/10 bg-white/5 shrink-0 sticky top-0 z-20">
                                     <h3 className="text-sm font-bold text-green-500 uppercase tracking-widest flex items-center gap-2">
-                                        <Database className="w-4 h-4" /> NETWORK_NODE_CONFIGURATION
+                                        <Database className="w-4 h-4" /> FELLOWSHIP_NODE_CONFIGURATION
                                     </h3>
                                     <button onClick={() => setIsEditingOrg(false)} className="text-gray-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-green-500"><XCircle className="w-5 h-5" /></button>
                                 </div>
