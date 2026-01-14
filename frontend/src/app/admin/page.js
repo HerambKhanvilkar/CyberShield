@@ -21,7 +21,7 @@ export default function AdminLogin() {
         const user = JSON.parse(localStorage.getItem("user") || "null");
         const token = localStorage.getItem("accessToken");
         if (user && user.isAdmin && token) {
-            router.push("/admin/applications");
+            router.push("/applications");
         }
     }, [router]);
 
