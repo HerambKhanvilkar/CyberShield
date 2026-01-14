@@ -186,7 +186,7 @@ export default function ApplicationForm() {
                             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-black uppercase tracking-widest text-cyan-400 mb-4">
                                 <ShieldCheck className="w-3 h-3" /> Secure Application
                             </div>
-                            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight italic mb-2 leading-tight">Network | DeepCytes Cyber Labs UK</h1>
+                            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight italic mb-2 leading-tight">Fellowship | DeepCytes Cyber Labs UK</h1>
                             <p className="text-gray-400 text-base sm:text-lg font-semibold mb-2">Organization: {org.name}</p>
                             <div className="text-gray-300 text-sm sm:text-base space-y-2">
                                 <p>As part of our global community, you will join a diverse and talented group of individuals who are passionate about using their skills to combat cybercrime and organized digital threats worldwide. This is your opportunity to contribute to innovative, impactful projects and collaborate with experts in the field of cybersecurity.</p>
