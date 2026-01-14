@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
@@ -9,29 +8,18 @@ import {
     Activity, GraduationCap, Clock, FileText,
     Search, Filter, ChevronRight
 } from 'lucide-react';
-import Loader from '@/components/Loader';
-import { toast } from 'react-toastify';
-import ErrorBoundary from '@/components/ErrorBoundary';
+import { toast, ToastContainer } from 'react-toastify';
+
 import 'react-toastify/dist/ReactToastify.css';
 
 export default function OrgDashboard() {
-    return (
-        <ErrorBoundary>
-            <OrgDashboardContent />
-        </ErrorBoundary>
-    );
-}
-
-function OrgDashboardContent() {
     const router = useRouter();
-    // ... all the content from previous OrgDashboard function
     const [user, setUser] = useState(null);
     const [stats, setStats] = useState({ totalApplicants: 0, pending: 0, accepted: 0, rejected: 0 });
     const [applicants, setApplicants] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('overview'); // overview, applicants
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedApplicant, setSelectedApplicant] = useState(null);
 
     useEffect(() => {
         const token = localStorage.getItem('orgToken');
@@ -76,33 +64,17 @@ function OrgDashboardContent() {
         router.push('/orgs/login');
     };
 
-    const handleDownloadCSV = async () => {
-        try {
-            const token = localStorage.getItem('orgToken');
-            const response = await axios.get(`${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api'}/org/export-csv`, {
-                headers: { Authorization: `Bearer ${token}` },
-                responseType: 'blob',
-            });
-            const url = window.URL.createObjectURL(new Blob([response.data]));
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', `applicants-${user?.orgCode}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-        } catch (error) {
-            console.error("CSV Export failed", error);
-            toast.error("Failed to export CSV");
-        }
-    };
-
     const filteredApplicants = applicants.filter(app =>
         app.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         app.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         app.email.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    if (loading) return <Loader text="INITIALIZING NODE LINK..." />;
+    if (loading) return (
+        <div className="min-h-screen bg-black text-green-500 font-mono flex items-center justify-center">
+            <div className="animate-pulse">INITIALIZING_NODE_LINK...</div>
+        </div>
+    );
 
     return (
         <div className="min-h-screen bg-black text-gray-300 font-mono selection:bg-green-500/30 selection:text-green-200">
@@ -138,7 +110,7 @@ function OrgDashboardContent() {
                 <div className="p-4 border-t border-white/10">
                     <div className="flex items-center gap-3 mb-4 px-2">
                         <div className="w-8 h-8 rounded bg-gray-900 flex items-center justify-center text-xs font-bold text-white border border-white/10">
-                            {user?.name?.charAt(0) || 'U'}
+                            {user?.name.charAt(0)}
                         </div>
                         <div className="truncate">
                             <p className="text-xs text-white truncate max-w-[120px]">{user?.name}</p>
@@ -168,9 +140,10 @@ function OrgDashboardContent() {
                             <StatCard label="Rejected" value={stats.rejected} icon={<Activity className="w-4 h-4" />} color="text-red-500" />
                         </div>
 
+                        {/* Recent Activity / Visualizations Placeholder */}
                         <div className="grid grid-cols-3 gap-6">
-                            <div className="col-span-2 h-64 bg-white/5 border border-white/10 rounded-sm p-4 flex flex-col items-center justify-center text-gray-500 text-xs text-center">
-                                <span className="mb-2 uppercase tracking-widest text-green-500/50">Application Velocity</span>
+                            <div className="col-span-2 h-64 bg-white/5 border border-white/10 rounded-sm p-4 flex flex-col items-center justify-center text-gray-500 text-xs">
+                                <span className="mb-2 uppercase tracking-widest">Application Velocity</span>
                                 <div className="w-full h-32 flex items-end justify-center gap-2 opacity-50">
                                     {[40, 60, 45, 70, 85, 60, 75, 50, 65, 80].map((h, i) => (
                                         <div key={i} style={{ height: `${h}%` }} className="w-4 bg-green-500/20 hover:bg-green-500/50 transition-colors" />
@@ -178,13 +151,13 @@ function OrgDashboardContent() {
                                 </div>
                             </div>
                             <div className="col-span-1 h-64 bg-white/5 border border-white/10 rounded-sm p-6">
-                                <h3 className="text-xs uppercase text-gray-400 mb-4 tracking-widest">Quick Actions</h3>
+                                <h3 className="text-xs uppercase text-gray-400 mb-4">Quick Actions</h3>
                                 <div className="space-y-2">
-                                    <button className="w-full text-left px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 text-[10px] uppercase font-bold text-gray-400 hover:text-white transition-all rounded-sm flex items-center justify-between group">
+                                    <button className="w-full text-left px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 text-xs transition-colors rounded-sm flex items-center justify-between group">
                                         Download Report
                                         <ChevronRight className="w-3 h-3 text-gray-500 group-hover:text-white" />
                                     </button>
-                                    <button className="w-full text-left px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 text-[10px] uppercase font-bold text-gray-400 hover:text-white transition-all rounded-sm flex items-center justify-between group">
+                                    <button className="w-full text-left px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 text-xs transition-colors rounded-sm flex items-center justify-between group">
                                         Update Node Config
                                         <ChevronRight className="w-3 h-3 text-gray-500 group-hover:text-white" />
                                     </button>
@@ -209,14 +182,11 @@ function OrgDashboardContent() {
                                         placeholder="SEARCH_DB..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="bg-white/5 border border-white/10 pl-8 pr-4 py-2 text-xs text-white focus:outline-none focus:border-green-500/50 w-64 font-mono transition-all"
+                                        className="bg-white/5 border border-white/10 pl-8 pr-4 py-2 text-xs text-white focus:outline-none focus:border-green-500/50 w-64"
                                     />
                                 </div>
-                                <button
-                                    onClick={handleDownloadCSV}
-                                    className="px-4 py-2 bg-green-500/10 border border-green-500/30 text-[10px] font-bold uppercase tracking-widest text-green-400 hover:bg-green-500/20 flex items-center gap-2 transition-all"
-                                >
-                                    <FileText className="w-3 h-3" /> Export CSV
+                                <button className="px-3 py-2 bg-white/5 border border-white/10 text-xs text-gray-400 hover:text-white hover:bg-white/10">
+                                    <Filter className="w-3 h-3" />
                                 </button>
                             </div>
                         </div>
@@ -225,39 +195,38 @@ function OrgDashboardContent() {
                             <table className="w-full text-left text-xs">
                                 <thead>
                                     <tr className="bg-white/5 text-gray-400 uppercase tracking-wider border-b border-white/10">
-                                        <th className="p-4 font-normal">Candidate / Identity</th>
+                                        <th className="p-4 font-normal">Candidate</th>
                                         <th className="p-4 font-normal">Preferred Role</th>
-                                        <th className="p-4 font-normal">Current Status</th>
-                                        <th className="p-4 font-normal text-right">Applied</th>
+                                        <th className="p-4 font-normal">Status</th>
+                                        <th className="p-4 font-normal">Applied</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-white/5">
                                     {filteredApplicants.map((app) => (
-                                        <tr
-                                            key={app._id}
-                                            onClick={() => setSelectedApplicant(app)}
-                                            className="hover:bg-green-500/5 transition-colors group cursor-pointer border-l-2 border-transparent hover:border-green-500/50"
-                                        >
+                                        <tr key={app._id} className="hover:bg-white/5 transition-colors group">
                                             <td className="p-4">
-                                                <div className="font-bold text-white group-hover:text-green-400 transition-colors uppercase tracking-tight">{app.firstName} {app.lastName}</div>
-                                                <div className="text-white/30 text-[10px] lowercase font-mono">{app.email}</div>
+                                                <div className="font-bold text-white group-hover:text-green-400 transition-colors">{app.firstName} {app.lastName}</div>
+                                                <div className="text-gray-500 text-[10px]">{app.email}</div>
                                             </td>
-                                            <td className="p-4">
-                                                <span className="text-[10px] font-mono text-cyan-400 bg-cyan-400/5 px-2 py-0.5 border border-cyan-400/20">
-                                                    {typeof app.role === 'object' ? app.role?.name : app.role || 'UNSPECIFIED'}
+                                            <td className="p-4 text-gray-300">
+                                                <span className="px-2 py-1 bg-white/5 rounded-full text-[10px] border border-white/10">
+                                                    {(() => {
+                                                        const r = app.role;
+                                                        return typeof r === 'object' ? r?.name : r || 'N/A';
+                                                    })()}
                                                 </span>
                                             </td>
                                             <td className="p-4">
-                                                <StatusBadge status={app.status || 'PENDING'} />
+                                                <StatusBadge status={app.status} />
                                             </td>
-                                            <td className="p-4 text-gray-500 font-mono text-[10px] text-right">
+                                            <td className="p-4 text-gray-500 font-mono text-[10px]">
                                                 {new Date(app.appliedAt).toLocaleDateString()}
                                             </td>
                                         </tr>
                                     ))}
                                     {filteredApplicants.length === 0 && (
                                         <tr>
-                                            <td colSpan="4" className="p-8 text-center text-gray-600 italic font-mono text-xs">
+                                            <td colSpan="4" className="p-8 text-center text-gray-600 italic">
                                                 No matching records found in node database.
                                             </td>
                                         </tr>
@@ -265,19 +234,12 @@ function OrgDashboardContent() {
                                 </tbody>
                             </table>
                         </div>
-                    </motion.div>
-                )}
-            </main>
-
-            <AnimatePresence>
-                {selectedApplicant && (
-                    <ApplicantDetailsModal
-                        applicant={selectedApplicant}
-                        onClose={() => setSelectedApplicant(null)}
-                    />
-                )}
-            </AnimatePresence>
-        </div>
+                    </motion.div >
+                )
+                }
+            </main >
+            <ToastContainer position="bottom-right" theme="dark" />
+        </div >
     );
 }
 
@@ -374,16 +336,14 @@ function ApplicantDetailsModal({ applicant, onClose }) {
 
 function StatCard({ label, value, icon, color = "text-green-500" }) {
     return (
-        <div className="bg-black border border-white/10 p-6 rounded-sm flex items-center justify-between hover:border-white/30 transition-all cursor-default group relative overflow-hidden">
-            <div className="relative z-10">
-                <p className="text-[10px] uppercase text-gray-500 tracking-[0.2em] mb-2 font-black group-hover:text-white transition-colors">{label}</p>
-                <p className={`text-4xl font-black ${color} font-mono tracking-tighter`}>{value}</p>
+        <div className="bg-white/5 border border-white/10 p-4 rounded-sm flex items-center justify-between hover:border-white/20 transition-all cursor-default group">
+            <div>
+                <p className="text-[10px] uppercase text-gray-500 tracking-wider mb-1 group-hover:text-gray-400">{label}</p>
+                <p className={`text-2xl font-bold ${color} font-mono`}>{value}</p>
             </div>
-            <div className={`p-3 rounded-sm bg-white/5 ${color} opacity-20 group-hover:opacity-100 transition-all transform group-hover:scale-110 relative z-10`}>
+            <div className={`p-2 rounded-full bg-white/5 ${color} opacity-80 group-hover:opacity-100 transition-opacity`}>
                 {icon}
             </div>
-            {/* Background scanline effect */}
-            <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
         </div>
     );
 }
@@ -398,7 +358,7 @@ function StatusBadge({ status }) {
     const style = styles[status] || "text-gray-500 border-gray-500/30 bg-gray-500/10";
 
     return (
-        <span className={`px-3 py-1 text-[9px] font-black uppercase tracking-[0.2em] border rounded-sm ${style}`}>
+        <span className={`px-2 py-1 text-[10px] font-bold uppercase tracking-wider border rounded-sm ${style}`}>
             {status}
         </span>
     );
