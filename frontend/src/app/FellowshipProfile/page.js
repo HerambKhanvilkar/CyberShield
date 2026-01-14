@@ -10,6 +10,7 @@ import TenureTimeline from "./components/TenureTimeline";
 import SignatureModal from "./components/SignatureModal";
 import { toast } from "react-toastify";
 import { ShieldCheck, AlertCircle } from "lucide-react";
+import Loader from "@/components/Loader";
 
 
 export default function FellowshipDashboard() {
@@ -135,11 +136,7 @@ export default function FellowshipDashboard() {
     };
 
     if (loading) {
-        return (
-            <div className="min-h-screen bg-black flex items-center justify-center">
-                <div className="text-cyan-500 font-mono animate-pulse">INITIALIZING FELLOWSHIP CONSOLE...</div>
-            </div>
-        );
+        return <Loader text="INITIALIZING FELLOWSHIP CONSOLE..." />;
     }
 
     if (!profile) return null;
