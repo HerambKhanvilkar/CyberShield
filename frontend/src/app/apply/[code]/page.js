@@ -306,7 +306,7 @@ export default function ApplicationForm() {
                                             className="absolute inset-0 opacity-0 cursor-pointer z-10"
                                         />
                                         <div className="h-20 border-2 border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center transition-colors group-hover:border-cyan-500/30 group-hover:bg-cyan-500/5">
-                                            <span className="text-xs font-black uppercase text-gray-600">Upload PDF</span>
+                                            <span className="text-xs font-black uppercase text-gray-600">Upload Resume PDF</span>
                                             <span className="text-xs font-mono mt-1 text-cyan-400">{resumeFile ? resumeFile.name.slice(0, 15) + '...' : 'Browse Documents'}</span>
                                         </div>
                                     </div>
