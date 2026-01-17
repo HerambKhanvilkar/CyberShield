@@ -11,7 +11,7 @@ import { toast } from "react-toastify";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Calendar, Mail, FileText, Send, ChevronRight, CheckCircle2, ShieldCheck } from "lucide-react";
+import { User, Calendar, Mail, FileText, Send, ChevronRight, CheckCircle2, ShieldCheck, Clock, Lock } from "lucide-react";
 
 export default function ApplicationForm() {
     const [showConfetti, setShowConfetti] = useState(false);
@@ -22,6 +22,13 @@ export default function ApplicationForm() {
     const [org, setOrg] = useState(null);
     const [errorMsg, setErrorMsg] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isExpired, setIsExpired] = useState(false);
+
+    // Status Check State
+    const [statusEmail, setStatusEmail] = useState("");
+    const [statusOtp, setStatusOtp] = useState("");
+    const [statusStep, setStatusStep] = useState("start"); // start, otp_sent
+    const [statusLoading, setStatusLoading] = useState(false);
 
     const [formData, setFormData] = useState({
         firstName: "",
@@ -44,9 +51,14 @@ export default function ApplicationForm() {
             try {
                 const res = await axios.get(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/application/org/${code}`);
                 setOrg(res.data);
+
+                // Check if expired
+                if (res.data.endDate && new Date(res.data.endDate) < new Date()) {
+                    setIsExpired(true);
+                }
             } catch (error) {
                 console.error("Org fetch error:", error);
-                setErrorMsg(error.response?.data?.message || "Organization Code not found or has expired.");
+                setErrorMsg(error.response?.data?.message || "Organization Code not found.");
             } finally {
                 setLoading(false);
             }
@@ -54,17 +66,62 @@ export default function ApplicationForm() {
         if (code) fetchOrg();
     }, [code, router]);
 
-    const handleSendOtp = async () => {
-        if (!formData.email) return toast.error("Please enter email");
-        // Frontend domain whitelist check
-        if (org && Array.isArray(org.emailDomainWhitelist)) {
-            const emailDomain = formData.email.split('@')[1]?.toLowerCase();
-            const allowed = org.emailDomainWhitelist.map(d => d.toLowerCase()).includes(emailDomain);
-            if (!allowed) {
-                toast.error(`Email domain @${emailDomain} is not allowed for registration. If you believe this is an error, try using your institutional email or reach out for support.`);
-                return;
-            }
+    // Status Check Handlers
+    const handleStatusSendOtp = async () => {
+        if (!statusEmail) return toast.error("Please enter email");
+        setStatusLoading(true);
+        try {
+            await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/auth/login/otp`, { email: statusEmail });
+            setStatusStep("otp_sent");
+            toast.success("OTP Sent!");
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to send OTP");
+        } finally {
+            setStatusLoading(false);
         }
+    };
+
+    const handleStatusLogin = async () => {
+        setStatusLoading(true);
+        try {
+            const res = await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/auth/login/verify`, {
+                email: statusEmail,
+                otp: statusOtp
+            });
+            localStorage.setItem('accessToken', res.data.accessToken);
+            toast.success("Login Successful");
+            router.push('/portal');
+        } catch (error) {
+            toast.error("Invalid OTP");
+        } finally {
+            setStatusLoading(false);
+        }
+    };
+    // Resume Handlers
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Validation: Must be PDF
+        if (file.type !== "application/pdf") {
+            toast.error("Invalid file format. Please upload a PDF.");
+            e.target.value = "";
+            return;
+        }
+
+        // Validation: Max 5MB
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error("File is too large. Maximum size is 5MB.");
+            e.target.value = "";
+            return;
+        }
+
+        setResumeFile(file);
+    };
+
+    // Form Handlers
+    const handleSendOtp = async () => {
+        if (!formData.email) return toast.error("Please enter your email first");
         setOtpLoading(true);
         try {
             await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/auth/register/otp`, {
@@ -72,16 +129,29 @@ export default function ApplicationForm() {
                 orgCode: code
             });
             setEmailStep("otp_sent");
-            toast.success("OTP sent to your email");
+            toast.success("Verification Code Sent");
         } catch (error) {
-            const errorMsg = error.response?.data?.msg || error.response?.data?.message || error.message || "Failed to send OTP";
-            toast.error(errorMsg);
+            const status = error.response?.status;
+            const msg = error.response?.data?.msg || error.response?.data?.message || "Failed to send code";
+
+            if (msg.includes("already registered") || (status === 400 && msg.includes("exists"))) {
+                toast.info(
+                    <div>
+                        <p className="font-bold">Email Already Registered</p>
+                        <p className="text-[10px] sm:text-xs">You have already submitted an application or have an account. Please use the "Check Status" button below.</p>
+                    </div>,
+                    { autoClose: 6000 }
+                );
+            } else {
+                toast.error(msg);
+            }
         } finally {
             setOtpLoading(false);
         }
     };
 
     const handleVerifyOtp = async () => {
+        if (!formData.otp) return toast.error("Please enter the OTP");
         setOtpLoading(true);
         try {
             await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/auth/validate-otp`, {
@@ -89,48 +159,67 @@ export default function ApplicationForm() {
                 otp: formData.otp
             });
             setEmailStep("verified");
-            toast.success("Email Verified!");
+            toast.success("Identity Verified");
         } catch (error) {
-            toast.error("Invalid OTP");
+            toast.error(error.response?.data?.message || "Invalid Code");
         } finally {
             setOtpLoading(false);
         }
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (emailStep !== "verified") return toast.error("Please verify your email.");
-        if (!formData.roles || formData.roles.length === 0) return toast.error("Please select at least one role.");
-        if (formData.whyFellowship.length < 100) return toast.error("Motivation must be at least 100 characters.");
-        if (!resumeFile && !formData.resume) return toast.error("Resume/Portfolio is mandatory.");
-        if (formData.roles.length > 2) return toast.error("You can select up to 2 roles only.");
+        if (e) e.preventDefault();
+        if (!formData.consent) return toast.error("Please agree to the privacy consent");
+        if (emailStep !== "verified") return toast.error("Identity verification required");
 
         setSubmitLoading(true);
+
+        const data = new FormData();
+        data.append("orgCode", code);
+        data.append("firstName", formData.firstName);
+        data.append("lastName", formData.lastName);
+        data.append("email", formData.email);
+        data.append("role", formData.roles.length > 0 ? formData.roles[0] : "General Applicant");
+        data.append("whyJoin", formData.whyFellowship);
+        data.append("ideas", formData.innovativeIdeas);
+
+        if (resumeFile) {
+            data.append("resumeFile", resumeFile);
+        }
+
+        const extraData = {
+            preferredRoles: formData.roles,
+            resumeLink: formData.resume,
+            consentDate: new Date().toISOString()
+        };
+        data.append("data", JSON.stringify(extraData));
+
         try {
-            const data = new FormData();
-            data.append("orgCode", code);
-            data.append("email", formData.email);
-            data.append("firstName", formData.firstName);
-            data.append("lastName", formData.lastName);
-            // Primary Role for backward compatibility
-            data.append("roles", JSON.stringify(formData.roles));
-
-            data.append("whyJoin", formData.whyFellowship);
-            data.append("ideas", formData.innovativeIdeas);
-            if (resumeFile) data.append("resumeFile", resumeFile);
-            data.append("data", JSON.stringify({ resumeLink: formData.resume }));
-
             await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/application/apply`, data, {
-                headers: { 'Content-Type': 'multipart/form-data' }
+                headers: { "Content-Type": "multipart/form-data" }
             });
-            toast.success("Application Received!");
-            router.push("/portal");
+
+            setShowConfetti(true);
+            toast.success("Transmission Secure: Application Submitted");
+
+            setTimeout(() => router.push('/portal'), 2500);
+
         } catch (error) {
-            toast.error(error.response?.data?.message || "Submission failed");
+            console.error("Submission error:", error);
+            const msg = error.response?.data?.message || error.response?.data?.msg || "Transmission Error: Payload Rejected";
+
+            if (error.response?.data?.errors) {
+                const combined = error.response.data.errors.map(err => err.msg).join(", ");
+                toast.error(`Validation Failed: ${combined}`);
+            } else {
+                toast.error(msg);
+            }
         } finally {
             setSubmitLoading(false);
         }
     };
+
+    // ... (keep loading return)
 
     if (loading) return (
         <div className="min-h-screen bg-[#050505] flex flex-col">
@@ -142,7 +231,71 @@ export default function ApplicationForm() {
         </div>
     );
 
-    if (!org) return (
+    // Expired UI
+    if (org && isExpired) return (
+        <div className="min-h-screen bg-[#050505] text-white flex flex-col font-sans">
+            <Navbar />
+            <main className="flex-1 flex items-center justify-center px-2 sm:px-6 py-8 sm:py-16">
+                <div className="w-full max-w-3xl space-y-8">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-white/[0.02] border border-white/5 rounded-[2rem] sm:rounded-[3rem] p-4 sm:p-10 md:p-16 shadow-2xl relative overflow-hidden"
+                    >
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-red-600/10 blur-[100px] rounded-full" />
+                        <header className="mb-8 border-b border-white/5 pb-8 relative z-10">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-red-500 mb-4">
+                                <Clock className="w-3 h-3" /> Deadline Exceeded
+                            </div>
+                            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight italic mb-2 text-white">Application Window Closed</h1>
+                            <p className="text-gray-400 text-lg">The application period for <span className="text-white font-bold">{org.name}</span> has ended.</p>
+                        </header>
+
+                        <div className="relative z-10 space-y-6">
+                            <div className="p-6 bg-white/5 border border-white/10 rounded-2xl">
+                                <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                                    <ShieldCheck className="w-5 h-5 text-cyan-500" /> Already Applied?
+                                </h3>
+                                <p className="text-gray-400 text-sm mb-4">Check your status by logging in with your email.</p>
+
+                                <div className="flex gap-2 flex-wrap max-w-md">
+                                    <Input
+                                        type="email"
+                                        disabled={statusStep !== 'start'}
+                                        placeholder="institutional-email@domain.com"
+                                        value={statusEmail}
+                                        onChange={e => setStatusEmail(e.target.value)}
+                                        className="bg-black/40 border-white/10 h-12 rounded-xl"
+                                    />
+                                    {statusStep === 'start' ? (
+                                        <Button onClick={handleStatusSendOtp} disabled={statusLoading} className="h-12 bg-cyan-600 hover:bg-cyan-500 rounded-xl px-6 font-bold">
+                                            {statusLoading ? "..." : "Check Status"}
+                                        </Button>
+                                    ) : (
+                                        <div className="flex gap-2 w-full">
+                                            <Input
+                                                placeholder="OTP"
+                                                value={statusOtp}
+                                                onChange={e => setStatusOtp(e.target.value)}
+                                                className="bg-black/40 border-white/10 h-12 rounded-xl text-center tracking-widest w-24"
+                                            />
+                                            <Button onClick={handleStatusLogin} disabled={statusLoading} className="h-12 bg-green-600 hover:bg-green-500 rounded-xl px-6 font-bold flex-1">
+                                                {statusLoading ? "Accessing..." : "Verify & Login"}
+                                            </Button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                </div>
+            </main>
+            <Footer />
+        </div>
+    );
+
+    if (errorMsg || !org) return (
+        // ... existing error UI
         <div className="min-h-screen bg-[#050505] text-white flex flex-col font-sans">
             <Navbar />
             <main className="flex-1 flex items-center justify-center px-2 sm:px-6 py-8 sm:py-16">
@@ -155,12 +308,12 @@ export default function ApplicationForm() {
                         <div className="absolute top-0 right-0 w-64 h-64 bg-red-600/10 blur-[100px] rounded-full" />
                         <header className="mb-8 sm:mb-12 border-b border-white/5 pb-6 sm:pb-8 relative z-10">
                             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-red-400 mb-4">
-                                <ShieldCheck className="w-3 h-3 text-red-400" /> ORG CODE AUTHORIZATION FAILURE
+                                <Lock className="w-3 h-3 text-red-400" /> INVALID ACCESS CODE
                             </div>
                             <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight italic mb-2 text-red-500 drop-shadow">ACCESS DENIED</h1>
                         </header>
                         <div className="text-center space-y-6 relative z-10">
-                            <p className="text-gray-400 text-lg font-medium">{errorMsg || `The organization code ${code} was not found or has expired.`}</p>
+                            <p className="text-gray-400 text-lg font-medium">{errorMsg || `The organization code ${code} was not found.`}</p>
                             <Button onClick={() => router.push("/apply")} className="bg-white text-black hover:bg-gray-200 rounded-xl px-8 h-12 font-bold uppercase tracking-widest text-xs shadow-lg transition-all">Try Another Code</Button>
                         </div>
                     </motion.div>
@@ -171,7 +324,7 @@ export default function ApplicationForm() {
     );
 
     return (
-
+        // ... existing main return
         <div className="min-h-screen bg-[#050505] text-white flex flex-col font-sans">
             <Navbar />
             <main className="flex-1 flex items-center justify-center px-2 sm:px-6 py-8 sm:py-16">
@@ -261,6 +414,7 @@ export default function ApplicationForm() {
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                     {(org.formVars?.roles || []).map((role) => {
+                                        // Handle both string and object roles
                                         const roleName = typeof role === 'object' ? role.name : role;
                                         const isSelected = formData.roles.includes(roleName);
                                         return (
@@ -302,7 +456,7 @@ export default function ApplicationForm() {
                                         <input
                                             type="file"
                                             accept=".pdf"
-                                            onChange={e => setResumeFile(e.target.files[0])}
+                                            onChange={handleFileChange}
                                             className="absolute inset-0 opacity-0 cursor-pointer z-10"
                                         />
                                         <div className="h-20 border-2 border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center transition-colors group-hover:border-cyan-500/30 group-hover:bg-cyan-500/5">
@@ -338,7 +492,7 @@ export default function ApplicationForm() {
                                     <Label className="text-gray-400 font-bold mb-2 block text-base sm:text-lg">Do you have any innovative ideas or projects you would like to pursue?</Label>
                                     <textarea
                                         className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white min-h-[120px] focus:border-cyan-500/50 focus:ring-0 resize-none text-sm sm:text-base"
-                                        placeholder="Share any innovative ideas or projects you would like to pursue as part of the network."
+                                        placeholder="Share any innovative ideas or projects you would like to pursue as part of the Fellowship."
                                         value={formData.innovativeIdeas || ''}
                                         onChange={e => setFormData({ ...formData, innovativeIdeas: e.target.value })}
                                     />
@@ -353,7 +507,7 @@ export default function ApplicationForm() {
                             {/* Consent Checkbox */}
                             <div className="flex flex-col items-start gap-2 mb-3">
                                 <span className="text-white text-sm sm:text-base mb-1">
-                                    <span className="font-semibold">By submitting this form, you agree to the use of your data for selection purposes and potential future opportunities within the DeepCytes.</span>
+                                    <span className="font-semibold">By submitting this form, you agree to the use of your data for selection purposes and potential future opportunities within the DeepCytes Fellowship.</span>
                                 </span>
                                 <label className="flex items-center gap-2 cursor-pointer select-none text-sm sm:text-base">
                                     <input
@@ -406,6 +560,5 @@ export default function ApplicationForm() {
             </main>
             <Footer />
         </div>
-
     );
 }

@@ -54,11 +54,34 @@ function AdminDashboardContent() {
     const [orgData, setOrgData] = useState({ name: '', code: '', emailDomainWhitelist: [], endDate: 0, formVar1: [], isActive: true });
     const [tenureEndDate, setTenureEndDate] = useState("");
     const [availableRoles, setAvailableRoles] = useState([]);
+    const [availableProjects, setAvailableProjects] = useState([]);
     const [newRole, setNewRole] = useState("");
+    const [newProject, setNewProject] = useState("");
 
     // Promotion State
     const [promotionData, setPromotionData] = useState({ newRole: "", newStatus: "ACTIVE", newCohort: "", completionStatus: "PROMOTED" });
     const [showPromoteModal, setShowPromoteModal] = useState(false);
+
+    // Interview Schedule State
+    const [showScheduleModal, setShowScheduleModal] = useState(false);
+    const [scheduleData, setScheduleData] = useState({ scheduledAt: "", meetLink: "" });
+
+    // Termination State
+    const [showTerminateModal, setShowTerminateModal] = useState(false);
+    const [terminationData, setTerminationData] = useState({ reason: "End of Tenure", endDate: "" });
+
+    // Manual Fellow State
+    const [showManualModal, setShowManualModal] = useState(false);
+    const [manualFellowData, setManualFellowData] = useState({
+        email: '',
+        firstName: '',
+        lastName: '',
+        role: '',
+        project: '',
+        orgCode: '',
+        cohort: 'C1',
+        startDate: new Date().toISOString().split('T')[0]
+    });
 
     const router = useRouter();
 
@@ -69,20 +92,93 @@ function AdminDashboardContent() {
             if (!token) { router.push("/admin"); return; }
             const config = { headers: { Authorization: `Bearer ${token}` } };
             const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
-            const [appsRes, fellowsRes, orgsRes, rolesRes] = await Promise.all([
+            const [appsRes, fellowsRes, orgsRes, rolesRes, projectsRes] = await Promise.all([
                 axios.get(`${serverUrl}/application/admin/list`, config),
                 axios.get(`${serverUrl}/admin/fellows`, config),
                 axios.get(`${serverUrl}/application/admin/orgs`, config),
-                axios.get(`${serverUrl}/application/admin/roles`, config)
+                axios.get(`${serverUrl}/application/admin/roles`, config),
+                axios.get(`${serverUrl}/application/admin/projects`, config)
             ]);
             setApps(appsRes.data);
             setFellows(fellowsRes.data);
             setOrgs(orgsRes.data);
             setAvailableRoles(rolesRes.data);
+            setAvailableProjects(projectsRes.data);
         } catch (error) {
             if (error.response?.status === 401) { router.push("/admin"); }
             toast.error("Failed to load dashboard data");
         } finally { setLoading(false); }
+    };
+
+    const handleTerminateFellow = async () => {
+        setActionLoading(true);
+        try {
+            const token = localStorage.getItem("accessToken");
+            const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
+            await axios.post(`${serverUrl}/admin/fellows/${selectedItem._id}/terminate`,
+                terminationData,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            toast.success("Fellow Terminated and Email Sent");
+            setShowTerminateModal(false);
+            setSelectedItem(prev => ({ ...prev, status: 'TERMINATED' })); // Optimistic update
+            fetchData();
+        } catch (error) {
+            toast.error("Failed to terminate fellow");
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handleAddManualFellow = async () => {
+        setActionLoading(true);
+        try {
+            const token = localStorage.getItem("accessToken");
+            const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
+            await axios.post(`${serverUrl}/admin/fellows/add`, manualFellowData, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            toast.success("Fellow Added Successfully");
+            setShowManualModal(false);
+            fetchData();
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to add fellow");
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handleAddProject = async () => {
+        if (!newProject.trim()) return;
+        try {
+            const token = localStorage.getItem("accessToken");
+            const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
+            await axios.post(`${serverUrl}/application/admin/projects`,
+                { name: newProject },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            toast.success(`Project "${newProject}" added!`);
+            setNewProject("");
+            fetchData();
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to add project");
+        }
+    };
+
+    const handleQuickAddOrg = async (name, code) => {
+        if (!name || !code) return toast.error("Name and Code required");
+        try {
+            const token = localStorage.getItem("accessToken");
+            const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
+            await axios.post(`${serverUrl}/application/admin/orgs`,
+                { name, code, isActive: false, emailDomainWhitelist: [], formVar1: [] },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            toast.success(`Node "${code}" initialized (Offline)`);
+            fetchData();
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to add node");
+        }
     };
 
     const handleAddRole = async () => {
@@ -136,6 +232,51 @@ function AdminDashboardContent() {
             setSelectedItem(null);
             fetchData();
         } catch (error) { toast.error("Promotion failed"); } finally { setActionLoading(false); }
+    };
+
+
+
+    const handleScheduleInterview = async () => {
+        if (!scheduleData.scheduledAt || !scheduleData.meetLink) {
+            toast.error("Please provide both time and link");
+            return;
+        }
+        setActionLoading(true);
+        try {
+            const token = localStorage.getItem("accessToken");
+            await axios.put(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/application/admin/schedule-interview`, {
+                applicantId: selectedItem._id,
+                ...scheduleData
+            }, { headers: { Authorization: `Bearer ${token}` } });
+            toast.success("Interview Scheduled & Email Sent!");
+            setShowScheduleModal(false);
+            setSelectedItem(null);
+            fetchData();
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to schedule interview");
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handleSkipInterview = async () => {
+        if (!window.confirm("Are you sure you want to skip the interview step?")) return;
+        setActionLoading(true);
+        try {
+            const token = localStorage.getItem("accessToken");
+            await axios.put(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/application/admin/skip-interview`, {
+                applicantId: selectedItem._id
+            }, { headers: { Authorization: `Bearer ${token}` } });
+            toast.success("Interview Step Skipped");
+            fetchData();
+            // Upate local state to reflect change so Accept button becomes available immediately
+            setSelectedItem(prev => ({ ...prev, status: 'INTERVIEW_SKIPPED', interviewDetails: { ...prev.interviewDetails, status: 'SKIPPED' } }));
+        } catch (error) {
+            toast.error("Failed to skip interview");
+        } finally {
+            setActionLoading(false);
+        }
     };
 
     const handleAdminDownload = async (fellowId, tenureIndex, docType, docName) => {
@@ -197,6 +338,7 @@ function AdminDashboardContent() {
             a.lastName.toLowerCase().includes(searchTerm.toLowerCase());
 
         if (activeSubTab === 'PENDING') return matchesSearch && a.status === 'PENDING';
+        if (activeSubTab === 'INTERVIEW') return matchesSearch && (a.status === 'INTERVIEW_SCHEDULED' || a.status === 'INTERVIEW_SKIPPED');
         if (activeSubTab === 'ARCHIVED') return matchesSearch && (a.status === 'ACCEPTED' || a.status === 'REJECTED');
         return matchesSearch; // ALL
     });
@@ -258,6 +400,7 @@ function AdminDashboardContent() {
 
     const renderOrgInspector = () => {
         const orgApps = apps.filter(a => a.orgCode === selectedItem.code && a.status === 'PENDING');
+        const orgInterviewees = apps.filter(a => a.orgCode === selectedItem.code && (a.status === 'INTERVIEW_SCHEDULED' || a.status === 'INTERVIEW_SKIPPED'));
         const orgFellows = fellows.filter(f => f.tenures?.some(t => t.orgCode === selectedItem.code)); // Robust filtering
 
         return (
@@ -309,6 +452,36 @@ function AdminDashboardContent() {
                                     ))}
                                 </div>
                             ) : <div className="text-xs text-gray-600 font-mono italic">NO ACTIVE UNITS</div>}
+                        </div>
+
+                        {/* Org Interviewees */}
+                        <div>
+                            <h4 className="text-xs font-bold text-orange-400 uppercase tracking-widest mb-2 border-b border-orange-500/20 pb-1">interview_pipeline ({orgInterviewees.length})</h4>
+                            {orgInterviewees.length > 0 ? (
+                                <div className="grid gap-2">
+                                    {orgInterviewees.map(a => (
+                                        <div
+                                            key={a._id}
+                                            onClick={() => { setActiveTab('applications'); setActiveSubTab('INTERVIEW'); setSelectedItem(a); }}
+                                            className="p-3 bg-white/5 border border-white/10 flex justify-between items-center group cursor-pointer hover:border-orange-500/50 transition-colors"
+                                        >
+                                            <div className="flex-1">
+                                                <div className="text-sm font-bold text-white group-hover:text-orange-400">{a.firstName} {a.lastName}</div>
+                                                <div className="text-[10px] text-gray-500 font-mono">{a.email}</div>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <div className="px-2 py-0.5 border border-orange-500/30 text-[9px] text-orange-400 uppercase">{a.status}</div>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); window.open(`/admin/applications?type=apps&email=${a.email}`, '_blank'); }}
+                                                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10"
+                                                >
+                                                    <ExternalLink className="w-3 h-3 text-orange-400" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : <div className="text-xs text-gray-600 font-mono italic">NO ACTIVE INTERVIEWS</div>}
                         </div>
 
                         {/* Org Applicants */}
@@ -431,13 +604,24 @@ function AdminDashboardContent() {
                                     <Plus className="w-5 h-5" />
                                 </button>
                             )}
+                            {activeTab === 'fellows' && (
+                                <button
+                                    onClick={() => {
+                                        setManualFellowData({ email: '', firstName: '', lastName: '', role: '', orgCode: '', cohort: 'C1', startDate: new Date().toISOString().split('T')[0] });
+                                        setShowManualModal(true);
+                                    }}
+                                    className="h-10 px-4 border border-purple-500/50 text-purple-500 hover:bg-purple-500 hover:text-white flex items-center gap-2 transition-all text-[10px] font-bold uppercase tracking-widest whitespace-nowrap"
+                                >
+                                    <Plus className="w-4 h-4" /> MANUAL_ONBOARD
+                                </button>
+                            )}
                         </div>
                     </header>
 
                     {/* Sub-tabs for Applications */}
                     {activeTab === 'applications' && (
                         <div className="flex bg-black border-b border-white/10 px-2 md:px-8 h-10 md:h-12 items-center gap-4 md:gap-8 relative z-20 overflow-x-auto">
-                            {['PENDING', 'ARCHIVED', 'ALL'].map(st => (
+                            {['PENDING', 'INTERVIEW', 'ARCHIVED', 'ALL'].map(st => (
                                 <button
                                     key={st}
                                     onClick={() => setActiveSubTab(st)}
@@ -677,6 +861,55 @@ function AdminDashboardContent() {
 
                                                     {selectedItem.status === 'PENDING' && (
                                                         <div className="space-y-3">
+                                                            <label className="text-xs font-mono text-gray-500 uppercase tracking-wider">Interview Protocol</label>
+
+                                                            {/* Show Schedule Button or Current Status */}
+                                                            {selectedItem.status === 'PENDING' && (!selectedItem.interviewDetails || selectedItem.interviewDetails.status === 'PENDING') ? (
+                                                                <div className="grid grid-cols-2 gap-4">
+                                                                    <button
+                                                                        onClick={() => setShowScheduleModal(true)}
+                                                                        className="h-10 border border-cyan-500/50 text-cyan-400 bg-cyan-900/10 hover:bg-cyan-500/20 text-xs font-bold uppercase tracking-wider"
+                                                                    >
+                                                                        Schedule Interview
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={handleSkipInterview}
+                                                                        className="h-10 border border-gray-600/50 text-gray-500 hover:text-white hover:border-white/50 text-xs font-bold uppercase tracking-wider"
+                                                                    >
+                                                                        Skip Protocol
+                                                                    </button>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="p-3 bg-cyan-900/10 border border-cyan-500/30 text-xs font-mono text-cyan-400">
+                                                                    STATUS: {selectedItem.interviewDetails?.status || selectedItem.status}
+                                                                </div>
+                                                            )}
+
+                                                            {/* Schedule Modal */}
+                                                            {showScheduleModal && (
+                                                                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="border border-cyan-500/30 bg-black p-4 space-y-4">
+                                                                    <h5 className="text-xs font-bold text-cyan-500 uppercase">Input_Coordinates</h5>
+                                                                    <Input
+                                                                        type="datetime-local"
+                                                                        value={scheduleData.scheduledAt}
+                                                                        onChange={e => setScheduleData({ ...scheduleData, scheduledAt: e.target.value })}
+                                                                        className="bg-black border-white/20 h-10 text-xs font-mono text-white"
+                                                                    />
+                                                                    <Input
+                                                                        placeholder="GMEET_UPLINK_URL"
+                                                                        value={scheduleData.meetLink}
+                                                                        onChange={e => setScheduleData({ ...scheduleData, meetLink: e.target.value })}
+                                                                        className="bg-black border-white/20 h-10 text-xs font-mono text-white"
+                                                                    />
+                                                                    <div className="flex gap-2">
+                                                                        <button onClick={() => setShowScheduleModal(false)} className="flex-1 py-2 border border-red-500/50 text-red-500 hover:bg-red-500/10 text-[10px] font-bold uppercase">ABORT</button>
+                                                                        <button onClick={handleScheduleInterview} className="flex-1 py-2 bg-cyan-600 text-black font-bold text-[10px] uppercase hover:bg-cyan-500">CONFIRM</button>
+                                                                    </div>
+                                                                </motion.div>
+                                                            )}
+
+                                                            <div className="h-px bg-white/10 my-4" />
+
                                                             <label className="text-xs font-mono text-gray-500 uppercase tracking-wider">Tenure Termination Code</label>
                                                             <Input
                                                                 placeholder="DDMMYYYY"
@@ -691,7 +924,11 @@ function AdminDashboardContent() {
                                                         <button onClick={() => handleUpdateAppStatus('REJECTED')} className="h-14 border border-red-500/20 text-red-500 hover:bg-red-500/10 hover:border-red-500 transition-all text-sm font-bold uppercase tracking-[0.2em]">
                                                             REJECT
                                                         </button>
-                                                        <button onClick={() => handleUpdateAppStatus('ACCEPTED')} className="h-14 bg-cyan-700/20 border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500 hover:text-black transition-all text-sm font-bold uppercase tracking-[0.2em]">
+                                                        <button
+                                                            onClick={() => handleUpdateAppStatus('ACCEPTED')}
+                                                            disabled={selectedItem.status === 'PENDING' && (!selectedItem.interviewDetails?.status || selectedItem.interviewDetails?.status === 'PENDING') && selectedItem.status !== 'INTERVIEW_SKIPPED'}
+                                                            className={`h-14 border transition-all text-sm font-bold uppercase tracking-[0.2em] ${selectedItem.status === 'PENDING' && (!selectedItem.interviewDetails?.status || selectedItem.interviewDetails?.status === 'PENDING') && selectedItem.status !== 'INTERVIEW_SKIPPED' ? 'border-gray-800 text-gray-700 cursor-not-allowed bg-transparent' : 'bg-cyan-700/20 border-cyan-500/50 text-cyan-400 hover:bg-cyan-500 hover:text-black'}`}
+                                                        >
                                                             ACCEPT
                                                         </button>
                                                     </div>
@@ -720,7 +957,32 @@ function AdminDashboardContent() {
                                                         <button onClick={() => setShowPromoteModal(!showPromoteModal)} className="text-purple-400 hover:text-white transition-colors flex items-center gap-2 text-xs">
                                                             <ArrowUpCircle className="w-4 h-4" /> PROMOTION_PROTOCOL
                                                         </button>
+                                                        <button onClick={() => setShowTerminateModal(!showTerminateModal)} className="text-red-500 hover:text-red-400 transition-colors flex items-center gap-2 text-xs ml-4">
+                                                            <XCircle className="w-4 h-4" /> TERMINATION_PROTOCOL
+                                                        </button>
                                                     </h4>
+
+                                                    {showTerminateModal && (
+                                                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="mb-8 border border-red-500/30 bg-red-900/10 p-6 space-y-4 overflow-hidden">
+                                                            <h5 className="text-xs font-bold text-red-500 uppercase">Confirm_Termination</h5>
+                                                            <Input
+                                                                placeholder="Reason for Termination"
+                                                                value={terminationData.reason}
+                                                                onChange={e => setTerminationData({ ...terminationData, reason: e.target.value })}
+                                                                className="bg-black border-red-500/20 h-10 text-xs font-mono"
+                                                            />
+                                                            <Input
+                                                                type="date"
+                                                                placeholder="End Date"
+                                                                value={terminationData.endDate}
+                                                                onChange={e => setTerminationData({ ...terminationData, endDate: e.target.value })}
+                                                                className="bg-black border-red-500/20 h-10 text-xs font-mono uppercase"
+                                                            />
+                                                            <button onClick={handleTerminateFellow} className="w-full py-3 bg-red-600 text-white text-xs font-bold uppercase tracking-[0.2em] hover:bg-red-500 border border-red-400">
+                                                                EXECUTE TERMINATION
+                                                            </button>
+                                                        </motion.div>
+                                                    )}
 
                                                     {showPromoteModal && (
                                                         <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="mb-8 border border-purple-500/30 bg-purple-900/10 p-6 space-y-4 overflow-hidden">
@@ -905,6 +1167,142 @@ function AdminDashboardContent() {
                                         className="w-full h-12 bg-green-900/20 border border-green-500/50 text-green-500 hover:bg-green-500 hover:text-black font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 text-sm"
                                     >
                                         {actionLoading ? 'UPLOADING...' : (orgData.id ? 'UPDATE_NODE' : 'INITIALIZE_NODE')}
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
+
+                {/* Manual Onboarding Modal */}
+                <AnimatePresence>
+                    {showManualModal && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                className="w-full max-w-[600px] bg-black border border-purple-500/30 shadow-[0_0_50px_rgba(168,85,247,0.1)] rounded-2xl overflow-hidden"
+                            >
+                                <div className="h-14 flex items-center justify-between px-6 border-b border-white/10 bg-purple-500/5">
+                                    <h3 className="text-sm font-bold text-purple-400 uppercase tracking-widest flex items-center gap-2">
+                                        <Plus className="w-4 h-4" /> MANUAL_TENURE_PROVISIONING
+                                    </h3>
+                                    <button onClick={() => setShowManualModal(false)} className="text-gray-500 hover:text-white transition-colors">
+                                        <XCircle className="w-5 h-5" />
+                                    </button>
+                                </div>
+
+                                <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
+                                    <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+                                        <div className="space-y-1.5 col-span-2">
+                                            <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Personnel_Email</label>
+                                            <Input value={manualFellowData.email} onChange={e => setManualFellowData({ ...manualFellowData, email: e.target.value.toLowerCase() })} className="bg-black border-white/10 h-10 text-xs font-mono text-white focus:border-purple-500" placeholder="IDENTIFIER@DEEPCYTES.IO" />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">First_Name</label>
+                                            <Input value={manualFellowData.firstName} onChange={e => setManualFellowData({ ...manualFellowData, firstName: e.target.value })} className="bg-black border-white/10 h-10 text-xs font-mono text-white focus:border-purple-500" placeholder="NAME_ENTRY" />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Last_Name</label>
+                                            <Input value={manualFellowData.lastName} onChange={e => setManualFellowData({ ...manualFellowData, lastName: e.target.value })} className="bg-black border-white/10 h-10 text-xs font-mono text-white focus:border-purple-500" placeholder="SURNAME_ENTRY" />
+                                        </div>
+
+                                        <div className="space-y-1.5 pt-2 border-t border-white/5 col-span-2">
+                                            <div className="flex justify-between items-center mb-1">
+                                                <label className="text-[10px] uppercase font-bold text-purple-500 tracking-widest">Designated_Role</label>
+                                                <div className="flex gap-2">
+                                                    <input
+                                                        type="text"
+                                                        placeholder="NEW_ROLE..."
+                                                        className="bg-black border-b border-white/20 text-[10px] w-24 outline-none focus:border-purple-500 px-1 text-white"
+                                                        value={newRole}
+                                                        onChange={e => setNewRole(e.target.value)}
+                                                        onKeyPress={e => e.key === 'Enter' && handleAddRole()}
+                                                    />
+                                                    <button onClick={handleAddRole} className="text-[10px] text-purple-400 hover:text-white uppercase font-bold">Add</button>
+                                                </div>
+                                            </div>
+                                            <select
+                                                value={manualFellowData.role}
+                                                onChange={e => setManualFellowData({ ...manualFellowData, role: e.target.value })}
+                                                className="w-full bg-black border border-white/10 h-10 text-xs font-mono text-white focus:border-purple-500 outline-none px-3"
+                                            >
+                                                <option value="">SELECT_ROLE</option>
+                                                {availableRoles.map(r => <option key={r} value={r}>{r}</option>)}
+                                            </select>
+                                        </div>
+
+                                        <div className="space-y-1.5 pt-2 border-t border-white/5 col-span-2">
+                                            <div className="flex justify-between items-center mb-1">
+                                                <label className="text-[10px] uppercase font-bold text-cyan-500 tracking-widest">Primary_Project</label>
+                                                <div className="flex gap-2">
+                                                    <input
+                                                        type="text"
+                                                        placeholder="NEW_PROJECT..."
+                                                        className="bg-black border-b border-white/20 text-[10px] w-28 outline-none focus:border-cyan-500 px-1 text-white"
+                                                        value={newProject}
+                                                        onChange={e => setNewProject(e.target.value)}
+                                                        onKeyPress={e => e.key === 'Enter' && handleAddProject()}
+                                                    />
+                                                    <button onClick={handleAddProject} className="text-[10px] text-cyan-400 hover:text-white uppercase font-bold">Add</button>
+                                                </div>
+                                            </div>
+                                            <select
+                                                value={manualFellowData.project}
+                                                onChange={e => setManualFellowData({ ...manualFellowData, project: e.target.value })}
+                                                className="w-full bg-black border border-white/10 h-10 text-xs font-mono text-white focus:border-cyan-500 outline-none px-3"
+                                            >
+                                                <option value="">SELECT_PROJECT</option>
+                                                {availableProjects.map(p => <option key={p.name} value={p.name}>{p.name}</option>)}
+                                            </select>
+                                        </div>
+
+                                        <div className="space-y-1.5 pt-2 border-t border-white/5 col-span-2">
+                                            <div className="flex justify-between items-center mb-1">
+                                                <label className="text-[10px] uppercase font-bold text-green-500 tracking-widest">Assigned_Node_Code</label>
+                                                <button
+                                                    onClick={() => {
+                                                        const name = prompt("Enter Node Name:");
+                                                        const code = prompt("Enter Node Code:");
+                                                        if (name && code) handleQuickAddOrg(name, code);
+                                                    }}
+                                                    className="text-[10px] text-green-400 hover:text-white uppercase font-bold"
+                                                >
+                                                    + Quick_Initialize
+                                                </button>
+                                            </div>
+                                            <select
+                                                value={manualFellowData.orgCode}
+                                                onChange={e => setManualFellowData({ ...manualFellowData, orgCode: e.target.value })}
+                                                className="w-full bg-black border border-white/10 h-10 text-xs font-mono text-white focus:border-green-500 outline-none px-3 text-green-400"
+                                            >
+                                                <option value="">NO_NODE_ASSIGNED (OPTIONAL)</option>
+                                                {orgs.map(o => <option key={o.code} value={o.code}>{o.code} - {o.name}</option>)}
+                                            </select>
+                                        </div>
+
+                                        <div className="space-y-1.5 pt-2 border-t border-white/5">
+                                            <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Tenure_Sequence</label>
+                                            <Input
+                                                value={manualFellowData.cohort}
+                                                onChange={e => setManualFellowData({ ...manualFellowData, cohort: e.target.value })}
+                                                className="bg-black border-white/10 h-10 text-xs font-mono text-white focus:border-purple-500"
+                                                placeholder="B1, B2 (OR #)"
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5 pt-2 border-t border-white/5">
+                                            <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Onboarding_Date</label>
+                                            <Input type="date" value={manualFellowData.startDate} onChange={e => setManualFellowData({ ...manualFellowData, startDate: e.target.value })} className="bg-black border-white/10 h-10 text-xs font-mono text-white focus:border-purple-500" />
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={handleAddManualFellow}
+                                        disabled={actionLoading}
+                                        className="w-full h-12 bg-purple-900/20 border border-purple-500/50 text-purple-500 hover:bg-purple-500 hover:text-black font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 text-xs mt-4"
+                                    >
+                                        {actionLoading ? 'COMMITTING...' : 'INITIALIZE_TENURE'}
                                     </button>
                                 </div>
                             </motion.div>

@@ -27,16 +27,24 @@ export default function ProfilePage() {
     }, [user]);
 
     const handleProfileSubmit = async () => {
+        if (!formData.linkedin || !formData.linkedin.includes("linkedin.com")) {
+            return toast.warning("Personnel Validation Failed: LinkedIN profile is mandatory for verification.");
+        }
+        if (!formData.firstName || !formData.lastName) {
+            return toast.warning("Personnel Validation Failed: Full legal name is required.");
+        }
+
         setSaving(true);
         try {
             const token = localStorage.getItem("token");
             await axios.put(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/portal/complete-profile`, formData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            toast.success("Profile Updated! Proceed to NDA.");
-            fetchUser();
+            toast.success("Profile Authenticated. Moving to Legal Framework.");
+            await fetchUser();
+            router.push('/portal/onboarding/nda');
         } catch (error) {
-            const msg = error.response?.data?.message || "Failed to update profile";
+            const msg = error.response?.data?.message || "Uplink Failed";
             toast.error(msg);
         } finally {
             setSaving(false);
@@ -53,13 +61,13 @@ export default function ProfilePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
                     <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em] flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 bg-cyan-500" /> Given_Name
+                        <div className="w-1.5 h-1.5 bg-cyan-500" /> Given_Name <span className="text-red-500">*</span>
                     </label>
                     <Input value={formData.firstName} onChange={e => setFormData({ ...formData, firstName: e.target.value })} className="bg-white/5 border-white/10 h-14 rounded-none font-mono focus:border-cyan-500 transition-all text-cyan-100" />
                 </div>
                 <div className="space-y-3">
                     <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em] flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 bg-cyan-500" /> Surname
+                        <div className="w-1.5 h-1.5 bg-cyan-500" /> Surname <span className="text-red-500">*</span>
                     </label>
                     <Input value={formData.lastName} onChange={e => setFormData({ ...formData, lastName: e.target.value })} className="bg-white/5 border-white/10 h-14 rounded-none font-mono focus:border-cyan-500 transition-all text-cyan-100" />
                 </div>
@@ -67,9 +75,9 @@ export default function ProfilePage() {
 
             <div className="space-y-3">
                 <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em] flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 bg-cyan-500" /> LinkedIn_Profile_<span className="text-red-500/50">[MANDATORY]</span>
+                    <div className="w-1.5 h-1.5 bg-cyan-500" /> LinkedIn_Profile_<span className="text-red-500 font-black tracking-widest">[CRITICAL]</span>
                 </label>
-                <Input value={formData.linkedin} onChange={e => setFormData({ ...formData, linkedin: e.target.value })} placeholder="https://linkedin.com/in/..." className="bg-white/5 border-white/10 h-14 rounded-none font-mono focus:border-cyan-500 transition-all text-cyan-100" />
+                <Input value={formData.linkedin} onChange={e => setFormData({ ...formData, linkedin: e.target.value })} placeholder="https://linkedin.com/in/yourprofile" className="bg-white/5 border-white/10 h-14 rounded-none font-mono focus:border-cyan-500 transition-all text-cyan-100 placeholder:text-gray-700" />
             </div>
 
             <div className="space-y-3">
@@ -85,14 +93,8 @@ export default function ProfilePage() {
                     className="w-full h-16 bg-cyan-600 hover:bg-cyan-500 rounded-none font-black italic tracking-[0.2em] text-white shadow-[0_0_20px_rgba(6,182,212,0.2)] group transition-all"
                     disabled={saving}
                 >
-                    {saving ? "SYNCING_DATA..." : "EXECUTE_SAVE_&_CONTINUE"}
+                    {saving ? "UPLINKING_DATA..." : "EXECUTE_SAVE_&_CONTINUE"}
                 </Button>
-                <button
-                    onClick={() => router.push('/portal/onboarding/nda')}
-                    className="text-[9px] font-black uppercase text-gray-600 hover:text-cyan-500 self-center tracking-[0.3em] transition-colors mt-4"
-                >
-                    [BYPASS_TO_NDA]
-                </button>
             </div>
         </motion.div>
     );

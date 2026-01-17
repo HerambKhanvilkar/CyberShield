@@ -5,11 +5,24 @@ import { CheckCircle, Award, Download, ShieldCheck, ChevronRight } from "lucide-
 import { Button } from "@/components/ui/button";
 import { useOnboarding } from "../layout";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 
 export default function CompletionPage() {
     const { user } = useOnboarding();
     const router = useRouter();
     const isGraduated = user?.onboardingState === 'COMPLETION';
+
+    const handleActivate = async () => {
+        try {
+            const token = localStorage.getItem("accessToken");
+            await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/application/onboarding/activate`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            window.location.href = '/FellowshipProfile';
+        } catch (error) {
+            console.error(error);
+        }
+    };
 
     return (
         <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center text-center space-y-12 py-20">
@@ -55,6 +68,15 @@ export default function CompletionPage() {
                     <div className="px-8 py-3 bg-cyan-500/5 border border-cyan-500/20 text-[9px] font-black uppercase text-cyan-500/60 tracking-[0.4em] animate-pulse">
                         Awaiting_Final_Peer_Validation
                     </div>
+                )}
+
+                {isGraduated && (
+                    <Button
+                        onClick={handleActivate}
+                        className="h-16 px-12 bg-cyan-600 hover:bg-cyan-500 text-black font-black uppercase tracking-[0.2em] rounded-none shadow-[0_0_30px_rgba(6,182,212,0.3)] animate-pulse"
+                    >
+                        INITIATE_DASHBOARD_PROTOCOL
+                    </Button>
                 )}
 
                 <button

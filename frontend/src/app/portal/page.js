@@ -168,8 +168,11 @@ export default function ApplicationStatus() {
                                         </div>
                                     </div>
 
-                                    <Button onClick={handleActivate} className="w-full h-14 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 rounded-2xl font-bold shadow-xl shadow-green-900/20 text-lg group">
-                                        Create Fellowship Account
+                                    <Button
+                                        onClick={() => result.hasAccount ? router.push('/login?ref=hiring') : handleActivate()}
+                                        className="w-full h-14 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 rounded-2xl font-bold shadow-xl shadow-green-900/20 text-lg group"
+                                    >
+                                        {result.hasAccount ? 'Login to Fellowship Portal' : 'Create Fellowship Account'}
                                         <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                     </Button>
                                 </div>

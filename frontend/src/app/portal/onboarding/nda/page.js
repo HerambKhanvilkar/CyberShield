@@ -8,12 +8,45 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { toast } from "react-toastify";
 import { motion } from "framer-motion";
+import { Eye, Download, ShieldCheck } from "lucide-react";
 
 export default function NDAPage() {
     const { fetchUser } = useOnboarding();
     const router = useRouter();
     const [legalName, setLegalName] = useState("");
     const [ndaLoading, setNdaLoading] = useState(false);
+    const [previewLoading, setPreviewLoading] = useState(false);
+
+    const handleDownloadPreview = async () => {
+        setPreviewLoading(true);
+        try {
+            const token = localStorage.getItem("token");
+            const response = await axios.get(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/portal/preview-nda`, {
+                headers: { Authorization: `Bearer ${token}` },
+                responseType: 'blob'
+            });
+
+            if (response.data.type === 'application/json') {
+                const text = await response.data.text();
+                const errorJson = JSON.parse(text);
+                toast.error(`Preview Error: ${errorJson.message}`);
+                return;
+            }
+
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'NDA_UNSIGNED_PREVIEW.pdf');
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            toast.info("Unsigned Preview Generated.");
+        } catch (error) {
+            toast.error("Failed to generate preview.");
+        } finally {
+            setPreviewLoading(false);
+        }
+    };
 
     const handleSignNDA = async () => {
         if (!legalName || legalName !== legalName.toUpperCase()) {
@@ -25,10 +58,39 @@ export default function NDAPage() {
             await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/portal/sign-nda`, {
                 legalName
             }, { headers: { Authorization: `Bearer ${token}` } });
-            toast.success("NDA Signed!");
-            fetchUser();
+
+            toast.success("Legal Agreement Sealed. Activating Personnel ID.");
+
+            // Trigger automatic download of the signed copy
+            try {
+                const response = await axios.get(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/portal/download-nda`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                    responseType: 'blob'
+                });
+
+                if (response.data.type === 'application/json') {
+                    const text = await response.data.text();
+                    const errorJson = JSON.parse(text);
+                    toast.error(`Auto-Download Error: ${errorJson.message}`);
+                    return;
+                }
+
+                const url = window.URL.createObjectURL(new Blob([response.data]));
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', `Signed_Executed_NDA_${legalName.split(' ')[0]}.pdf`);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                toast.info("Executing local copy download...");
+            } catch (dlErr) {
+                console.error("Auto-download failed:", dlErr);
+            }
+
+            await fetchUser();
+            router.push('/portal/onboarding/offer');
         } catch (error) {
-            toast.error(error.response?.data?.message || "Failed to sign NDA");
+            toast.error(error.response?.data?.message || "Encryption Failed");
         } finally {
             setNdaLoading(false);
         }
@@ -41,14 +103,40 @@ export default function NDAPage() {
                 <p className="text-gray-500 text-[10px] uppercase tracking-widest mt-2 font-bold">Binding Non-Disclosure & Intellectual Property Agreement.</p>
             </div>
 
-            <div className="p-8 bg-black border border-white/10 max-h-72 overflow-y-auto text-xs text-gray-500 leading-relaxed font-mono custom-scrollbar">
-                <h3 className="text-lg font-black mb-6 text-center text-white bg-white/5 py-3 tracking-[0.2em] border-y border-white/10 uppercase">Security_Protocol_NDA</h3>
-                <p className="mb-4">This Non-Disclosure Agreement (the "Agreement") is entered into by and between DeepCytes R&D and the undersigned Participant...</p>
-                <div className="space-y-4 opacity-70">
-                    <p>1. <span className="text-white font-bold">CONFIDENTIALITY:</span> The Participant acknowledges that in the course of the tenure, they may have access to confidential and proprietary information, including but not limited to source code, research data, product roadmaps, and internal methodologies.</p>
-                    <p>2. <span className="text-white font-bold">IP_PROTECTION:</span> All intellectual property generated during the tenure remains the sole property of DeepCytes Fellowship.</p>
-                    <p>3. <span className="text-white font-bold">LEGAL_ACTION:</span> Unauthorized disclosure may result in legal action, intellectual property theft charges, and immediate termination of the fellowship engagement.</p>
+            <div className="relative group">
+                <div className="p-8 bg-black border border-white/10 max-h-60 overflow-y-auto text-xs text-gray-500 leading-relaxed font-mono custom-scrollbar opacity-50 group-hover:opacity-100 transition-opacity">
+                    <h3 className="text-lg font-black mb-6 text-center text-white bg-white/5 py-3 tracking-[0.2em] border-y border-white/10 uppercase">Security_Protocol_NDA</h3>
+                    <p className="mb-4">This Non-Disclosure Agreement (the "Agreement") is entered into by and between DeepCytes R&D and the undersigned Participant...</p>
+                    <div className="space-y-4">
+                        <p>1. <span className="text-white font-bold">CONFIDENTIALITY:</span> The Participant acknowledges that in the course of the tenure, they may have access to confidential and proprietary information, including but not limited to source code, research data, product roadmaps, and internal methodologies.</p>
+                        <p>2. <span className="text-white font-bold">IP_PROTECTION:</span> All intellectual property generated during the tenure remains the sole property of DeepCytes Fellowship.</p>
+                        <p>3. <span className="text-white font-bold">LEGAL_ACTION:</span> Unauthorized disclosure may result in legal action, intellectual property theft charges, and immediate termination of the fellowship engagement.</p>
+                    </div>
                 </div>
+
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                    <div className="bg-black/80 backdrop-blur-sm border border-purple-500/50 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-purple-400">
+                        Scroll to Review Summary
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex justify-center">
+                <button
+                    onClick={handleDownloadPreview}
+                    disabled={previewLoading}
+                    className="flex items-center gap-3 px-8 py-4 bg-purple-500/5 border border-purple-500/30 text-purple-400 hover:bg-purple-500 hover:text-white transition-all font-black uppercase text-[10px] tracking-[0.2em] group"
+                >
+                    {previewLoading ? (
+                        "GENERATING_ENCRYPTED_PREVIEW..."
+                    ) : (
+                        <>
+                            <Eye className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                            VIEW_FULL_AGREEMENT_PREVIEW_[PDF]
+                            <Download className="w-3 h-3 opacity-50" />
+                        </>
+                    )}
+                </button>
             </div>
 
             <div className="space-y-6 pt-6">
@@ -68,12 +156,6 @@ export default function NDAPage() {
                     >
                         {ndaLoading ? "GENERATING_PERSONNEL_ID..." : "EXECUTE_SIGN_&_ACTIVATE_PID"}
                     </Button>
-                    <button
-                        onClick={() => router.push('/portal/onboarding/offer')}
-                        className="text-[9px] font-black uppercase text-gray-700 hover:text-purple-400 self-center tracking-[0.3em] transition-colors mt-2"
-                    >
-                        [BYPASS_SIGNATURE]
-                    </button>
                 </div>
             </div>
         </motion.div>

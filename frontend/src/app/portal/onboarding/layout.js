@@ -136,10 +136,18 @@ export default function OnboardingLayout({ children }) {
                                     return (
                                         <div
                                             key={step.id}
-                                            onClick={() => router.push(`/portal/onboarding/${step.id}`)}
+                                            onClick={() => {
+                                                if (idx <= userInitialStep) {
+                                                    router.push(`/portal/onboarding/${step.id}`);
+                                                } else {
+                                                    toast.warning(`Access Restricted: Complete previous directive before accessing ${step.title}.`);
+                                                }
+                                            }}
                                             className={`p-5 border transition-all duration-300 relative group cursor-pointer ${isActive
                                                 ? 'bg-cyan-500/10 border-cyan-500 shadow-[0_0_20px_rgba(6,182,212,0.1)]'
-                                                : 'bg-black border-white/5 hover:border-white/20'
+                                                : isCompleted || idx === userInitialStep
+                                                    ? 'bg-black border-white/10 hover:border-cyan-500/50'
+                                                    : 'bg-black border-white/5 opacity-50 cursor-not-allowed'
                                                 }`}
                                         >
                                             {isActive && (
