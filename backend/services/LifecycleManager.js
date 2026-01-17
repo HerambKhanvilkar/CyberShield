@@ -53,6 +53,56 @@ class LifecycleManager {
         profile.onboardingState = 'OFFER';
         profile.status = 'ACTIVE';
 
+        // Generate and Store Documents immediately
+        try {
+            const DocumentService = require('./DocumentService');
+
+            // 1. Generate NDA
+            const ndaResult = await DocumentService.generateNDA(
+                { firstName: profile.firstName, lastName: profile.lastName, email: profile.email, globalPid: pid },
+                { type: 'TYPED', data: legalName }
+            );
+
+            // 2. Generate Offer Letter for the first tenure
+            const firstTenure = profile.tenures[0];
+            const offerResult = await DocumentService.generateOfferLetter(
+                { firstName: profile.firstName, lastName: profile.lastName, email: profile.email, globalPid: pid },
+                {
+                    role: firstTenure?.role || 'Fellow',
+                    startDate: firstTenure?.startDate || now.toLocaleDateString('en-GB'),
+                    endDate: firstTenure?.endDate || 'Ongoing'
+                }
+            );
+
+            // Update Tenure with Signed Documents
+            if (profile.tenures.length > 0) {
+                profile.tenures[0].signedDocuments = {
+                    nda: {
+                        signedAt: timestampStr,
+                        signedBy: legalName,
+                        documentHash: ndaResult.hash,
+                        signatureData: "[PROTECTED]",
+                        signatureType: 'TYPED',
+                        pdfPath: ndaResult.path
+                    },
+                    offerLetter: {
+                        signedAt: timestampStr,
+                        signedBy: "DeepCytes Ventures",
+                        documentHash: offerResult.hash,
+                        signatureData: "[OFFICIAL]",
+                        signatureType: 'TYPED',
+                        pdfPath: offerResult.path
+                    }
+                };
+            }
+
+            profile.nda.pdfHash = ndaResult.hash;
+            profile.markModified('tenures');
+        } catch (docErr) {
+            console.error("Critical Post-Activation Document Generation Failure:", docErr);
+            // We still proceed with activation, but log the error
+        }
+
         await profile.save();
         return profile;
     }

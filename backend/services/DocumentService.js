@@ -17,8 +17,12 @@ class DocumentService {
             fs.mkdirSync(uploadDir, { recursive: true });
         }
 
-        const outputPath = path.join(uploadDir, `NDA_${applicantData.lastName}_${Date.now()}.pdf`);
-        const password = `${applicantData.lastName}_${applicantData.globalPid}`;
+        const safeLastName = (applicantData.lastName || 'FELLOW').trim();
+        const safePid = (applicantData.globalPid || 'PENDING').trim();
+        const outputPath = path.join(uploadDir, `NDA_${safeLastName}_${Date.now()}.pdf`);
+        const password = `${safeLastName.toUpperCase()}_${safePid.toUpperCase()}`;
+
+        console.log(`[DOC_GEN] Generating NDA for ${applicantData.email}. PID: ${safePid}. Password set to: ${password}`);
 
         try {
             // Create new PDF document
@@ -47,7 +51,7 @@ class DocumentService {
             let yPos = pageHeight - margin;
 
             // Logo (if exists)
-            const logoPath = path.join(__dirname, '../../uploads/assets/DC_LOGO.png');
+            const logoPath = path.join(__dirname, '../uploads/assets/DC_LOGO.png');
             if (fs.existsSync(logoPath)) {
                 const logoBytes = fs.readFileSync(logoPath);
                 const logoImage = await pdfDoc.embedPng(logoBytes);
@@ -436,6 +440,7 @@ class DocumentService {
             yPos -= 40;
             const col1X = margin;
             const col2X = pageWidth / 2 + 20;
+            const sigStartY = yPos;
 
             // Column 1: Company signature
             page.drawText('Mr. Shubham Pareek,', {
@@ -463,7 +468,7 @@ class DocumentService {
             });
 
             // Company signature image
-            const signaturePath = path.join(__dirname, '../../uploads/assets/SP Sign DCFP.png');
+            const signaturePath = path.join(__dirname, '../uploads/assets/SP Sign DCFP.png');
             if (fs.existsSync(signaturePath)) {
                 const sigBytes = fs.readFileSync(signaturePath);
                 const sigImage = await pdfDoc.embedPng(sigBytes);
@@ -505,8 +510,7 @@ class DocumentService {
             });
 
             // Column 2: Employee signature
-            let col2Y = pageHeight - margin - 40;
-            col2Y -= 40;
+            let col2Y = sigStartY;
             page.drawText(`${applicantData.firstName} ${applicantData.lastName}`, {
                 x: col2X,
                 y: col2Y,
@@ -517,7 +521,17 @@ class DocumentService {
 
             // Employee signature (typed or drawn)
             col2Y -= 40;
-            if (signatureInfo && signatureInfo.type === 'TYPED') {
+            if (signatureInfo && signatureInfo.isPreview) {
+                const sigFont = await pdfDoc.embedFont(StandardFonts.TimesRomanItalic);
+                page.drawText(`[UNSIGNED PREVIEW]`, {
+                    x: col2X,
+                    y: col2Y,
+                    size: 14,
+                    font: sigFont,
+                    color: rgb(0.8, 0, 0),
+                });
+                col2Y -= 30;
+            } else if (signatureInfo && signatureInfo.type === 'TYPED') {
                 const sigFont = await pdfDoc.embedFont(StandardFonts.TimesRomanItalic);
                 page.drawText(`${applicantData.firstName} ${applicantData.lastName}`, {
                     x: col2X,
@@ -565,23 +579,51 @@ class DocumentService {
                     color: lightGray,
                     opacity: 0.6,
                 });
+
+                if (signatureInfo && signatureInfo.isPreview) {
+                    pg.drawText('UNSIGNED PREVIEW', {
+                        x: 100,
+                        y: 300,
+                        size: 60,
+                        font: headingFont,
+                        color: rgb(1, 0, 0),
+                        opacity: 0.15,
+                        rotate: degrees(45),
+                    });
+                }
             });
 
             // Save unprotected PDF
             const pdfBytes = await pdfDoc.save();
+
+            if (signatureInfo && signatureInfo.isPreview) {
+                // If it's a preview, we return the buffer directly without protection or hash storage
+                return { buffer: pdfBytes, path: null, hash: null };
+            }
+
             const tempPath = path.join(path.dirname(outputPath), `temp_${crypto.randomBytes(4).toString('hex')}.pdf`);
             fs.writeFileSync(tempPath, pdfBytes);
+            const protectedPath = path.join(path.dirname(outputPath), `prot_${crypto.randomBytes(4).toString('hex')}.pdf`);
 
-            // Apply password protection
-            muhammara.recrypt(tempPath, outputPath, {
+            // Apply password protection to a temporary protected path first
+            muhammara.recrypt(tempPath, protectedPath, {
                 userPassword: password,
                 ownerPassword: crypto.randomBytes(32).toString('hex'),
                 userProtectionFlag: 4
             });
 
+            if (!fs.existsSync(protectedPath)) {
+                throw new Error("Encryption failed - Protected file not created");
+            }
+
+            // Move to final output path
+            fs.copyFileSync(protectedPath, outputPath);
+
             fs.unlinkSync(tempPath);
+            fs.unlinkSync(protectedPath);
 
             const finalBytes = fs.readFileSync(outputPath);
+            console.log(`[DOC_GEN] NDA Generated successfully: ${outputPath} (${finalBytes.length} bytes)`);
             const hash = crypto.createHash('sha256').update(finalBytes).digest('hex');
 
             return {
@@ -721,8 +763,12 @@ class DocumentService {
             fs.mkdirSync(uploadDir, { recursive: true });
         }
 
-        const outputPath = path.join(uploadDir, `OfferLetter_${fellowData.lastName}_${Date.now()}.pdf`);
-        const password = `${fellowData.lastName}_${fellowData.globalPid}`;
+        const safeLastName = (fellowData.lastName || 'FELLOW').trim();
+        const safePid = (fellowData.globalPid || 'PENDING').trim();
+        const outputPath = path.join(uploadDir, `OfferLetter_${safeLastName}_${Date.now()}.pdf`);
+        const password = `${safeLastName.toUpperCase()}_${safePid.toUpperCase()}`;
+
+        console.log(`[DOC_GEN] Generating Offer Letter for ${fellowData.email}. PID: ${safePid}. Password set to: ${password}`);
 
         try {
             const pdfDoc = await PDFDocument.create();
@@ -744,7 +790,7 @@ class DocumentService {
             let yPos = pageHeight - margin;
 
             // Logo
-            const logoPath = path.join(__dirname, '../../uploads/assets/DC_LOGO.png');
+            const logoPath = path.join(__dirname, '../uploads/assets/DC_LOGO.png');
             if (fs.existsSync(logoPath)) {
                 const logoBytes = fs.readFileSync(logoPath);
                 const logoImage = await pdfDoc.embedPng(logoBytes);
@@ -792,7 +838,7 @@ class DocumentService {
             }
 
             yPos -= 40;
-            const signaturePath = path.join(__dirname, '../../uploads/assets/SP Sign DCFP.png');
+            const signaturePath = path.join(__dirname, '../uploads/assets/SP Sign DCFP.png');
             if (fs.existsSync(signaturePath)) {
                 const sigBytes = fs.readFileSync(signaturePath);
                 const sigImage = await pdfDoc.embedPng(sigBytes);
@@ -814,18 +860,45 @@ class DocumentService {
             page.drawText(`DeepCytes Ventures | ${fellowData.email} | Fellowship Offer Letter`, { x: margin, y: 30, size: 8, font: regularFont, color: lightGray, opacity: 0.6 });
             page.drawLine({ start: { x: margin, y: 50 }, end: { x: pageWidth - margin, y: 50 }, thickness: 1, color: primaryColor, opacity: 0.3 });
 
+            if (tenureData && tenureData.isPreview) {
+                page.drawText('UNSIGNED PREVIEW', {
+                    x: 100,
+                    y: 300,
+                    size: 60,
+                    font: boldFont,
+                    color: rgb(1, 0, 0),
+                    opacity: 0.15,
+                    rotate: degrees(45),
+                });
+            }
+
             const pdfBytes = await pdfDoc.save();
+
+            if (tenureData && tenureData.isPreview) {
+                return { buffer: pdfBytes, path: null, hash: null };
+            }
+
             const tempPath = path.join(path.dirname(outputPath), `temp_${crypto.randomBytes(4).toString('hex')}.pdf`);
             fs.writeFileSync(tempPath, pdfBytes);
+            const protectedPath = path.join(path.dirname(outputPath), `prot_${crypto.randomBytes(4).toString('hex')}.pdf`);
 
-            muhammara.recrypt(tempPath, outputPath, {
+            muhammara.recrypt(tempPath, protectedPath, {
                 userPassword: password,
                 ownerPassword: crypto.randomBytes(32).toString('hex'),
                 userProtectionFlag: 4
             });
 
+            if (!fs.existsSync(protectedPath)) {
+                throw new Error("Encryption failed - Protected file not created");
+            }
+
+            fs.copyFileSync(protectedPath, outputPath);
+
             fs.unlinkSync(tempPath);
+            fs.unlinkSync(protectedPath);
+
             const finalBytes = fs.readFileSync(outputPath);
+            console.log(`[DOC_GEN] Offer Letter Generated successfully: ${outputPath} (${finalBytes.length} bytes)`);
             const hash = crypto.createHash('sha256').update(finalBytes).digest('hex');
 
             return { buffer: finalBytes, hash, path: outputPath, password };
