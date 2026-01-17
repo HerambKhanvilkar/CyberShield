@@ -23,7 +23,7 @@ const FellowshipProfileSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['PENDING', 'ACTIVE', 'COMPLETED', 'CANCELLED', 'FROZEN'],
+        enum: ['PENDING', 'ACTIVE', 'COMPLETED', 'CANCELLED', 'FROZEN', 'TERMINATED', 'DROPPED'],
         default: 'PENDING'
     },
     onboardingState: {
@@ -41,6 +41,7 @@ const FellowshipProfileSchema = new mongoose.Schema({
     tenures: [{
         type: { type: String, default: "Fellowship" },
         role: { type: String, default: "" },
+        project: { type: String, default: "" },
         orgCode: { type: String, default: "" },
         status: { type: String, enum: ['ACTIVE', 'COMPLETED', 'FROZEN', 'UPGRADED'], default: 'ACTIVE' },
         cohort: { type: String, default: "C1" },

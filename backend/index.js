@@ -128,7 +128,7 @@ app.use((err, req, res, next) => {
 (async () => {
   try {
     // Connect to MongoDB Atlas
-    mongoose.connect(process.env.MONGO_URI, {
+    mongoose.connect(process.env.HIRING_MONGO_URI || process.env.MONGO_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true
     })
@@ -137,6 +137,11 @@ app.use((err, req, res, next) => {
 
     app.listen(PORT, () => {
       logger.info(`Application initialized successfully on port ${PORT}`);
+    });
+
+    app.use((req, res, next) => {
+      console.log(`${new Date().toISOString()} [${req.method}] ${req.url}`);
+      next();
     });
 
   } catch (error) {
