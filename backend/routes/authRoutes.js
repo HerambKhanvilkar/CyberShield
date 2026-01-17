@@ -119,8 +119,13 @@ router.post("/register/otp", [body("email").isEmail().withMessage("Invalid email
     const { email } = req.body;
 
     // 1. Check if email already registered
+    const { orgCode } = req.body;
     const existingUser = await User.findOne({ email });
-    if (existingUser) {
+
+    // If user exists, normally we block registration. 
+    // BUT if they are providing an orgCode, they are using the Fellowship Application form.
+    // In that case, we allow them to proceed so they can verify identity and apply.
+    if (existingUser && !orgCode) {
       return res.status(400).json({
         msg: "Email already registered",
         action: "login",
@@ -135,7 +140,6 @@ router.post("/register/otp", [body("email").isEmail().withMessage("Invalid email
     // 2. Extract domain and validate against organization whitelist
     const Organization = require('../models/Organization');
     const emailDomain = email.split('@')[1];
-    const { orgCode } = req.body;
 
     let org;
     if (existingApplicant) {

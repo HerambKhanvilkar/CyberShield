@@ -105,6 +105,14 @@ router.get('/download-nda', authenticateJWT, async (req, res) => {
             return res.status(403).json({ message: "NDA not signed yet" });
         }
 
+        // Check if pre-generated PDF exists in tenures
+        const savedNda = profile.tenures[0]?.signedDocuments?.nda;
+        if (savedNda && savedNda.pdfPath && fs.existsSync(savedNda.pdfPath)) {
+            await logAction(profile._id, 'NDA_DOWNLOAD', 'Downloaded Persisted NDA PDF', req);
+            return res.download(savedNda.pdfPath, `NDA_${profile.lastName}.pdf`);
+        }
+
+        // Fallback: Generate on fly (for older profiles)
         const applicantData = {
             firstName: profile.firstName,
             lastName: profile.lastName,
@@ -117,19 +125,47 @@ router.get('/download-nda', authenticateJWT, async (req, res) => {
             data: profile.nda.signedName
         };
 
-        const { buffer, hash } = await DocumentService.generateNDA(applicantData, signatureInfo);
-
-        profile.nda.pdfHash = hash;
-        await profile.save();
-
-        await logAction(profile._id, 'NDA_DOWNLOAD', 'Downloaded Premium NDA PDF', req);
+        const { buffer } = await DocumentService.generateNDA(applicantData, signatureInfo);
+        await logAction(profile._id, 'NDA_DOWNLOAD_GENERATED', 'Downloaded On-Fly NDA PDF (Fallback)', req);
 
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', 'attachment; filename=DC_NDA_SIGNED.pdf');
-        res.send(buffer);
+        res.setHeader('Content-Disposition', `attachment; filename=NDA_${profile.lastName}.pdf`);
+        res.send(Buffer.from(buffer));
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: "Document generation failed" });
+        res.status(500).json({ message: "Document retrieval failed" });
+    }
+});
+
+// 3.5. Preview NDA (Unsigned)
+router.get('/preview-nda', authenticateJWT, async (req, res) => {
+    try {
+        const profile = await FellowshipProfile.findOne({ email: req.user.email });
+        if (!profile) return res.status(404).json({ message: "Profile not found" });
+
+        const applicantData = {
+            firstName: profile.firstName,
+            lastName: profile.lastName,
+            email: profile.email,
+            globalPid: "PENDING"
+        };
+
+        const signatureInfo = {
+            type: 'TYPED',
+            data: 'UNSIGNED_PREVIEW',
+            isPreview: true
+        };
+
+        const { buffer } = await DocumentService.generateNDA(applicantData, signatureInfo);
+
+        await logAction(profile._id, 'NDA_PREVIEW', 'Previewed Unsigned NDA', req);
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'inline; filename=NDA_PREVIEW.pdf');
+        res.send(Buffer.from(buffer));
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Preview generation failed" });
     }
 });
 
@@ -142,8 +178,16 @@ router.get('/download-offer', authenticateJWT, async (req, res) => {
         }
 
         const tenureIndex = parseInt(req.query.tenureIndex) || 0;
-        const selectedTenure = profile.tenures[tenureIndex] || profile.tenures[profile.tenures.length - 1];
+        const selectedTenure = profile.tenures[tenureIndex] || profile.tenures[0];
 
+        // Check if pre-generated PDF exists
+        const savedOffer = selectedTenure?.signedDocuments?.offerLetter;
+        if (savedOffer && savedOffer.pdfPath && fs.existsSync(savedOffer.pdfPath)) {
+            await logAction(profile._id, 'OFFER_DOWNLOAD', 'Downloaded Persisted Offer Letter', req);
+            return res.download(savedOffer.pdfPath, `OfferLetter_${profile.lastName}.pdf`);
+        }
+
+        // Fallback: Generate
         const fellowData = {
             firstName: profile.firstName,
             lastName: profile.lastName,
@@ -158,15 +202,14 @@ router.get('/download-offer', authenticateJWT, async (req, res) => {
         };
 
         const { buffer } = await DocumentService.generateOfferLetter(fellowData, tenureData);
-
-        await logAction(profile._id, 'OFFER_DOWNLOAD', 'Downloaded Premium Offer Letter', req);
+        await logAction(profile._id, 'OFFER_DOWNLOAD_GENERATED', 'Downloaded On-Fly Offer Letter (Fallback)', req);
 
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', 'attachment; filename=DC_OFFER_LETTER.pdf');
-        res.send(buffer);
+        res.setHeader('Content-Disposition', `attachment; filename=OfferLetter_${profile.lastName}.pdf`);
+        res.send(Buffer.from(buffer));
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: "Offer generation failed" });
+        res.status(500).json({ message: "Offer retrieval failed" });
     }
 });
 
@@ -224,6 +267,42 @@ router.post('/advance-state', authenticateJWT, [
     } catch (err) {
         console.error(err);
         res.status(400).json({ message: err.message });
+    }
+});
+
+// 4.5 Preview Offer Letter (Unsigned)
+router.get('/preview-offer', authenticateJWT, async (req, res) => {
+    try {
+        const profile = await FellowshipProfile.findOne({ email: req.user.email });
+        if (!profile) return res.status(404).json({ message: "Profile not found" });
+
+        const tenureIndex = parseInt(req.query.tenureIndex) || 0;
+        const selectedTenure = profile.tenures[tenureIndex] || profile.tenures[0];
+
+        const fellowData = {
+            firstName: profile.firstName,
+            lastName: profile.lastName,
+            email: profile.email,
+            globalPid: "PENDING"
+        };
+
+        const tenureData = {
+            role: selectedTenure?.role || 'Fellow',
+            startDate: selectedTenure?.startDate || new Date().toLocaleDateString('en-GB'),
+            endDate: selectedTenure?.endDate || 'Ongoing',
+            isPreview: true
+        };
+
+        const { buffer } = await DocumentService.generateOfferLetter(fellowData, tenureData);
+
+        await logAction(profile._id, 'OFFER_PREVIEW', 'Previewed Unsigned Offer Letter', req);
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'inline; filename=OFFER_PREVIEW.pdf');
+        res.send(Buffer.from(buffer));
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Offer preview generation failed" });
     }
 });
 

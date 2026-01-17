@@ -45,6 +45,7 @@ const {
 } = require("../services/emailService");
 const { awardCompositeBadgesForUser } = require('../services/badgeService');
 const FellowshipProfile = require('../models/FellowshipProfile');
+const ProjectMaster = require('../models/ProjectMaster');
 const LifecycleManager = require('../services/LifecycleManager');
 
 const uploadImage = multer({
@@ -974,17 +975,176 @@ router.post('/admin/fellows/:id/promote', authenticateJWT, isAdmin, async (req, 
       completionStatus
     });
 
+    // Logging
+    const HiringAuditLog = require('../models/HiringAuditLog');
+    await HiringAuditLog.create({
+      action: "FELLOW_PROMOTE",
+      userId: fellow.email,
+      details: `Fellow promoted to ${newRole} by ${req.user.email}`,
+      ipAddress: req.ip
+    });
+
+    // Send Promotion Email
+    const { sendPromotionEmail } = require('../services/emailService');
+    try {
+      if (fellow.email) await sendPromotionEmail(fellow.email, newRole || "Senior Fellow");
+    } catch (e) {
+      console.error("Failed to send promotion email", e);
+    }
+
     res.json({ message: "Fellow promoted successfully", fellow: updated });
   } catch (err) {
+    console.error("Promotion Error:", err);
     res.status(500).json({ message: err.message });
   }
 });
 
-// 4. Update Fellow Basic Info (Admin Override)
+// 4. Terminate Fellow
+router.post('/admin/fellows/:id/terminate', authenticateJWT, isAdmin, async (req, res) => {
+  try {
+    const { reason, endDate } = req.body;
+    const fellow = await FellowshipProfile.findById(req.params.id);
+    if (!fellow) return res.status(404).json({ message: "Fellow not found" });
+
+    // 1. Collect Attachments from all tenures
+    const attachments = [];
+    if (fellow.tenures && fellow.tenures.length > 0) {
+      fellow.tenures.forEach(tenure => {
+        if (tenure.signedDocuments) {
+          ['nda', 'offerLetter', 'completionLetter'].forEach(docType => {
+            const doc = tenure.signedDocuments[docType];
+            if (doc && doc.pdfPath) {
+              const fullPath = path.resolve(process.cwd(), doc.pdfPath.startsWith('/') ? doc.pdfPath.slice(1) : doc.pdfPath);
+              if (fs.existsSync(fullPath)) {
+                attachments.push(fullPath);
+              }
+            }
+          });
+        }
+      });
+    }
+
+    // 2. Logging (Before deletion)
+    const HiringAuditLog = require('../models/HiringAuditLog');
+    await HiringAuditLog.create({
+      action: "FELLOW_TERMINATE",
+      userId: fellow.email,
+      details: `Fellow terminated: ${reason}. Data scrub initiated. Documents archived to email.`,
+      ipAddress: req.ip
+    });
+
+    // 3. Send Termination Email with Attachments
+    const { sendTerminationEmail } = require('../services/emailService');
+    try {
+      if (fellow.email) {
+        await sendTerminationEmail(fellow.email, reason, attachments);
+      }
+    } catch (e) {
+      console.error("Failed to send termination email", e);
+    }
+
+    // 4. PERFORM FULL DATA SCRUB
+    const userEmail = fellow.email;
+    await FellowshipProfile.findByIdAndDelete(fellow._id);
+
+    // Also delete any existing application records
+    const Applicant = require('../models/Applicant');
+    await Applicant.deleteMany({ email: userEmail });
+
+    // Also delete from main Badge-Viewer DB
+    await User.findOneAndDelete({ email: userEmail });
+
+    res.json({ message: "Fellowship terminated. Documents sent via email and user data has been permanently scrubbed from the system.", status: "DELETED" });
+  } catch (err) {
+    console.error("Termination Error:", err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// 5. Update Fellow Basic Info (Admin Override)
 router.put('/admin/fellows/:id', authenticateJWT, isAdmin, async (req, res) => {
   try {
     const fellow = await FellowshipProfile.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json(fellow);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// 6. Manual Add Fellow (For existing/prev hires)
+router.post('/admin/fellows/add', authenticateJWT, isAdmin, async (req, res) => {
+  try {
+    const { email, firstName, lastName, role, project, orgCode, cohort, startDate } = req.body;
+
+    if (!email || !firstName || !lastName) {
+      return res.status(400).json({ message: "Missing required fields (email, firstName, lastName)" });
+    }
+
+    let profile = await FellowshipProfile.findOne({ email: email.toLowerCase().trim() });
+    const isNewProfile = !profile;
+
+    if (isNewProfile) {
+      profile = new FellowshipProfile({
+        email: email.toLowerCase().trim(),
+        firstName,
+        lastName,
+        status: 'ACTIVE',
+        onboardingState: 'COMPLETION'
+      });
+    }
+
+    // Add Tenure
+    profile.tenures.push({
+      role: role || "Fellow",
+      project: project || "",
+      orgCode: orgCode || "", // Org is now optional
+      status: 'ACTIVE',
+      cohort: cohort || "C1",
+      startDate: startDate || new Date().toISOString().split('T')[0]
+    });
+
+    await profile.save();
+
+    // Audit Log
+    const HiringAuditLog = require('../models/HiringAuditLog');
+    await HiringAuditLog.create({
+      action: "FELLOW_ADD_MANUAL",
+      userId: email,
+      details: `Manual fellow addition: ${role} on project ${project || 'N/A'} (Org: ${orgCode || 'None'})`,
+      ipAddress: req.ip
+    });
+
+    res.status(201).json({
+      message: isNewProfile ? "Fellow profile created and added" : "New tenure added to existing fellow profile",
+      profile
+    });
+  } catch (err) {
+    console.error("Manual Fellow Add Error:", err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// 7. Projects Master Routes
+router.get('/application/admin/projects', authenticateJWT, isAdmin, async (req, res) => {
+  try {
+    const projects = await ProjectMaster.find().sort({ name: 1 });
+    res.json(projects);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.post('/application/admin/projects', authenticateJWT, isAdmin, async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name) return res.status(400).json({ message: "Project name required" });
+
+    const existing = await ProjectMaster.findOne({ name: { $regex: new RegExp(`^${name.trim()}$`, 'i') } });
+    if (existing) return res.status(400).json({ message: "Project already exists" });
+
+    const project = new ProjectMaster({ name: name.trim() });
+    await project.save();
+    res.status(201).json({ message: "Project added", project: project.name });
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }

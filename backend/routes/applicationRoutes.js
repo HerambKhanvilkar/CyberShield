@@ -11,6 +11,7 @@ const multer = require('multer');
 const path = require('path');
 const FellowshipProfile = require('../models/FellowshipProfile');
 const RolesMaster = require('../models/RolesMaster');
+const { sendInterviewScheduledEmail, sendApplicationStatusEmail } = require('../services/emailService');
 
 // Multer Storage Configuration
 const storage = multer.diskStorage({
@@ -75,7 +76,25 @@ router.get('/org/:code', async (req, res) => {
 });
 
 // 2. Submit Application (Public)
-router.post('/apply', upload.single('resumeFile'), [
+router.post('/apply', (req, res, next) => {
+    upload.single('resumeFile')(req, res, function (err) {
+        if (err instanceof multer.MulterError) {
+            // A Multer error occurred when uploading.
+            console.error("Multer Error:", err);
+            if (err.code === 'LIMIT_FILE_SIZE') {
+                return res.status(400).json({ message: "Resume file too large. Maximum allowed size is 5MB." });
+            }
+            return res.status(400).json({ message: `Upload Error: ${err.message}` });
+        } else if (err) {
+            // An unknown error occurred when uploading.
+            console.error("Unknown Upload Error:", err);
+            return res.status(500).json({ message: `Upload Failed: ${err.message}` });
+        }
+
+        // Everything went fine, proceed to validation and logic
+        next();
+    });
+}, [
     check('orgCode').notEmpty().trim().escape(),
     check('email').isEmail().normalizeEmail(),
     check('firstName').notEmpty().trim().escape(),
@@ -134,15 +153,14 @@ router.post('/apply', upload.single('resumeFile'), [
             }
         }
 
-        // Duplicate Check
-        const existingApplicant = await Applicant.findOne({ email });
+        // Duplicate Check (Pending Application)
+        const existingApplicant = await Applicant.findOne({ email, status: { $in: ['PENDING', 'INTERVIEW_SCHEDULED'] } });
         if (existingApplicant) {
-            return res.status(400).json({ message: "Application already exists for this email." });
+            return res.status(400).json({ message: "You already have a pending application. Please check your status in the portal." });
         }
-        const existingFellow = await FellowshipProfile.findOne({ email });
-        if (existingFellow) {
-            return res.status(400).json({ message: "User is already an active Fellow." });
-        }
+
+        // We allow users with existing FellowshipProfiles to apply for new roles/tenures.
+        // The acceptance logic will handle adding a new tenure to their existing profile.
 
         // Create Applicant
         const applicant = new Applicant({
@@ -203,6 +221,15 @@ router.patch('/admin/status', authenticateJWT, isAdmin, [
             return res.status(404).json({ message: "Applicant not found" });
         }
 
+        // Logic: Cannot accept if interview pending (unless manually skipped or completed)
+        if (status === 'ACCEPTED' &&
+            applicant.interviewDetails?.status === 'PENDING' &&
+            applicant.status !== 'INTERVIEW_SKIPPED') {
+            return res.status(400).json({
+                message: "Applicant currently has a pending interview. Please complete or skip interview before accepting."
+            });
+        }
+
         applicant.status = status;
         applicant.processedBy = req.user?.email || "Unknown Admin";
         await applicant.save();
@@ -243,6 +270,12 @@ router.patch('/admin/status', authenticateJWT, isAdmin, [
             }
             await profile.save();
             console.log(`[StatusUpdate] FellowshipProfile saved for ${applicant.email}`);
+
+            // Send Acceptance Email
+            await sendApplicationStatusEmail(applicant.email, 'ACCEPTED');
+        } else if (status === 'REJECTED') {
+            // Send Rejection Email
+            await sendApplicationStatusEmail(applicant.email, 'REJECTED');
         }
 
         await HiringAuditLog.create({
@@ -255,6 +288,63 @@ router.patch('/admin/status', authenticateJWT, isAdmin, [
     } catch (err) {
         console.error("Status Update Critical Error:", err);
         res.status(500).json({ message: "Internal server error: " + err.message });
+    }
+});
+
+// 4.5 Schedule Interview
+router.put('/admin/schedule-interview', authenticateJWT, isAdmin, [
+    check('applicantId').notEmpty(),
+    check('scheduledAt').isISO8601(),
+    check('meetLink').isURL()
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+    try {
+        const { applicantId, scheduledAt, meetLink } = req.body;
+        const applicant = await Applicant.findById(applicantId);
+
+        if (!applicant) return res.status(404).json({ message: "Applicant not found" });
+
+        applicant.status = 'INTERVIEW_SCHEDULED';
+        applicant.interviewDetails = {
+            scheduledAt: new Date(scheduledAt),
+            meetLink,
+            status: 'SCHEDULED',
+            scheduledBy: req.user.email
+        };
+
+        await applicant.save();
+
+        // Send confirmation email
+        await sendInterviewScheduledEmail(applicant.email, scheduledAt, meetLink);
+
+        await HiringAuditLog.create({
+            action: "INTERVIEW_SCHEDULED",
+            details: `Interview scheduled for ${applicant.email} at ${scheduledAt} by ${req.user.email}`,
+            ipAddress: req.ip
+        });
+
+        res.json({ message: "Interview scheduled successfully" });
+    } catch (err) {
+        res.status(500).json({ message: "Server error: " + err.message });
+    }
+});
+
+// 4.6 Skip Interview
+router.put('/admin/skip-interview', authenticateJWT, isAdmin, async (req, res) => {
+    try {
+        const { applicantId } = req.body;
+        const applicant = await Applicant.findById(applicantId);
+        if (!applicant) return res.status(404).json({ message: "Applicant not found" });
+
+        applicant.status = 'INTERVIEW_SKIPPED';
+        applicant.interviewDetails = { ...applicant.interviewDetails, status: 'SKIPPED' };
+
+        await applicant.save();
+        res.json({ message: "Interview step skipped" });
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
     }
 });
 
@@ -322,10 +412,14 @@ router.post('/check-status', [
             ipAddress: req.ip
         });
 
+        const User = require('../models/User');
+        const user = await User.findOne({ email });
+
         res.json({
             status: applicant.status,
             firstName: applicant.firstName,
-            email: applicant.email
+            email: applicant.email,
+            hasAccount: !!user
         });
 
     } catch (err) {
@@ -378,6 +472,29 @@ router.post('/admin/roles', authenticateJWT, isAdmin, async (req, res) => {
     } catch (error) {
         console.error('Role add error:', error);
         res.status(500).json({ message: 'Failed to add role' });
+    }
+});
+
+// Activate Fellowship (User Action)
+router.post('/onboarding/activate', authenticateJWT, async (req, res) => {
+    try {
+        const userEmail = req.user.email;
+        const profile = await FellowshipProfile.findOne({ email: userEmail });
+
+        if (!profile) return res.status(404).json({ msg: "Profile not found" });
+
+        // Ensure onboarding is complete (you might want to check strict state)
+        if (profile.onboardingState !== 'COMPLETION') {
+            return res.status(400).json({ msg: "Onboarding not complete" });
+        }
+
+        profile.status = 'ACTIVE';
+        await profile.save();
+
+        res.json({ msg: "Fellowship Activated", status: 'ACTIVE' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ msg: "Activation failed" });
     }
 });
 

@@ -7,8 +7,8 @@ const hiringDbConnection = require('./hiringDb');
 
 const seedData = async () => {
     try {
-        await mongoose.connect(process.env.MONGO_URI);
-        console.log("Connected to Main MongoDB...");
+        await mongoose.connect(process.env.HIRING_MONGO_URI || process.env.MONGO_URI);
+        console.log("Connected to Hiring MongoDB...");
 
         // Wait for hiring DB connection
         await new Promise((resolve) => {
