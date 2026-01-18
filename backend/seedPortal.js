@@ -7,15 +7,17 @@ const hiringDbConnection = require('./hiringDb');
 
 const seedData = async () => {
     try {
-        await mongoose.connect(process.env.HIRING_MONGO_URI || process.env.MONGO_URI);
-        console.log("Connected to Hiring MongoDB...");
+        await mongoose.connect(process.env.MONGO_URI);
+        console.log("Connected to Main (Testing) MongoDB...");
 
-        // Wait for hiring DB connection
+        // Wait for hiring DB connection (which connects using HIRING_MONGO_URI in its own file)
         await new Promise((resolve) => {
             if (hiringDbConnection.readyState === 1) resolve();
-            else hiringDbConnection.on('connected', resolve);
+            else hiringDbConnection.on('connected', () => {
+                console.log("Connected to Hiring MongoDB...");
+                resolve();
+            });
         });
-        console.log("Connected to Hiring MongoDB...");
 
         // 1. Seed Organization
         const orgData = {

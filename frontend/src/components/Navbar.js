@@ -209,17 +209,25 @@ function Navbar() {
                 <span>Badges</span>
               </Link>
 
+              {user && user.isAdmin && (
+                <Link
+                  href="/applications"
+                  className="px-4 py-1.5 rounded-full bg-red-500/10 border border-red-500/50 text-red-500 hover:bg-red-500 hover:text-white transition-all text-xs font-black uppercase tracking-widest"
+                >
+                  Admin Control
+                </Link>
+              )}
+
               {user && (
                 <Link
                   href={
-                    user.isAdmin ? '/applications' :
-                      user.fellowshipStatus === 'FELLOW' ? '/FellowshipProfile' :
-                        user.fellowshipStatus === 'ONBOARDING' ? '/portal/onboarding' :
-                          '/portal'
+                    user.fellowshipStatus === 'FELLOW' ? '/FellowshipProfile' :
+                      user.fellowshipStatus === 'ONBOARDING' ? '/portal/onboarding' :
+                        '/portal'
                   }
                   className="px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500 hover:text-white transition-all text-xs font-black uppercase tracking-widest"
                 >
-                  {user.isAdmin ? 'Applications' : user.fellowshipStatus === 'FELLOW' ? 'Fellowship Dashboard' : 'Fellowship Portal'}
+                  {user.fellowshipStatus === 'FELLOW' ? 'Fellowship Dashboard' : 'Fellowship Portal'}
                 </Link>
               )}
             </div>
@@ -332,18 +340,27 @@ function Navbar() {
               Badges
             </Link>
 
+            {user && user.isAdmin && (
+              <Link
+                href="/applications"
+                onClick={() => setIsSidenavOpen(false)}
+                className="text-red-500 text-2xl font-black italic uppercase tracking-tighter"
+              >
+                Admin Control
+              </Link>
+            )}
+
             {user && (
               <Link
                 href={
-                  user.isAdmin ? '/applications' :
-                    user.fellowshipStatus === 'FELLOW' ? '/FellowshipProfile' :
-                      user.fellowshipStatus === 'ONBOARDING' ? '/portal/onboarding' :
-                        '/portal'
+                  user.fellowshipStatus === 'FELLOW' ? '/FellowshipProfile' :
+                    user.fellowshipStatus === 'ONBOARDING' ? '/portal/onboarding' :
+                      '/portal'
                 }
                 onClick={() => setIsSidenavOpen(false)}
                 className="text-cyan-400 text-2xl font-black italic uppercase tracking-tighter"
               >
-                {user.isAdmin ? 'Applications' : user.fellowshipStatus === 'FELLOW' ? 'Fellowship Dashboard' : 'Fellowship'}
+                {user.fellowshipStatus === 'FELLOW' ? 'Fellowship Dashboard' : 'Fellowship Portal'}
               </Link>
             )}
 

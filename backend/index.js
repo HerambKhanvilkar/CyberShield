@@ -128,11 +128,11 @@ app.use((err, req, res, next) => {
 (async () => {
   try {
     // Connect to MongoDB Atlas
-    mongoose.connect(process.env.HIRING_MONGO_URI || process.env.MONGO_URI, {
+    mongoose.connect(process.env.MONGO_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true
     })
-      .then(() => console.log("MongoDB Atlas Connected"))
+      .then(() => console.log("MongoDB Atlas Connected (Main DB)"))
       .catch(err => console.error("MongoDB Connection Error:", err));
 
     app.listen(PORT, () => {
