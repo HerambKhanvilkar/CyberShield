@@ -419,6 +419,7 @@ router.post('/check-status', [
             status: applicant.status,
             firstName: applicant.firstName,
             email: applicant.email,
+            interviewDetails: applicant.interviewDetails,
             hasAccount: !!user
         });
 

@@ -8,7 +8,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, CheckCircle, XCircle, Clock, ArrowRight, Mail } from "lucide-react";
+import { Search, CheckCircle, XCircle, Clock, ArrowRight, Mail, Calendar, ExternalLink } from "lucide-react";
 
 export default function ApplicationStatus() {
     const [email, setEmail] = useState("");
@@ -70,13 +70,15 @@ export default function ApplicationStatus() {
 
                 <div className="w-full max-w-lg bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 shadow-2xl relative overflow-hidden">
                     {/* Header */}
-                    <div className="text-center mb-10">
-                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-cyan-600/20 border border-cyan-500/30 mb-4 shadow-lg">
-                            <Search className="text-cyan-400 w-8 h-8" />
+                    {step !== 3 && (
+                        <div className="text-center mb-10">
+                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-cyan-600/20 border border-cyan-500/30 mb-4 shadow-lg">
+                                <Search className="text-cyan-400 w-8 h-8" />
+                            </div>
+                            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight italic mb-2 bg-clip-text text-transparent bg-gradient-to-r from-white to-cyan-400">Application Status</h1>
+                            <p className="text-gray-400 text-base sm:text-lg mt-2">Track your progress in the DeepCytes Fellowship</p>
                         </div>
-                        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight italic mb-2 bg-clip-text text-transparent bg-gradient-to-r from-white to-cyan-400">Application Status</h1>
-                        <p className="text-gray-400 text-base sm:text-lg mt-2">Track your progress in the DeepCytes Fellowship</p>
-                    </div>
+                    )}
 
                     {step === 1 && (
                         <form onSubmit={handleSendOtp} className="space-y-7">
@@ -129,6 +131,82 @@ export default function ApplicationStatus() {
                                     <div className="space-y-2">
                                         <h2 className="text-2xl font-bold text-yellow-400">Application Under Review</h2>
                                         <p className="text-gray-400">Sit tight, {result.firstName}! Our team is currently reviewing your expertise. You'll receive an email once a decision is made.</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {result.status === "INTERVIEW_SCHEDULED" && (
+                                <div className="space-y-8 text-center animate-in fade-in zoom-in duration-700">
+                                    <div className="mb-2">
+                                        <img
+                                            src="https://static.wixstatic.com/media/e48a18_c949f6282e6a4c8e9568f40916a0c704~mv2.png/v1/crop/x_0,y_151,w_1920,h_746/fill/w_203,h_79,fp_0.50_0.50,q_85,usm_0.66_1.00_0.01,enc_auto/For%20Dark%20Theme.png"
+                                            className="h-12 mx-auto grayscale brightness-200"
+                                            alt="DeepCytes Logo"
+                                        />
+                                    </div>
+                                    <div className="flex flex-col items-center gap-4">
+                                        <div className="flex items-center gap-3">
+                                            <Calendar className="text-cyan-400 w-8 h-8" />
+                                            <h2 className="text-3xl font-black uppercase tracking-tighter text-white">
+                                                INTERVIEW SCHEDULED
+                                            </h2>
+                                        </div>
+                                        <p className="text-gray-400 text-sm max-w-sm mx-auto leading-relaxed">
+                                            Your engagement sequence has been initialized. Please prepare for your fellowship evaluation at the designated time.
+                                        </p>
+                                    </div>
+
+                                    <div className="bg-black/40 border border-white/10 rounded-2xl p-6 text-left space-y-4 relative overflow-hidden group">
+                                        <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-white/20" />
+                                        <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-white/20" />
+
+                                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-500/60 mb-2">[EVENT_DETAILS]</h3>
+
+                                        <div className="space-y-4">
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest font-mono">DATE:</span>
+                                                <span className="text-white font-mono text-sm">
+                                                    {result.interviewDetails?.scheduledAt ? new Date(result.interviewDetails.scheduledAt).toLocaleString('en-US', {
+                                                        weekday: 'long',
+                                                        year: 'numeric',
+                                                        month: 'long',
+                                                        day: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit',
+                                                        timeZoneName: 'short'
+                                                    }) : 'PULLING_DATE_FAIL...'}
+                                                </span>
+                                            </div>
+
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest font-mono">LINK:</span>
+                                                <a
+                                                    href={result.interviewDetails?.meetLink?.startsWith('http') ? result.interviewDetails.meetLink : `https://${result.interviewDetails?.meetLink}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-cyan-400 font-mono text-sm hover:underline flex items-center gap-2"
+                                                >
+                                                    Open Secure Meeting <ExternalLink size={12} />
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <Button
+                                            onClick={() => window.open(result.interviewDetails?.meetLink?.startsWith('http') ? result.interviewDetails.meetLink : `https://${result.interviewDetails?.meetLink}`, '_blank')}
+                                            className="w-full h-14 bg-[#38C8F8] hover:bg-[#2bb0dc] text-black font-black uppercase tracking-[0.2em] rounded-xl shadow-xl shadow-cyan-900/20 group"
+                                        >
+                                            JOIN BRIEFING TERMINAL
+                                        </Button>
+
+                                        <div className="pt-4 border-t border-white/5 space-y-2">
+                                            <p className="text-[9px] font-mono text-gray-600 uppercase tracking-widest">[SECURE_TRANSMISSION_PROTOCOL: v4.1]</p>
+                                            <p className="text-[10px] text-gray-400 px-4">
+                                                Please ensure your audio/visual systems are optimized 5 minutes prior to synchronization.
+                                                Need assistance? <span className="text-cyan-500 hover:underline cursor-pointer">Contact Mission Control</span>
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             )}
