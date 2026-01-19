@@ -17,7 +17,7 @@ export default function OrgLoginPage() {
         setLoading(true);
 
         try {
-            const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api';
+            const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
             const res = await axios.post(`${serverUrl}/org/login`, formData);
 
             // Login success

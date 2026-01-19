@@ -36,7 +36,7 @@ export default function OrgDashboard() {
 
     const fetchDashboardData = async (token) => {
         try {
-            const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001/api';
+            const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
             const config = { headers: { Authorization: `Bearer ${token}` } };
 
             const [statsRes, applicantsRes] = await Promise.all([
