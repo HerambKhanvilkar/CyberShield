@@ -6,17 +6,59 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
-import { motion } from "framer-motion";
-import { KeyRound, Sparkles, ShieldCheck } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { KeyRound, Sparkles, ShieldCheck, Search, Mail, ArrowRight } from "lucide-react";
+import { toast } from "react-toastify";
+import axios from "axios";
 
 export default function ApplyLanding() {
     const [code, setCode] = useState("");
+    const [activeTab, setActiveTab] = useState("apply"); // "apply" or "status"
     const router = useRouter();
+
+    // Status Check State
+    const [statusEmail, setStatusEmail] = useState("");
+    const [statusOtp, setStatusOtp] = useState("");
+    const [statusStep, setStatusStep] = useState("email"); // email, otp
+    const [statusLoading, setStatusLoading] = useState(false);
 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (code.trim()) {
             router.push(`/apply/${code.trim()}`);
+        }
+    };
+
+    // Status Check Handlers
+    const handleSendOtp = async () => {
+        if (!statusEmail) return toast.error("Please enter your email");
+        setStatusLoading(true);
+        try {
+            await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/auth/login/otp`, { email: statusEmail });
+            setStatusStep("otp");
+            toast.success("OTP sent to your email!");
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to send OTP");
+        } finally {
+            setStatusLoading(false);
+        }
+    };
+
+    const handleVerifyOtp = async () => {
+        if (!statusOtp) return toast.error("Please enter the OTP");
+        setStatusLoading(true);
+        try {
+            const res = await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/auth/login/verify`, {
+                email: statusEmail,
+                otp: statusOtp
+            });
+            localStorage.setItem('accessToken', res.data.accessToken);
+            toast.success("Login Successful! Redirecting...");
+            router.push('/portal');
+        } catch (error) {
+            toast.error("Invalid OTP");
+        } finally {
+            setStatusLoading(false);
         }
     };
 
@@ -47,29 +89,131 @@ export default function ApplyLanding() {
                         </p>
                     </div>
 
+                    {/* Tab Switcher */}
+                    <div className="flex mb-6 bg-black/50 border border-white/10 rounded-2xl p-1">
+                        <button
+                            onClick={() => setActiveTab("apply")}
+                            className={`flex-1 py-3 text-sm font-bold uppercase tracking-widest rounded-xl transition-all ${activeTab === "apply" ? "bg-white text-black" : "text-gray-500 hover:text-white"}`}
+                        >
+                            Apply
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("status")}
+                            className={`flex-1 py-3 text-sm font-bold uppercase tracking-widest rounded-xl transition-all ${activeTab === "status" ? "bg-cyan-500 text-black" : "text-gray-500 hover:text-white"}`}
+                        >
+                            Check Status
+                        </button>
+                    </div>
+
                     <div className="bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden">
                         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
 
-                        <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-500/70 ml-1">Access Credential</label>
-                                <Input
-                                    placeholder="ORG-CODE-2026"
-                                    className="bg-black/50 border-white/10 text-center text-2xl h-20 tracking-[0.1em] font-black text-white placeholder:text-gray-800 rounded-2xl focus:border-cyan-500/50 focus:ring-cyan-500/20"
-                                    value={code}
-                                    onChange={(e) => setCode(e.target.value)}
-                                    autoFocus
-                                />
-                            </div>
+                        <AnimatePresence mode="wait">
+                            {activeTab === "apply" ? (
+                                <motion.form
+                                    key="apply"
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: 20 }}
+                                    onSubmit={handleSubmit}
+                                    className="space-y-6 relative z-10"
+                                >
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-500/70 ml-1">Access Credential</label>
+                                        <Input
+                                            placeholder="ORG-CODE-2026"
+                                            className="bg-black/50 border-white/10 text-center text-2xl h-20 tracking-[0.1em] font-black text-white placeholder:text-gray-800 rounded-2xl focus:border-cyan-500/50 focus:ring-cyan-500/20"
+                                            value={code}
+                                            onChange={(e) => setCode(e.target.value)}
+                                            autoFocus
+                                        />
+                                    </div>
 
-                            <Button
-                                type="submit"
-                                className="w-full h-16 text-xl font-black italic tracking-widest bg-white text-black hover:bg-cyan-400 hover:text-black transition-all rounded-2xl group"
-                            >
-                                CONTINUE TO FORM
-                                <Sparkles className="ml-2 w-5 h-5 group-hover:scale-125 transition-transform" />
-                            </Button>
-                        </form>
+                                    <Button
+                                        type="submit"
+                                        className="w-full h-16 text-xl font-black italic tracking-widest bg-white text-black hover:bg-cyan-400 hover:text-black transition-all rounded-2xl group"
+                                    >
+                                        CONTINUE TO FORM
+                                        <Sparkles className="ml-2 w-5 h-5 group-hover:scale-125 transition-transform" />
+                                    </Button>
+                                </motion.form>
+                            ) : (
+                                <motion.div
+                                    key="status"
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                    className="space-y-6 relative z-10"
+                                >
+                                    <div className="text-center mb-4">
+                                        <Search className="w-8 h-8 text-cyan-400 mx-auto mb-3" />
+                                        <h3 className="text-lg font-bold uppercase tracking-widest text-white">Application Status</h3>
+                                        <p className="text-xs text-gray-500 mt-1">Enter the email you used for your application</p>
+                                    </div>
+
+                                    {statusStep === "email" ? (
+                                        <div className="space-y-4">
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-500/70 ml-1">
+                                                    <Mail className="w-3 h-3 inline mr-2" />
+                                                    Registered Email
+                                                </label>
+                                                <Input
+                                                    type="email"
+                                                    placeholder="your.email@institution.edu"
+                                                    className="bg-black/50 border-white/10 text-center text-lg h-14 tracking-wide text-white placeholder:text-gray-700 rounded-xl focus:border-cyan-500/50"
+                                                    value={statusEmail}
+                                                    onChange={(e) => setStatusEmail(e.target.value)}
+                                                />
+                                            </div>
+                                            <Button
+                                                type="button"
+                                                onClick={handleSendOtp}
+                                                disabled={statusLoading}
+                                                className="w-full h-14 text-lg font-bold uppercase tracking-widest bg-cyan-500 text-black hover:bg-cyan-400 transition-all rounded-xl"
+                                            >
+                                                {statusLoading ? "Sending..." : "Send OTP"}
+                                                <ArrowRight className="ml-2 w-5 h-5" />
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            <div className="p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-center">
+                                                <p className="text-xs text-cyan-400 font-mono">OTP sent to {statusEmail}</p>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-500/70 ml-1">Enter OTP</label>
+                                                <Input
+                                                    placeholder="000000"
+                                                    className="bg-black/50 border-white/10 text-center text-3xl h-16 tracking-[0.5em] font-mono text-white placeholder:text-gray-800 rounded-xl focus:border-cyan-500/50"
+                                                    value={statusOtp}
+                                                    onChange={(e) => setStatusOtp(e.target.value)}
+                                                    maxLength={6}
+                                                />
+                                            </div>
+                                            <div className="flex gap-3">
+                                                <Button
+                                                    type="button"
+                                                    onClick={() => setStatusStep("email")}
+                                                    variant="outline"
+                                                    className="flex-1 h-14 border-white/20 text-gray-400 hover:text-white rounded-xl"
+                                                >
+                                                    Back
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    onClick={handleVerifyOtp}
+                                                    disabled={statusLoading}
+                                                    className="flex-1 h-14 bg-cyan-500 text-black hover:bg-cyan-400 rounded-xl font-bold"
+                                                >
+                                                    {statusLoading ? "Verifying..." : "Verify & Login"}
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
 
                     <div className="mt-12 flex items-center justify-center gap-8 opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all">

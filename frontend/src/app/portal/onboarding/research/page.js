@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { FlaskConical, ExternalLink, ChevronRight, ArrowRight } from "lucide-react";
+import { FlaskConical, Lock, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import axios from "axios";
@@ -23,37 +23,31 @@ export default function ResearchGatewayPage() {
 
     return (
         <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center text-center space-y-12 py-12">
-            <div className="w-28 h-28 bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 rotate-3 hover:rotate-0 transition-all duration-700 shadow-[0_0_40px_rgba(6,182,212,0.1)] relative group">
-                <div className="absolute inset-0 border border-cyan-500/20 -m-2 group-hover:m-0 transition-all" />
+            <div className="w-28 h-28 bg-gray-800/50 border border-gray-700 flex items-center justify-center text-gray-500 relative group">
+                <div className="absolute inset-0 border border-gray-700/50 -m-2" />
                 <FlaskConical className="w-14 h-14" />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/80">
+                    <Lock className="w-8 h-8 text-gray-600" />
+                </div>
             </div>
 
             <div className="space-y-6">
-                <h2 className="text-5xl font-black italic tracking-tighter uppercase text-white">R&D_<span className="text-cyan-500">LABS</span></h2>
+                <h2 className="text-5xl font-black italic tracking-tighter uppercase text-white">R&D_<span className="text-gray-500">LABS</span></h2>
+                <div className="inline-block px-6 py-3 bg-cyan-500/10 border border-cyan-500/30">
+                    <span className="text-cyan-400 text-sm font-black uppercase tracking-[0.3em]">COMING SOON</span>
+                </div>
                 <p className="text-gray-500 max-w-sm mx-auto leading-relaxed text-[10px] uppercase tracking-[0.2em] font-bold">
-                    [PROPRIETARY_ACCESS_REQUIRED] Step inside the internal DeepCytes laboratory. All project data is high-level confidential.
+                    [ACCESS_PENDING] The internal DeepCytes R&D Laboratory is currently being configured. This feature will be available in a future update.
                 </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-6 w-full max-w-md">
-                <Button
-                    variant="outline"
-                    className="flex-1 h-16 border-white/10 hover:bg-white/5 text-gray-500 rounded-none font-black text-[10px] uppercase tracking-widest"
-                    onClick={handleProceed}
-                >
-                    SKIP_PROTOTYPE_VIEW
-                </Button>
-                <Button
-                    className="flex-1 h-16 bg-cyan-600 hover:bg-cyan-500 text-white rounded-none font-black text-[10px] uppercase tracking-widest shadow-[0_0_20px_rgba(6,182,212,0.2)]"
-                    onClick={() => router.push("/research")}
-                >
-                    ACCESS_LAB_SHOWCASE <ExternalLink className="w-4 h-4 ml-3" />
-                </Button>
-            </div>
+            <Button onClick={handleProceed} className="w-full max-w-md h-16 bg-white text-black hover:bg-gray-200 rounded-none font-black italic tracking-[0.2em] text-xs transition-all">
+                CONTINUE_TO_FEEDBACK <ArrowRight className="w-4 h-4 ml-3" />
+            </Button>
 
-            <div className="flex items-center gap-3 text-[9px] font-black uppercase text-cyan-500/40 tracking-[0.4em] px-6 py-3 border border-cyan-500/10">
-                <span className="w-1.5 h-1.5 bg-cyan-500 rounded-full animate-ping" />
-                LIVE_INTERNAL_INFRASTRUCTURE_ACTIVE
+            <div className="flex items-center gap-3 text-[9px] font-black uppercase text-gray-600 tracking-[0.4em] px-6 py-3 border border-gray-800">
+                <span className="w-1.5 h-1.5 bg-gray-600 rounded-full" />
+                INFRASTRUCTURE_UNDER_DEVELOPMENT
             </div>
         </motion.div>
     );

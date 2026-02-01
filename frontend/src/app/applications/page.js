@@ -653,16 +653,22 @@ function AdminDashboardContent() {
                                             <span className="text-sm font-mono text-gray-600 w-10">{String(idx + 1).padStart(2, '0')}</span>
                                             <div>
                                                 <h3 className="font-bold text-xl text-white group-hover:text-cyan-400 transition-colors uppercase tracking-widest mb-1.5">{app.firstName} {app.lastName}</h3>
-                                                <div className="flex gap-6 text-xs font-mono text-gray-500 items-center">
+                                                <div className="flex gap-6 text-xs font-mono text-gray-500 items-center flex-wrap">
                                                     <span className="text-white/60">{app.email}</span>
                                                     <span className="text-cyan-600 uppercase text-[10px] font-bold">REQ: {typeof app.role === 'object' ? app.role?.name : app.role}</span>
                                                     {app.processedBy && (
                                                         <span className="text-gray-400 border border-white/10 px-2 py-0.5 text-[10px] bg-white/5">AUTH: {app.processedBy}</span>
                                                     )}
+                                                    {app.interviewDetails?.scheduledAt && (
+                                                        <span className="text-orange-400 border border-orange-500/30 px-2 py-0.5 text-[10px] bg-orange-500/5 flex items-center gap-1">
+                                                            <Clock className="w-3 h-3" />
+                                                            {new Date(app.interviewDetails.scheduledAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className={`px-4 py-1.5 border text-xs font-bold uppercase tracking-widest ${app.status === 'ACCEPTED' ? 'border-green-500/50 text-green-500 bg-green-500/5' : app.status === 'REJECTED' ? 'border-red-500/50 text-red-500 bg-red-500/5' : 'border-yellow-500/50 text-yellow-500 bg-yellow-500/5'}`}>
+                                        <div className={`px-4 py-1.5 border text-xs font-bold uppercase tracking-widest ${app.status === 'ACCEPTED' ? 'border-green-500/50 text-green-500 bg-green-500/5' : app.status === 'REJECTED' ? 'border-red-500/50 text-red-500 bg-red-500/5' : app.status === 'INTERVIEW_SCHEDULED' ? 'border-orange-500/50 text-orange-500 bg-orange-500/5' : 'border-yellow-500/50 text-yellow-500 bg-yellow-500/5'}`}>
                                             {app.status}
                                         </div>
                                     </div>
@@ -859,11 +865,11 @@ function AdminDashboardContent() {
                                                         </div>
                                                     )}
 
-                                                    {selectedItem.status === 'PENDING' && (
+                                                    {(selectedItem.status === 'PENDING' || selectedItem.status === 'INTERVIEW_SCHEDULED' || selectedItem.status === 'INTERVIEW_SKIPPED') && (
                                                         <div className="space-y-3">
                                                             <label className="text-xs font-mono text-gray-500 uppercase tracking-wider">Interview Protocol</label>
 
-                                                            {/* Show Schedule Button or Current Status */}
+                                                            {/* Show Schedule Button for PENDING */}
                                                             {selectedItem.status === 'PENDING' && (!selectedItem.interviewDetails || selectedItem.interviewDetails.status === 'PENDING') ? (
                                                                 <div className="grid grid-cols-2 gap-4">
                                                                     <button
@@ -877,6 +883,44 @@ function AdminDashboardContent() {
                                                                         className="h-10 border border-gray-600/50 text-gray-500 hover:text-white hover:border-white/50 text-xs font-bold uppercase tracking-wider"
                                                                     >
                                                                         Skip Protocol
+                                                                    </button>
+                                                                </div>
+                                                            ) : selectedItem.status === 'INTERVIEW_SCHEDULED' ? (
+                                                                <div className="space-y-3">
+                                                                    {/* Current Interview Details */}
+                                                                    <div className="p-4 bg-orange-900/10 border border-orange-500/30 space-y-2">
+                                                                        <div className="flex items-center justify-between">
+                                                                            <span className="text-[10px] font-mono text-orange-400 uppercase">Scheduled_Time:</span>
+                                                                            <span className="text-xs font-mono text-white">
+                                                                                {selectedItem.interviewDetails?.scheduledAt
+                                                                                    ? new Date(selectedItem.interviewDetails.scheduledAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
+                                                                                    : 'N/A'}
+                                                                            </span>
+                                                                        </div>
+                                                                        <div className="flex items-center justify-between">
+                                                                            <span className="text-[10px] font-mono text-orange-400 uppercase">Meet_Link:</span>
+                                                                            <a
+                                                                                href={selectedItem.interviewDetails?.meetLink?.startsWith('http') ? selectedItem.interviewDetails.meetLink : `https://${selectedItem.interviewDetails?.meetLink}`}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                className="text-xs font-mono text-cyan-400 hover:underline truncate max-w-[200px]"
+                                                                            >
+                                                                                {selectedItem.interviewDetails?.meetLink || 'N/A'}
+                                                                            </a>
+                                                                        </div>
+                                                                    </div>
+                                                                    {/* Reschedule Button */}
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            setScheduleData({
+                                                                                scheduledAt: selectedItem.interviewDetails?.scheduledAt ? new Date(selectedItem.interviewDetails.scheduledAt).toISOString().slice(0, 16) : '',
+                                                                                meetLink: selectedItem.interviewDetails?.meetLink || ''
+                                                                            });
+                                                                            setShowScheduleModal(true);
+                                                                        }}
+                                                                        className="w-full h-10 border border-orange-500/50 text-orange-400 bg-orange-900/10 hover:bg-orange-500/20 text-xs font-bold uppercase tracking-wider"
+                                                                    >
+                                                                        Reschedule Interview
                                                                     </button>
                                                                 </div>
                                                             ) : (
