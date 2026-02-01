@@ -5,6 +5,7 @@ const path = require('path');
 const crypto = require('crypto');
 
 class DocumentService {
+
     /**
      * Generate Premium NDA Document
      * @param {Object} applicantData - { firstName, lastName, email, globalPid }
@@ -29,7 +30,6 @@ class DocumentService {
             const regularFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
             const boldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
             const italicFont = await pdfDoc.embedFont(StandardFonts.TimesRomanItalic);
-            // Using Helvetica for header to match visual style if needed
             const headingFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
             const pageWidth = 595.28;
@@ -71,57 +71,193 @@ class DocumentService {
             yPos -= 40;
             const today = new Date().toLocaleDateString('en-GB');
 
-            // Party definitions
-            page.drawText('This Confidentiality and Non-Disclosure Agreement (the "Agreement") is entered into by and between:', { x: margin, y: yPos, size: 11, font: regularFont, color: black });
+            // Helper to check for new page
+            const checkPageAdd = (requiredSpace = 20) => {
+                if (yPos < 70) {
+                    page = pdfDoc.addPage([pageWidth, pageHeight]);
+                    yPos = pageHeight - margin;
+                    return true;
+                }
+                return false;
+            };
+
+            // Header Details
+            page.drawText(`Effective Date: ${today}`, { x: margin, y: yPos, size: 11, font: boldFont, color: black });
+            yPos -= 15;
+            page.drawText('Company: DeepCytes Ventures (hereinafter, the "Company")', { x: margin, y: yPos, size: 11, font: regularFont, color: black });
+            yPos -= 15;
+            const fellowNameText = `Fellow: ${applicantData.firstName} ${applicantData.lastName} (hereinafter, the "Fellow")`;
+            page.drawText(fellowNameText, { x: margin, y: yPos, size: 11, font: regularFont, color: black });
             yPos -= 25;
 
-            // Company
-            page.drawText('DeepCytes Ventures', { x: margin, y: yPos, size: 11, font: boldFont, color: black });
-            page.drawText(' (hereinafter referred to as the "Disclosing Party" or "Company"),', { x: margin + boldFont.widthOfTextAtSize('DeepCytes Ventures', 11), y: yPos, size: 11, font: regularFont });
-            yPos -= 18;
+            // Preamble
+            const preamble = 'This Agreement sets forth the terms and conditions under which the Fellow agrees to maintain the confidentiality of information disclosed by the Company during the course of their work with the DeepCytes Fellowship Program.';
+            let lines = this._wrapText(preamble, contentWidth, 11, regularFont);
+            for (const line of lines) {
+                checkPageAdd();
+                page.drawText(line, { x: margin, y: yPos, size: 11, font: regularFont });
+                yPos -= 15;
+            }
+            yPos -= 10;
 
-            // Employee
-            const nameText = `${applicantData.firstName} ${applicantData.lastName}`;
-            page.drawText(nameText, { x: margin, y: yPos, size: 11, font: boldFont, color: black });
-            page.drawText(' (hereinafter referred to as the "Receiving Party" or "Fellow").', { x: margin + boldFont.widthOfTextAtSize(nameText, 11), y: yPos, size: 11, font: regularFont });
+            // 1. Confidential Information
+            checkPageAdd();
+            page.drawText('1. Confidential Information', { x: margin, y: yPos, size: 11, font: boldFont, color: black });
+            yPos -= 15;
+            const para1 = '"Confidential Information" refers to all technical, non-technical, proprietary, or sensitive information disclosed to the Fellow by the Company in connection with the Fellowship, including, but not limited to, product plans, processes, drawings, research, data, business operations, and any other information disclosed verbally, in writing, electronically, or in any other form.';
+            lines = this._wrapText(para1, contentWidth, 11, regularFont);
+            for (const line of lines) {
+                checkPageAdd();
+                page.drawText(line, { x: margin, y: yPos, size: 11, font: regularFont });
+                yPos -= 15;
+            }
 
-            yPos -= 30;
-            page.drawText('1. Purpose', { x: margin, y: yPos, size: 11, font: boldFont, color: black });
-            yPos -= 15;
-            const para1 = 'The Receiving Party understands that during the course of the Fellowship, they may have access to confidential information regarding the Business, operations, and technology of the Disclosing Party. The purpose of this Agreement is to prevent the unauthorized disclosure of such Confidential Information.';
-            let lines = this._wrapText(para1, contentWidth, 11, regularFont);
-            for (const line of lines) { page.drawText(line, { x: margin, y: yPos, size: 11, font: regularFont }); yPos -= 15; }
+            yPos -= 10;
 
+            // 2. Fellow Obligations
+            checkPageAdd();
+            page.drawText('2. Fellow Obligations', { x: margin, y: yPos, size: 11, font: boldFont, color: black });
             yPos -= 15;
-            page.drawText('2. Confidential Information', { x: margin, y: yPos, size: 11, font: boldFont, color: black });
+            checkPageAdd();
+            page.drawText('The Fellow agrees to:', { x: margin, y: yPos, size: 11, font: regularFont });
             yPos -= 15;
-            const para2 = '"Confidential Information" shall include all non-public information, intellectual property, research data, technical specifications, and proprietary knowledge shared by the Disclosing Party.';
-            lines = this._wrapText(para2, contentWidth, 11, regularFont);
-            for (const line of lines) { page.drawText(line, { x: margin, y: yPos, size: 11, font: regularFont }); yPos -= 15; }
 
+            // 2.A
+            checkPageAdd();
+            page.drawText('A. Maintain Confidentiality:', { x: margin + 20, y: yPos, size: 11, font: boldFont });
             yPos -= 15;
-            page.drawText('3. Obligations of Receiving Party', { x: margin, y: yPos, size: 11, font: boldFont, color: black });
+            const para2A = 'Hold all Confidential Information in strict confidence and exercise a reasonable degree of care to prevent its disclosure to unauthorised third parties.';
+            lines = this._wrapText(para2A, contentWidth - 20, 11, regularFont);
+            for (const line of lines) {
+                checkPageAdd();
+                page.drawText(line, { x: margin + 20, y: yPos, size: 11, font: regularFont });
+                yPos -= 15;
+            }
+            yPos -= 5;
+
+            // 2.B
+            checkPageAdd();
+            page.drawText('B. No Disclosure:', { x: margin + 20, y: yPos, size: 11, font: boldFont });
             yPos -= 15;
-            const para3 = 'The Receiving Party agrees to hold all Confidential Information in strict confidence and shall not disclose, reproduce, or use such information for any purpose other than the Fellowship activities without prior written consent.';
+            const para2B = 'Not disclose, share, or otherwise make available the Confidential Information to any third party unless authorised in writing by the Company.';
+            lines = this._wrapText(para2B, contentWidth - 20, 11, regularFont);
+            for (const line of lines) {
+                checkPageAdd();
+                page.drawText(line, { x: margin + 20, y: yPos, size: 11, font: regularFont });
+                yPos -= 15;
+            }
+            yPos -= 5;
+
+            // 2.C
+            checkPageAdd();
+            page.drawText('C. No Unauthorised Use:', { x: margin + 20, y: yPos, size: 11, font: boldFont });
+            yPos -= 15;
+            const para2C = 'Not reproduce, use, or exploit the Confidential Information for any purpose other than for the performance of duties for the Company.';
+            lines = this._wrapText(para2C, contentWidth - 20, 11, regularFont);
+            for (const line of lines) {
+                checkPageAdd();
+                page.drawText(line, { x: margin + 20, y: yPos, size: 11, font: regularFont });
+                yPos -= 15;
+            }
+            yPos -= 5;
+
+            // 2.D
+            checkPageAdd();
+            page.drawText('D. Return of Materials:', { x: margin + 20, y: yPos, size: 11, font: boldFont });
+            yPos -= 15;
+            const para2D = 'Upon request or termination of the Fellowship, immediately return any materials, notes, documents, or equipment containing Confidential Information provided by the Company.';
+            lines = this._wrapText(para2D, contentWidth - 20, 11, regularFont);
+            for (const line of lines) {
+                checkPageAdd();
+                page.drawText(line, { x: margin + 20, y: yPos, size: 11, font: regularFont });
+                yPos -= 15;
+            }
+
+            yPos -= 10;
+
+            // 3. Company's Rights
+            checkPageAdd();
+            page.drawText('3. Company’s Rights', { x: margin, y: yPos, size: 11, font: boldFont, color: black });
+            yPos -= 15;
+            const para3 = 'The Company retains the sole right to determine the treatment of any information disclosed, including the ability to keep it confidential, file patents, copyrights, or take other actions as deemed necessary.';
             lines = this._wrapText(para3, contentWidth, 11, regularFont);
-            for (const line of lines) { page.drawText(line, { x: margin, y: yPos, size: 11, font: regularFont }); yPos -= 15; }
+            for (const line of lines) {
+                checkPageAdd();
+                page.drawText(line, { x: margin, y: yPos, size: 11, font: regularFont });
+                yPos -= 15;
+            }
 
+            yPos -= 10;
+
+            // 4. Intellectual Property
+            checkPageAdd();
+            page.drawText('4. Intellectual Property', { x: margin, y: yPos, size: 11, font: boldFont, color: black });
             yPos -= 15;
-            page.drawText('4. Term', { x: margin, y: yPos, size: 11, font: boldFont, color: black });
-            yPos -= 15;
-            const para4 = 'The obligations of confidentiality shall commence on the Effective Date and survive the termination of the Fellowship indefinitely for trade secrets and for a period of five (5) years for other Confidential Information.';
+            const para4 = 'The Fellow agrees not to file any patents or seek any intellectual property rights related to developments or inventions arising from the use of Confidential Information. Any discoveries, inventions, or technologies developed during the Fellowship shall remain the property of the Company.';
             lines = this._wrapText(para4, contentWidth, 11, regularFont);
-            for (const line of lines) { page.drawText(line, { x: margin, y: yPos, size: 11, font: regularFont }); yPos -= 15; }
+            for (const line of lines) {
+                checkPageAdd();
+                page.drawText(line, { x: margin, y: yPos, size: 11, font: regularFont });
+                yPos -= 15;
+            }
+
+            yPos -= 10;
+
+            // 5. Severability
+            checkPageAdd();
+            page.drawText('5. Severability', { x: margin, y: yPos, size: 11, font: boldFont, color: black });
+            yPos -= 15;
+            const para5 = 'If any provision of this Agreement is found to be invalid, illegal, or unenforceable by a court of competent jurisdiction, the remaining provisions will remain valid and enforceable, and the Agreement shall continue as intended by the parties.';
+            lines = this._wrapText(para5, contentWidth, 11, regularFont);
+            for (const line of lines) {
+                checkPageAdd();
+                page.drawText(line, { x: margin, y: yPos, size: 11, font: regularFont });
+                yPos -= 15;
+            }
+
+            yPos -= 10;
+
+            // 6. Employment Terms
+            checkPageAdd();
+            page.drawText('6. Employment Terms', { x: margin, y: yPos, size: 11, font: boldFont, color: black });
+            yPos -= 15;
+            const para6 = 'This Agreement does not constitute a promise of continued employment or a guarantee of any specific employment term. The Fellow’s participation in the Fellowship remains subject to the "at-will" nature of their engagement.';
+            lines = this._wrapText(para6, contentWidth, 11, regularFont);
+            for (const line of lines) {
+                checkPageAdd();
+                page.drawText(line, { x: margin, y: yPos, size: 11, font: regularFont });
+                yPos -= 15;
+            }
+
+            yPos -= 10;
+
+            // 7. Violation and Consequences
+            checkPageAdd();
+            page.drawText('7. Violation and Consequences', { x: margin, y: yPos, size: 11, font: boldFont, color: black });
+            yPos -= 15;
+            const para7 = 'A violation of this Agreement may result in disciplinary action, up to and including termination from the Fellowship, in accordance with the Company’s policies.';
+            lines = this._wrapText(para7, contentWidth, 11, regularFont);
+            for (const line of lines) {
+                checkPageAdd();
+                page.drawText(line, { x: margin, y: yPos, size: 11, font: regularFont });
+                yPos -= 15;
+            }
 
             // Acknowledgment
             yPos -= 25;
+            checkPageAdd(40); // Need more space for title
             page.drawText('Acknowledgment and Acceptance', { x: margin, y: yPos, size: 12, font: boldFont, color: primaryColor });
             yPos -= 20;
-            const ackText = 'By signing below, both the Company and the Employee acknowledge and accept the terms of this Confidentiality and Non-Disclosure Agreement.';
+            const ackText = 'By signing below, both the Company and the Fellow acknowledge and accept the terms of this Confidentiality and Non-Disclosure Agreement.';
             lines = this._wrapText(ackText, contentWidth, 11, regularFont);
-            for (const line of lines) { page.drawText(line, { x: margin, y: yPos, size: 11, font: regularFont }); yPos -= 15; }
+            for (const line of lines) {
+                checkPageAdd();
+                page.drawText(line, { x: margin, y: yPos, size: 11, font: regularFont });
+                yPos -= 15;
+            }
 
             yPos -= 40;
+            checkPageAdd(40);
             page.drawText('AGREED:', {
                 x: margin,
                 y: yPos,
@@ -131,7 +267,14 @@ class DocumentService {
             });
 
             // ========== SIGNATURE SECTION (REPLICATED FROM OFFER LETTER) ==========
+            // Add significantly more spacing before signatures to prevent overlap
             yPos -= 70;
+
+            // Check if there's enough space for signatures, otherwise add page
+            if (yPos < 150) {
+                page = pdfDoc.addPage([pageWidth, pageHeight]);
+                yPos = pageHeight - margin - 50;
+            }
 
             const leftColX = margin;
             const rightColX = pageWidth / 2 + 20;
@@ -143,11 +286,11 @@ class DocumentService {
             if (fs.existsSync(signaturePath)) {
                 const sigBytes = fs.readFileSync(signaturePath);
                 const sigImage = await pdfDoc.embedPng(sigBytes);
-                // Matched Offer Letter Scale
-                const sigDims = sigImage.scale(0.22);
+                // Smaller scale and positioned further left/up based on feedback
+                const sigDims = sigImage.scale(0.18); // Reduced size
                 page.drawImage(sigImage, {
-                    x: leftColX - 40,
-                    y: signatureBaseY - 45,
+                    x: leftColX - 80, // More to left
+                    y: signatureBaseY - 60, // Lowered
                     width: sigDims.width,
                     height: sigDims.height
                 });
@@ -156,11 +299,12 @@ class DocumentService {
             page.drawLine({ start: { x: leftColX, y: signatureBaseY - 50 }, end: { x: leftColX + signatureWidth, y: signatureBaseY - 50 }, thickness: 0.5, color: black });
 
             page.drawText('Mr. Shubham Pareek,', { x: leftColX, y: signatureBaseY - 65, size: 10, font: boldFont, color: black });
-            page.drawText('Global Alliance Officer,', { x: leftColX, y: signatureBaseY - 78, size: 9, font: regularFont, color: darkGray });
+            page.drawText('Co-Founder | Global Alliance Officer', { x: leftColX, y: signatureBaseY - 78, size: 9, font: regularFont, color: darkGray }); // Added Co-Founder
             page.drawText('DeepCytes Ventures', { x: leftColX, y: signatureBaseY - 91, size: 9, font: regularFont, color: darkGray });
 
             // === RIGHT COLUMN: Fellow ===
-            page.drawText(`${applicantData.firstName} ${applicantData.lastName}`, { x: rightColX, y: signatureBaseY - 35, size: 14, font: italicFont, color: primaryColor });
+            const fellowName = `${applicantData.firstName} ${applicantData.lastName}`.toUpperCase();
+            page.drawText(fellowName, { x: rightColX, y: signatureBaseY - 35, size: 12, font: regularFont, color: black }); // Times Roman, CAPS, Black
             page.drawLine({ start: { x: rightColX, y: signatureBaseY - 50 }, end: { x: rightColX + signatureWidth, y: signatureBaseY - 50 }, thickness: 0.5, color: black });
 
             page.drawText('(Signature)', { x: rightColX, y: signatureBaseY - 63, size: 8, font: italicFont, color: lightGray });
@@ -361,10 +505,10 @@ class DocumentService {
                 const sigBytes = fs.readFileSync(signaturePath);
                 const sigImage = await pdfDoc.embedPng(sigBytes);
                 // Smaller scale and positioned further left/up based on feedback
-                const sigDims = sigImage.scale(0.22);
+                const sigDims = sigImage.scale(0.18); // Reduced size
                 page.drawImage(sigImage, {
-                    x: leftColX - 40, // Moved even more left (was -20)
-                    y: signatureBaseY - 45, // Moved down relative to base (was -35)
+                    x: leftColX - 80, // Moved even more left (was -40)
+                    y: signatureBaseY - 60, // Moved down relative to base (was -35)
                     width: sigDims.width,
                     height: sigDims.height
                 });
@@ -385,12 +529,13 @@ class DocumentService {
 
             // === RIGHT COLUMN: Fellow ===
             // Fellow's typed signature name
-            page.drawText(`${fellowData.firstName} ${fellowData.lastName}`, {
+            const fellowName = `${fellowData.firstName} ${fellowData.lastName}`.toUpperCase();
+            page.drawText(fellowName, {
                 x: rightColX,
                 y: signatureBaseY - 35,
-                size: 14,
-                font: italicFont,
-                color: primaryColor
+                size: 12, // Standard size
+                font: regularFont, // Times Roman
+                color: black // Standard Black
             });
 
             // Line under Fellow's signature
@@ -401,39 +546,33 @@ class DocumentService {
                 color: black
             });
 
-            // (Signature) label
             page.drawText('(Signature)', { x: rightColX, y: signatureBaseY - 63, size: 8, font: italicFont, color: lightGray });
 
-            // Date
             const fellowDateText = `Date: ${today}`;
             page.drawText(fellowDateText, { x: rightColX, y: signatureBaseY - 78, size: 9, font: regularFont, color: darkGray });
 
-            // ========== FOOTER ==========
-            page.drawText(`DeepCytes Ventures | Fellowship Offer Letter`, { x: margin, y: 30, size: 8, font: regularFont, color: lightGray, opacity: 0.6 });
-            page.drawLine({ start: { x: margin, y: 50 }, end: { x: pageWidth - margin, y: 50 }, thickness: 1, color: primaryColor, opacity: 0.3 });
-
-            if (tenureData && tenureData.isPreview) {
-                page.drawText('UNSIGNED PREVIEW', {
-                    x: 100,
-                    y: 300,
-                    size: 60,
-                    font: boldFont,
-                    color: rgb(1, 0, 0),
-                    opacity: 0.15,
-                    rotate: degrees(45),
+            // Footer watermark on all pages
+            const pages = pdfDoc.getPages();
+            pages.forEach((pg, idx) => {
+                // Removed email from footer as requested
+                pg.drawText(`DeepCytes Ventures | Offer Letter | Page ${idx + 1}/${pages.length}`, {
+                    x: margin,
+                    y: 30,
+                    size: 8,
+                    font: regularFont,
+                    color: lightGray,
+                    opacity: 0.6,
                 });
-            }
+            });
 
+            // Save unprotected PDF
             const pdfBytes = await pdfDoc.save();
-
-            if (tenureData && tenureData.isPreview) {
-                return { buffer: pdfBytes, path: null, hash: null };
-            }
 
             const tempPath = path.join(path.dirname(outputPath), `temp_${crypto.randomBytes(4).toString('hex')}.pdf`);
             fs.writeFileSync(tempPath, pdfBytes);
             const protectedPath = path.join(path.dirname(outputPath), `prot_${crypto.randomBytes(4).toString('hex')}.pdf`);
 
+            // Apply password protection
             muhammara.recrypt(tempPath, protectedPath, {
                 userPassword: password,
                 ownerPassword: crypto.randomBytes(32).toString('hex'),
@@ -444,6 +583,7 @@ class DocumentService {
                 throw new Error("Encryption failed - Protected file not created");
             }
 
+            // Move to final output path
             fs.copyFileSync(protectedPath, outputPath);
 
             fs.unlinkSync(tempPath);
@@ -454,7 +594,6 @@ class DocumentService {
             const hash = crypto.createHash('sha256').update(finalBytes).digest('hex');
 
             return { buffer: finalBytes, hash, path: outputPath, password };
-
         } catch (error) {
             console.error('Offer Letter Generation Error:', error);
             throw error;
