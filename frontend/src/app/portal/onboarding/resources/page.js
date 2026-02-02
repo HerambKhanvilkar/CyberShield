@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { BookOpen, Shield, FlaskConical, MessageSquare, Download, ArrowRight } from "lucide-react";
+import { BookOpen, Shield, FlaskConical, MessageSquare, Lock, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import axios from "axios";
@@ -28,36 +28,45 @@ export default function ResourcesPage() {
                 <p className="text-gray-500 text-[10px] uppercase tracking-widest mt-2 font-bold">Secure Retrieval of Fellowship Assets & Guidelines.</p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Coming Soon Banner */}
+            <div className="p-8 bg-cyan-500/5 border border-cyan-500/20 text-center space-y-4">
+                <div className="inline-block px-6 py-3 bg-cyan-500/10 border border-cyan-500/30">
+                    <span className="text-cyan-400 text-sm font-black uppercase tracking-[0.3em]">COMING SOON</span>
+                </div>
+                <p className="text-gray-500 text-[10px] uppercase tracking-widest font-bold max-w-lg mx-auto">
+                    Fellowship resources are currently being prepared. Handbooks, brand kits, and documentation will be available here soon.
+                </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 opacity-50">
                 {[
                     { title: 'Fellowship_Handbook', icon: <BookOpen className="w-5 h-5" />, type: 'PDF' },
                     { title: 'Brand_Identity_Kit', icon: <Shield className="w-5 h-5" />, type: 'ZIP' },
                     { title: 'Internal_Ethics_v1', icon: <FlaskConical className="w-5 h-5" />, type: 'PDF' },
                     { title: 'Comm_Protocols', icon: <MessageSquare className="w-5 h-5" />, type: 'DOCX' }
                 ].map((item, idx) => (
-                    <div key={idx} className="p-6 bg-black border border-white/5 hover:border-cyan-500/50 transition-all group cursor-pointer relative overflow-hidden">
+                    <div key={idx} className="p-6 bg-black border border-white/5 relative overflow-hidden cursor-not-allowed">
                         <div className="flex items-center gap-6">
-                            <div className="w-12 h-12 border border-white/10 flex items-center justify-center text-gray-500 group-hover:text-cyan-500 group-hover:border-cyan-500/50 transition-all">{item.icon}</div>
+                            <div className="w-12 h-12 border border-white/10 flex items-center justify-center text-gray-600">{item.icon}</div>
                             <div className="flex-1">
-                                <h4 className="font-black text-[11px] text-white uppercase tracking-widest">{item.title}</h4>
-                                <p className="text-[8px] text-gray-600 uppercase tracking-widest font-bold mt-1">{item.type} • Restricted_Access</p>
+                                <h4 className="font-black text-[11px] text-gray-500 uppercase tracking-widest">{item.title}</h4>
+                                <p className="text-[8px] text-gray-700 uppercase tracking-widest font-bold mt-1">{item.type} • Pending_Upload</p>
                             </div>
-                            <Download className="w-4 h-4 text-gray-800 group-hover:text-cyan-500 transition-colors" />
+                            <Lock className="w-4 h-4 text-gray-700" />
                         </div>
                     </div>
                 ))}
             </div>
 
-            <div className="p-8 bg-cyan-500/5 border border-cyan-500/10 italic">
-                <h4 className="text-[9px] font-black text-cyan-500 uppercase tracking-[0.3em] mb-3">[SECURITY_ADVISORY]</h4>
-                <p className="text-gray-500 text-[10px] leading-relaxed">
-                    All retrieved assets are cryptographically watermarked with your Personnel ID for traceability.
-                    Unlicensed distribution is a violation of the signed NDA Protocol.
+            <div className="p-8 bg-gray-900/50 border border-gray-800 italic">
+                <h4 className="text-[9px] font-black text-gray-500 uppercase tracking-[0.3em] mb-3">[SYSTEM_NOTICE]</h4>
+                <p className="text-gray-600 text-[10px] leading-relaxed">
+                    Resource distribution is pending administrative approval. All materials will be cryptographically watermarked with your Personnel ID once available.
                 </p>
             </div>
 
             <Button onClick={handleProceed} className="w-full h-16 bg-white text-black hover:bg-gray-200 rounded-none font-black italic tracking-[0.2em] text-xs transition-all">
-                EXECUTE_HUB_EXIT_&_RESEARCH_ACCESS <ArrowRight className="w-4 h-4 ml-3" />
+                PROCEED_TO_R&D_LABS <ArrowRight className="w-4 h-4 ml-3" />
             </Button>
         </motion.div>
     );
