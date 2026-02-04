@@ -526,7 +526,7 @@ export default function ApplicationForm() {
                                 disabled={submitLoading || emailStep !== "verified" || !formData.consent}
                                 className="w-full h-12 sm:h-14 text-base sm:text-lg font-black italic tracking-[0.05em] sm:tracking-[0.1em] bg-white text-black hover:bg-cyan-400 transition-all rounded-[2rem] shadow-2xl shadow-cyan-500/10 group flex items-center justify-center px-3 sm:px-6 whitespace-normal"
                             >
-                                <span className="flex-1 text-center truncate">{submitLoading ? "TRANSMITTING DATA..." : "TRANSMIT APPLICATION"}</span>
+                                <span className="flex-1 text-center truncate">{submitLoading ? "SUBMITTING DATA..." : "SUBMIT APPLICATION"}</span>
                                 <Send className="ml-2 sm:ml-3 w-4 sm:w-5 h-4 sm:h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform flex-shrink-0" />
                             </Button>
                         </form>

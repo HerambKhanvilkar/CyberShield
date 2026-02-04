@@ -34,7 +34,7 @@ export default function ApplyLanding() {
         if (!statusEmail) return toast.error("Please enter your email");
         setStatusLoading(true);
         try {
-            await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/auth/login/otp`, { email: statusEmail });
+            await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/auth/register/otp`, { email: statusEmail });
             setStatusStep("otp");
             toast.success("OTP sent to your email!");
         } catch (error) {
@@ -121,7 +121,7 @@ export default function ApplyLanding() {
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-500/70 ml-1">Access Credential</label>
                                         <Input
-                                            placeholder="ORG-CODE-2026"
+                                            placeholder="ORG-CODE"
                                             className="bg-black/50 border-white/10 text-center text-2xl h-20 tracking-[0.1em] font-black text-white placeholder:text-gray-800 rounded-2xl focus:border-cyan-500/50 focus:ring-cyan-500/20"
                                             value={code}
                                             onChange={(e) => setCode(e.target.value)}
