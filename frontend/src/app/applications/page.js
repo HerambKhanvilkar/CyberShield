@@ -244,9 +244,20 @@ function AdminDashboardContent() {
         setActionLoading(true);
         try {
             const token = localStorage.getItem("accessToken");
+            // Convert the datetime-local value to Asia/Kolkata ISO string
+            const localDate = new Date(scheduleData.scheduledAt);
+            // Calculate IST offset (Asia/Kolkata is UTC+5:30)
+            const istOffsetMinutes = 5.5 * 60;
+            const utcDate = new Date(localDate.getTime() - (localDate.getTimezoneOffset() * 60000));
+            // Add IST offset
+            const istDate = new Date(utcDate.getTime() + istOffsetMinutes * 60000);
+            // Format as ISO string with explicit offset
+            const pad = n => n.toString().padStart(2, '0');
+            const istIsoString = `${istDate.getFullYear()}-${pad(istDate.getMonth() + 1)}-${pad(istDate.getDate())}T${pad(istDate.getHours())}:${pad(istDate.getMinutes())}:00+05:30`;
             await axios.put(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/application/admin/schedule-interview`, {
                 applicantId: selectedItem._id,
-                ...scheduleData
+                scheduledAt: istIsoString,
+                meetLink: scheduleData.meetLink
             }, { headers: { Authorization: `Bearer ${token}` } });
             toast.success("Interview Scheduled & Email Sent!");
             setShowScheduleModal(false);
@@ -954,13 +965,13 @@ function AdminDashboardContent() {
 
                                                             <div className="h-px bg-white/10 my-4" />
 
-                                                            <label className="text-xs font-mono text-gray-500 uppercase tracking-wider">Tenure Termination Code</label>
+                                                            {/* <label className="text-xs font-mono text-gray-500 uppercase tracking-wider">Tenure Termination Code</label>
                                                             <Input
                                                                 placeholder="DDMMYYYY"
                                                                 value={tenureEndDate}
                                                                 onChange={e => setTenureEndDate(e.target.value)}
                                                                 className="bg-black border-white/20 h-12 font-mono text-center text-lg tracking-[0.3em] text-cyan-400 focus:border-cyan-500"
-                                                            />
+                                                            /> */}
                                                         </div>
                                                     )}
 

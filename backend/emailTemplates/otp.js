@@ -61,7 +61,7 @@ function getOTPEmail(otpCode) {
           
           <!-- Logo -->
           <div style="text-align: center; padding-bottom: 10px;">
-            <img class="logo" src="${process.env.SERVER_URL}/STAGE%20NEO.png" alt="DeepCytes Fellowship Logo" width="100" style="display: block; margin: 0 auto;">
+            <img class="logo" src="https://profile.deepcytes.io/STAGE%20NEO.png" alt="DeepCytes Fellowship Logo" width="100" style="display: block; margin: 0 auto;">
           </div>
 
           <!-- Header -->

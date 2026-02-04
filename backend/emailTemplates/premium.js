@@ -42,7 +42,7 @@ function getPremiumTemplate({ title, message, bodyContent, footerExtra = "" }) {
           
           <!-- Logo -->
           <div style="text-align: center; padding-bottom: 20px;">
-            <img class="logo" src="https://static.wixstatic.com/media/e48a18_c949f6282e6a4c8e9568f40916a0c704~mv2.png/v1/crop/x_0,y_151,w_1920,h_746/fill/w_310,h_120,fp_0.50_0.50,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/For%20Dark%20Theme.png" alt="DeepCytes Logo" width="120" style="display: block; margin: 0 auto;">
+            <img class="logo" src="https://profile.deepcytes.io/STAGE%20NEO.png" alt="DeepCytes Logo" width="120" style="display: block; margin: 0 auto;">
           </div>
 
           <!-- Header -->

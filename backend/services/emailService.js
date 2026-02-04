@@ -236,31 +236,55 @@ const sendAdminDailyReport = async (email, adminName, date, logs) => {
  * @param {string} meetLink - Google Meet link
  */
 const sendInterviewScheduledEmail = async (email, scheduledAt, meetLink) => {
-  const formattedDate = new Date(scheduledAt).toLocaleString('en-US', {
+
+  // Format date/time in IST for email
+  const istDate = new Date(scheduledAt).toLocaleString('en-IN', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    hour12: true,
+    timeZone: 'Asia/Kolkata',
     timeZoneName: 'short'
   });
 
-  // ISO format for .ics
-  const startISO = new Date(scheduledAt).toISOString().replace(/[-:]|\.\d{3}/g, '').slice(0, 15) + 'Z';
-  // Default duration: 1 hour
-  const endISO = new Date(new Date(scheduledAt).getTime() + 60 * 60 * 1000).toISOString().replace(/[-:]|\.\d{3}/g, '').slice(0, 15) + 'Z';
+  // For .ics: DTSTART/DTEND in local IST (Asia/Kolkata)
+  function pad(n) { return n < 10 ? '0' + n : n; }
+  const dt = new Date(scheduledAt);
+  const dtEnd = new Date(dt.getTime() + 60 * 60 * 1000);
+  function icsLocal(dt) {
+    return dt.getFullYear() + pad(dt.getMonth() + 1) + pad(dt.getDate()) + 'T' + pad(dt.getHours()) + pad(dt.getMinutes()) + '00';
+  }
+  const startIST = icsLocal(dt);
+  const endIST = icsLocal(dtEnd);
 
-  // Generate .ics calendar invite
+  // VTIMEZONE for Asia/Kolkata
+  const vtimezone = [
+    'BEGIN:VTIMEZONE',
+    'TZID:Asia/Kolkata',
+    'X-LIC-LOCATION:Asia/Kolkata',
+    'BEGIN:STANDARD',
+    'TZOFFSETFROM:+0530',
+    'TZOFFSETTO:+0530',
+    'TZNAME:IST',
+    'DTSTART:19700101T000000',
+    'END:STANDARD',
+    'END:VTIMEZONE'
+  ].join('\r\n');
+
+  // Generate .ics calendar invite with IST
   const icsContent = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
     'PRODID:-//DeepCytes//Interview//EN',
+    vtimezone,
     'BEGIN:VEVENT',
     `UID:${Date.now()}@deepcytes.com`,
-    `DTSTAMP:${startISO}`,
-    `DTSTART:${startISO}`,
-    `DTEND:${endISO}`,
+    `DTSTAMP:${startIST}`,
+    `DTSTART;TZID=Asia/Kolkata:${startIST}`,
+    `DTEND;TZID=Asia/Kolkata:${endIST}`,
     'SUMMARY:DeepCytes Fellowship Interview',
     'DESCRIPTION:Your interview for the DeepCytes Fellowship. Please join using the provided meeting link.',
     `LOCATION:${meetLink}`,
@@ -278,8 +302,8 @@ const sendInterviewScheduledEmail = async (email, scheduledAt, meetLink) => {
         <h3 style="margin: 0 0 10px 0; font-size: 13px; color: #06b6d0; font-family: monospace;">Interview Event</h3>
         <table style="width:100%; font-size:15px; color:#fff; margin-bottom:10px;">
           <tr><td><strong>Subject:</strong></td><td>DeepCytes Fellowship Interview</td></tr>
-          <tr><td><strong>Date & Time:</strong></td><td>${formattedDate}</td></tr>
-          <tr><td><strong>Location:</strong></td><td><a href="${meetLink}" style="color: #06b6d0; text-decoration: underline;">${meetLink}</a></td></tr>
+          <tr><td><strong>Date & Time:</strong></td><td>${istDate}</td></tr>
+          <tr><td><strong>Link:</strong></td><td><a href="${meetLink}" style="color: #06b6d0; text-decoration: underline;">${meetLink}</a></td></tr>
         </table>
         <p style="margin: 5px 0; color: #b0b0b0;">You may add this event to your calendar using the attached file or by clicking the meeting link above.</p>
       </div>
@@ -294,8 +318,8 @@ const sendInterviewScheduledEmail = async (email, scheduledAt, meetLink) => {
   const attachments = [
     {
       filename: 'DeepCytes-Interview.ics',
-      content: icsContent,
-      contentType: 'text/calendar'
+      data: Buffer.from(icsContent, 'utf-8'),
+      contentType: 'text/calendar; charset=utf-8'
     }
   ];
 
