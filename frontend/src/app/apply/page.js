@@ -77,14 +77,14 @@ export default function ApplyLanding() {
                     transition={{ duration: 0.8 }}
                     className="z-10 w-full max-w-xl"
                 >
-                    <div className="text-center mb-12">
+                    <div className="text-center mb-4">
                         <div className="inline-flex p-4 rounded-3xl bg-white/5 border border-white/10 mb-6 group">
                             <KeyRound className="w-10 h-10 text-cyan-400 group-hover:rotate-12 transition-transform" />
                         </div>
                         <h1 className="text-5xl md:text-7xl font-black italic tracking-tighter mb-4 bg-gradient-to-r from-white via-white to-gray-500 bg-clip-text text-transparent">
                             UNLOCK YOUR <br />FUTURE.
                         </h1>
-                        <p className="text-gray-500 text-lg max-w-sm mx-auto">
+                        <p className="text-gray-500 text-lg max-w-md mx-auto">
                             Enter the unique Organization Code provided by your institution to begin your DeepCytes Fellowship application.
                         </p>
                     </div>
@@ -138,80 +138,69 @@ export default function ApplyLanding() {
                                     </Button>
                                 </motion.form>
                             ) : (
-                                <motion.div
+                                <motion.form
                                     key="status"
                                     initial={{ opacity: 0, x: 20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: -20 }}
                                     className="space-y-6 relative z-10"
+                                    onSubmit={(e) => e.preventDefault()}
                                 >
-                                    <div className="text-center mb-4">
-                                        <Search className="w-8 h-8 text-cyan-400 mx-auto mb-3" />
-                                        <h3 className="text-lg font-bold uppercase tracking-widest text-white">Application Status</h3>
-                                        <p className="text-xs text-gray-500 mt-1">Enter the email you used for your application</p>
-                                    </div>
-
                                     {statusStep === "email" ? (
-                                        <div className="space-y-4">
-                                            <div className="space-y-2">
-                                                <label className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-500/70 ml-1">
-                                                    <Mail className="w-3 h-3 inline mr-2" />
-                                                    Registered Email
-                                                </label>
-                                                <Input
-                                                    type="email"
-                                                    placeholder="your.email@institution.edu"
-                                                    className="bg-black/50 border-white/10 text-center text-lg h-14 tracking-wide text-white placeholder:text-gray-700 rounded-xl focus:border-cyan-500/50"
-                                                    value={statusEmail}
-                                                    onChange={(e) => setStatusEmail(e.target.value)}
-                                                />
-                                            </div>
-                                            <Button
-                                                type="button"
-                                                onClick={handleSendOtp}
-                                                disabled={statusLoading}
-                                                className="w-full h-14 text-lg font-bold uppercase tracking-widest bg-cyan-500 text-black hover:bg-cyan-400 transition-all rounded-xl"
-                                            >
-                                                {statusLoading ? "Sending..." : "Send OTP"}
-                                                <ArrowRight className="ml-2 w-5 h-5" />
-                                            </Button>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-500/70 ml-1">Registered Email</label>
+                                            <Input
+                                                type="email"
+                                                placeholder="your.email@institution.edu"
+                                                className="bg-black/50 border-white/10 text-center text-2xl h-20 tracking-[0.1em] font-black text-white placeholder:text-gray-800 rounded-2xl focus:border-cyan-500/50 focus:ring-cyan-500/20"
+                                                value={statusEmail}
+                                                onChange={(e) => setStatusEmail(e.target.value)}
+                                            />
                                         </div>
                                     ) : (
-                                        <div className="space-y-4">
-                                            <div className="p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-center">
-                                                <p className="text-xs text-cyan-400 font-mono">OTP sent to {statusEmail}</p>
-                                            </div>
-                                            <div className="space-y-2">
-                                                <label className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-500/70 ml-1">Enter OTP</label>
-                                                <Input
-                                                    placeholder="000000"
-                                                    className="bg-black/50 border-white/10 text-center text-3xl h-16 tracking-[0.5em] font-mono text-white placeholder:text-gray-800 rounded-xl focus:border-cyan-500/50"
-                                                    value={statusOtp}
-                                                    onChange={(e) => setStatusOtp(e.target.value)}
-                                                    maxLength={6}
-                                                />
-                                            </div>
-                                            <div className="flex gap-3">
-                                                <Button
-                                                    type="button"
-                                                    onClick={() => setStatusStep("email")}
-                                                    variant="outline"
-                                                    className="flex-1 h-14 border-white/20 text-gray-400 hover:text-white rounded-xl"
-                                                >
-                                                    Back
-                                                </Button>
-                                                <Button
-                                                    type="button"
-                                                    onClick={handleVerifyOtp}
-                                                    disabled={statusLoading}
-                                                    className="flex-1 h-14 bg-cyan-500 text-black hover:bg-cyan-400 rounded-xl font-bold"
-                                                >
-                                                    {statusLoading ? "Verifying..." : "Verify & Login"}
-                                                </Button>
-                                            </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-500/70 ml-1">Enter OTP</label>
+                                            <Input
+                                                placeholder="000000"
+                                                className="bg-black/50 border-white/10 text-center text-2xl h-20 tracking-[0.1em] font-black text-white placeholder:text-gray-800 rounded-2xl focus:border-cyan-500/50 focus:ring-cyan-500/20"
+                                                value={statusOtp}
+                                                onChange={(e) => setStatusOtp(e.target.value)}
+                                                maxLength={6}
+                                            />
                                         </div>
                                     )}
-                                </motion.div>
+
+                                    {statusStep === "email" ? (
+                                        <Button
+                                            type="button"
+                                            onClick={handleSendOtp}
+                                            disabled={statusLoading}
+                                            className="w-full h-16 text-xl font-black italic tracking-widest bg-white text-black hover:bg-cyan-400 hover:text-black transition-all rounded-2xl group"
+                                        >
+                                            {statusLoading ? "Sending..." : "SEND OTP"}
+                                            <Sparkles className="ml-2 w-5 h-5 group-hover:scale-125 transition-transform" />
+                                        </Button>
+                                    ) : (
+                                        <div className="flex gap-3">
+                                            <Button
+                                                type="button"
+                                                onClick={() => setStatusStep("email")}
+                                                variant="outline"
+                                                className="flex-1 h-16 border-white/20 text-gray-400 hover:text-white rounded-2xl"
+                                            >
+                                                Back
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                onClick={handleVerifyOtp}
+                                                disabled={statusLoading}
+                                                className="flex-1 h-16 bg-white text-black hover:bg-cyan-400 hover:text-black rounded-2xl font-black"
+                                            >
+                                                {statusLoading ? "Verifying..." : "Verify & Login"}
+                                            </Button>
+                                        </div>
+                                    )}
+                                </motion.form>
                             )}
                         </AnimatePresence>
                     </div>

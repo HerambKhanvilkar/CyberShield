@@ -208,6 +208,12 @@ function Navbar() {
               >
                 <span>Badges</span>
               </Link>
+              <Link
+                href="/apply"
+                className="hover:text-[#3DB5DA] transition-colors flex items-center gap-2"
+              >
+                <span>Apply for Fellowships</span>
+              </Link>
 
               {user && user.isAdmin && (
                 <Link
