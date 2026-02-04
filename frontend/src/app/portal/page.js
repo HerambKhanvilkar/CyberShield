@@ -11,6 +11,17 @@ import { Button } from "@/components/ui/button";
 import { Search, CheckCircle, XCircle, Clock, ArrowRight, Mail, Calendar, ExternalLink } from "lucide-react";
 
 export default function ApplicationStatus() {
+        // Cooldown state for resend OTP
+        const [resendCooldown, setResendCooldown] = useState(0);
+
+        // Cooldown timer effect
+        useState(() => {
+            let timer;
+            if (resendCooldown > 0) {
+                timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+            }
+            return () => clearTimeout(timer);
+        }, [resendCooldown]);
     const [email, setEmail] = useState("");
     const [otp, setOtp] = useState("");
     const [step, setStep] = useState(1); // 1: Email, 2: OTP, 3: Result
@@ -18,13 +29,15 @@ export default function ApplicationStatus() {
     const [result, setResult] = useState(null);
     const router = useRouter();
 
-    const handleSendOtp = async (e) => {
-        e.preventDefault();
+    const handleSendOtp = async (e, isResend = false) => {
+        if (e) e.preventDefault();
+        if (isResend && resendCooldown > 0) return;
         setLoading(true);
         try {
             await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/auth/register/otp`, { email });
             toast.success("OTP sent to your email!");
             setStep(2);
+            setResendCooldown(45);
         } catch (error) {
             toast.error(error.response?.data?.msg || error.response?.data?.message || "Failed to send OTP");
         } finally {
@@ -75,26 +88,26 @@ export default function ApplicationStatus() {
                             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-cyan-600/20 border border-cyan-500/30 mb-4 shadow-lg">
                                 <Search className="text-cyan-400 w-8 h-8" />
                             </div>
-                            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight italic mb-2 bg-clip-text text-transparent bg-gradient-to-r from-white to-cyan-400">Application Status</h1>
-                            <p className="text-gray-400 text-base sm:text-lg mt-2">Track your progress in the DeepCytes Fellowship</p>
+                            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight italic mb-2 bg-clip-text text-transparent bg-gradient-to-r from-white to-cyan-400">Fellowship Application Status</h1>
+                            <p className="text-gray-400 text-base sm:text-lg mt-2">Monitor the status of your DeepCytes Fellowship application</p>
                         </div>
                     )}
 
                     {step === 1 && (
                         <form onSubmit={handleSendOtp} className="space-y-7">
                             <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase tracking-widest text-gray-500 ml-1">Registered Email</label>
+                                <label className="text-xs font-bold uppercase tracking-widest text-gray-500 ml-1">Email Address</label>
                                 <Input
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
-                                    placeholder="Enter your application email"
+                                    placeholder="Enter the email used for your application"
                                     className="bg-black/40 border-white/10 text-white h-12 rounded-xl text-base"
                                 />
                             </div>
                             <Button type="submit" disabled={loading} className="w-full h-12 bg-gradient-to-r from-cyan-600 to-cyan-400 hover:from-cyan-500 hover:to-cyan-300 rounded-xl font-bold transition-all shadow-lg">
-                                {loading ? "Finding Application..." : "Check My Status"}
+                                {loading ? "Searching for Application..." : "View Application Status"}
                             </Button>
                         </form>
                     )}
@@ -102,22 +115,30 @@ export default function ApplicationStatus() {
                     {step === 2 && (
                         <form onSubmit={handleVerifyOtp} className="space-y-7">
                             <div className="text-center mb-6">
-                                <p className="text-base text-gray-400">An OTP has been sent to <span className="text-white font-semibold">{email}</span></p>
+                                <p className="text-base text-gray-400">A one-time passcode (OTP) has been sent to <span className="text-white font-semibold">{email}</span></p>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase tracking-widest text-gray-500 ml-1">Enter Verification Code</label>
+                                <label className="text-xs font-bold uppercase tracking-widest text-gray-500 ml-1">Verification Code</label>
                                 <Input
                                     value={otp}
                                     onChange={(e) => setOtp(e.target.value)}
                                     required
-                                    placeholder="6-digit code"
+                                    placeholder="Enter 6-digit code"
                                     className="bg-black/40 border-white/10 text-white h-12 text-center text-2xl tracking-[0.5em] font-mono rounded-xl"
                                 />
                             </div>
-                            <Button type="submit" disabled={loading} className="w-full h-12 bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 rounded-xl font-bold transition-all shadow-lg">
-                                {loading ? "Verifying..." : "View Result"}
-                            </Button>
-                            <button type="button" onClick={() => setStep(1)} className="w-full text-xs text-gray-500 hover:text-white transition-colors">Using a different email?</button>
+                            <div className="flex flex-col gap-2">
+                                <Button type="submit" disabled={loading} className="w-full h-12 bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 rounded-xl font-bold transition-all shadow-lg">
+                                    {loading ? "Verifying..." : "Submit Verification Code"}
+                                </Button>
+                                <Button type="button" onClick={(e) => handleSendOtp(e, true)} disabled={resendCooldown > 0 || loading} className="w-full h-12 bg-gradient-to-r from-cyan-600 to-cyan-400 hover:from-cyan-500 hover:to-cyan-300 rounded-xl font-bold transition-all shadow-lg">
+                                    {resendCooldown > 0 ? `Resend Code (${resendCooldown}s)` : "Resend Code"}
+                                </Button>
+                                {resendCooldown > 0 && (
+                                    <span className="text-xs text-gray-400 text-center">You may request a new code in {resendCooldown} seconds.</span>
+                                )}
+                            </div>
+                            <button type="button" onClick={() => setStep(1)} className="w-full text-xs text-gray-500 hover:text-white transition-colors">Use a different email address</button>
                         </form>
                     )}
 
@@ -130,7 +151,7 @@ export default function ApplicationStatus() {
                                     </div>
                                     <div className="space-y-2">
                                         <h2 className="text-2xl font-bold text-yellow-400">Application Under Review</h2>
-                                        <p className="text-gray-400">Sit tight, {result.firstName}! Our team is currently reviewing your expertise. You'll receive an email once a decision is made.</p>
+                                        <p className="text-gray-400">Thank you for your interest, {result.firstName}. Your application is currently under review by our admissions team. You will be notified via email once a decision has been made.</p>
                                     </div>
                                 </div>
                             )}
@@ -148,11 +169,11 @@ export default function ApplicationStatus() {
                                         <div className="flex items-center gap-3">
                                             <Calendar className="text-cyan-400 w-8 h-8" />
                                             <h2 className="text-3xl font-black uppercase tracking-tighter text-white">
-                                                INTERVIEW SCHEDULED
+                                                Interview Scheduled
                                             </h2>
                                         </div>
                                         <p className="text-gray-400 text-sm max-w-sm mx-auto leading-relaxed">
-                                            Your engagement sequence has been initialized. Please prepare for your fellowship evaluation at the designated time.
+                                            Your interview has been scheduled. Please review the details below and ensure you are prepared at the designated time.
                                         </p>
                                     </div>
 
@@ -160,11 +181,11 @@ export default function ApplicationStatus() {
                                         <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-white/20" />
                                         <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-white/20" />
 
-                                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-500/60 mb-2">[EVENT_DETAILS]</h3>
+                                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-500/60 mb-2">Interview Details</h3>
 
                                         <div className="space-y-4">
                                             <div className="flex flex-col gap-1">
-                                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest font-mono">DATE:</span>
+                                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest font-mono">Date & Time:</span>
                                                 <span className="text-white font-mono text-sm">
                                                     {result.interviewDetails?.scheduledAt ? new Date(result.interviewDetails.scheduledAt).toLocaleString('en-US', {
                                                         weekday: 'long',
@@ -174,19 +195,19 @@ export default function ApplicationStatus() {
                                                         hour: '2-digit',
                                                         minute: '2-digit',
                                                         timeZoneName: 'short'
-                                                    }) : 'PULLING_DATE_FAIL...'}
+                                                    }) : 'Unable to retrieve date.'}
                                                 </span>
                                             </div>
 
                                             <div className="flex flex-col gap-1">
-                                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest font-mono">LINK:</span>
+                                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest font-mono">Meeting Link:</span>
                                                 <a
                                                     href={result.interviewDetails?.meetLink?.startsWith('http') ? result.interviewDetails.meetLink : `https://${result.interviewDetails?.meetLink}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="text-cyan-400 font-mono text-sm hover:underline flex items-center gap-2"
                                                 >
-                                                    Open Secure Meeting <ExternalLink size={12} />
+                                                    Join Meeting <ExternalLink size={12} />
                                                 </a>
                                             </div>
                                         </div>
@@ -197,14 +218,13 @@ export default function ApplicationStatus() {
                                             onClick={() => window.open(result.interviewDetails?.meetLink?.startsWith('http') ? result.interviewDetails.meetLink : `https://${result.interviewDetails?.meetLink}`, '_blank')}
                                             className="w-full h-14 bg-[#38C8F8] hover:bg-[#2bb0dc] text-black font-black uppercase tracking-[0.2em] rounded-xl shadow-xl shadow-cyan-900/20 group"
                                         >
-                                            JOIN BRIEFING TERMINAL
+                                            Join Interview
                                         </Button>
 
                                         <div className="pt-4 border-t border-white/5 space-y-2">
-                                            <p className="text-[9px] font-mono text-gray-600 uppercase tracking-widest">[SECURE_TRANSMISSION_PROTOCOL: v4.1]</p>
+                                            <p className="text-[9px] font-mono text-gray-600 uppercase tracking-widest">[Secure Transmission Protocol: v4.1]</p>
                                             <p className="text-[10px] text-gray-400 px-4">
-                                                Please ensure your audio/visual systems are optimized 5 minutes prior to synchronization.
-                                                Need assistance? <span className="text-cyan-500 hover:underline cursor-pointer">Contact Mission Control</span>
+                                                Please ensure your audio and video equipment are functioning properly at least 5 minutes prior to your scheduled interview. For assistance, please contact our support team.
                                             </p>
                                         </div>
                                     </div>
@@ -217,10 +237,10 @@ export default function ApplicationStatus() {
                                         <XCircle className="text-red-400 w-10 h-10" />
                                     </div>
                                     <div className="space-y-2">
-                                        <h2 className="text-2xl font-bold text-red-500">Not Selected This Time</h2>
-                                        <p className="text-gray-400">Thank you for your interest in DeepCytes, {result.firstName}. While we can't move forward now, we keep all applications on file for future opportunities.</p>
+                                        <h2 className="text-2xl font-bold text-red-500">Application Unsuccessful</h2>
+                                        <p className="text-gray-400">We appreciate your interest in DeepCytes, {result.firstName}. At this time, we are unable to offer you a position in the Fellowship. Your application will remain on file for future consideration.</p>
                                     </div>
-                                    <Button onClick={() => router.push("/")} variant="outline" className="border-white/10 hover:bg-white/5">Back to Home</Button>
+                                    <Button onClick={() => router.push("/")} variant="outline" className="border-white/10 hover:bg-white/5">Return to Homepage</Button>
                                 </div>
                             )}
 
@@ -231,13 +251,13 @@ export default function ApplicationStatus() {
                                         <div className="absolute inset-0 bg-green-400/20 rounded-full animate-ping"></div>
                                     </div>
                                     <div className="space-y-2">
-                                        <h2 className="text-3xl font-extrabold text-green-400">Welcome to the Team!</h2>
-                                        <p className="text-gray-300">Congratulations {result.firstName}! You have been selected for the DeepCytes Fellowship.</p>
+                                        <h2 className="text-3xl font-extrabold text-green-400">Application Approved</h2>
+                                        <p className="text-gray-300">Congratulations, {result.firstName}. You have been selected to join the DeepCytes Fellowship.</p>
                                     </div>
 
                                     <div className="bg-black/40 border border-white/10 rounded-2xl p-6 text-left space-y-4 shadow-lg">
-                                        <h3 className="text-xs font-bold uppercase tracking-widest text-cyan-400">Next Step: Account Activation</h3>
-                                        <p className="text-sm text-gray-400">Please create your official account using the email address from your application:</p>
+                                        <h3 className="text-xs font-bold uppercase tracking-widest text-cyan-400">Next Steps: Account Activation</h3>
+                                        <p className="text-sm text-gray-400">To proceed, please activate your account using the email address provided in your application:</p>
                                         <div className="space-y-3">
                                             <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
                                                 <Mail className="w-4 h-4 text-cyan-400" />
@@ -250,7 +270,7 @@ export default function ApplicationStatus() {
                                         onClick={() => result.hasAccount ? router.push('/login?ref=hiring') : handleActivate()}
                                         className="w-full h-14 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 rounded-2xl font-bold shadow-xl shadow-green-900/20 text-lg group"
                                     >
-                                        {result.hasAccount ? 'Login to Fellowship Portal' : 'Create Fellowship Account'}
+                                        {result.hasAccount ? 'Access Fellowship Portal' : 'Activate Fellowship Account'}
                                         <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                     </Button>
                                 </div>

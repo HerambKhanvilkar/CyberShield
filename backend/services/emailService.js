@@ -246,26 +246,64 @@ const sendInterviewScheduledEmail = async (email, scheduledAt, meetLink) => {
     timeZoneName: 'short'
   });
 
+  // ISO format for .ics
+  const startISO = new Date(scheduledAt).toISOString().replace(/[-:]|\.\d{3}/g, '').slice(0, 15) + 'Z';
+  // Default duration: 1 hour
+  const endISO = new Date(new Date(scheduledAt).getTime() + 60 * 60 * 1000).toISOString().replace(/[-:]|\.\d{3}/g, '').slice(0, 15) + 'Z';
+
+  // Generate .ics calendar invite
+  const icsContent = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//DeepCytes//Interview//EN',
+    'BEGIN:VEVENT',
+    `UID:${Date.now()}@deepcytes.com`,
+    `DTSTAMP:${startISO}`,
+    `DTSTART:${startISO}`,
+    `DTEND:${endISO}`,
+    'SUMMARY:DeepCytes Fellowship Interview',
+    'DESCRIPTION:Your interview for the DeepCytes Fellowship. Please join using the provided meeting link.',
+    `LOCATION:${meetLink}`,
+    `URL:${meetLink}`,
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].join('\r\n');
+
+  // Structured event block for Gmail auto-detection
   const html = getPremiumTemplate({
-    title: '📅 Interview Scheduled',
-    message: 'Your engagement sequence has been initialized. Please prepare for your fellowship evaluation at the designated time.',
+    title: 'Interview Invitation',
+    message: 'We are pleased to inform you that your interview for the DeepCytes Fellowship has been scheduled. Kindly review the details below and ensure your timely participation.',
     bodyContent: `
       <div style="background: rgba(6, 182, 212, 0.05); border: 1px solid rgba(6, 182, 212, 0.2); padding: 25px; border-radius: 12px; text-align: left;">
-        <p style="margin: 0 0 10px 0; font-size: 11px; color: #06b6d0; font-family: monospace;">[EVENT_DETAILS]</p>
-        <p style="margin: 5px 0; color: #ffffff;"><strong>DATE:</strong> ${formattedDate}</p>
-        <p style="margin: 5px 0; color: #ffffff;"><strong>LINK:</strong> <a href="${meetLink}" style="color: #06b6d0; text-decoration: underline;">Open Secure Meeting</a></p>
+        <h3 style="margin: 0 0 10px 0; font-size: 13px; color: #06b6d0; font-family: monospace;">Interview Event</h3>
+        <table style="width:100%; font-size:15px; color:#fff; margin-bottom:10px;">
+          <tr><td><strong>Subject:</strong></td><td>DeepCytes Fellowship Interview</td></tr>
+          <tr><td><strong>Date & Time:</strong></td><td>${formattedDate}</td></tr>
+          <tr><td><strong>Location:</strong></td><td><a href="${meetLink}" style="color: #06b6d0; text-decoration: underline;">${meetLink}</a></td></tr>
+        </table>
+        <p style="margin: 5px 0; color: #b0b0b0;">You may add this event to your calendar using the attached file or by clicking the meeting link above.</p>
       </div>
       <div style="margin-top: 25px;">
-        <a href="${meetLink}" style="display: inline-block; padding: 14px 28px; background: #06b6d0; color: #000; text-decoration: none; font-weight: bold; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; border-radius: 4px;">Join Briefing Terminal</a>
+        <a href="${meetLink}" style="display: inline-block; padding: 14px 28px; background: #06b6d0; color: #000; text-decoration: none; font-weight: bold; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; border-radius: 4px;">Join Interview</a>
       </div>
     `,
-    footerExtra: `Please ensure your audio/visual systems are optimized 5 minutes prior to synchronization.`
+    footerExtra: `Please ensure your audio and video equipment are functioning properly at least 5 minutes prior to your scheduled interview. For assistance, please contact our support team.`
   });
+
+  // Attach .ics file for Google Calendar
+  const attachments = [
+    {
+      filename: 'DeepCytes-Interview.ics',
+      content: icsContent,
+      contentType: 'text/calendar'
+    }
+  ];
 
   return sendEmail({
     to: email,
-    subject: '📅 Interview Scheduled: DeepCytes Fellowship',
-    html: html
+    subject: 'Interview Scheduled: DeepCytes Fellowship',
+    html: html,
+    attachments
   });
 };
 
@@ -276,14 +314,14 @@ const sendInterviewScheduledEmail = async (email, scheduledAt, meetLink) => {
  */
 const sendApplicationStatusEmail = async (email, status) => {
   const isAccepted = status === 'ACCEPTED';
-  const subject = isAccepted ? '🎉 Congratulations! Access Granted to DeepCytes Fellowship' : 'Application Status Update - DeepCytes Fellowship';
+  const subject = isAccepted ? 'DeepCytes Fellowship Application Approved' : 'DeepCytes Fellowship Application Status';
   const portalLink = `${process.env.FRONTEND || 'http://localhost:3000'}/portal`;
 
   const html = getPremiumTemplate({
-    title: isAccepted ? '🎉 Application Accepted' : '📢 Status Update',
+    title: isAccepted ? 'Application Approved' : 'Application Status Update',
     message: isAccepted
-      ? 'We are thrilled to inform you that your application to the DeepCytes Fellowship has been successfully verified and accepted.'
-      : 'Thank you for your interest in the DeepCytes Fellowship. After careful review of our current cohort capacity, we are unable to proceed with your candidacy at this time.',
+      ? 'We are pleased to inform you that your application for the DeepCytes Fellowship has been approved. Please follow the instructions below to proceed.'
+      : 'Thank you for your interest in the DeepCytes Fellowship. After careful consideration, we regret to inform you that we are unable to offer you a position at this time.',
     bodyContent: `
       <div style="margin: 30px 0;">
         <span style="font-size: 14px; color: ${isAccepted ? '#10b981' : '#ef4444'}; font-family: monospace; border: 1px solid currentColor; padding: 4px 12px; border-radius: 100px;">
@@ -291,10 +329,10 @@ const sendApplicationStatusEmail = async (email, status) => {
         </span>
       </div>
       ${isAccepted ? `
-        <p style="color: #b0b0b0; margin-bottom: 25px;">Your credentials have been provisioned. You may now proceed to the Fellowship Portal to begin your deployment.</p>
-        <a href="${portalLink}" style="display: inline-block; padding: 14px 28px; background: #ffffff; color: #000; text-decoration: none; font-weight: bold; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; border-radius: 4px;">Initialize Onboarding</a>
+        <p style="color: #b0b0b0; margin-bottom: 25px;">Your credentials have been provisioned. You may now access the Fellowship Portal to begin onboarding.</p>
+        <a href="${portalLink}" style="display: inline-block; padding: 14px 28px; background: #ffffff; color: #000; text-decoration: none; font-weight: bold; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; border-radius: 4px;">Access Fellowship Portal</a>
       ` : `
-        <p style="color: #888; font-size: 14px;">We encourage you to maintain your focus and apply for future cohorts. Your application data will be archived for 12 months.</p>
+        <p style="color: #888; font-size: 14px;">We encourage you to apply for future cohorts. Your application data will be retained for 12 months for future consideration.</p>
       `}
     `
   });
@@ -314,21 +352,21 @@ const sendApplicationStatusEmail = async (email, status) => {
  */
 const sendTerminationEmail = async (email, reason = 'Performance Review', attachments = []) => {
   const html = getPremiumTemplate({
-    title: '⚠️ Status Deactivated',
-    message: 'Your active tenure with the DeepCytes Fellowship has been terminated effective immediately.',
+    title: 'Fellowship Status Update',
+    message: 'We regret to inform you that your tenure with the DeepCytes Fellowship has been terminated, effective immediately. Please review the details below.',
     bodyContent: `
       <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); padding: 25px; border-radius: 12px; text-align: left;">
-        <p style="margin: 0 0 10px 0; font-size: 11px; color: #ef4444; font-family: monospace;">[TERMINATION_PROTOCOL_IN_EFFECT]</p>
-        <p style="margin: 5px 0; color: #ffffff;"><strong>PROTOCOL:</strong> ${reason}</p>
-        <p style="margin: 5px 0; color: #b0b0b0;"><strong>ASSETS:</strong> Your signed documents are attached to this email for your records. Internal resource access has been revoked.</p>
+        <p style="margin: 0 0 10px 0; font-size: 11px; color: #ef4444; font-family: monospace;">Termination Details</p>
+        <p style="margin: 5px 0; color: #ffffff;"><strong>Reason:</strong> ${reason}</p>
+        <p style="margin: 5px 0; color: #b0b0b0;"><strong>Documents:</strong> Your signed documents are attached for your records. All internal resource access has been revoked.</p>
       </div>
-      <p style="margin-top: 25px; color: #888; font-size: 13px;">If you believe this action was taken in error, please contact administration immediately.</p>
+      <p style="margin-top: 25px; color: #888; font-size: 13px;">If you believe this action was taken in error, please contact our administration team immediately.</p>
     `
   });
 
   return sendEmail({
     to: email,
-    subject: '⚠️ Fellowship Status Update - Tenure Terminated',
+    subject: 'Fellowship Termination Notice',
     html: html,
     attachments
   });
@@ -343,22 +381,22 @@ const sendPromotionEmail = async (email, newRole) => {
   const dashboardLink = `${process.env.FRONTEND || 'http://localhost:3000'}/FellowshipProfile`;
 
   const html = getPremiumTemplate({
-    title: '🚀 Promotion Synchronized',
-    message: `Congratulations on your advancement within the DeepCytes Fellowship. Your dedication has been recognized.`,
+    title: 'Promotion Notification',
+    message: `We are pleased to announce your promotion within the DeepCytes Fellowship. Your commitment and achievements have been duly recognized.`,
     bodyContent: `
       <div style="background: rgba(168, 85, 247, 0.05); border: 1px solid rgba(168, 85, 247, 0.2); padding: 25px; border-radius: 12px; text-align: center;">
-        <p style="margin: 0 0 10px 0; font-size: 11px; color: #a855f7; font-family: monospace;">[RANK_ASCENSION]</p>
+        <p style="margin: 0 0 10px 0; font-size: 11px; color: #a855f7; font-family: monospace;">Promotion Details</p>
         <h2 style="margin: 10px 0; color: #ffffff; font-size: 24px;">${newRole}</h2>
       </div>
       <div style="margin-top: 30px;">
-        <a href="${dashboardLink}" style="display: inline-block; padding: 14px 28px; background: #a855f7; color: #fff; text-decoration: none; font-weight: bold; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; border-radius: 4px;">Update Dashboard Credentials</a>
+        <a href="${dashboardLink}" style="display: inline-block; padding: 14px 28px; background: #a855f7; color: #fff; text-decoration: none; font-weight: bold; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; border-radius: 4px;">Access Dashboard</a>
       </div>
     `
   });
 
   return sendEmail({
     to: email,
-    subject: `🚀 Promotion Update: You are now a ${newRole}`,
+    subject: `Promotion Update: ${newRole}`,
     html: html
   });
 };

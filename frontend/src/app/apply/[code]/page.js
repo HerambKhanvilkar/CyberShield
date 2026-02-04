@@ -14,6 +14,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import { User, Calendar, Mail, FileText, Send, ChevronRight, CheckCircle2, ShieldCheck, Clock, Lock } from "lucide-react";
 
 export default function ApplicationForm() {
+        // Cooldown state for resend OTP
+        const [resendCooldown, setResendCooldown] = useState(0);
+
+        useEffect(() => {
+            let timer;
+            if (resendCooldown > 0) {
+                timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+            }
+            return () => clearTimeout(timer);
+        }, [resendCooldown]);
     const [showConfetti, setShowConfetti] = useState(false);
     const confettiTimeout = useRef(null);
     const { code } = useParams();
@@ -71,7 +81,7 @@ export default function ApplicationForm() {
         if (!statusEmail) return toast.error("Please enter email");
         setStatusLoading(true);
         try {
-            await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/auth/login/otp`, { email: statusEmail });
+            await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/auth/register/otp`, { email: statusEmail });
             setStatusStep("otp_sent");
             toast.success("OTP Sent!");
         } catch (error) {
@@ -123,12 +133,14 @@ export default function ApplicationForm() {
     const handleSendOtp = async () => {
         if (!formData.email) return toast.error("Please enter your email first");
         setOtpLoading(true);
+        if (emailStep === "otp_sent" && resendCooldown > 0) return; // Prevent resend if cooldown
         try {
             await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/auth/register/otp`, {
                 email: formData.email,
                 orgCode: code
             });
             setEmailStep("otp_sent");
+            setResendCooldown(45); // Start cooldown
             toast.success("Verification Code Sent");
         } catch (error) {
             const status = error.response?.status;
@@ -219,8 +231,6 @@ export default function ApplicationForm() {
         }
     };
 
-    // ... (keep loading return)
-
     if (loading) return (
         <div className="min-h-screen bg-[#050505] flex flex-col">
             <Navbar />
@@ -295,7 +305,6 @@ export default function ApplicationForm() {
     );
 
     if (errorMsg || !org) return (
-        // ... existing error UI
         <div className="min-h-screen bg-[#050505] text-white flex flex-col font-sans">
             <Navbar />
             <main className="flex-1 flex items-center justify-center px-2 sm:px-6 py-8 sm:py-16">
@@ -324,7 +333,6 @@ export default function ApplicationForm() {
     );
 
     return (
-        // ... existing main return
         <div className="min-h-screen bg-[#050505] text-white flex flex-col font-sans">
             <Navbar />
             <main className="flex-1 flex items-center justify-center px-2 sm:px-6 py-8 sm:py-16">
@@ -353,17 +361,29 @@ export default function ApplicationForm() {
                             </div>
                             <div className="grid md:grid-cols-2 gap-5">
                                 <div className="space-y-2">
-                                    <Label className="text-gray-400 flex items-center gap-2 text-sm sm:text-base"><User className="w-4 h-4" /> First Name</Label>
+                                    <Label className="text-gray-400 flex items-center gap-2 text-sm sm:text-base">
+                                        <User className="w-4 h-4" /> First Name
+                                        <span className="text-red-500 font-bold ml-1">*</span>
+                                        <span className="text-xs text-red-500 ml-1">Mandatory</span>
+                                    </Label>
                                     <Input value={formData.firstName} onChange={e => setFormData({ ...formData, firstName: e.target.value })} required className="bg-black/50 border-white/10 h-10 sm:h-12 rounded-xl focus:border-cyan-500/50 text-sm sm:text-base" />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-gray-400 flex items-center gap-2 text-sm sm:text-base">Last Name</Label>
+                                    <Label className="text-gray-400 flex items-center gap-2 text-sm sm:text-base">
+                                        Last Name
+                                        <span className="text-red-500 font-bold ml-1">*</span>
+                                        <span className="text-xs text-red-500 ml-1">Mandatory</span>
+                                    </Label>
                                     <Input value={formData.lastName} onChange={e => setFormData({ ...formData, lastName: e.target.value })} required className="bg-black/50 border-white/10 h-10 sm:h-12 rounded-xl focus:border-cyan-500/50 text-sm sm:text-base" />
                                 </div>
                             </div>
                             {/* Email Verification */}
                             <div className="p-4 sm:p-6 bg-white/5 rounded-2xl sm:rounded-3xl border border-white/10 space-y-4">
-                                <Label className="text-gray-400 flex items-center gap-2 text-sm sm:text-base"><Mail className="w-4 h-4" /> Identity Verification (Email)</Label>
+                                <Label className="text-gray-400 flex items-center gap-2 text-sm sm:text-base">
+                                    <Mail className="w-4 h-4" /> Email Verification
+                                    <span className="text-red-500 font-bold ml-1">*</span>
+                                    <span className="text-xs text-red-500 ml-1">Mandatory</span>
+                                </Label>
                                 <div className="flex gap-2 flex-wrap">
                                     <Input
                                         type="email"
@@ -378,6 +398,16 @@ export default function ApplicationForm() {
                                         <Button type="button" onClick={handleSendOtp} disabled={otpLoading} className="h-10 sm:h-12 bg-cyan-600 hover:bg-cyan-500 px-5 rounded-xl text-sm sm:text-base">
                                             {otpLoading ? "..." : "Send Code"}
                                         </Button>
+                                    )}
+                                    {emailStep === "otp_sent" && (
+                                        <div className="flex flex-col gap-1">
+                                            <Button type="button" onClick={handleSendOtp} disabled={otpLoading || resendCooldown > 0} className="h-10 sm:h-12 bg-cyan-600 hover:bg-cyan-500 px-5 rounded-xl text-sm sm:text-base">
+                                                {otpLoading ? "..." : resendCooldown > 0 ? `Resend OTP (${resendCooldown}s)` : "Resend OTP"}
+                                            </Button>
+                                            {resendCooldown > 0 && (
+                                                <span className="text-xs text-gray-400">You can resend the OTP after {resendCooldown} seconds.</span>
+                                            )}
+                                        </div>
                                     )}
                                     {emailStep === "verified" && (
                                         <div className="flex items-center gap-2 text-green-400 px-3 font-bold text-xs sm:text-sm">
@@ -448,10 +478,17 @@ export default function ApplicationForm() {
                                     })}
                                 </div>
                             </div>
-                            {/* Resume */}
+                            
+                            {/* Resume + Portfolio */}
                             <div className="space-y-3 border-t border-white/10 pt-7">
-                                <Label className="text-gray-400 flex items-center gap-2 text-sm sm:text-base"><FileText className="w-4 h-4" /> Academic Record / Portfolio</Label>
+                                <Label className="text-gray-400 flex items-center gap-2 text-sm sm:text-base">
+                                    <FileText className="w-4 h-4" /> Curriculum Vitae (CV) / Portfolio
+                                    <span className="text-red-500 font-bold ml-1">*</span>
+                                    <span className="text-xs text-red-500 ml-1">Mandatory</span>
+                                </Label>
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {/* Resume upload */}
                                     <div className="relative group">
                                         <input
                                             type="file"
@@ -460,16 +497,18 @@ export default function ApplicationForm() {
                                             className="absolute inset-0 opacity-0 cursor-pointer z-10"
                                         />
                                         <div className="h-20 border-2 border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center transition-colors group-hover:border-cyan-500/30 group-hover:bg-cyan-500/5">
-                                            <span className="text-xs font-black uppercase text-gray-600">Upload Resume PDF</span>
-                                            <span className="text-xs font-mono mt-1 text-cyan-400">{resumeFile ? resumeFile.name.slice(0, 15) + '...' : 'Browse Documents'}</span>
+                                            <span className="text-xs font-black uppercase text-gray-600">Upload your most recent CV (PDF only)</span>
+                                            <span className="text-xs font-mono mt-1 text-cyan-400">{resumeFile ? resumeFile.name.slice(0, 15) + '...' : 'Select File'}</span>
                                         </div>
                                     </div>
+
+                                    {/* Portfolio Link */}
                                     <div className="h-20 bg-white/5 rounded-2xl p-3 border border-white/5">
-                                        <span className="text-xs font-black uppercase text-gray-600 mb-1 block">Portfolio Link</span>
+                                        <span className="text-xs font-black uppercase text-gray-600 mb-1 block">Portfolio or Supporting Materials (Link)</span>
                                         <Input
                                             value={formData.resume}
                                             onChange={e => setFormData({ ...formData, resume: e.target.value })}
-                                            placeholder="Drive or GitHub link"
+                                            placeholder="Provide a link to your online portfolio, GitHub, or relevant supporting documents."
                                             className="bg-transparent border-0 border-b border-white/10 rounded-none h-8 px-0 focus:ring-0 focus:border-cyan-500 text-sm sm:text-base"
                                         />
                                     </div>
@@ -479,7 +518,11 @@ export default function ApplicationForm() {
                             {/* Questions */}
                             <div className="border-t border-white/10 pt-7 space-y-5">
                                 <div>
-                                    <Label className="text-gray-400 font-bold mb-2 block text-base sm:text-lg">Why should we select you for the DeepCytes Fellowship?</Label>
+                                    <Label className="text-gray-400 font-bold mb-2 block text-base sm:text-lg">
+                                        What Makes You Stand Apart?
+                                        <span className="text-red-500 font-bold ml-1">*</span>
+                                        <span className="text-xs text-red-500 ml-1">Mandatory</span>
+                                    </Label>
                                     <textarea
                                         className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white min-h-[120px] focus:border-cyan-500/50 focus:ring-0 resize-none text-sm sm:text-base"
                                         placeholder="In 100-200 words, tell us about your skills, research abilities, and why you’re passionate about the field of cybersecurity."
@@ -507,7 +550,9 @@ export default function ApplicationForm() {
                             {/* Consent Checkbox */}
                             <div className="flex flex-col items-start gap-2 mb-3">
                                 <span className="text-white text-sm sm:text-base mb-1">
-                                    <span className="font-semibold">By submitting this form, you agree to the use of your data for selection purposes and potential future opportunities within the DeepCytes Fellowship.</span>
+                                    <span className="font-semibold">
+                                        By submitting this application, you acknowledge and consent to the collection and processing of your personal data for the purpose of evaluating your eligibility and suitability for the DeepCytes Fellowship, as well as for consideration in future opportunities related to the program.
+                                    </span>
                                 </span>
                                 <label className="flex items-center gap-2 cursor-pointer select-none text-sm sm:text-base">
                                     <input
@@ -518,6 +563,8 @@ export default function ApplicationForm() {
                                         className="accent-cyan-500 w-5 h-5 rounded border border-cyan-400 bg-black/40 focus:ring-2 focus:ring-cyan-500 transition-all"
                                     />
                                     <span className="text-white">I consent to the use of my data for these purposes.</span>
+                                    <span className="text-red-500 font-bold ml-1">*</span>
+                                    <span className="text-xs text-red-500 ml-1">Mandatory</span>
                                 </label>
                             </div>
 
