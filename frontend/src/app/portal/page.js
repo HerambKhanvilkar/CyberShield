@@ -151,7 +151,7 @@ export default function ApplicationStatus() {
                                     </div>
                                     <div className="space-y-2">
                                         <h2 className="text-2xl font-bold text-yellow-400">Application Under Review</h2>
-                                        <p className="text-gray-400">Thank you for your interest, {result.firstName}. Your application is currently under review by our admissions team. You will be notified via email once a decision has been made.</p>
+                                        <p className="text-gray-400">Thank you for your interest, {result.firstName}. Your profile is currently under review. You will be notified via email once a decision has been made.</p>
                                     </div>
                                 </div>
                             )}

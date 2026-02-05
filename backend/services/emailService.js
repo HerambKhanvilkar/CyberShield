@@ -1,8 +1,10 @@
+
 const formData = require('form-data');
 const Mailgun = require('mailgun.js');
 const logger = require('../logger');
 const Badge = require('../models/Badge');
 const { getPremiumTemplate } = require('../emailTemplates/premium');
+const { DateTime } = require('luxon');
 
 // Initialize Mailgun
 const mailgun = new Mailgun(formData);
@@ -237,25 +239,23 @@ const sendAdminDailyReport = async (email, adminName, date, logs) => {
  */
 const sendInterviewScheduledEmail = async (email, scheduledAt, meetLink) => {
 
-  // Format date/time in IST for email
-  const istDate = new Date(scheduledAt).toLocaleString('en-IN', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-    timeZone: 'Asia/Kolkata',
-    timeZoneName: 'short'
-  });
+  // Always interpret scheduledAt as IST (Asia/Kolkata), regardless of offset or server timezone
+  // scheduledAt is expected to be a string like '2026-02-10T10:00'
+  let dtIST = DateTime.fromFormat(scheduledAt, "yyyy-MM-dd'T'HH:mm", { zone: 'Asia/Kolkata' });
+  if (!dtIST.isValid) {
+    // fallback: try parsing as ISO and force to IST
+    dtIST = DateTime.fromISO(scheduledAt, { zone: 'Asia/Kolkata' });
+  }
+
+  // Format for email (e.g., Tuesday, February 10, 2026, 10:00 AM IST)
+  const istDate = dtIST.toFormat("cccc, LLLL d, yyyy, h:mm a 'IST'");
 
   // For .ics: DTSTART/DTEND in local IST (Asia/Kolkata)
   function pad(n) { return n < 10 ? '0' + n : n; }
-  const dt = new Date(scheduledAt);
-  const dtEnd = new Date(dt.getTime() + 60 * 60 * 1000);
+  const dt = dtIST;
+  const dtEnd = dt.plus({ hours: 1 });
   function icsLocal(dt) {
-    return dt.getFullYear() + pad(dt.getMonth() + 1) + pad(dt.getDate()) + 'T' + pad(dt.getHours()) + pad(dt.getMinutes()) + '00';
+    return dt.toFormat('yyyyMMdd\'T\'HHmmss');
   }
   const startIST = icsLocal(dt);
   const endIST = icsLocal(dtEnd);
