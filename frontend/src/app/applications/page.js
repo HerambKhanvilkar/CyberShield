@@ -234,8 +234,6 @@ function AdminDashboardContent() {
         } catch (error) { toast.error("Promotion failed"); } finally { setActionLoading(false); }
     };
 
-
-
     const handleScheduleInterview = async () => {
         if (!scheduleData.scheduledAt || !scheduleData.meetLink) {
             toast.error("Please provide both time and link");
@@ -244,16 +242,23 @@ function AdminDashboardContent() {
         setActionLoading(true);
         try {
             const token = localStorage.getItem("accessToken");
-            // Convert the datetime-local value to Asia/Kolkata ISO string
+
+            // Log what the user entered in the component
+            console.log("[Interview] User entered (component value):", scheduleData.scheduledAt);
+
+            // Parse the local datetime string (no timezone conversion)
             const localDate = new Date(scheduleData.scheduledAt);
-            // Calculate IST offset (Asia/Kolkata is UTC+5:30)
-            const istOffsetMinutes = 5.5 * 60;
-            const utcDate = new Date(localDate.getTime() - (localDate.getTimezoneOffset() * 60000));
-            // Add IST offset
-            const istDate = new Date(utcDate.getTime() + istOffsetMinutes * 60000);
-            // Format as ISO string with explicit offset
+
+            // Log what was registered by JS Date
+            console.log("[Interview] Registered by JS Date (local):", localDate.toString());
+
+            // Format as 'YYYY-MM-DDTHH:mm:00+05:30' (IST)
             const pad = n => n.toString().padStart(2, '0');
-            const istIsoString = `${istDate.getFullYear()}-${pad(istDate.getMonth() + 1)}-${pad(istDate.getDate())}T${pad(istDate.getHours())}:${pad(istDate.getMinutes())}:00+05:30`;
+            const istIsoString = `${localDate.getFullYear()}-${pad(localDate.getMonth() + 1)}-${pad(localDate.getDate())}T${pad(localDate.getHours())}:${pad(localDate.getMinutes())}:00+05:30`;
+
+            // Log what is passed to the API
+            console.log("[Interview] Passed to API (IST):", istIsoString);
+
             await axios.put(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/application/admin/schedule-interview`, {
                 applicantId: selectedItem._id,
                 scheduledAt: istIsoString,
