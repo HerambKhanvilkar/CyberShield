@@ -48,7 +48,7 @@ export default function ApplyLanding() {
         if (!statusOtp) return toast.error("Please enter the OTP");
         setStatusLoading(true);
         try {
-            const res = await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/auth/login/verify`, {
+            const res = await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/auth/login/verify-login-otp`, {
                 email: statusEmail,
                 otp: statusOtp
             });

@@ -243,21 +243,12 @@ function AdminDashboardContent() {
         try {
             const token = localStorage.getItem("accessToken");
 
-            // Log what the user entered in the component
-            console.log("[Interview] User entered (component value):", scheduleData.scheduledAt);
-
             // Parse the local datetime string (no timezone conversion)
             const localDate = new Date(scheduleData.scheduledAt);
-
-            // Log what was registered by JS Date
-            console.log("[Interview] Registered by JS Date (local):", localDate.toString());
 
             // Format as 'YYYY-MM-DDTHH:mm:00+05:30' (IST)
             const pad = n => n.toString().padStart(2, '0');
             const istIsoString = `${localDate.getFullYear()}-${pad(localDate.getMonth() + 1)}-${pad(localDate.getDate())}T${pad(localDate.getHours())}:${pad(localDate.getMinutes())}:00+05:30`;
-
-            // Log what is passed to the API
-            console.log("[Interview] Passed to API (IST):", istIsoString);
 
             await axios.put(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/application/admin/schedule-interview`, {
                 applicantId: selectedItem._id,
