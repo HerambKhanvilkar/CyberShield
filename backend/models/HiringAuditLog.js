@@ -16,12 +16,14 @@ const HiringAuditLogSchema = new mongoose.Schema({
             'STATUS_UPDATE',
             'INTERVIEW_SCHEDULED',
             'INTERVIEW_SKIPPED',
+            'INTERVIEW_NO_SHOW',
             'FELLOW_TERMINATE',
             'FELLOW_PROMOTE',
             'FELLOW_ADD_MANUAL',
             'ACCOUNT_ACTIVATE',
             'STATE_ADVANCE',
             'FEEDBACK_SUBMIT',
+            'ORG_ARCHIVE',
             'OTHER'
         ]
     },

@@ -34,16 +34,16 @@ async function generateTestPDFs() {
         // Test 2: Generate Offer Letter
         console.log('📄 Generating Offer Letter...');
         const offerFellowData = {
-            firstName: 'Aryan',
-            lastName: 'Lomte',
-            email: 'aryan.lomte@deepcytes.com',
-            globalPid: 'DC-TEST-2026-001'
+            firstName: 'Kewal',
+            lastName: 'Dawada',
+            email: 'kewaldawada29@gmail.com',
+            globalPid: ''
         };
 
         const offerTenureData = {
-            role: 'Security Researcher',
-            startDate: '13/01/2026',
-            endDate: '13/07/2026'
+            role: 'Cyber Development Analyst',
+            startDate: '01/01/2026',
+            endDate: '01/07/2026'
         };
 
         const offerResult = await DocumentService.generateOfferLetter(offerFellowData, offerTenureData);

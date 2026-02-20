@@ -88,8 +88,14 @@ router.post('/sign-document', authenticateJWT, isFellow, async (req, res) => {
         const { tenureIndex, documentType, signatureData, signatureType } = req.body;
         const fellow = req.fellow;
 
-        if (tenureIndex === undefined || !['nda', 'offerLetter', 'completionLetter'].includes(documentType)) {
-            return res.status(400).json({ message: "Invalid request parameters" });
+        // Validate inputs early to avoid 500s
+        // Fellows are only allowed to sign their NDA from the portal
+        if (tenureIndex === undefined || documentType !== 'nda') {
+            return res.status(400).json({ message: "Invalid request parameters - fellows may only sign NDA" });
+        }
+
+        if (!Array.isArray(fellow.tenures) || tenureIndex < 0 || tenureIndex >= fellow.tenures.length) {
+            return res.status(400).json({ message: "Invalid tenureIndex" });
         }
 
         // Use hardcoded template paths for Sprint 1/2
@@ -100,7 +106,7 @@ router.post('/sign-document', authenticateJWT, isFellow, async (req, res) => {
         };
 
         // Ensure templates dir exists
-        const templatesDir = path.join(__dirname, '../../uploads/templates');
+        const templatesDir = path.join(__dirname, '../uploads/templates');
         if (!fs.existsSync(templatesDir)) {
             fs.mkdirSync(templatesDir, { recursive: true });
         }
@@ -109,42 +115,47 @@ router.post('/sign-document', authenticateJWT, isFellow, async (req, res) => {
 
         // Generate Premium PDF based on document type
         let pdfResult;
-        if (documentType === 'nda') {
-            const applicantData = {
-                firstName: fellow.firstName,
-                lastName: fellow.lastName,
-                email: fellow.email,
-                globalPid: fellow.globalPid
-            };
-            pdfResult = await DocumentService.generateNDA(applicantData, { type: signatureType, data: signatureData });
-        } else if (documentType === 'offerLetter') {
-            const fellowData = {
-                firstName: fellow.firstName,
-                lastName: fellow.lastName,
-                email: fellow.email,
-                globalPid: fellow.globalPid
-            };
-            const tenureData = {
-                role: fellow.tenures[tenureIndex].role || 'Fellow',
-                startDate: fellow.tenures[tenureIndex].startDate || new Date().toLocaleDateString('en-GB'),
-                endDate: fellow.tenures[tenureIndex].endDate || 'Ongoing'
-            };
-            pdfResult = await DocumentService.generateOfferLetter(fellowData, tenureData);
-        } else {
-            // Use generic for other document types (completion letter, etc.)
-            pdfResult = await DocumentService.generateSecurePDF(
-                templatePath,
-                {
-                    fullName: `${fellow.firstName} ${fellow.lastName}`,
-                    role: fellow.tenures[tenureIndex].role || "Fellow",
-                    globalPid: fellow.globalPid,
-                    email: fellow.email
-                },
-                { type: signatureType, data: signatureData },
-                fellow.email,
-                fellow.lastName,
-                fellow.globalPid
-            );
+        try {
+            if (documentType === 'nda') {
+                const applicantData = {
+                    firstName: fellow.firstName,
+                    lastName: fellow.lastName,
+                    email: fellow.email,
+                    globalPid: fellow.globalPid
+                };
+                pdfResult = await DocumentService.generateNDA(applicantData, { type: signatureType, data: signatureData });
+            } else if (documentType === 'offerLetter') {
+                const fellowData = {
+                    firstName: fellow.firstName,
+                    lastName: fellow.lastName,
+                    email: fellow.email,
+                    globalPid: fellow.globalPid
+                };
+                const tenureData = {
+                    role: fellow.tenures[tenureIndex].role || 'Fellow',
+                    startDate: fellow.tenures[tenureIndex].startDate || new Date().toLocaleDateString('en-GB'),
+                    endDate: fellow.tenures[tenureIndex].endDate || 'Ongoing'
+                };
+                pdfResult = await DocumentService.generateOfferLetter(fellowData, tenureData);
+            } else {
+                // Use generic for other document types (completion letter, etc.)
+                pdfResult = await DocumentService.generateSecurePDF(
+                    templatePath,
+                    {
+                        fullName: `${fellow.firstName} ${fellow.lastName}`,
+                        role: fellow.tenures[tenureIndex].role || "Fellow",
+                        globalPid: fellow.globalPid,
+                        email: fellow.email
+                    },
+                    { type: signatureType, data: signatureData },
+                    fellow.email,
+                    fellow.lastName,
+                    fellow.globalPid
+                );
+            }
+        } catch (err) {
+            console.error('Document generation failed:', err.stack || err);
+            return res.status(500).json({ message: 'Document generation failed', details: err.message });
         }
 
         // Update Tenure
@@ -173,8 +184,9 @@ router.post('/sign-document', authenticateJWT, isFellow, async (req, res) => {
         });
 
     } catch (err) {
-        console.error("Signing error:", err);
-        res.status(500).json({ message: "Signing failed" });
+        console.error("Signing error:", err.stack || err);
+        // Return the underlying error message to help debugging in dev. Do not expose full stack in production.
+        res.status(500).json({ message: "Signing failed", details: err.message });
     }
 });
 

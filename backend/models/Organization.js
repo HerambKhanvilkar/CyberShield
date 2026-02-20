@@ -19,12 +19,23 @@ const OrganizationSchema = new mongoose.Schema({
         type: Date, // If current date > endDate, application closed
         default: 0 // 0 means open indefinitely or logic to handle
     },
+    // Default tenure end date (applied to accepted applicants when org admin configures it)
+    defaultTenureEndDate: {
+        type: Date,
+        default: null
+    },
     formVar1: {
         type: [String], // Array of Roles e.g. ["Developer", "Designer"] - LEGACY, use availableRoles
         default: []
     },
+    // availableRoles now supports storing objects with name + description. Legacy string arrays are still accepted across the codebase.
     availableRoles: {
-        type: [String], // Selected roles from master list for this organization
+        type: [
+            new mongoose.Schema({
+                name: { type: String, required: true, trim: true },
+                description: { type: String, default: '' }
+            }, { _id: false })
+        ],
         default: []
     },
     formVar2: {

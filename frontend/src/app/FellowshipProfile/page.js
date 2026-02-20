@@ -70,12 +70,23 @@ export default function FellowshipDashboard() {
     };
 
     const handleSignRequest = (index, type) => {
+        // Only NDA should be signed by fellows
+        if (type !== 'nda') {
+            toast.info('Only NDA requires fellow signature');
+            return;
+        }
         setCurrentSigningDoc({ index, type });
         setIsModalOpen(true);
     };
 
     const handleSignConfirm = async (signatureInfo) => {
         if (!currentSigningDoc) return;
+
+        // Safety: only allow NDA signing from the UI
+        if (currentSigningDoc.type !== 'nda') {
+            toast.error('Signing this document is not allowed');
+            return;
+        }
 
         setIsSigning(true);
         try {
@@ -125,7 +136,8 @@ export default function FellowshipDashboard() {
             link.remove();
         } catch (err) {
             console.error(err);
-            toast.error("Download failed");
+            if (err.response?.status === 404) toast.info('Signed document not available yet');
+            else toast.error(err.response?.data?.message || 'Download failed');
         }
     };
 
@@ -186,20 +198,20 @@ export default function FellowshipDashboard() {
                                 Action Items
                             </h3>
                             <div className="space-y-3">
-                                {/* Simple Logic to find unsigned docs */}
+                                {/* Only list unsigned NDAs here (fellows should not sign offer/completion) */}
                                 {tenures.flatMap((t, i) =>
                                     Object.entries(t.signedDocuments || {})
-                                        .filter(([_, doc]) => !doc?.signedAt)
+                                        .filter(([type, doc]) => type === 'nda' && !doc?.signedAt)
                                         .map(([type]) => ({ i, type }))
                                 ).length === 0 ? (
                                     <p className="text-zinc-500 text-sm">No pending actions.</p>
                                 ) : (
                                     tenures.map((t, i) => (
                                         Object.entries(t.signedDocuments || {}).map(([type, doc]) => {
-                                            if (doc && !doc.signedAt) {
+                                            if (type === 'nda' && doc && !doc.signedAt) {
                                                 return (
                                                     <div key={`${i}-${type}`} className="text-sm p-3 bg-amber-500/5 border border-amber-500/20 rounded-lg flex justify-between items-center">
-                                                        <span className="text-amber-400/80">Sign {type} for {t.role}</span>
+                                                        <span className="text-amber-400/80">Sign NDA for {t.role}</span>
                                                         <button
                                                             onClick={() => handleSignRequest(i, type)}
                                                             className="text-xs bg-amber-500/20 text-amber-500 px-2 py-1 rounded hover:bg-amber-500/30"

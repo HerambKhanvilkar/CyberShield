@@ -78,4 +78,6 @@ router.get('/generate-offer', authenticateJWT, isAdmin, async (req, res) => {
     }
 });
 
+
+
 module.exports = router;

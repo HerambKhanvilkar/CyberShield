@@ -91,21 +91,14 @@ export default function OnboardingLayout({ children }) {
 
                     <div className="max-w-6xl mx-auto relative z-10">
                         <div className="mb-16 text-center">
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="inline-block px-4 py-1.5 border border-cyan-500/30 bg-cyan-500/5 text-[10px] uppercase font-black tracking-[0.4em] text-cyan-500 mb-6"
-                            >
-                                DeepCytes_Fellowship_Portal_v2.0
-                            </motion.div>
                             <motion.h1
                                 initial={{ opacity: 0, y: -20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 className="text-5xl sm:text-7xl font-black tracking-tighter uppercase italic"
                             >
-                                PERSONNEL_<span className="text-cyan-500">UPLINK</span>
+                                Hello! <span className="text-cyan-500">{user?.firstName || ''}</span>
                             </motion.h1>
-                            <p className="mt-4 text-gray-500 text-[10px] uppercase tracking-[0.2em] font-bold">Secure Gateway for Onboarding & R&D Integration</p>
+                            <p className="mt-4 text-gray-500 text-[10px] uppercase tracking-[0.2em] font-bold">What's on your rosted today?</p>
                         </div>
 
                         {user?.tenures?.length > 1 && userInitialStep >= 2 && (

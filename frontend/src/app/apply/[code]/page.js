@@ -184,6 +184,9 @@ export default function ApplicationForm() {
         if (!formData.consent) return toast.error("Please agree to the privacy consent");
         if (emailStep !== "verified") return toast.error("Identity verification required");
 
+        // Require either uploaded PDF or a resume link
+        if (!resumeFile && !formData.resume) return toast.error("Please upload your CV (PDF) or provide a resume link before submitting the application.");
+
         setSubmitLoading(true);
 
         const data = new FormData();
@@ -195,13 +198,15 @@ export default function ApplicationForm() {
         data.append("whyJoin", formData.whyFellowship);
         data.append("ideas", formData.innovativeIdeas);
 
-        if (resumeFile) {
-            data.append("resumeFile", resumeFile);
-        }
+        // resumeFile is required (checked above)
+        data.append("resumeFile", resumeFile);
+
+        // Normalize resume link (ensure protocol so admin can open it directly)
+        const normalizedResumeLink = formData.resume && !/^https?:\/\//i.test(formData.resume) ? `https://${formData.resume}` : formData.resume;
 
         const extraData = {
             preferredRoles: formData.roles,
-            resumeLink: formData.resume,
+            resumeLink: normalizedResumeLink || null,
             consentDate: new Date().toISOString()
         };
         data.append("data", JSON.stringify(extraData));
@@ -446,6 +451,7 @@ export default function ApplicationForm() {
                                     {(org.formVars?.roles || []).map((role) => {
                                         // Handle both string and object roles
                                         const roleName = typeof role === 'object' ? role.name : role;
+                                        const roleDesc = typeof role === 'object' ? (role.description || '') : '';
                                         const isSelected = formData.roles.includes(roleName);
                                         return (
                                             <button
@@ -464,12 +470,18 @@ export default function ApplicationForm() {
                                                     }
                                                     setFormData({ ...formData, roles: newRoles });
                                                 }}
-                                                className={`p-4 rounded-xl border text-sm font-bold transition-all duration-200 text-left flex items-center justify-between group ${isSelected
+                                                className={`p-4 rounded-xl border text-sm transition-all duration-200 text-left flex items-center justify-between group ${isSelected
                                                     ? "bg-cyan-500/10 border-cyan-500 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.1)]"
                                                     : "bg-white/5 border-white/10 text-gray-400 hover:border-white/30 hover:bg-white/[0.08]"
                                                     }`}
                                             >
-                                                <span className="truncate">{roleName}</span>
+                                                <div className="flex-1 text-left">
+                                                    <div className="truncate font-bold text-sm text-white">{roleName}</div>
+                                                    {roleDesc ? (
+                                                        <div className="mt-1 text-[11px] text-gray-400 truncate">{roleDesc}</div>
+                                                    ) : null}
+                                                </div>
+
                                                 {isSelected && (
                                                     <CheckCircle2 className="w-4 h-4 flex-shrink-0 animate-in zoom-in duration-300" />
                                                 )}
@@ -511,6 +523,7 @@ export default function ApplicationForm() {
                                             placeholder="Provide a link to your online portfolio, GitHub, or relevant supporting documents."
                                             className="bg-transparent border-0 border-b border-white/10 rounded-none h-8 px-0 focus:ring-0 focus:border-cyan-500 text-sm sm:text-base"
                                         />
+                                        <div className="text-[11px] text-gray-500 mt-1">You may upload a PDF or paste a public URL (include https://). Admins can open links directly from the application.</div>
                                     </div>
                                 </div>
                             </div>
@@ -570,7 +583,7 @@ export default function ApplicationForm() {
 
                             <Button
                                 type="submit"
-                                disabled={submitLoading || emailStep !== "verified" || !formData.consent}
+                                disabled={submitLoading || emailStep !== "verified" || !formData.consent || (!resumeFile && !formData.resume)}
                                 className="w-full h-12 sm:h-14 text-base sm:text-lg font-black italic tracking-[0.05em] sm:tracking-[0.1em] bg-white text-black hover:bg-cyan-400 transition-all rounded-[2rem] shadow-2xl shadow-cyan-500/10 group flex items-center justify-center px-3 sm:px-6 whitespace-normal"
                             >
                                 <span className="flex-1 text-center truncate">{submitLoading ? "SUBMITTING DATA..." : "SUBMIT APPLICATION"}</span>

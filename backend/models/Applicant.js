@@ -26,6 +26,12 @@ const ApplicantSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    // Store applicant's selected preferred roles (up to 2 choices)
+    preferredRoles: {
+        type: [String],
+        default: []
+    },
+    // make this an array of strings to store multiple project preferences
     project: {
         type: String,
         required: false
@@ -34,6 +40,7 @@ const ApplicantSchema = new mongoose.Schema({
         type: Object, // Any other form data
         default: {}
     },
+    // remove unwanted stuff.
     assignedEmail: {
         type: String,
         default: ""
@@ -52,7 +59,7 @@ const ApplicantSchema = new mongoose.Schema({
         meetLink: String,
         status: {
             type: String,
-            enum: ['PENDING', 'SCHEDULED', 'COMPLETED', 'SKIPPED'],
+            enum: ['PENDING', 'SCHEDULED', 'COMPLETED', 'SKIPPED', 'NO_SHOW'],
             default: 'PENDING'
         },
         scheduledBy: String

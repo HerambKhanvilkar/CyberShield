@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import axios from "axios";
 import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
@@ -8,55 +8,45 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "react-toastify";
-import {
-    Users,
-    Briefcase,
-    Shield,
-    Database,
-    Search,
-    Plus,
-    ChevronRight,
-    CheckCircle,
-    XCircle,
-    Clock,
-    FileText,
-    Award,
-    History,
-    Settings,
-    ArrowLeft,
-    ExternalLink,
-    Mail,
-    Calendar,
-    Globe,
-    Terminal,
-    Code,
-    Cpu,
-    Zap,
-    Linkedin,
-    Github,
-    Trophy,
-    ArrowUpCircle,
-    Download
-} from "lucide-react";
+import { Users,Briefcase,Shield,Database,Search,Plus,ChevronRight,CheckCircle,XCircle,Clock,FileText,Award,History,Settings,ArrowLeft,ExternalLink,Mail,Calendar,Globe,Terminal,Code,Cpu,Zap,Linkedin,Github,Trophy,ArrowUpCircle,Download,Trash,MoreVertical} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 function AdminDashboardContent() {
+    const sixMonthsFromNow = () => {
+        const d = new Date();
+        d.setMonth(d.getMonth() + 6);
+        d.setHours(0,0,0,0);
+        return d.getTime();
+    };
+
     const [activeTab, setActiveTab] = useState("applications");
     const [activeSubTab, setActiveSubTab] = useState("PENDING");
+    // Org sub-tab (ACTIVE / ARCHIVED)
+    const [orgSubTab, setOrgSubTab] = useState('ACTIVE');
     const [apps, setApps] = useState([]);
     const [fellows, setFellows] = useState([]);
     const [orgs, setOrgs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedItem, setSelectedItem] = useState(null);
+    const [orgInspectorMember, setOrgInspectorMember] = useState(null); // nested member view inside org inspector
     const [actionLoading, setActionLoading] = useState(false);
     const [isEditingOrg, setIsEditingOrg] = useState(false);
-    const [orgData, setOrgData] = useState({ name: '', code: '', emailDomainWhitelist: [], endDate: 0, formVar1: [], isActive: true });
+    const [orgData, setOrgData] = useState({ name: '', code: '', emailDomainWhitelist: [], endDate: sixMonthsFromNow(), defaultTenureEndDate: null, formVar1: [], availableRoles: [], isActive: true });
     const [tenureEndDate, setTenureEndDate] = useState("");
     const [availableRoles, setAvailableRoles] = useState([]);
     const [availableProjects, setAvailableProjects] = useState([]);
     const [newRole, setNewRole] = useState("");
+    const [newRoleDescription, setNewRoleDescription] = useState("");
+    const [newOrgRole, setNewOrgRole] = useState("");
+    const [newOrgRoleDescription, setNewOrgRoleDescription] = useState("");
+    const [editingRoleDesc, setEditingRoleDesc] = useState(null);
+    const [editingRoleTempDesc, setEditingRoleTempDesc] = useState("");
     const [newProject, setNewProject] = useState("");
+
+    // Role menu + delete confirm state
+    const [roleMenuOpenFor, setRoleMenuOpenFor] = useState(null); // role name
+    const [deleteConfirm, setDeleteConfirm] = useState(null); // { mode: 'GLOBAL'|'LOCAL', roleName, roleObj }
 
     // Promotion State
     const [promotionData, setPromotionData] = useState({ newRole: "", newStatus: "ACTIVE", newCohort: "", completionStatus: "PROMOTED" });
@@ -85,6 +75,41 @@ function AdminDashboardContent() {
 
     const router = useRouter();
 
+    // Scroll refs + persistence (sessionStorage)
+    const listRef = useRef(null);
+    const inspectorRef = useRef(null);
+
+    const listScrollKey = () => `admin:scroll:list:${activeTab}:${activeSubTab || ''}`;
+    const inspectorScrollKey = () => {
+        if (activeTab === 'orgs' && selectedItem) {
+            const orgKey = selectedItem.code || selectedItem._id || 'unknown';
+            const memberPart = orgInspectorMember ? `:member:${orgInspectorMember._id || orgInspectorMember.email}` : ':org';
+            return `admin:scroll:inspector:org:${orgKey}${memberPart}`;
+        }
+        if (activeTab === 'applications' && selectedItem) return `admin:scroll:inspector:app:${selectedItem._id}`;
+        if (activeTab === 'fellows' && selectedItem) return `admin:scroll:inspector:fellow:${selectedItem._id}`;
+        return `admin:scroll:inspector:${activeTab}`;
+    };
+
+    useEffect(() => {
+        // restore left-list scroll on tab/subtab/load changes
+        try {
+            const pos = sessionStorage.getItem(listScrollKey());
+            if (pos && listRef.current) listRef.current.scrollTop = parseInt(pos, 10);
+        } catch (e) {/* ignore */}
+    }, [activeTab, activeSubTab, loading]);
+
+    useEffect(() => {
+        // restore inspector scroll when selected item / nested member changes or after reload
+        try {
+            const pos = sessionStorage.getItem(inspectorScrollKey());
+            if (pos && inspectorRef.current) inspectorRef.current.scrollTop = parseInt(pos, 10);
+        } catch (e) {/* ignore */}
+    }, [selectedItem, orgInspectorMember, activeTab, loading]);
+
+    const saveListScroll = () => { if (!listRef.current) return; sessionStorage.setItem(listScrollKey(), String(listRef.current.scrollTop)); };
+    const saveInspectorScroll = () => { if (!inspectorRef.current) return; sessionStorage.setItem(inspectorScrollKey(), String(inspectorRef.current.scrollTop)); };
+
     const fetchData = async () => {
         setLoading(true);
         try {
@@ -104,9 +129,12 @@ function AdminDashboardContent() {
             setOrgs(orgsRes.data);
             setAvailableRoles(rolesRes.data);
             setAvailableProjects(projectsRes.data);
+            // return fetched data so callers can synchronously act on fresh values
+            return { apps: appsRes.data, fellows: fellowsRes.data, orgs: orgsRes.data, roles: rolesRes.data, projects: projectsRes.data };
         } catch (error) {
             if (error.response?.status === 401) { router.push("/admin"); }
             toast.error("Failed to load dashboard data");
+            return null;
         } finally { setLoading(false); }
     };
 
@@ -115,14 +143,19 @@ function AdminDashboardContent() {
         try {
             const token = localStorage.getItem("accessToken");
             const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
-            await axios.post(`${serverUrl}/admin/fellows/${selectedItem._id}/terminate`,
+            const target = orgInspectorMember || selectedItem;
+            if (!target || !target._id) { toast.error('No fellow selected'); setActionLoading(false); return; }
+
+            await axios.post(`${serverUrl}/admin/fellows/${target._id}/terminate`,
                 terminationData,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             toast.success("Fellow Terminated and Email Sent");
             setShowTerminateModal(false);
-            setSelectedItem(prev => ({ ...prev, status: 'TERMINATED' })); // Optimistic update
-            fetchData();
+
+            const fresh = await fetchData();
+            const updated = (fresh?.fellows || []).find(f => f._id === target._id) || { ...target, status: 'TERMINATED' };
+            if (target === orgInspectorMember) setOrgInspectorMember(updated); else setSelectedItem(updated);
         } catch (error) {
             toast.error("Failed to terminate fellow");
         } finally {
@@ -171,7 +204,7 @@ function AdminDashboardContent() {
             const token = localStorage.getItem("accessToken");
             const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
             await axios.post(`${serverUrl}/application/admin/orgs`,
-                { name, code, isActive: false, emailDomainWhitelist: [], formVar1: [] },
+                { name, code, isActive: false, emailDomainWhitelist: [], defaultTenureEndDate: 0, formVar1: [], availableRoles: [] },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             toast.success(`Node "${code}" initialized (Offline)`);
@@ -187,11 +220,12 @@ function AdminDashboardContent() {
             const token = localStorage.getItem("accessToken");
             const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
             await axios.post(`${serverUrl}/application/admin/roles`,
-                { name: newRole },
+                { name: newRole, description: newRoleDescription },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             toast.success(`Role "${newRole}" added!`);
             setNewRole("");
+            setNewRoleDescription("");
             fetchData(); // Refresh roles
         } catch (error) {
             console.error("Add Role Error:", error);
@@ -202,20 +236,347 @@ function AdminDashboardContent() {
         }
     };
 
+    // Delete a global role (deactivate in RolesMaster) — shows undo toast
+    const handleDeleteRole = async (roleObj, skipConfirm = false) => {
+        // Accept either: role object { id|_id, name }, a partial object { name }, or plain string role name
+        let role = roleObj;
+
+        // If caller passed a string (role name), try to resolve the full role object from availableRoles
+        if (typeof role === 'string') {
+            const found = (availableRoles || []).find(ar => (typeof ar === 'string' ? ar : ar.name) === role);
+            if (found) role = found;
+        }
+
+        // If caller passed a partial object without id, try to resolve by name
+        if (role && !(role.id || role._id) && role.name) {
+            const found = (availableRoles || []).find(ar => (typeof ar === 'string' ? ar : ar.name) === role.name);
+            if (found) role = found;
+        }
+
+        // Defensive fallback: query the server for the role list and resolve by name (covers cases where
+        if (role && !(role.id || role._id) && role.name) {
+            try {
+                const token = localStorage.getItem('accessToken');
+                const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
+                const res = await axios.get(`${serverUrl}/application/admin/roles`, { headers: { Authorization: `Bearer ${token}` } });
+                const srvFound = (res.data || []).find(r => r.name === role.name);
+                if (srvFound && (srvFound.id || srvFound._id)) role = srvFound;
+            } catch (e) {
+                // ignore — we'll show the generic "Unable to determine role id" below
+                console.debug('Role id lookup fallback failed', e?.message || e);
+            }
+        }
+
+        if (!role || !(role.id || role._id)) return toast.error('Unable to determine role id');
+        if (!skipConfirm && !window.confirm(`Deactivate global role "${role.name}"? This will hide it from selects and org lists.`)) return;
+
+        setActionLoading(true);
+        try {
+            const token = localStorage.getItem('accessToken');
+            const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
+            const id = role.id || role._id;
+            await axios.delete(`${serverUrl}/application/admin/roles/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+
+            // Refresh immediately so UI reflects deactivation
+            fetchData();
+
+            // Show undo toast (calls restore endpoint)
+            let toastId;
+            toastId = toast.info(
+                <div className="flex items:center justify-between gap-4">
+                    <span>Role "{role.name}" deactivated</span>
+                    <button
+                        className="text-[10px] px-2 py-1 bg-white/5 rounded text-cyan-300 hover:bg-white/10"
+                        onClick={async () => {
+                            toast.dismiss(toastId);
+                            await handleRestoreRole(role);
+                        }}
+                    >
+                        UNDO
+                    </button>
+                </div>,
+                { autoClose: 8000 }
+            );
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to deactivate role');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    // Permanently delete a global role — safe cleanup of org availableRoles/formVar1 and applicant.preferredRoles
+    const handlePermanentDeleteRole = async (roleObj) => {
+        let role = roleObj;
+
+        if (typeof role === 'string') {
+            const found = (availableRoles || []).find(ar => (typeof ar === 'string' ? ar : ar.name) === role);
+            if (found) role = found;
+        }
+
+        if (role && !(role.id || role._id) && role.name) {
+            try {
+                const token = localStorage.getItem('accessToken');
+                const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
+                const res = await axios.get(`${serverUrl}/application/admin/roles`, { headers: { Authorization: `Bearer ${token}` } });
+                const srvFound = (res.data || []).find(r => r.name === role.name);
+                if (srvFound && (srvFound.id || srvFound._id)) role = srvFound;
+            } catch (e) {
+                console.debug('Role id lookup fallback failed', e?.message || e);
+            }
+        }
+
+        if (!role || !(role.id || role._id)) return toast.error('Unable to determine role id');
+        if (!window.confirm(`Permanently delete role "${role.name}" and remove it from organizations & applicant preferred roles? This is irreversible.`)) return;
+
+        setActionLoading(true);
+        try {
+            const token = localStorage.getItem('accessToken');
+            const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
+            const id = role.id || role._id;
+
+            await axios.delete(`${serverUrl}/application/admin/roles/${id}/permanent?force=true`, { headers: { Authorization: `Bearer ${token}` } });
+
+            toast.success(`Role "${role.name}" permanently deleted`);
+            setDeleteConfirm(null);
+            fetchData();
+        } catch (err) {
+            const counts = err.response?.data?.counts;
+            if (counts) {
+                const details = Object.entries(counts).map(([k,v]) => `${k}: ${v}`).join(', ');
+                toast.error((err.response?.data?.message || 'Deletion blocked') + ' — ' + details);
+            } else {
+                toast.error(err.response?.data?.message || 'Failed to permanently delete role');
+            }
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    // Add role locally to the currently-editing organization (name + optional description)
+    const handleAddOrgRole = () => {
+        const name = (newOrgRole || '').trim();
+        if (!name) return toast.error('Role name required');
+
+        const roleObj = { name, description: (newOrgRoleDescription || '').trim() };
+        const currentAvail = Array.isArray(orgData.availableRoles) ? [...orgData.availableRoles] : [];
+
+        // Prevent duplicates by name (case-sensitive match on UI)
+        if (currentAvail.find(r => r.name === roleObj.name)) {
+            setNewOrgRole('');
+            setNewOrgRoleDescription('');
+            return toast.info('Role already present for this org');
+        }
+
+        currentAvail.push(roleObj);
+        const currentFormVar1 = Array.isArray(orgData.formVar1) ? [...orgData.formVar1] : [];
+        if (!currentFormVar1.includes(roleObj.name)) currentFormVar1.push(roleObj.name);
+
+        setOrgData({ ...orgData, availableRoles: currentAvail, formVar1: currentFormVar1 });
+        setNewOrgRole('');
+        setNewOrgRoleDescription('');
+        toast.success(`Added "${roleObj.name}" to organization (local)`);
+    };
+
+    // Remove a role from the current organization immediately (persist via API when org exists)
+    const handleDeleteOrgRole = async (roleName, skipConfirm = false) => {
+        if (!roleName) return toast.error('Role name required');
+        if (!skipConfirm && !window.confirm(`Remove role "${roleName}" from organization ${orgData.code || ''}?`)) return;
+
+        // Backup (for undo)
+        const backupRole = (orgData.availableRoles || []).find(r => r.name === roleName) || { name: roleName, description: '' };
+
+        // Update local state immediately for fast UI response
+        const updatedAvail = (orgData.availableRoles || []).filter(r => r.name !== roleName);
+        const updatedFormVar1 = (orgData.formVar1 || []).filter(n => n !== roleName);
+        setOrgData({ ...orgData, availableRoles: updatedAvail, formVar1: updatedFormVar1 });
+
+        // If org is not persisted yet, just show toast and return
+        if (!orgData?.id) {
+            toast.success(`Removed "${roleName}" (local) — click Save to persist`);
+            return;
+        }
+
+        setActionLoading(true);
+        try {
+            const token = localStorage.getItem('accessToken');
+            const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
+
+            // Prepare payload similar to handleSaveOrg
+            const payload = {
+                id: orgData.id,
+                name: orgData.name,
+                code: orgData.code,
+                emailDomainWhitelist: orgData.emailDomainWhitelist || [],
+                endDate: orgData.endDate || 0,
+                formVar1: updatedFormVar1,
+                availableRoles: updatedAvail,
+                isActive: orgData.isActive
+            };
+
+            await axios.post(`${serverUrl}/application/admin/orgs`, payload, { headers: { Authorization: `Bearer ${token}` } });
+            fetchData();
+
+            // undo option
+            let toastId = null;
+            toastId = toast.info(
+                <div className="flex items-center justify-between gap-4">
+                    <span>Removed "{roleName}" from {orgData.code}</span>
+                    <button
+                        className="text-[10px] px-2 py-1 bg-white/5 rounded text-cyan-300 hover:bg-white/10"
+                        onClick={async () => {
+                            toast.dismiss(toastId);
+                            await handleRestoreOrgRole(backupRole);
+                        }}
+                    >
+                        UNDO
+                    </button>
+                </div>,
+                { autoClose: 8000 }
+            );
+
+            toast.success(`Role "${roleName}" removed from org`);
+        } catch (err) {
+            console.error('Remove org role failed', err);
+            toast.error(err.response?.data?.message || 'Failed to remove role from org');
+            // revert local change on failure
+            setOrgData({ ...orgData, availableRoles: (orgData.availableRoles || []).concat([backupRole]), formVar1: (orgData.formVar1 || []).concat([roleName]) });
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    // Restore a role that was removed from the org
+    const handleRestoreOrgRole = async (roleObj) => {
+        if (!roleObj || !roleObj.name) return toast.error('Invalid role');
+
+        // If org not persisted yet just add locally
+        if (!orgData?.id) {
+            const updated = Array.isArray(orgData.availableRoles) ? [...orgData.availableRoles, { name: roleObj.name, description: roleObj.description || '' }] : [{ name: roleObj.name, description: roleObj.description || '' }];
+            setOrgData({ ...orgData, availableRoles: updated, formVar1: Array.from(new Set([...(orgData.formVar1 || []), roleObj.name])) });
+            toast.success(`Restored "${roleObj.name}" (local)`);
+            return;
+        }
+
+        setActionLoading(true);
+        try {
+            const token = localStorage.getItem('accessToken');
+            const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
+            const updatedAvail = Array.from(new Set([...(orgData.availableRoles || []).map(r => r.name), roleObj.name]));
+            const payload = {
+                id: orgData.id,
+                name: orgData.name,
+                code: orgData.code,
+                emailDomainWhitelist: orgData.emailDomainWhitelist || [],
+                endDate: orgData.endDate || 0,
+                formVar1: updatedAvail,
+                availableRoles: (orgData.availableRoles || []).concat([{ name: roleObj.name, description: roleObj.description || '' }]),
+                isActive: orgData.isActive
+            };
+            await axios.post(`${serverUrl}/application/admin/orgs`, payload, { headers: { Authorization: `Bearer ${token}` } });
+            toast.success(`Role "${roleObj.name}" restored to org`);
+            fetchData();
+        } catch (err) {
+            console.error('Restore org role failed', err);
+            toast.error(err.response?.data?.message || 'Failed to restore role to org');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    // Restore a previously deactivated global role
+    const handleRestoreRole = async (roleObj) => {
+        if (!roleObj || !(roleObj.id || roleObj._id)) return toast.error('Unable to determine role id');
+        setActionLoading(true);
+        try {
+            const token = localStorage.getItem('accessToken');
+            const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
+            const id = roleObj.id || roleObj._id;
+            await axios.post(`${serverUrl}/application/admin/roles/${id}/restore`, null, { headers: { Authorization: `Bearer ${token}` } });
+            toast.success(`Role "${roleObj.name}" restored`);
+            fetchData();
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to restore role');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    // --- Role description editing (inline, local only until org saved) ---
+    const startEditRoleDesc = (roleName) => {
+        const existing = (orgData.availableRoles || []).find(r => r.name === roleName) || { description: '' };
+        setEditingRoleDesc(roleName);
+        setEditingRoleTempDesc(existing.description || '');
+    };
+
+    const saveRoleDescEdit = async () => {
+        const prevRole = (orgData.availableRoles || []).find(r => r.name === editingRoleDesc) || { name: editingRoleDesc, description: '' };
+        const updatedAvail = (orgData.availableRoles || []).map(r => r.name === editingRoleDesc ? { ...r, description: editingRoleTempDesc } : r);
+
+        // Optimistic UI update
+        setOrgData({ ...orgData, availableRoles: updatedAvail });
+        setEditingRoleDesc(null);
+        setEditingRoleTempDesc('');
+        toast.success('Role description updated (local)');
+
+        // If org is not persisted yet, user will still need to click Save — nothing to persist server-side
+        if (!orgData?.id) return;
+
+        setActionLoading(true);
+        try {
+            const token = localStorage.getItem('accessToken');
+            const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
+
+            const payload = {
+                id: orgData.id,
+                name: orgData.name,
+                code: orgData.code,
+                emailDomainWhitelist: orgData.emailDomainWhitelist || [],
+                endDate: orgData.endDate || 0,
+                formVar1: orgData.formVar1 || [],
+                availableRoles: updatedAvail,
+                isActive: orgData.isActive
+            };
+
+            await axios.post(`${serverUrl}/application/admin/orgs`, payload, { headers: { Authorization: `Bearer ${token}` } });
+            toast.success('Role description saved to node');
+            await fetchData();
+        } catch (err) {
+            console.error('Save role description failed', err);
+            toast.error(err.response?.data?.message || 'Failed to save role description');
+            // revert local change on failure
+            const reverted = (orgData.availableRoles || []).map(r => r.name === prevRole.name ? prevRole : r);
+            setOrgData({ ...orgData, availableRoles: reverted });
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const cancelRoleDescEdit = () => {
+        setEditingRoleDesc(null);
+        setEditingRoleTempDesc('');
+    };
+
     useEffect(() => { fetchData(); }, []);
 
     const handleUpdateAppStatus = async (status) => {
         setActionLoading(true);
         try {
             const token = localStorage.getItem("accessToken");
+            const target = orgInspectorMember || selectedItem;
+            if (!target || !target._id) { toast.error('No applicant selected'); setActionLoading(false); return; }
+
             await axios.patch(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/application/admin/status`, {
-                applicantId: selectedItem._id,
+                applicantId: target._id,
                 status,
                 tenureEndDate: status === 'ACCEPTED' ? tenureEndDate : undefined
             }, { headers: { Authorization: `Bearer ${token}` } });
+
             toast.success(`Applicant ${status}`);
-            setSelectedItem(null);
-            fetchData();
+
+            // refresh and re-select the same item so inspector remains visible
+            const fresh = await fetchData();
+            const updated = (fresh?.apps || []).find(a => a._id === target._id) || { ...target, status };
+            if (target === orgInspectorMember) setOrgInspectorMember(updated); else setSelectedItem(updated);
         } catch (error) { toast.error("Failed to update status"); } finally { setActionLoading(false); }
     };
 
@@ -224,13 +585,18 @@ function AdminDashboardContent() {
         setActionLoading(true);
         try {
             const token = localStorage.getItem("accessToken");
-            await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/admin/fellows/${selectedItem._id}/promote`, promotionData, {
+            const target = orgInspectorMember || selectedItem;
+            if (!target || !target._id) { toast.error('No fellow selected'); setActionLoading(false); return; }
+
+            await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/admin/fellows/${target._id}/promote`, promotionData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             toast.success("Fellow Promoted!");
             setShowPromoteModal(false);
-            setSelectedItem(null);
-            fetchData();
+
+            const fresh = await fetchData();
+            const updated = (fresh?.fellows || []).find(f => f._id === target._id) || { ...target };
+            if (target === orgInspectorMember) setOrgInspectorMember(updated); else setSelectedItem(updated);
         } catch (error) { toast.error("Promotion failed"); } finally { setActionLoading(false); }
     };
 
@@ -245,20 +611,26 @@ function AdminDashboardContent() {
 
             // Parse the local datetime string (no timezone conversion)
             const localDate = new Date(scheduleData.scheduledAt);
-
-            // Format as 'YYYY-MM-DDTHH:mm:00+05:30' (IST)
             const pad = n => n.toString().padStart(2, '0');
             const istIsoString = `${localDate.getFullYear()}-${pad(localDate.getMonth() + 1)}-${pad(localDate.getDate())}T${pad(localDate.getHours())}:${pad(localDate.getMinutes())}:00+05:30`;
 
+            // Target can be the nested orgInspectorMember (when opened inside org inspector) or the selectedItem (applications view)
+            const target = (orgInspectorMember && (orgInspectorMember.status || orgInspectorMember.interviewDetails)) ? orgInspectorMember : selectedItem;
+            if (!target || !target._id) { toast.error("No applicant selected"); setActionLoading(false); return; }
+
             await axios.put(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/application/admin/schedule-interview`, {
-                applicantId: selectedItem._id,
+                applicantId: target._id,
                 scheduledAt: istIsoString,
                 meetLink: scheduleData.meetLink
             }, { headers: { Authorization: `Bearer ${token}` } });
+
             toast.success("Interview Scheduled & Email Sent!");
             setShowScheduleModal(false);
-            setSelectedItem(null);
-            fetchData();
+
+            // Refresh backend data then restore local selection so UI stays in the same context
+            const fresh = await fetchData();
+            const updatedApp = (fresh?.apps || []).find(a => a._id === target._id) || { ...target, interviewDetails: { scheduledAt: istIsoString, meetLink: scheduleData.meetLink, status: 'INTERVIEW_SCHEDULED' }, status: 'INTERVIEW_SCHEDULED' };
+            if (target === orgInspectorMember) setOrgInspectorMember(updatedApp); else setSelectedItem(updatedApp);
         } catch (error) {
             console.error(error);
             toast.error("Failed to schedule interview");
@@ -272,15 +644,44 @@ function AdminDashboardContent() {
         setActionLoading(true);
         try {
             const token = localStorage.getItem("accessToken");
+            const target = (orgInspectorMember && (orgInspectorMember.status || orgInspectorMember.interviewDetails)) ? orgInspectorMember : selectedItem;
+            if (!target || !target._id) { toast.error('No applicant selected'); setActionLoading(false); return; }
+
             await axios.put(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/application/admin/skip-interview`, {
-                applicantId: selectedItem._id
+                applicantId: target._id
             }, { headers: { Authorization: `Bearer ${token}` } });
+
             toast.success("Interview Step Skipped");
-            fetchData();
-            // Upate local state to reflect change so Accept button becomes available immediately
-            setSelectedItem(prev => ({ ...prev, status: 'INTERVIEW_SKIPPED', interviewDetails: { ...prev.interviewDetails, status: 'SKIPPED' } }));
+            const fresh = await fetchData();
+            const updated = (fresh?.apps || []).find(a => a._id === target._id) || { ...target, status: 'INTERVIEW_SKIPPED', interviewDetails: { ...target.interviewDetails, status: 'SKIPPED' } };
+            if (target === orgInspectorMember) setOrgInspectorMember(updated); else setSelectedItem(updated);
         } catch (error) {
             toast.error("Failed to skip interview");
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    // Mark applicant as DID NOT ATTEND (NO-SHOW) -> rejected and tagged
+    const handleMarkNoShow = async () => {
+        if (!window.confirm("Mark applicant as DID NOT ATTEND (No-show)? This will reject the applicant.")) return;
+        setActionLoading(true);
+        try {
+            const token = localStorage.getItem("accessToken");
+            const target = (orgInspectorMember && (orgInspectorMember.status || orgInspectorMember.interviewDetails)) ? orgInspectorMember : selectedItem;
+            if (!target || !target._id) { toast.error('No applicant selected'); setActionLoading(false); return; }
+
+            await axios.put(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/application/admin/mark-no-show`, {
+                applicantId: target._id
+            }, { headers: { Authorization: `Bearer ${token}` } });
+
+            toast.success("Applicant marked as No-show and rejected");
+            const fresh = await fetchData();
+            const updated = (fresh?.apps || []).find(a => a._id === target._id) || { ...target, status: 'REJECTED', interviewDetails: { ...target.interviewDetails, status: 'NO_SHOW' } };
+            if (target === orgInspectorMember) setOrgInspectorMember(updated); else setSelectedItem(updated);
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to mark no-show");
         } finally {
             setActionLoading(false);
         }
@@ -313,13 +714,17 @@ function AdminDashboardContent() {
     const handleUpdateState = async (state) => {
         try {
             const token = localStorage.getItem("accessToken");
-            await axios.put(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/admin/fellows/${selectedItem._id}`,
+            const target = orgInspectorMember || selectedItem;
+            if (!target || !target._id) { toast.error('No fellow selected'); return; }
+
+            await axios.put(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/admin/fellows/${target._id}`,
                 { onboardingState: state },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             toast.success(`State: ${state}`);
-            fetchData();
-            setSelectedItem({ ...selectedItem, onboardingState: state }); // Local sync
+            const fresh = await fetchData();
+            const updated = (fresh?.fellows || []).find(f => f._id === target._id) || { ...target, onboardingState: state };
+            if (target === orgInspectorMember) setOrgInspectorMember(updated); else setSelectedItem(updated);
         } catch (error) { toast.error("Update failed"); }
     };
 
@@ -328,6 +733,10 @@ function AdminDashboardContent() {
         if (loading) return;
         const email = searchParams.get('email');
         const type = searchParams.get('type');
+        const orgCode = searchParams.get('orgCode');
+        const memberEmail = searchParams.get('memberEmail');
+
+        // legacy/email shortcuts (apps / fellows)
         if (email && type) {
             if (type === 'apps') {
                 const item = apps.find(a => a.email === email);
@@ -336,8 +745,22 @@ function AdminDashboardContent() {
                 const item = fellows.find(f => f.email === email);
                 if (item) { setActiveTab('fellows'); setSelectedItem(item); }
             }
+            return; // prefer explicit email/type handling when present
         }
-    }, [loading, searchParams]);
+
+        // restore org inspector + nested member from query (persists view across reload)
+        if (orgCode) {
+            const org = orgs.find(o => o.code === orgCode);
+            if (org) {
+                setActiveTab('orgs');
+                setSelectedItem(org);
+                if (memberEmail) {
+                    const mem = (fellows || []).find(f => f.email === memberEmail) || (apps || []).find(a => a.email === memberEmail);
+                    if (mem) setOrgInspectorMember(mem);
+                }
+            }
+        }
+    }, [loading, searchParams, orgs, fellows, apps]);
 
     const filteredApps = apps.filter(a => {
         const matchesSearch = a.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -349,6 +772,11 @@ function AdminDashboardContent() {
         if (activeSubTab === 'ARCHIVED') return matchesSearch && (a.status === 'ACCEPTED' || a.status === 'REJECTED');
         return matchesSearch; // ALL
     });
+
+    // Visible orgs depending on org sub-tab (ACTIVE | ARCHIVED)
+    const visibleOrgs = Array.isArray(orgs)
+        ? orgs.filter(o => orgSubTab === 'ARCHIVED' ? !o.isActive : Boolean(o.isActive))
+        : [];
 
 
     const ensureExternalLink = (url) => {
@@ -364,10 +792,16 @@ function AdminDashboardContent() {
             const token = localStorage.getItem("accessToken");
             const payload = { ...orgData };
 
-            // If editing, use PUT (assuming endpoint exists, or just POST for now as per minimal viable fix)
-            // The prompt says "add another org", so primarily focus on CREATE.
-            // If ID exists, it would be an update, but let's stick to Create for "Add" request.
-            // Adjusting payload for arrays if needed (split by comma if input is string)
+            // Ensure selected roles (formVar1) are stored with descriptions when available
+            if (Array.isArray(orgData.formVar1) && orgData.formVar1.length) {
+                payload.availableRoles = orgData.formVar1.map(name => {
+                    const existing = (orgData.availableRoles || []).find(r => r.name === name);
+                    return existing ? { name: existing.name, description: existing.description || '' } : { name, description: '' };
+                });
+            } else {
+                // fallback: if availableRoles present, ensure shape is correct
+                payload.availableRoles = (orgData.availableRoles || []).map(r => ({ name: r.name || r, description: r.description || '' }));
+            }
 
             await axios.post(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/application/admin/orgs`, payload, {
                 headers: { Authorization: `Bearer ${token}` }
@@ -381,6 +815,24 @@ function AdminDashboardContent() {
             toast.error("Failed to save organization");
         } finally { setActionLoading(false); }
     };
+
+    // Archive an organization (mark offline so no further applications accepted)
+    const handleArchiveOrg = async () => {
+        if (!orgData?.id) return toast.error('No organization selected');
+        if (!window.confirm(`Archive node ${orgData.code}? This will make the node offline and prevent further applications.`)) return;
+        setActionLoading(true);
+        try {
+            const token = localStorage.getItem('accessToken');
+            const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
+            await axios.put(`${serverUrl}/application/admin/orgs/${orgData.id}/archive`, {}, { headers: { Authorization: `Bearer ${token}` } });
+            toast.success('Organization archived');
+            setIsEditingOrg(false);
+            fetchData();
+        } catch (err) {
+            console.error('Archive failed', err);
+            toast.error(err.response?.data?.message || 'Archive failed');
+        } finally { setActionLoading(false); }
+    }; 
 
     const TenureTimeline = ({ tenures }) => (
         <div className="relative pl-6 border-l border-cyan-900/50 space-y-8 ml-2">
@@ -408,10 +860,94 @@ function AdminDashboardContent() {
     const renderOrgInspector = () => {
         const orgApps = apps.filter(a => a.orgCode === selectedItem.code && a.status === 'PENDING');
         const orgInterviewees = apps.filter(a => a.orgCode === selectedItem.code && (a.status === 'INTERVIEW_SCHEDULED' || a.status === 'INTERVIEW_SKIPPED'));
+        const orgRejected = apps.filter(a => a.orgCode === selectedItem.code && a.status === 'REJECTED');
         const orgFellows = fellows.filter(f => f.tenures?.some(t => t.orgCode === selectedItem.code)); // Robust filtering
 
         return (
             <div className="space-y-8">
+                {orgInspectorMember && (
+                    <motion.div initial={{ x: 24, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 24, opacity: 0 }} transition={{ duration: 0.18 }} className="w-full p-4 border border-white/10 bg-white/[0.01] space-y-4">
+                        <div className="flex items-start gap-4">
+                            <button onClick={() => { setOrgInspectorMember(null); router.replace(`${window.location.pathname}?orgCode=${selectedItem?.code || ''}`); }} className="text-gray-400 hover:text-white p-1">
+                                <ArrowLeft className="w-4 h-4" />
+                            </button>
+                            <div className="flex-1 flex items-center gap-4">
+                                <div className="w-16 h-16 border border-white/10 flex items-center justify-center text-3xl font-bold bg-white/5 text-purple-500">{orgInspectorMember.firstName?.[0] || 'U'}</div>
+                                <div className="flex-1">
+                                    <div className="text-lg font-bold uppercase tracking-tight">{orgInspectorMember.firstName} {orgInspectorMember.lastName}</div>
+                                    <div className="text-xs font-mono text-gray-400">{orgInspectorMember.email}</div>
+                                    <div className="mt-2 flex items-center gap-2">
+                                        <div className="px-2 py-0.5 border border-purple-500/30 text-[9px] text-purple-400 uppercase">{orgInspectorMember.onboardingState || orgInspectorMember.status}</div>
+                                        <button onClick={() => {
+                                            const isApplicant = orgInspectorMember && (typeof orgInspectorMember.status === 'string' || orgInspectorMember.interviewDetails);
+                                            const applicantStatuses = ['PENDING','INTERVIEW_SCHEDULED','INTERVIEW_SKIPPED','REJECTED'];
+                                            if (isApplicant && applicantStatuses.includes((orgInspectorMember.status || '').toUpperCase())) {
+                                                // Open in Applications (Interview tab) for applicants who are not yet fellows
+                                                setActiveTab('applications');
+                                                setActiveSubTab('INTERVIEW');
+                                                setSelectedItem(orgInspectorMember);
+                                                setOrgInspectorMember(null);
+                                                router.replace(`${window.location.pathname}?type=apps&email=${encodeURIComponent(orgInspectorMember.email)}`);
+                                            } else {
+                                                // Default: open full fellow profile
+                                                setActiveTab('fellows');
+                                                setSelectedItem(orgInspectorMember);
+                                                setOrgInspectorMember(null);
+                                                router.replace(`${window.location.pathname}?type=fellows&email=${encodeURIComponent(orgInspectorMember.email)}`);
+                                            }
+                                        }} className="text-xs text-gray-400 hover:text-white">Open full profile</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* If this nested item is a fellow, show tenure timeline; if it's an application, show interview controls */}
+                        <div className="pt-4">
+                            {orgInspectorMember.tenures ? (
+                                <TenureTimeline tenures={orgInspectorMember.tenures} />
+                            ) : (
+                                <div className="space-y-3">
+                                    <div className="text-[10px] text-gray-500 uppercase font-mono tracking-widest flex justify-between">
+                                        <span>Motivation_Payload</span>
+                                        <span className={((orgInspectorMember?.whyJoinDeepCytes ?? orgInspectorMember?.data?.whyJoin ?? '').length < 100) ? "text-red-500" : "text-green-500"}>
+                                            LEN_{(orgInspectorMember?.whyJoinDeepCytes ?? orgInspectorMember?.data?.whyJoin ?? '').length}
+                                        </span>
+                                    </div>
+                                    <div className="p-3 bg-black/40 border border-white/5 text-xs text-gray-400 font-mono leading-relaxed max-h-28 overflow-y-auto custom-scrollbar">
+                                        {orgInspectorMember.whyJoinDeepCytes || orgInspectorMember.data?.whyJoin || "NO_DATA_FOUND"}
+                                    </div>
+
+                                    {/* Interview controls (same behavior as applications inspector but local to nested panel) */}
+                                    {orgInspectorMember.status === 'PENDING' || orgInspectorMember.status === 'INTERVIEW_SCHEDULED' || orgInspectorMember.interviewDetails ? (
+                                        <div className="space-y-3 pt-3">
+                                            {orgInspectorMember.status === 'PENDING' && (!orgInspectorMember.interviewDetails || orgInspectorMember.interviewDetails.status === 'PENDING') ? (
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <button onClick={() => setShowScheduleModal(true)} className="h-10 border border-cyan-500/50 text-cyan-400 bg-cyan-900/10 hover:bg-cyan-500/20 text-xs font-bold uppercase tracking-wider">Schedule Interview</button>
+                                                    <button onClick={handleSkipInterview} className="h-10 border border-gray-600/50 text-gray-500 hover:text-white hover:border-white/50 text-xs font-bold uppercase tracking-wider">Skip Protocol</button>
+                                                </div>
+                                            ) : orgInspectorMember.status === 'INTERVIEW_SCHEDULED' ? (
+                                                <div className="space-y-3">
+                                                    <div className="p-3 bg-orange-900/10 border border-orange-500/30 space-y-2">
+                                                        <div className="flex items-center justify-between text-xs text-gray-400 font-mono uppercase">
+                                                            <span>Scheduled_Time:</span>
+                                                            <span className="text-xs">{orgInspectorMember.interviewDetails?.scheduledAt ? new Date(orgInspectorMember.interviewDetails.scheduledAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A'}</span>
+                                                        </div>
+                                                        <div className="flex items-center justify-between text-xs text-gray-400 font-mono uppercase">
+                                                            <span>Meet_Link:</span>
+                                                            <a href={orgInspectorMember.interviewDetails?.meetLink?.startsWith('http') ? orgInspectorMember.interviewDetails.meetLink : `https://${orgInspectorMember.interviewDetails?.meetLink}`} target="_blank" rel="noopener noreferrer" className="text-xs font-mono text-cyan-400 hover:underline truncate max-w-[200px]">{orgInspectorMember.interviewDetails?.meetLink || 'N/A'}</a>
+                                                        </div>
+                                                    </div>
+                                                    <button onClick={() => { setScheduleData({ scheduledAt: orgInspectorMember.interviewDetails?.scheduledAt ? new Date(orgInspectorMember.interviewDetails.scheduledAt).toISOString().slice(0,16) : '', meetLink: orgInspectorMember.interviewDetails?.meetLink || '' }); setShowScheduleModal(true); }} className="w-full h-10 border border-orange-500/50 text-orange-400 bg-orange-900/10 hover:bg-orange-500/20 text-xs font-bold uppercase tracking-wider">Reschedule Interview</button>
+                                                </div>
+                                            ) : null}
+                                        </div>
+                                    ) : null}
+                                </div>
+                            )}
+                        </div>
+                    </motion.div>
+                )}
+
                 <div className="flex items-start gap-6 border-b border-white/10 pb-8">
                     <div className="w-20 h-20 border border-white/20 flex items-center justify-center text-4xl font-bold bg-white/5 text-green-500">
                         {selectedItem.name[0]}
@@ -439,7 +975,7 @@ function AdminDashboardContent() {
                                     {orgFellows.map(f => (
                                         <div
                                             key={f._id}
-                                            onClick={() => { setActiveTab('fellows'); setSelectedItem(f); }}
+                                            onClick={() => { setOrgInspectorMember(f); router.replace(`${window.location.pathname}?orgCode=${selectedItem?.code}&memberEmail=${encodeURIComponent(f.email)}`); }}
                                             className="p-3 bg-white/5 border border-white/10 flex justify-between items-center group cursor-pointer hover:border-purple-500/50 transition-colors"
                                         >
                                             <div className="flex-1">
@@ -449,7 +985,7 @@ function AdminDashboardContent() {
                                             <div className="flex items-center gap-3">
                                                 <div className="px-2 py-0.5 border border-purple-500/30 text-[9px] text-purple-400 uppercase">{f.onboardingState}</div>
                                                 <button
-                                                    onClick={(e) => { e.stopPropagation(); window.open(`/admin/applications?type=fellows&email=${f.email}`, '_blank'); }}
+                                                    onClick={(e) => { e.stopPropagation(); window.open(`/applications?type=fellows&email=${f.email}`, '_blank'); }}
                                                     className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10"
                                                 >
                                                     <ExternalLink className="w-3 h-3 text-purple-400" />
@@ -464,31 +1000,57 @@ function AdminDashboardContent() {
                         {/* Org Interviewees */}
                         <div>
                             <h4 className="text-xs font-bold text-orange-400 uppercase tracking-widest mb-2 border-b border-orange-500/20 pb-1">interview_pipeline ({orgInterviewees.length})</h4>
-                            {orgInterviewees.length > 0 ? (
-                                <div className="grid gap-2">
-                                    {orgInterviewees.map(a => (
-                                        <div
-                                            key={a._id}
-                                            onClick={() => { setActiveTab('applications'); setActiveSubTab('INTERVIEW'); setSelectedItem(a); }}
-                                            className="p-3 bg-white/5 border border-white/10 flex justify-between items-center group cursor-pointer hover:border-orange-500/50 transition-colors"
-                                        >
-                                            <div className="flex-1">
-                                                <div className="text-sm font-bold text-white group-hover:text-orange-400">{a.firstName} {a.lastName}</div>
-                                                <div className="text-[10px] text-gray-500 font-mono">{a.email}</div>
+                            {orgInterviewees.length > 0 ? (() => {
+                                const now = new Date();
+                                const scheduled = orgInterviewees.filter(a => a.interviewDetails?.scheduledAt).map(a => ({ ...a, _sched: new Date(a.interviewDetails.scheduledAt) }));
+                                const unscheduled = orgInterviewees.filter(a => !a.interviewDetails?.scheduledAt);
+                                const upcoming = scheduled.filter(a => a._sched >= now).sort((x, y) => x._sched - y._sched);
+                                const past = scheduled.filter(a => a._sched < now).sort((x, y) => y._sched - x._sched);
+                                return (
+                                    <div className="grid gap-2">
+                                        {upcoming.map(a => (
+                                            <div key={a._id} onClick={() => { setOrgInspectorMember(a); router.replace(`${window.location.pathname}?orgCode=${selectedItem?.code}&memberEmail=${encodeURIComponent(a.email)}`); }} className="p-3 bg-white/5 border border-white/10 flex justify-between items-center group cursor-pointer hover:border-orange-500/50 transition-colors">
+                                                <div className="flex-1">
+                                                    <div className="text-sm font-bold text-white group-hover:text-orange-400">{a.firstName} {a.lastName}</div>
+                                                    <div className="text-[10px] text-gray-500 font-mono">{a.email}</div>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="px-2 py-0.5 border border-orange-500/30 text-[9px] text-orange-400 uppercase">{a.status}</div>
+                                                    {a.interviewDetails?.scheduledAt && (<div className="text-[10px] text-gray-400 font-mono">{new Date(a.interviewDetails.scheduledAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</div>)}
+                                                </div>
                                             </div>
-                                            <div className="flex items-center gap-3">
-                                                <div className="px-2 py-0.5 border border-orange-500/30 text-[9px] text-orange-400 uppercase">{a.status}</div>
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); window.open(`/admin/applications?type=apps&email=${a.email}`, '_blank'); }}
-                                                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10"
-                                                >
-                                                    <ExternalLink className="w-3 h-3 text-orange-400" />
-                                                </button>
+                                        ))}
+
+                                        {unscheduled.map(a => (
+                                            <div key={a._id} onClick={() => { setOrgInspectorMember(a); router.replace(`${window.location.pathname}?orgCode=${selectedItem?.code}&memberEmail=${encodeURIComponent(a.email)}`); }} className="p-3 bg-white/5 border border-white/10 flex justify-between items-center group cursor-pointer hover:border-orange-500/50 transition-colors">
+                                                <div className="flex-1">
+                                                    <div className="text-sm font-bold text-white group-hover:text-orange-400">{a.firstName} {a.lastName}</div>
+                                                    <div className="text-[10px] text-gray-500 font-mono">{a.email}</div>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="px-2 py-0.5 border border-orange-500/30 text-[9px] text-orange-400 uppercase">{a.status}</div>
+                                                    <div className="text-[10px] text-gray-400 font-mono">UNSCHEDULED</div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : <div className="text-xs text-gray-600 font-mono italic">NO ACTIVE INTERVIEWS</div>}
+                                        ))}
+
+                                        {past.length > 0 && <div className="border-t border-white/10 my-2" />}
+
+                                        {past.map(a => (
+                                            <div key={a._id} onClick={() => { setOrgInspectorMember(a); router.replace(`${window.location.pathname}?orgCode=${selectedItem?.code}&memberEmail=${encodeURIComponent(a.email)}`); }} className="p-3 bg-white/5 border border-white/10 flex justify-between items-center group cursor-pointer hover:border-orange-500/50 transition-colors">
+                                                <div className="flex-1">
+                                                    <div className="text-sm font-bold text-white group-hover:text-orange-400">{a.firstName} {a.lastName}</div>
+                                                    <div className="text-[10px] text-gray-500 font-mono">{a.email}</div>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="px-2 py-0.5 border border-orange-500/30 text-[9px] text-orange-400 uppercase">{a.status}</div>
+                                                    {a.interviewDetails?.scheduledAt && (<div className="text-[10px] text-gray-400 font-mono">{new Date(a.interviewDetails.scheduledAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</div>)}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                );
+                            })() : <div className="text-xs text-gray-600 font-mono italic">NO ACTIVE INTERVIEWS</div>}
                         </div>
 
                         {/* Org Applicants */}
@@ -499,7 +1061,7 @@ function AdminDashboardContent() {
                                     {orgApps.map(a => (
                                         <div
                                             key={a._id}
-                                            onClick={() => { setActiveTab('applications'); setActiveSubTab('PENDING'); setSelectedItem(a); }}
+                                            onClick={() => { setOrgInspectorMember(a); router.replace(`${window.location.pathname}?orgCode=${selectedItem?.code}&memberEmail=${encodeURIComponent(a.email)}`); }}
                                             className="p-3 bg-white/5 border border-white/10 flex justify-between items-center group cursor-pointer hover:border-cyan-500/50 transition-colors"
                                         >
                                             <div className="flex-1">
@@ -509,7 +1071,7 @@ function AdminDashboardContent() {
                                             <div className="flex items-center gap-3">
                                                 <div className={`px-2 py-0.5 border text-[9px] uppercase ${a.status === 'ACCEPTED' ? 'text-green-500 border-green-500/30' : 'text-yellow-500 border-yellow-500/30'}`}>{a.status}</div>
                                                 <button
-                                                    onClick={(e) => { e.stopPropagation(); window.open(`/admin/applications?type=apps&email=${a.email}`, '_blank'); }}
+                                                    onClick={(e) => { e.stopPropagation(); window.open(`/applications?type=apps&email=${a.email}`, '_blank'); }}
                                                     className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10"
                                                 >
                                                     <ExternalLink className="w-3 h-3 text-cyan-400" />
@@ -520,6 +1082,39 @@ function AdminDashboardContent() {
                                 </div>
                             ) : <div className="text-xs text-gray-600 font-mono italic">NO INCOMING SIGNALS</div>}
                         </div>
+
+                        {/* Rejected Applicants */}
+                        <div>
+                            <h4 className="text-xs font-bold text-red-400 uppercase tracking-widest mb-2 border-b border-red-500/20 pb-1">rejected_applicants ({orgRejected.length})</h4>
+                            {orgRejected.length > 0 ? (
+                                <div className="grid gap-2">
+                                    {orgRejected.map(a => (
+                                        <div
+                                            key={a._id}
+                                            onClick={() => { setOrgInspectorMember(a); router.replace(`${window.location.pathname}?orgCode=${selectedItem?.code}&memberEmail=${encodeURIComponent(a.email)}`); }}
+                                            className="p-3 bg-white/5 border border-white/10 flex justify-between items-center group cursor-pointer hover:border-red-500/50 transition-colors"
+                                        >
+                                            <div className="flex-1">
+                                                <div className="text-sm font-bold text-white group-hover:text-red-400">{a.firstName} {a.lastName}</div>
+                                                <div className="text-[10px] text-gray-500 font-mono">{a.email}</div>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <div className="px-2 py-0.5 border text-[9px] text-red-400 border-red-500/30 uppercase">{a.status}</div>
+                                                {a.interviewDetails?.status === 'NO_SHOW' && (
+                                                    <div className="text-[9px] px-2 py-0.5 bg-red-900/10 border border-red-500/30 text-red-400 uppercase">NO-SHOW</div>
+                                                )}
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); window.open(`/applications?type=apps&email=${a.email}`, '_blank'); }}
+                                                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10"
+                                                >
+                                                    <ExternalLink className="w-3 h-3 text-red-400" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : <div className="text-xs text-gray-600 font-mono italic">NO REJECTED APPLICANTS</div>}
+                        </div>
                     </div>
                 </div>
 
@@ -529,6 +1124,11 @@ function AdminDashboardContent() {
                         <div className="p-4 bg-white/5 border border-white/10">
                             <span className="text-[10px] text-gray-500 uppercase block mb-1">Termination_Date</span>
                             <span className="text-sm font-mono text-white">{selectedItem.endDate ? new Date(selectedItem.endDate).toLocaleDateString() : 'INDEFINITE'}</span>
+
+                            <div className="mt-3">
+                                <span className="text-[10px] text-gray-500 uppercase block mb-1">Tenure End Date</span>
+                                <span className="text-sm font-mono text-gray-400">{selectedItem.defaultTenureEndDate ? new Date(selectedItem.defaultTenureEndDate).toLocaleDateString() : 'N/A'}</span>
+                            </div>
                         </div>
                         <div className="p-4 bg-white/5 border border-white/10">
                             <span className="text-[10px] text-gray-500 uppercase block mb-1">Allowed_Domains</span>
@@ -543,12 +1143,12 @@ function AdminDashboardContent() {
     };
 
     return (
-        <div className="min-h-screen bg-black text-white flex flex-col font-mono selection:bg-cyan-500/50 selection:text-black">
+        <div className="h-screen overflow-auto bg-black text-white flex flex-col font-mono selection:bg-cyan-500/50 selection:text-black">
             <Navbar />
 
-            <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+            <div className="flex-1 flex flex-col md:flex-row overflow-auto min-h-screen">
                 {/* Cyber Sidebar */}
-                <div className="w-full md:w-16 bg-black border-r border-white/10 flex md:flex-col flex-row items-center md:py-6 py-2 gap-2 md:gap-6 shrink-0 relative z-30">
+                <div className="w-full md:w-16 h-full bg-black border-r border-white/10 flex md:flex-col flex-row items-center md:py-6 py-2 gap-2 md:gap-6 shrink-0 relative z-30">
                     <div className="w-10 h-10 md:w-12 md:h-12 border border-cyan-500 flex items-center justify-center text-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
                         <Terminal className="w-6 h-6" />
                     </div>
@@ -580,7 +1180,7 @@ function AdminDashboardContent() {
                 </div>
 
                 {/* Main Viewport */}
-                <main className="flex-1 flex flex-col min-w-0 bg-black relative">
+                <main className="flex-1 flex flex-col min-w-0 min-h-0 bg-black relative">
                     {/* Grid Background */}
                     <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none opacity-20" />
 
@@ -591,7 +1191,7 @@ function AdminDashboardContent() {
                                 <span className="text-cyan-500">/</span> {activeTab}_CONSOLE
                             </h2>
                             <span className="text-xs bg-cyan-900/20 border border-cyan-500/30 text-cyan-400 px-2 md:px-3 py-1 rounded-none font-bold">
-                                CNT: {activeTab === 'applications' ? filteredApps.length : activeTab === 'fellows' ? fellows.length : orgs.length}
+                                CNT: {activeTab === 'applications' ? filteredApps.length : activeTab === 'fellows' ? fellows.length : (orgSubTab === 'ARCHIVED' ? orgs.filter(o => !o.isActive).length : orgs.filter(o => o.isActive).length)}
                             </span>
                         </div>
 
@@ -607,7 +1207,7 @@ function AdminDashboardContent() {
                                 />
                             </div>
                             {activeTab === 'orgs' && (
-                                <button onClick={() => { setOrgData({ name: '', code: '', emailDomainWhitelist: [], endDate: 0, formVar1: [], isActive: true }); setIsEditingOrg(true); }} className="h-10 w-10 border border-white/20 hover:border-cyan-500 hover:text-cyan-500 flex items-center justify-center transition-colors">
+                                <button onClick={() => { setOrgData({ name: '', code: '', emailDomainWhitelist: [], endDate: sixMonthsFromNow(), defaultTenureEndDate: null, formVar1: [], availableRoles: [], isActive: true }); setIsEditingOrg(true); }} className="h-10 w-10 border border-white/20 hover:border-cyan-500 hover:text-cyan-500 flex items-center justify-center transition-colors">
                                     <Plus className="w-5 h-5" />
                                 </button>
                             )}
@@ -641,8 +1241,23 @@ function AdminDashboardContent() {
                         </div>
                     )}
 
+                    {activeTab === 'orgs' && (
+                        <div className="flex bg-black border-b border-white/10 px-2 md:px-8 h-10 md:h-12 items-center gap-4 md:gap-8 relative z-20 overflow-x-auto">
+                            {['ACTIVE', 'ARCHIVED'].map(st => (
+                                <button
+                                    key={st}
+                                    onClick={() => setOrgSubTab(st)}
+                                    className={`relative h-full text-[10px] font-bold tracking-[0.2em] transition-all flex items-center ${orgSubTab === st ? 'text-cyan-400' : 'text-gray-500 hover:text-white'}`}
+                                >
+                                    {st}
+                                    {orgSubTab === st && <motion.div layoutId="org-sub-tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500 shadow-[0_0_10px_#06b6d4]" />}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
                     {/* Content List */}
-                    <div className="flex-1 overflow-y-auto p-0 custom-scrollbar z-10">
+                    <div ref={listRef} onScroll={saveListScroll} className="flex-1 min-h-0 overflow-y-auto p-0 custom-scrollbar z-10">
                         {loading ? (
                             <div className="h-full flex flex-col items-center justify-center opacity-50 space-y-6">
                                 <div className="w-16 h-16 border-2 border-cyan-500 border-t-white animate-spin rounded-full" />
@@ -650,19 +1265,111 @@ function AdminDashboardContent() {
                             </div>
                         ) : (
                             <div className="grid grid-cols-1">
-                                {activeTab === 'applications' && filteredApps.map((app, idx) => (
-                                    <div
-                                        key={app._id}
-                                        onClick={() => setSelectedItem(app)}
-                                        className={`group px-8 py-5 border-b border-white/10 hover:bg-white/5 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === app._id ? 'bg-cyan-900/10 border-l-[6px] border-l-cyan-500' : 'border-l-[6px] border-l-transparent'}`}
-                                    >
+                                {activeTab === 'applications' && (
+                                    // Special sorting for INTERVIEW sub-tab: upcoming (asc) -> separator -> past (desc)
+                                    activeSubTab === 'INTERVIEW' ? (() => {
+                                        const now = new Date();
+                                        const interviewApps = filteredApps.slice();
+                                        const scheduled = interviewApps.filter(a => a.interviewDetails?.scheduledAt).map(a => ({ ...a, _sched: new Date(a.interviewDetails.scheduledAt) }));
+                                        const unscheduled = interviewApps.filter(a => !a.interviewDetails?.scheduledAt);
+                                        const upcoming = scheduled.filter(a => a._sched >= now).sort((x, y) => x._sched - y._sched);
+                                        const past = scheduled.filter(a => a._sched < now).sort((x, y) => y._sched - x._sched);
+                                        let counter = 0;
+                                        return (
+                                            <>
+                                                {upcoming.map((app, i) => { counter++; return (
+                                                    <div key={app._id} onClick={() => setSelectedItem(app)} className={`group px-8 py-5 border-b border-white/10 hover:bg-white/5 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === app._id ? 'bg-cyan-900/10 border-l-[6px] border-l-cyan-500' : 'border-l-[6px] border-l-transparent'}`}>
+                                                        <div className="flex items-center gap-8">
+                                                            <span className="text-sm font-mono text-gray-600 w-10">{String(counter).padStart(2, '0')}</span>
+                                                            <div>
+                                                                <h3 className="font-bold text-xl text-white group-hover:text-cyan-400 transition-colors uppercase tracking-widest mb-1.5">{app.firstName} {app.lastName}</h3>
+                                                                <div className="flex gap-6 text-xs font-mono text-gray-500 items-center flex-wrap">
+                                                                    <span className="text-white/60">{app.email}</span>
+                                                                    <span className="inline-flex gap-2 items-center">
+                                                                        {(() => {
+                                                                            const displayRoles = (app.preferredRoles && app.preferredRoles.length)
+                                                                                ? app.preferredRoles.slice(0, 2)
+                                                                                : (app.data?.preferredRoles && app.data.preferredRoles.length)
+                                                                                    ? app.data.preferredRoles.slice(0, 2)
+                                                                                    : [(typeof app.role === 'object' ? app.role?.name : app.role)].filter(Boolean);
+                                                                            return displayRoles.map((r, idx) => (
+                                                                                <span key={idx} className="text-[10px] px-2 py-0.5 bg-cyan-900/10 border border-cyan-500/30 text-cyan-400 uppercase">
+                                                                                    {r}
+                                                                                </span>
+                                                                            ));
+                                                                        })()}
+                                                                    </span>
+                                                                    {app.processedBy && (<span className="text-gray-400 border border-white/10 px-2 py-0.5 text-[10px] bg-white/5">AUTH: {app.processedBy}</span>)}
+                                                                    {app.interviewDetails?.scheduledAt && (<span className="text-orange-400 border border-orange-500/30 px-2 py-0.5 text-[10px] bg-orange-500/5 flex items-center gap-1"><Clock className="w-3 h-3" />{new Date(app.interviewDetails.scheduledAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</span>)}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className={`px-4 py-1.5 border text-xs font-bold uppercase tracking-widest ${app.status === 'ACCEPTED' ? 'border-green-500/50 text-green-500 bg-green-500/5' : app.status === 'REJECTED' ? 'border-red-500/50 text-red-500 bg-red-500/5' : app.status === 'INTERVIEW_SCHEDULED' ? 'border-orange-500/50 text-orange-500 bg-orange-500/5' : 'border-yellow-500/50 text-yellow-500 bg-yellow-500/5'}`}>{app.status}</div>
+                                                    </div>
+                                                ); })}
+
+                                                {unscheduled.length > 0 && (
+                                                    <div className="px-8 py-3 text-xs font-mono text-gray-500">Unscheduled / Pending interviews</div>
+                                                )}
+                                                {unscheduled.map((app) => { counter++; return (
+                                                    <div key={app._id} onClick={() => setSelectedItem(app)} className={`group px-8 py-5 border-b border-white/10 hover:bg-white/5 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === app._id ? 'bg-cyan-900/10 border-l-[6px] border-l-cyan-500' : 'border-l-[6px] border-l-transparent'}`}>
+                                                        <div className="flex items-center gap-8">
+                                                            <span className="text-sm font-mono text-gray-600 w-10">{String(counter).padStart(2, '0')}</span>
+                                                            <div>
+                                                                <h3 className="font-bold text-xl text-white group-hover:text-cyan-400 transition-colors uppercase tracking-widest mb-1.5">{app.firstName} {app.lastName}</h3>
+                                                                <div className="flex gap-6 text-xs font-mono text-gray-500 items-center flex-wrap">
+                                                                    <span className="text-white/60">{app.email}</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className={`px-4 py-1.5 border text-xs font-bold uppercase tracking-widest ${app.status === 'ACCEPTED' ? 'border-green-500/50 text-green-500 bg-green-500/5' : app.status === 'REJECTED' ? 'border-red-500/50 text-red-500 bg-red-500/5' : app.status === 'INTERVIEW_SCHEDULED' ? 'border-orange-500/50 text-orange-500 bg-orange-500/5' : 'border-yellow-500/50 text-yellow-500 bg-yellow-500/5'}`}>{app.status}</div>
+                                                    </div>
+                                                ); })}
+
+                                                {past.length > 0 && <div className="border-t border-white/10 my-4" />}
+
+                                                {past.map((app, i) => { counter++; return (
+                                                    <div key={app._id} onClick={() => setSelectedItem(app)} className={`group px-8 py-5 border-b border-white/10 hover:bg-white/5 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === app._id ? 'bg-cyan-900/10 border-l-[6px] border-l-cyan-500' : 'border-l-[6px] border-l-transparent'}`}>
+                                                        <div className="flex items-center gap-8">
+                                                            <span className="text-sm font-mono text-gray-600 w-10">{String(counter).padStart(2, '0')}</span>
+                                                            <div>
+                                                                <h3 className="font-bold text-xl text-white group-hover:text-cyan-400 transition-colors uppercase tracking-widest mb-1.5">{app.firstName} {app.lastName}</h3>
+                                                                <div className="flex gap-6 text-xs font-mono text-gray-500 items-center flex-wrap">
+                                                                    <span className="text-white/60">{app.email}</span>
+                                                                    {app.interviewDetails?.scheduledAt && (<span className="text-orange-400 border border-orange-500/30 px-2 py-0.5 text-[10px] bg-orange-500/5 flex items-center gap-1"><Clock className="w-3 h-3" />{new Date(app.interviewDetails.scheduledAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</span>)}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className={`px-4 py-1.5 border text-xs font-bold uppercase tracking-widest ${app.status === 'ACCEPTED' ? 'border-green-500/50 text-green-500 bg-green-500/5' : app.status === 'REJECTED' ? 'border-red-500/50 text-red-500 bg-red-500/5' : app.status === 'INTERVIEW_SCHEDULED' ? 'border-orange-500/50 text-orange-500 bg-orange-500/5' : 'border-yellow-500/50 text-yellow-500 bg-yellow-500/5'}`}>{app.status}</div>
+                                                    </div>
+                                                ); })}
+                                            </>
+                                        );
+                                    })() : (
+                                        filteredApps.map((app, idx) => (
+                                            <div
+                                                key={app._id}
+                                                onClick={() => setSelectedItem(app)}
+                                                className={`group px-8 py-5 border-b border-white/10 hover:bg-white/5 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === app._id ? 'bg-cyan-900/10 border-l-[6px] border-l-cyan-500' : 'border-l-[6px] border-l-transparent'}`}
+                                            >
                                         <div className="flex items-center gap-8">
                                             <span className="text-sm font-mono text-gray-600 w-10">{String(idx + 1).padStart(2, '0')}</span>
                                             <div>
                                                 <h3 className="font-bold text-xl text-white group-hover:text-cyan-400 transition-colors uppercase tracking-widest mb-1.5">{app.firstName} {app.lastName}</h3>
                                                 <div className="flex gap-6 text-xs font-mono text-gray-500 items-center flex-wrap">
                                                     <span className="text-white/60">{app.email}</span>
-                                                    <span className="text-cyan-600 uppercase text-[10px] font-bold">REQ: {typeof app.role === 'object' ? app.role?.name : app.role}</span>
+                                                    {(() => {
+                                                        const displayRoles = (app.preferredRoles && app.preferredRoles.length)
+                                                            ? app.preferredRoles.slice(0, 2)
+                                                            : (app.data?.preferredRoles && app.data.preferredRoles.length)
+                                                                ? app.data.preferredRoles.slice(0, 2)
+                                                                : [(typeof app.role === 'object' ? app.role?.name : app.role)].filter(Boolean);
+                                                        return displayRoles.map((r, idx) => (
+                                                            <span key={idx} className={`text-[10px] px-2 py-0.5 bg-cyan-900/10 border border-cyan-500/30 text-cyan-400 uppercase ${idx > 0 ? 'ml-2' : ''}`}>
+                                                                {r}
+                                                            </span>
+                                                        ));
+                                                    })()}
                                                     {app.processedBy && (
                                                         <span className="text-gray-400 border border-white/10 px-2 py-0.5 text-[10px] bg-white/5">AUTH: {app.processedBy}</span>
                                                     )}
@@ -679,7 +1386,7 @@ function AdminDashboardContent() {
                                             {app.status}
                                         </div>
                                     </div>
-                                ))}
+                                ))))}
 
                                 {activeTab === 'fellows' && fellows.filter(f => f.email.toLowerCase().includes(searchTerm.toLowerCase())).map((fellow, idx) => (
                                     <div
@@ -723,11 +1430,11 @@ function AdminDashboardContent() {
                                     </div>
                                 ))}
 
-                                {activeTab === 'orgs' && orgs.map((org, idx) => (
+                                {activeTab === 'orgs' && visibleOrgs.map((org, idx) => (
                                     <div
                                         key={org._id}
-                                        onClick={() => setSelectedItem(org)}
-                                        className={`group px-8 py-6 border-b border-white/10 hover:bg-white/5 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === org._id ? 'bg-green-900/10 border-l-[6px] border-l-green-500' : 'border-l-[6px] border-l-transparent'}`}
+                                        onClick={() => { setSelectedItem(org); setOrgInspectorMember(null); router.replace(`${window.location.pathname}?orgCode=${org.code}`); }}
+                                        className={`group px-8 py-6 border-b border-white/10 hover:bg-white/5 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === org._id ? 'bg-green-900/10 border-l-[6px] border-l-green-500' : 'border-l-[6px] border-l-transparent'}`} 
                                     >
                                         <div className="flex items-center gap-8">
                                             <span className="text-sm font-mono text-gray-600 w-10">{String(idx + 1).padStart(2, '0')}</span>
@@ -744,13 +1451,19 @@ function AdminDashboardContent() {
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
+                                                    const rawRoles = org.availableRoles || org.formVar1 || [];
+                                                    const availObjects = Array.isArray(rawRoles)
+                                                        ? rawRoles.map(r => typeof r === 'string' ? { name: r, description: '' } : { name: r.name || '', description: r.description || '' })
+                                                        : [];
                                                     setOrgData({
                                                         id: org._id,
                                                         name: org.name,
                                                         code: org.code,
                                                         emailDomainWhitelist: org.emailDomainWhitelist || [],
-                                                        endDate: org.endDate || 0,
-                                                        formVar1: org.availableRoles || org.formVar1 || [],
+                                                        endDate: org.endDate || sixMonthsFromNow(),
+                                                        defaultTenureEndDate: org.defaultTenureEndDate ? new Date(org.defaultTenureEndDate).getTime() : 0,
+                                                        formVar1: availObjects.map(r => r.name),
+                                                        availableRoles: availObjects,
                                                         isActive: org.isActive
                                                     });
                                                     setIsEditingOrg(true);
@@ -779,20 +1492,20 @@ function AdminDashboardContent() {
                             animate={{ x: 0 }}
                             exit={{ x: '100%' }}
                             transition={{ type: 'tween', ease: 'circOut', duration: 0.3 }}
-                            className="w-[600px] bg-black border-l border-white/10 z-40 flex flex-col shrink-0 shadow-[-50px_0_100px_rgba(0,0,0,0.8)]"
+                            className="w-[600px] bg-black border-l border-white/10 z-40 flex flex-col shrink-0 h-full min-h-0 shadow-[-50px_0_100px_rgba(0,0,0,0.8)]"
                         >
                             <div className="h-20 flex items-center justify-between px-10 border-b border-white/10 bg-black/50 backdrop-blur-md">
                                 <h3 className="font-mono text-sm text-white uppercase tracking-[0.2em] flex items-center gap-3">
                                     <div className={`w-2 h-2 ${activeTab === 'fellows' ? 'bg-purple-500' : activeTab === 'orgs' ? 'bg-green-500' : 'bg-cyan-500'} animate-pulse`} />
                                     DATA_INSPECTOR
                                 </h3>
-                                <button onClick={() => setSelectedItem(null)} className="hover:text-white text-gray-600 transition-colors"><XCircle className="w-6 h-6" /></button>
+                                <button onClick={() => { setSelectedItem(null); setOrgInspectorMember(null); }} className="hover:text-white text-gray-600 transition-colors"><XCircle className="w-6 h-6" /></button>
                             </div>
 
-                            <div className="flex-1 overflow-y-auto p-10 custom-scrollbar space-y-10">
+                            <div ref={inspectorRef} onScroll={saveInspectorScroll} className="flex-1 min-h-0 overflow-y-auto p-10 custom-scrollbar space-y-10">
                                 {activeTab === 'orgs' ? renderOrgInspector() : (
                                     <>
-                                        <div className="flex items-start gap-8 border-b border-white/10 pb-10">
+                                        <div className="flex items-start gap-8 border-b border-white/10 pb-4">
                                             <div className={`w-24 h-24 border border-white/20 flex items-center justify-center text-4xl font-bold bg-white/5 ${activeTab === 'fellows' ? 'text-purple-500' : 'text-cyan-500'}`}>
                                                 {selectedItem.firstName[0]}
                                             </div>
@@ -834,8 +1547,8 @@ function AdminDashboardContent() {
                                                         <div className="space-y-2">
                                                             <div className="text-[10px] text-gray-500 uppercase font-mono tracking-widest flex justify-between">
                                                                 <span>Motivation_Payload</span>
-                                                                <span className={selectedItem.whyJoinDeepCytes?.length < 100 ? "text-red-500" : "text-green-500"}>
-                                                                    LEN_{selectedItem.whyJoinDeepCytes?.length || 0}
+                                                                <span className={( (selectedItem?.whyJoinDeepCytes ?? selectedItem?.data?.whyJoin ?? '').length < 100) ? "text-red-500" : "text-green-500"}>
+                                                                    LEN_{(selectedItem?.whyJoinDeepCytes ?? selectedItem?.data?.whyJoin ?? '').length}
                                                                 </span>
                                                             </div>
                                                             <div className="p-4 bg-black/40 border border-white/5 text-xs text-gray-400 font-mono leading-relaxed max-h-40 overflow-y-auto custom-scrollbar">
@@ -916,19 +1629,22 @@ function AdminDashboardContent() {
                                                                             </a>
                                                                         </div>
                                                                     </div>
-                                                                    {/* Reschedule Button */}
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            setScheduleData({
-                                                                                scheduledAt: selectedItem.interviewDetails?.scheduledAt ? new Date(selectedItem.interviewDetails.scheduledAt).toISOString().slice(0, 16) : '',
-                                                                                meetLink: selectedItem.interviewDetails?.meetLink || ''
-                                                                            });
-                                                                            setShowScheduleModal(true);
-                                                                        }}
-                                                                        className="w-full h-10 border border-orange-500/50 text-orange-400 bg-orange-900/10 hover:bg-orange-500/20 text-xs font-bold uppercase tracking-wider"
-                                                                    >
-                                                                        Reschedule Interview
-                                                                    </button>
+                                                                    {/* Reschedule + No-show Buttons */}
+                                                                    <div className="grid grid-cols-2 gap-2">
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                setScheduleData({
+                                                                                    scheduledAt: selectedItem.interviewDetails?.scheduledAt ? new Date(selectedItem.interviewDetails.scheduledAt).toISOString().slice(0, 16) : '',
+                                                                                    meetLink: selectedItem.interviewDetails?.meetLink || ''
+                                                                                });
+                                                                                setShowScheduleModal(true);
+                                                                            }}
+                                                                            className="w-full h-10 border border-orange-500/50 text-orange-400 bg-orange-900/10 hover:bg-orange-500/20 text-xs font-bold uppercase tracking-wider"
+                                                                        >
+                                                                            Reschedule Interview
+                                                                        </button>
+                                                                        <button onClick={handleMarkNoShow} className="w-full h-10 border border-red-500/20 text-red-500 hover:bg-red-500/10 text-xs font-bold uppercase tracking-wider">Mark No-show</button>
+                                                                    </div>
                                                                 </div>
                                                             ) : (
                                                                 <div className="p-3 bg-cyan-900/10 border border-cyan-500/30 text-xs font-mono text-cyan-400">
@@ -975,6 +1691,7 @@ function AdminDashboardContent() {
                                                         <button onClick={() => handleUpdateAppStatus('REJECTED')} className="h-14 border border-red-500/20 text-red-500 hover:bg-red-500/10 hover:border-red-500 transition-all text-sm font-bold uppercase tracking-[0.2em]">
                                                             REJECT
                                                         </button>
+                                                    {selectedItem.status !== 'REJECTED' && (
                                                         <button
                                                             onClick={() => handleUpdateAppStatus('ACCEPTED')}
                                                             disabled={selectedItem.status === 'PENDING' && (!selectedItem.interviewDetails?.status || selectedItem.interviewDetails?.status === 'PENDING') && selectedItem.status !== 'INTERVIEW_SKIPPED'}
@@ -982,22 +1699,36 @@ function AdminDashboardContent() {
                                                         >
                                                             ACCEPT
                                                         </button>
+                                                    )}
                                                     </div>
                                                 </div>
 
-                                                {selectedItem.resume && (
-                                                    <button
-                                                        onClick={() => {
-                                                            const serverUrl = process.env.SERVER_URL || 'http://localhost:3001';
-                                                            const url = selectedItem.resume.startsWith('http') ? selectedItem.resume : `${serverUrl}${selectedItem.resume}`;
-                                                            window.open(url, '_blank');
-                                                        }}
-                                                        className="w-full py-6 border border-white/20 hover:bg-white hover:text-black hover:border-white transition-all flex items-center justify-center gap-4 group"
-                                                    >
-                                                        <FileText className="w-5 h-5" />
-                                                        <span className="text-sm font-mono font-bold uppercase tracking-[0.15em]">Decrypt Resume Payload</span>
-                                                        <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                    </button>
+                                                {(selectedItem.resume || selectedItem.data?.resumeLink) && (
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                        {selectedItem.resume && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={(e) => { e.stopPropagation(); const serverUrl = process.env.SERVER_URL || 'http://localhost:3001'; const url = selectedItem.resume.startsWith('http') ? selectedItem.resume : `${serverUrl}${selectedItem.resume}`; window.open(url, '_blank'); }}
+                                                                className="w-full py-4 border border-white/10 hover:bg-white/5 transition-all flex items-center justify-center gap-3 group rounded-lg"
+                                                            >
+                                                                <FileText className="w-5 h-5" />
+                                                                <span className="text-sm font-mono font-bold uppercase tracking-[0.08em]">Open uploaded CV</span>
+                                                                <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                            </button>
+                                                        )}
+
+                                                        {selectedItem.data?.resumeLink && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={(e) => { e.stopPropagation(); window.open(ensureExternalLink(selectedItem.data.resumeLink), '_blank'); }}
+                                                                className="w-full py-4 border border-white/10 hover:bg-white/5 transition-all flex items-center justify-center gap-3 group rounded-lg"
+                                                            >
+                                                                <ExternalLink className="w-5 h-5" />
+                                                                <span className="text-sm font-mono font-bold uppercase tracking-[0.08em]">Open resume link</span>
+                                                                <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                            </button>
+                                                        )}
+                                                    </div>
                                                 )}
                                             </div>
                                         ) : (
@@ -1046,13 +1777,13 @@ function AdminDashboardContent() {
                                                         </motion.div>
                                                     )}
 
-                                                    <TenureTimeline tenures={selectedItem.tenures} />
+                                                    <TenureTimeline tenures={selectedItem.tenures || []} />
 
                                                     {/* Signed Documents Inspector */}
                                                     <div className="pt-6 border-t border-white/10 mt-6">
                                                         <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Encrypted_Assets</h4>
                                                         <div className="space-y-4">
-                                                            {selectedItem.tenures.map((tenure, idx) => (
+                                                            {(selectedItem.tenures || []).map((tenure, idx) => (
                                                                 <div key={idx} className="space-y-2">
                                                                     <div className="flex justify-between items-center text-[10px] text-gray-400 font-mono">
                                                                         <span>TENURE_{idx + 1}: {typeof tenure.role === 'object' ? tenure.role?.name : tenure.role}</span>
@@ -1114,21 +1845,21 @@ function AdminDashboardContent() {
                 {/* Add/Edit Organization Modal */}
                 <AnimatePresence>
                     {isEditingOrg && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+                        <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/80 backdrop-blur-sm overflow-y-auto py-6 sm:py-0">
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
-                                className="w-full max-w-[500px] bg-black border border-white/20 shadow-[0_0_50px_rgba(4,120,87,0.2)] p-0 max-h-[100dvh] sm:max-h-[90vh] flex flex-col overflow-y-auto rounded-2xl"
+                                className="w-full max-w-[98vw] sm:max-w-[720px] md:max-w-[980px] lg:max-w-[1100px] bg-black border border-white/20 shadow-[0_0_50px_rgba(4,120,87,0.2)] p-0 max-h-[95vh] sm:max-h-[90vh] md:max-h-[80vh] flex flex-col overflow-y-auto rounded-none sm:rounded-2xl"
                                 style={{ margin: 'env(safe-area-inset-top, 0) auto env(safe-area-inset-bottom, 0) auto' }}
                             >
-                                <div className="h-14 flex items-center justify-between px-4 sm:px-6 border-b border-white/10 bg-white/5 shrink-0 sticky top-0 z-20">
+                                <div className="h-12 sm:h-14 flex items-center justify-between px-4 sm:px-6 border-b border-white/10 bg-white/5 shrink-0 sticky top-0 z-20">
                                     <h3 className="text-sm font-bold text-green-500 uppercase tracking-widest flex items-center gap-2">
                                         <Database className="w-4 h-4" /> FELLOWSHIP_NODE_CONFIGURATION
                                     </h3>
                                     <button onClick={() => setIsEditingOrg(false)} className="text-gray-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-green-500"><XCircle className="w-5 h-5" /></button>
                                 </div>
-                                <div className="flex-1 overflow-y-auto p-2 sm:p-8 space-y-6">
+                                <div className="flex-1 overflow-y-auto p-3 sm:p-6 md:p-6 space-y-3 md:space-y-4">
                                     <div className="space-y-4">
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div className="space-y-2">
@@ -1153,24 +1884,68 @@ function AdminDashboardContent() {
 
                                         <div className="space-y-2">
                                             <label className="text-[10px] uppercase font-mono text-gray-500">Available_Roles (Select Multiple)</label>
-                                            <div className="grid grid-cols-2 gap-2 p-3 bg-white/5 border border-white/10 max-h-32 overflow-y-auto">
-                                                {['Developer', 'Security Researcher', 'Data Analyst', 'UI/UX Designer', 'Project Manager', 'DevOps Engineer', 'ML Engineer', 'Technical Writer', ...availableRoles.filter(r => !['Developer', 'Security Researcher', 'Data Analyst', 'UI/UX Designer', 'Project Manager', 'DevOps Engineer', 'ML Engineer', 'Technical Writer'].includes(r))].map(role => (
-                                                    <label key={role} className="flex items-center gap-2 cursor-pointer group hover:bg-white/5 p-1.5 transition-colors">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={(orgData.formVar1 || []).includes(role)}
-                                                            onChange={(e) => {
-                                                                const current = orgData.formVar1 || [];
-                                                                const updated = e.target.checked
-                                                                    ? [...current, role]
-                                                                    : current.filter(r => r !== role);
-                                                                setOrgData({ ...orgData, formVar1: updated });
-                                                            }}
-                                                            className="w-3 h-3 accent-green-500"
-                                                        />
-                                                        <span className="text-[10px] text-gray-300 group-hover:text-white">{role}</span>
-                                                    </label>
-                                                ))}
+                                            <div className="text-[10px] text-gray-500 mt-1">Global roles are available across the app — use <span className="font-bold uppercase">ADD (GLOBAL)</span> to add a role globally or <span className="font-bold uppercase">ADD TO ORG (LOCAL)</span> to attach it only to this organization.</div>
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-3 p-3 bg-white/5 border border-white/10 max-h-36 sm:max-h-32 overflow-y-auto">
+                                                {([...(availableRoles || []).map(r => (typeof r === 'string' ? r : r.name)), ...(orgData.availableRoles || []).map(r => r.name)]).filter((v,i,a) => a.indexOf(v) === i).map(role => {
+                                                    const roleObj = (orgData.availableRoles || []).find(r => r.name === role);
+                                                    const isEditing = editingRoleDesc === role;
+                                                    return (
+                                                        <label key={role} className={`group cursor-pointer p-2 transition-colors rounded ${isEditing ? 'bg-white/3' : 'hover:bg-white/5'}`}>
+                                                            <div className="flex items-center gap-2 w-full">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={(orgData.formVar1 || []).includes(role)}
+                                                                    onChange={(e) => {
+                                                                        const current = orgData.formVar1 || [];
+                                                                        const updated = e.target.checked
+                                                                            ? [...current, role]
+                                                                            : current.filter(r => r !== role);
+                                                                        setOrgData({ ...orgData, formVar1: updated });
+                                                                    }}
+                                                                    className="w-3 h-3 accent-green-500"
+                                                                />
+
+                                                                <span className="text-[10px] text-gray-300 group-hover:text-white truncate">{role}</span>
+
+                                                                <div className="flex-1" />
+
+                                                                {/* edit button for roles that belong to this org */}
+                                                                {roleObj && !isEditing && (
+                                                                    <button type="button" onClick={(e) => { e.stopPropagation(); startEditRoleDesc(role); }} className="ml-2 text-[10px] text-cyan-400 hover:text-white">Edit</button>
+                                                                )}
+
+                                                                {/* compact split-menu: trash icon opens menu with Local/Global remove */}
+                                                                <div className="relative ml-2">
+                                                                    <button type="button" onClick={(e) => { e.stopPropagation(); setRoleMenuOpenFor(roleMenuOpenFor === role ? null : role); }} className="p-1 rounded bg-white/5 hover:bg-white/10">
+                                                                        <Trash className="w-3 h-3 text-red-400" />
+                                                                    </button>
+
+                                                                    {roleMenuOpenFor === role && (
+                                                                        <div className="absolute right-0 mt-2 w-44 bg-black border border-white/10 rounded shadow-lg z-50 py-1">
+                                                                            {roleObj && <button type="button" onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ mode: 'LOCAL', roleName: role, roleObj }); setRoleMenuOpenFor(null); }} className="w-full text-left px-3 py-2 text-xs hover:bg-white/5">Remove (local)</button>}
+                                                                            {(availableRoles || []).find(ar => (typeof ar === 'string' ? ar : ar.name) === role) && (() => { const g = (availableRoles || []).find(ar => (typeof ar === 'string' ? ar : ar.name) === role); return (<button type="button" onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ mode: 'GLOBAL', roleName: role, roleObj: g }); setRoleMenuOpenFor(null); }} className="w-full text-left px-3 py-2 text-xs hover:bg-white/5">Remove (global)</button>); })()}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+
+                                                            </div>
+
+                                                            {/* show description (below the role) */}
+                                                            {roleObj && roleObj.description && !isEditing && (
+                                                                <div className="text-[10px] text-gray-500 ml-3 pl-1 break-words">{roleObj.description}</div>
+                                                            )}
+
+                                                            {/* inline edit controls (stacked under the role) */}
+                                                            {isEditing && (
+                                                                <div className="w-full ml-3 flex gap-2 mt-2">
+                                                                    <input value={editingRoleTempDesc} onChange={e => setEditingRoleTempDesc(e.target.value)} placeholder="description (optional)" className="flex-1 bg-black border border-white/10 text-xs px-2 py-1 h-8" />
+                                                                    <button onClick={(e) => { e.stopPropagation(); saveRoleDescEdit(); }} className="text-xs bg-green-700/20 px-2 py-1 rounded">Save</button>
+                                                                    <button onClick={(e) => { e.stopPropagation(); cancelRoleDescEdit(); }} className="text-xs bg-red-700/10 px-2 py-1 rounded">Cancel</button>
+                                                                </div>
+                                                            )}
+                                                        </label>
+                                                    );
+                                                })}
                                             </div>
                                             {/* Add custom role input */}
                                             <div className="flex gap-2 mt-3">
@@ -1178,25 +1953,64 @@ function AdminDashboardContent() {
                                                     value={newRole}
                                                     onChange={(e) => setNewRole(e.target.value)}
                                                     onKeyPress={(e) => { if (e.key === 'Enter') handleAddRole(); }}
-                                                    placeholder="Add new role..."
+                                                    placeholder="Add new role (global)"
+                                                    className="bg-black border-white/20 h-8 text-xs font-mono text-white focus:border-green-500 w-24"
+                                                />
+                                                <Input
+                                                    value={newRoleDescription}
+                                                    onChange={(e) => setNewRoleDescription(e.target.value)}
+                                                    placeholder="description (optional)"
                                                     className="bg-black border-white/20 h-8 text-xs font-mono text-white focus:border-green-500 flex-1"
                                                 />
                                                 <button
                                                     onClick={handleAddRole}
+                                                    title="Add role to global list — available across all organizations"
                                                     className="px-3 h-8 bg-green-900/20 border border-green-500/50 text-green-500 hover:bg-green-500/10 text-[10px] font-bold uppercase tracking-wider transition-colors"
                                                 >
-                                                    ADD
+                                                    ADD (GLOBAL)
+                                                </button>
+                                            </div>
+
+                                            {/* Add role directly to this org (local) */}
+                                            <div className="flex gap-2 mt-3">
+                                                <Input
+                                                    value={newOrgRole}
+                                                    onChange={(e) => setNewOrgRole(e.target.value)}
+                                                    onKeyPress={(e) => { if (e.key === 'Enter') handleAddOrgRole(); }}
+                                                    placeholder="Add role to this org (local)"
+                                                    className="bg-black border-white/20 h-8 text-xs font-mono text-white focus:border-green-500 w-24"
+                                                />
+                                                <Input
+                                                    value={newOrgRoleDescription}
+                                                    onChange={(e) => setNewOrgRoleDescription(e.target.value)}
+                                                    placeholder="description (org-local, optional)"
+                                                    className="bg-black border-white/20 h-8 text-xs font-mono text-white focus:border-green-500 flex-1"
+                                                />
+                                                <button
+                                                    onClick={handleAddOrgRole}
+                                                    title="Add role only to this organization (local)"
+                                                    className="px-3 h-8 bg-cyan-900/10 border border-cyan-500/30 text-cyan-500 hover:bg-cyan-500/10 text-[10px] font-bold uppercase tracking-wider transition-colors"
+                                                >
+                                                    ADD TO ORG (LOCAL)
                                                 </button>
                                             </div>
                                         </div>
 
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div className="space-y-2">
-                                                <label className="text-[10px] uppercase font-mono text-gray-500">Termination_Date</label>
+                                                <label className="text-[10px] uppercase font-mono text-gray-500">End Of Application Date</label>
                                                 <Input
                                                     type="date"
                                                     value={orgData.endDate ? new Date(orgData.endDate).toISOString().split('T')[0] : ''}
                                                     onChange={e => setOrgData({ ...orgData, endDate: new Date(e.target.value).getTime() })}
+                                                    className="bg-black border-white/20 h-10 text-xs font-mono text-gray-300 focus:border-green-500"
+                                                />
+
+                                                <label className="text-[10px] uppercase font-mono text-gray-500 mt-3">Tenure End Date</label>
+                                                <Input
+                                                    type="date"
+                                                    value={orgData.defaultTenureEndDate ? new Date(orgData.defaultTenureEndDate).toISOString().split('T')[0] : ''}
+                                                    onChange={e => setOrgData({ ...orgData, defaultTenureEndDate: e.target.value ? new Date(e.target.value).getTime() : 0 })}
                                                     className="bg-black border-white/20 h-10 text-xs font-mono text-gray-300 focus:border-green-500"
                                                 />
                                             </div>
@@ -1212,13 +2026,56 @@ function AdminDashboardContent() {
                                         </div>
                                     </div>
 
-                                    <button
-                                        onClick={handleSaveOrg}
-                                        disabled={actionLoading}
-                                        className="w-full h-12 bg-green-900/20 border border-green-500/50 text-green-500 hover:bg-green-500 hover:text-black font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 text-sm"
-                                    >
-                                        {actionLoading ? 'UPLOADING...' : (orgData.id ? 'UPDATE_NODE' : 'INITIALIZE_NODE')}
-                                    </button>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        <button
+                                            onClick={handleSaveOrg}
+                                            disabled={actionLoading}
+                                            className="w-full h-10 sm:h-12 bg-green-900/20 border border-green-500/50 text-green-500 hover:bg-green-500 hover:text-black font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 text-sm"
+                                        >
+                                            {actionLoading ? 'UPLOADING...' : (orgData.id ? 'UPDATE_NODE' : 'INITIALIZE_NODE')}
+                                        </button>
+
+                                        {orgData?.id && (
+                                            <button
+                                                onClick={handleArchiveOrg}
+                                                disabled={actionLoading}
+                                                className="w-full h-10 bg-red-900/10 border border-red-500/40 text-red-400 hover:bg-red-500/10 text-[10px] font-bold uppercase tracking-wider transition-colors"
+                                            >
+                                                ARCHIVE NODE
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
+
+                {/* Confirm Delete Modal (global / local) */}
+                <AnimatePresence>
+                    {deleteConfirm && (
+                        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/70">
+                            <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98 }} className="w-full max-w-md bg-black border border-white/10 p-6 rounded-2xl shadow-lg">
+                                <h4 className="text-sm font-bold text-white mb-2">Confirm removal</h4>
+                                <p className="text-xs text-gray-400">Are you sure you want to remove <span className="font-bold">{deleteConfirm.roleName}</span> {deleteConfirm.mode === 'GLOBAL' ? 'globally (it will be hidden across the app)' : `from ${orgData.code || 'this org'}`}?</p>
+                                <div className="flex gap-2 mt-4">
+                                    {deleteConfirm.mode === 'GLOBAL' ? (
+                                        <>
+                                            <button onClick={async () => {
+                                                setDeleteConfirm(null);
+                                                await handleDeleteRole(deleteConfirm.roleObj, true);
+                                            }} className="flex-1 py-2 bg-red-600 text-white text-xs font-bold uppercase hover:bg-red-500">Deactivate (soft)</button>
+
+                                            <button onClick={async () => {
+                                                setDeleteConfirm(null);
+                                                await handlePermanentDeleteRole(deleteConfirm.roleObj);
+                                            }} className="flex-1 py-2 bg-red-800 text-white text-xs font-bold uppercase hover:bg-red-700">Permanent Delete (clean refs)</button>
+                                        </>
+                                    ) : (
+                                        <button onClick={async () => { setDeleteConfirm(null); await handleDeleteOrgRole(deleteConfirm.roleName, true); }} className="flex-1 py-2 bg-red-600 text-white text-xs font-bold uppercase hover:bg-red-500">Confirm</button>
+                                    )}
+
+                                    <button onClick={() => setDeleteConfirm(null)} className="w-28 py-2 border border-white/10 text-xs font-bold uppercase">Cancel</button>
                                 </div>
                             </motion.div>
                         </div>
@@ -1237,7 +2094,7 @@ function AdminDashboardContent() {
                             >
                                 <div className="h-14 flex items-center justify-between px-6 border-b border-white/10 bg-purple-500/5">
                                     <h3 className="text-sm font-bold text-purple-400 uppercase tracking-widest flex items-center gap-2">
-                                        <Plus className="w-4 h-4" /> MANUAL_TENURE_PROVISIONING
+                                        <Plus className="w-4 h-4" /> MANUAL TENURE PROVISIONING
                                     </h3>
                                     <button onClick={() => setShowManualModal(false)} className="text-gray-500 hover:text-white transition-colors">
                                         <XCircle className="w-5 h-5" />
@@ -1247,15 +2104,15 @@ function AdminDashboardContent() {
                                 <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
                                     <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                                         <div className="space-y-1.5 col-span-2">
-                                            <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Personnel_Email</label>
+                                            <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Personnel Email</label>
                                             <Input value={manualFellowData.email} onChange={e => setManualFellowData({ ...manualFellowData, email: e.target.value.toLowerCase() })} className="bg-black border-white/10 h-10 text-xs font-mono text-white focus:border-purple-500" placeholder="IDENTIFIER@DEEPCYTES.IO" />
                                         </div>
                                         <div className="space-y-1.5">
-                                            <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">First_Name</label>
+                                            <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">First Name</label>
                                             <Input value={manualFellowData.firstName} onChange={e => setManualFellowData({ ...manualFellowData, firstName: e.target.value })} className="bg-black border-white/10 h-10 text-xs font-mono text-white focus:border-purple-500" placeholder="NAME_ENTRY" />
                                         </div>
                                         <div className="space-y-1.5">
-                                            <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Last_Name</label>
+                                            <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Last Name</label>
                                             <Input value={manualFellowData.lastName} onChange={e => setManualFellowData({ ...manualFellowData, lastName: e.target.value })} className="bg-black border-white/10 h-10 text-xs font-mono text-white focus:border-purple-500" placeholder="SURNAME_ENTRY" />
                                         </div>
 
@@ -1265,13 +2122,20 @@ function AdminDashboardContent() {
                                                 <div className="flex gap-2">
                                                     <input
                                                         type="text"
-                                                        placeholder="NEW_ROLE..."
+                                                        placeholder="NEW_ROLE (global)..."
                                                         className="bg-black border-b border-white/20 text-[10px] w-24 outline-none focus:border-purple-500 px-1 text-white"
                                                         value={newRole}
                                                         onChange={e => setNewRole(e.target.value)}
                                                         onKeyPress={e => e.key === 'Enter' && handleAddRole()}
                                                     />
-                                                    <button onClick={handleAddRole} className="text-[10px] text-purple-400 hover:text-white uppercase font-bold">Add</button>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="desc (global, optional)"
+                                                        className="bg-black border-b border-white/20 text-[10px] w-56 outline-none focus:border-purple-500 px-1 text-white"
+                                                        value={newRoleDescription}
+                                                        onChange={e => setNewRoleDescription(e.target.value)}
+                                                    />
+                                                    <button title="Add role to global list — available across all organizations" onClick={handleAddRole} className="text-[10px] text-purple-400 hover:text-white uppercase font-bold">Add (global)</button>
                                                 </div>
                                             </div>
                                             <select
@@ -1280,13 +2144,16 @@ function AdminDashboardContent() {
                                                 className="w-full bg-black border border-white/10 h-10 text-xs font-mono text-white focus:border-purple-500 outline-none px-3"
                                             >
                                                 <option value="">SELECT_ROLE</option>
-                                                {availableRoles.map(r => <option key={r} value={r}>{r}</option>)}
+                                                {availableRoles.map(r => {
+                                                        const name = typeof r === 'string' ? r : r.name;
+                                                        return <option key={name} value={name}>{name}</option>;
+                                                    })}
                                             </select>
                                         </div>
 
                                         <div className="space-y-1.5 pt-2 border-t border-white/5 col-span-2">
                                             <div className="flex justify-between items-center mb-1">
-                                                <label className="text-[10px] uppercase font-bold text-cyan-500 tracking-widest">Primary_Project</label>
+                                                <label className="text-[10px] uppercase font-bold text-cyan-500 tracking-widest">Primary Project</label>
                                                 <div className="flex gap-2">
                                                     <input
                                                         type="text"
@@ -1311,7 +2178,7 @@ function AdminDashboardContent() {
 
                                         <div className="space-y-1.5 pt-2 border-t border-white/5 col-span-2">
                                             <div className="flex justify-between items-center mb-1">
-                                                <label className="text-[10px] uppercase font-bold text-green-500 tracking-widest">Assigned_Node_Code</label>
+                                                <label className="text-[10px] uppercase font-bold text-green-500 tracking-widest">Assigned Node Code</label>
                                                 <button
                                                     onClick={() => {
                                                         const name = prompt("Enter Node Name:");
@@ -1326,7 +2193,7 @@ function AdminDashboardContent() {
                                             <select
                                                 value={manualFellowData.orgCode}
                                                 onChange={e => setManualFellowData({ ...manualFellowData, orgCode: e.target.value })}
-                                                className="w-full bg-black border border-white/10 h-10 text-xs font-mono text-white focus:border-green-500 outline-none px-3 text-green-400"
+                                                className="w-full bg-black border border-white/10 h-10 text-xs font-mono text-white focus:border-green-500 outline-none px-3"
                                             >
                                                 <option value="">NO_NODE_ASSIGNED (OPTIONAL)</option>
                                                 {orgs.map(o => <option key={o.code} value={o.code}>{o.code} - {o.name}</option>)}
@@ -1334,7 +2201,7 @@ function AdminDashboardContent() {
                                         </div>
 
                                         <div className="space-y-1.5 pt-2 border-t border-white/5">
-                                            <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Tenure_Sequence</label>
+                                            <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Tenure Sequence</label>
                                             <Input
                                                 value={manualFellowData.cohort}
                                                 onChange={e => setManualFellowData({ ...manualFellowData, cohort: e.target.value })}
@@ -1343,7 +2210,7 @@ function AdminDashboardContent() {
                                             />
                                         </div>
                                         <div className="space-y-1.5 pt-2 border-t border-white/5">
-                                            <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Onboarding_Date</label>
+                                            <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Onboarding Date</label>
                                             <Input type="date" value={manualFellowData.startDate} onChange={e => setManualFellowData({ ...manualFellowData, startDate: e.target.value })} className="bg-black border-white/10 h-10 text-xs font-mono text-white focus:border-purple-500" />
                                         </div>
                                     </div>
@@ -1370,7 +2237,7 @@ export default function AdminDashboard() {
     return (
         <Suspense fallback={
             <div className="h-screen w-screen bg-black flex items-center justify-center font-mono">
-                <div className="text-cyan-500 animate-pulse tracking-widest text-xl">BOOTING_CORE_ENGINE...</div>
+                <div className="text-cyan-500 animate-pulse tracking-widest text-xl">Loading Dashboard</div>
             </div>
         }>
             <AdminDashboardContent />

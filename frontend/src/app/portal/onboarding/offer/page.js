@@ -61,24 +61,13 @@ export default function OfferPage() {
             </div>
 
             <div className="space-y-4">
-                <h2 className="text-4xl font-black uppercase tracking-tighter text-white italic">Personnel_<span className="text-green-500">Activated</span></h2>
+                <h2 className="text-4xl font-black uppercase tracking-tighter text-white italic">Profile: <span className="text-green-500">Active</span></h2>
                 <div className="inline-block px-4 py-2 bg-white/5 border border-white/10 rounded-none">
-                    <p className="text-[10px] font-mono text-cyan-400 uppercase tracking-[0.3em]">Official_ID: <span className="text-white font-black">{user.globalPid}</span></p>
+                    <p className="text-[10px] font-mono text-cyan-400 uppercase tracking-[0.3em]">Fellowship ID: <span className="text-white font-black">{user.globalPid}</span></p>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl px-4">
-                {/* Offer Letter Box */}
-                <div className="p-8 bg-black border border-white/10 relative group hover:border-cyan-500/50 transition-colors">
-                    <div className="absolute top-0 left-0 w-2 h-2 bg-cyan-500" />
-                    <FileText className="w-10 h-10 mb-4 text-cyan-400/50 group-hover:text-cyan-400 transition-colors" />
-                    <h3 className="text-xs font-black uppercase tracking-widest text-white mb-2">Offer_Letter</h3>
-                    <p className="text-[9px] font-mono text-gray-500 mb-6 uppercase">DeepCytes_Offer_{user.lastName}.pdf</p>
-                    <Button onClick={() => handleDownload('download-offer', `OfferLetter_${user.lastName}.pdf`)} className="w-full h-12 bg-white text-black hover:bg-gray-200 rounded-none font-black text-[10px] uppercase tracking-widest">
-                        <Download className="w-3 h-3 mr-2" /> RETRIEVE_OFFER
-                    </Button>
-                </div>
-
                 {/* NDA Box */}
                 <div className="p-8 bg-black border border-white/10 relative group hover:border-purple-500/50 transition-colors">
                     <div className="absolute top-0 left-0 w-2 h-2 bg-purple-500" />
@@ -87,6 +76,17 @@ export default function OfferPage() {
                     <p className="text-[9px] font-mono text-gray-500 mb-6 uppercase">NDA_Executed_{user.lastName}.pdf</p>
                     <Button onClick={() => handleDownload('download-nda', `Signed_NDA_${user.lastName}.pdf`)} className="w-full h-12 bg-purple-500 text-white hover:bg-purple-600 rounded-none font-black text-[10px] uppercase tracking-widest">
                         <Download className="w-3 h-3 mr-2" /> RETRIEVE_NDA
+                    </Button>
+                </div>
+                
+                {/* Offer Letter Box */}
+                <div className="p-8 bg-black border border-white/10 relative group hover:border-cyan-500/50 transition-colors">
+                    <div className="absolute top-0 left-0 w-2 h-2 bg-cyan-500" />
+                    <FileText className="w-10 h-10 mb-4 text-cyan-400/50 group-hover:text-cyan-400 transition-colors" />
+                    <h3 className="text-xs font-black uppercase tracking-widest text-white mb-2">Offer_Letter</h3>
+                    <p className="text-[9px] font-mono text-gray-500 mb-6 uppercase">DeepCytes_Offer_{user.lastName}.pdf</p>
+                    <Button onClick={() => handleDownload('download-offer', `OfferLetter_${user.lastName}.pdf`)} className="w-full h-12 bg-white text-black hover:bg-gray-200 rounded-none font-black text-[10px] uppercase tracking-widest">
+                        <Download className="w-3 h-3 mr-2" /> RETRIEVE_OFFER
                     </Button>
                 </div>
             </div>

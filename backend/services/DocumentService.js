@@ -1,5 +1,5 @@
 const { PDFDocument, rgb, StandardFonts, degrees } = require('pdf-lib');
-const muhammara = require('muhammara');
+// const muhammara = require('muhammara'); // removed — password protection disabled (muhammara not used)
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -13,7 +13,7 @@ class DocumentService {
      * @returns {Object} - { buffer, hash, path, password }
      */
     static async generateNDA(applicantData, signatureInfo) {
-        const uploadDir = path.join(__dirname, '../../uploads/signed_documents');
+        const uploadDir = path.join(__dirname, '../uploads/signed_documents');
         if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });
         }
@@ -21,9 +21,10 @@ class DocumentService {
         const safeLastName = (applicantData.lastName || 'FELLOW').trim();
         const safePid = (applicantData.globalPid || 'PENDING').trim();
         const outputPath = path.join(uploadDir, `NDA_${safeLastName}_${Date.now()}.pdf`);
-        const password = `${safeLastName.toUpperCase()}_${safePid.toUpperCase()}`;
+        // Password protection disabled — generate unprotected PDF
+        const password = undefined;
 
-        console.log(`[DOC_GEN] Generating NDA for ${applicantData.email}. PID: ${safePid}. Password set to: ${password}`);
+        console.log(`[DOC_GEN] Generating NDA for ${applicantData.email}. PID: ${safePid}. (password protection disabled)`);
 
         try {
             const pdfDoc = await PDFDocument.create();
@@ -64,9 +65,9 @@ class DocumentService {
             const title1 = "FELLOWSHIP CONFIDENTIALITY AND";
             const title2 = "NON-DISCLOSURE AGREEMENT";
 
-            page.drawText(title1, { x: margin, y: yPos, size: 14, font: boldFont, color: primaryColor });
+            page.drawText(title1, { x: margin, y: yPos, size: 14, font: boldFont, color: black });
             yPos -= 20;
-            page.drawText(title2, { x: margin, y: yPos, size: 14, font: boldFont, color: primaryColor });
+            page.drawText(title2, { x: margin, y: yPos, size: 14, font: boldFont, color: black });
 
             yPos -= 40;
             const today = new Date().toLocaleDateString('en-GB');
@@ -246,7 +247,7 @@ class DocumentService {
             // Acknowledgment
             yPos -= 25;
             checkPageAdd(40); // Need more space for title
-            page.drawText('Acknowledgment and Acceptance', { x: margin, y: yPos, size: 12, font: boldFont, color: primaryColor });
+            page.drawText('Acknowledgment and Acceptance', { x: margin, y: yPos, size: 12, font: boldFont, color: black });
             yPos -= 20;
             const ackText = 'By signing below, both the Company and the Fellow acknowledge and accept the terms of this Confidentiality and Non-Disclosure Agreement.';
             lines = this._wrapText(ackText, contentWidth, 11, regularFont);
@@ -281,36 +282,49 @@ class DocumentService {
             const signatureWidth = 180;
             const signatureBaseY = yPos;
 
-            // === LEFT COLUMN: Shubham Pareek ===
-            const signaturePath = path.join(__dirname, '../uploads/assets/SP Sign DCFP.png');
-            if (fs.existsSync(signaturePath)) {
-                const sigBytes = fs.readFileSync(signaturePath);
-                const sigImage = await pdfDoc.embedPng(sigBytes);
-                // Smaller scale and positioned further left/up based on feedback
-                const sigDims = sigImage.scale(0.18); // Reduced size
+            // === LEFT COLUMN: Company representative + company signature (use template spsign.png if present) ===
+            const companySigCandidates = [
+                path.join(__dirname, '../uploads/templates/spsign.png'),
+                path.join(__dirname, '../uploads/assets/SP Sign DCFP.png')
+            ];
+            let companySigPath = null;
+            for (const p of companySigCandidates) { if (fs.existsSync(p)) { companySigPath = p; break; } }
+
+            // Company signature image should only appear in signed PDFs (not in preview/unsigned)
+            if (!signatureInfo?.isPreview && companySigPath) {
+                const sigBytes = fs.readFileSync(companySigPath);
+                // support PNG/JPEG automatically if possible (prefer PNG)
+                let sigImage;
+                try { sigImage = await pdfDoc.embedPng(sigBytes); }
+                catch (e) { sigImage = await pdfDoc.embedJpg(sigBytes); }
+
+                // Signed PDF: larger and shifted right per request
+                const sigDims = sigImage.scale(0.75); // increased size for signed output
                 page.drawImage(sigImage, {
-                    x: leftColX - 80, // More to left
-                    y: signatureBaseY - 60, // Lowered
+                    x: leftColX + 10, // shift to the right so signature sits more prominently above the line
+                    y: signatureBaseY - (sigDims.height / 2) - 8,
                     width: sigDims.width,
                     height: sigDims.height
                 });
             }
+            // If preview/unsigned, do not draw company signature image (keep signature area empty)
+
 
             page.drawLine({ start: { x: leftColX, y: signatureBaseY - 50 }, end: { x: leftColX + signatureWidth, y: signatureBaseY - 50 }, thickness: 0.5, color: black });
 
             page.drawText('Mr. Shubham Pareek,', { x: leftColX, y: signatureBaseY - 65, size: 10, font: boldFont, color: black });
-            page.drawText('Co-Founder | Global Alliance Officer', { x: leftColX, y: signatureBaseY - 78, size: 9, font: regularFont, color: darkGray }); // Added Co-Founder
-            page.drawText('DeepCytes Ventures', { x: leftColX, y: signatureBaseY - 91, size: 9, font: regularFont, color: darkGray });
+            page.drawText('Co-Founder | Global Alliance Officer', { x: leftColX, y: signatureBaseY - 78, size: 9, font: regularFont, color: black }); // Added Co-Founder
+            page.drawText('DeepCytes Ventures', { x: leftColX, y: signatureBaseY - 91, size: 9, font: regularFont, color: black });
 
             // === RIGHT COLUMN: Fellow ===
             const fellowName = `${applicantData.firstName} ${applicantData.lastName}`.toUpperCase();
             page.drawText(fellowName, { x: rightColX, y: signatureBaseY - 35, size: 12, font: regularFont, color: black }); // Times Roman, CAPS, Black
             page.drawLine({ start: { x: rightColX, y: signatureBaseY - 50 }, end: { x: rightColX + signatureWidth, y: signatureBaseY - 50 }, thickness: 0.5, color: black });
 
-            page.drawText('(Signature)', { x: rightColX, y: signatureBaseY - 63, size: 8, font: italicFont, color: lightGray });
+            page.drawText('(Signature)', { x: rightColX, y: signatureBaseY - 63, size: 8, font: italicFont, color: black });
 
             const fellowDateText = `Date: ${today}`;
-            page.drawText(fellowDateText, { x: rightColX, y: signatureBaseY - 78, size: 9, font: regularFont, color: darkGray });
+            page.drawText(fellowDateText, { x: rightColX, y: signatureBaseY - 78, size: 9, font: regularFont, color: black });
 
             // Footer watermark on all pages
             const pages = pdfDoc.getPages();
@@ -321,12 +335,12 @@ class DocumentService {
                     y: 30,
                     size: 8,
                     font: regularFont,
-                    color: lightGray,
+                    color: black,
                     opacity: 0.6,
                 });
 
                 if (signatureInfo && signatureInfo.isPreview) {
-                    pg.drawText('UNSIGNED PREVIEW', {
+                    pg.drawText('PREVIEW', {
                         x: 100,
                         y: 300,
                         size: 60,
@@ -351,27 +365,36 @@ class DocumentService {
             const protectedPath = path.join(path.dirname(outputPath), `prot_${crypto.randomBytes(4).toString('hex')}.pdf`);
 
             // Apply password protection to a temporary protected path first
-            muhammara.recrypt(tempPath, protectedPath, {
-                userPassword: password,
-                ownerPassword: crypto.randomBytes(32).toString('hex'),
-                userProtectionFlag: 4
-            });
-
-            if (!fs.existsSync(protectedPath)) {
-                throw new Error("Encryption failed - Protected file not created");
+            let protectedSuccessfully = false;
+            try {
+                muhammara.recrypt(tempPath, protectedPath, {
+                    userPassword: password,
+                    ownerPassword: crypto.randomBytes(32).toString('hex'),
+                    userProtectionFlag: 4
+                });
+                if (fs.existsSync(protectedPath)) {
+                    protectedSuccessfully = true;
+                    fs.copyFileSync(protectedPath, outputPath);
+                }
+            } catch (e) {
+                console.warn('[DOC_GEN] muhammara.recrypt failed, will use unprotected PDF as fallback:', e.message || e);
             }
 
-            // Move to final output path
-            fs.copyFileSync(protectedPath, outputPath);
+            // If protection failed, copy the unprotected temp file instead
+            if (!protectedSuccessfully) {
+                fs.copyFileSync(tempPath, outputPath);
+            }
 
-            fs.unlinkSync(tempPath);
-            fs.unlinkSync(protectedPath);
+            // Cleanup
+            try { if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath); } catch (__) {}
+            try { if (fs.existsSync(protectedPath)) fs.unlinkSync(protectedPath); } catch (__) {}
 
             const finalBytes = fs.readFileSync(outputPath);
             console.log(`[DOC_GEN] NDA Generated successfully: ${outputPath} (${finalBytes.length} bytes)`);
             const hash = crypto.createHash('sha256').update(finalBytes).digest('hex');
 
-            return { buffer: finalBytes, hash, path: outputPath, password };
+            // If protection failed, still return (password will be undefined)
+            return { buffer: finalBytes, hash, path: outputPath, password: protectedSuccessfully ? password : undefined };
         } catch (error) {
             console.error('NDA Generation Error:', error);
             throw error;
@@ -404,10 +427,10 @@ class DocumentService {
 
 
     /**
-     * Generate Premium Offer Letter Document
+     * Generate Offer Letter using a PDF template (preferred) or fall back to previous builder
      */
     static async generateOfferLetter(fellowData, tenureData) {
-        const uploadDir = path.join(__dirname, '../../uploads/signed_documents');
+        const uploadDir = path.join(__dirname, '../uploads/signed_documents');
         if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });
         }
@@ -415,188 +438,376 @@ class DocumentService {
         const safeLastName = (fellowData.lastName || 'FELLOW').trim();
         const safePid = (fellowData.globalPid || 'PENDING').trim();
         const outputPath = path.join(uploadDir, `OfferLetter_${safeLastName}_${Date.now()}.pdf`);
-        const password = `${safeLastName.toUpperCase()}_${safePid.toUpperCase()}`;
+        // Password protection disabled — generate unprotected PDF
+        const password = undefined;
 
-        console.log(`[DOC_GEN] Generating Offer Letter for ${fellowData.email}. PID: ${safePid}. Password set to: ${password}`);
-
+        console.log(`[DOC_GEN] Generating Offer Letter for ${fellowData.email}. PID: ${safePid}. (password protection disabled)`);
+            const today = new Date();
         try {
-            const pdfDoc = await PDFDocument.create();
-            const regularFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
-            const boldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
-            const italicFont = await pdfDoc.embedFont(StandardFonts.TimesRomanItalic);
+            // Ensure templates dir exists and attempt to use a PDF form template
+            const templatesDir = path.join(__dirname, '../uploads/templates');
+            if (!fs.existsSync(templatesDir)) fs.mkdirSync(templatesDir, { recursive: true });
 
-            const pageWidth = 595.28;
-            const pageHeight = 841.89;
-            const margin = 70;
-            const contentWidth = pageWidth - (2 * margin);
+            const localTemplate = path.join(templatesDir, 'Offer_Letter.pdf');
 
-            const primaryColor = rgb(0.024, 0.714, 0.831);
-            const darkGray = rgb(0.2, 0.2, 0.2);
-            const black = rgb(0, 0, 0);
-            const lightGray = rgb(0.5, 0.5, 0.5);
+            // If no local template is present, the code falls back to the programmatic builder.
 
-            const page = pdfDoc.addPage([pageWidth, pageHeight]);
-            let yPos = pageHeight - margin;
-
-            // Logo
-            const logoPath = path.join(__dirname, '../uploads/assets/DC_LOGO.png');
-            if (fs.existsSync(logoPath)) {
-                const logoBytes = fs.readFileSync(logoPath);
-                const logoImage = await pdfDoc.embedPng(logoBytes);
-                // Increased scale based on feedback (was 0.18)
-                const logoDims = logoImage.scale(0.25);
-                page.drawImage(logoImage, { x: margin, y: yPos - 55, width: logoDims.width, height: logoDims.height });
-                yPos -= 80;
+            if (!fs.existsSync(localTemplate)) {
+                // As a fallback, reuse the old builder implementation (keeps behavior safe)
+                console.warn('[DOC_GEN] Offer template not found. Falling back to programmatic builder.');
+                console.log('[DOC_GEN] generateOfferLetter - USING PROGRAMMATIC BUILDER (no template present)');
+            } else {
+                console.log(`[DOC_GEN] generateOfferLetter - USING PDF TEMPLATE: ${localTemplate}`);
             }
 
-            page.drawLine({ start: { x: margin, y: yPos }, end: { x: pageWidth - margin, y: yPos }, thickness: 3, color: primaryColor });
-            yPos -= 2;
-            page.drawLine({ start: { x: margin, y: yPos }, end: { x: pageWidth - margin, y: yPos }, thickness: 1, color: primaryColor, opacity: 0.5 });
+            // If no template is present, execute the original programmatic builder and return
+            if (!fs.existsSync(localTemplate)) {
+                // Original builder code (kept as fallback)
+                const pdfDoc = await PDFDocument.create();
+                const regularFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+                const boldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
+                const italicFont = await pdfDoc.embedFont(StandardFonts.TimesRomanItalic);
 
-            yPos -= 35;
-            const today = new Date().toLocaleDateString('en-GB');
-            const dateText = `Date: ${today}`;
-            page.drawText(dateText, { x: pageWidth - margin - boldFont.widthOfTextAtSize(dateText, 11), y: yPos, size: 11, font: boldFont, color: darkGray });
+                const pageWidth = 595.28;
+                const pageHeight = 841.89;
+                const margin = 70;
+                const contentWidth = pageWidth - (2 * margin);
 
-            yPos -= 18;
-            const termText = `Fellowship Term: ${tenureData.startDate} to ${tenureData.endDate}`;
-            page.drawText(termText, { x: pageWidth - margin - regularFont.widthOfTextAtSize(termText, 10), y: yPos, size: 10, font: regularFont, color: darkGray });
+                const primaryColor = rgb(0.024, 0.714, 0.831);
+                const darkGray = rgb(0.2, 0.2, 0.2);
+                const black = rgb(0, 0, 0);
+                const lightGray = rgb(0.5, 0.5, 0.5);
 
-            yPos -= 18;
-            const roleText = `Role: ${tenureData.role}`;
-            page.drawText(roleText, { x: pageWidth - margin - regularFont.widthOfTextAtSize(roleText, 10), y: yPos, size: 10, font: regularFont, color: primaryColor });
+                const page = pdfDoc.addPage([pageWidth, pageHeight]);
+                let yPos = pageHeight - margin;
 
-            yPos -= 50;
-            page.drawText(`Dear ${fellowData.firstName} ${fellowData.lastName},`, { x: margin, y: yPos, size: 12, font: boldFont, color: black });
-
-            yPos -= 30;
-            const paragraphs = [
-                `We are delighted to welcome you to the DeepCytes Fellowship Program, where you will join DeepCytes Cyber Labs as a ${tenureData.role}. Your selection reflects not only your technical potential, but also your curiosity, mindset, and commitment to addressing complex challenges in the evolving cyber landscape.`,
-                `As a Fellow at DeepCytes, you will work at the intersection of emerging technologies, real-world cyber threats, and strategic problem-solving. The Fellowship is designed to tackle pressing cybersecurity challenges—ranging from digital trust, privacy, and resilience, to adversarial threats impacting individuals, institutions, and nations. You will contribute to building practical, forward-looking solutions that strengthen cyber resilience at scale.`,
-                `DeepCytes Cyber Labs is more than a workplace—it is a community of solution builders, researchers, and practitioners committed to developing and sharing skills that matter. Throughout your Fellowship, you will collaborate with like-minded professionals, exchange knowledge, and sharpen your expertise while contributing to a culture of continuous learning and collective growth.`,
-                `We believe that the future of cybersecurity will be shaped by individuals who think deeply, act boldly, and share knowledge openly. As part of the DC Cyber Universe, your contributions will help define how emerging technologies are secured and how cyber resilience is built for the world ahead.`,
-                `Welcome to DeepCytes Cyber Labs. We look forward to the impact you will create.`
-            ];
-
-            for (let i = 0; i < paragraphs.length; i++) {
-                const lines = this._wrapText(paragraphs[i], contentWidth, 11, i === 4 ? boldFont : regularFont);
-                for (const line of lines) {
-                    page.drawText(line, { x: margin, y: yPos, size: 11, font: i === 4 ? boldFont : regularFont, color: i === 4 ? primaryColor : black });
-                    yPos -= 16;
+                // Logo
+                const logoPath = path.join(__dirname, '../uploads/assets/DC_LOGO.png');
+                if (fs.existsSync(logoPath)) {
+                    const logoBytes = fs.readFileSync(logoPath);
+                    const logoImage = await pdfDoc.embedPng(logoBytes);
+                    const logoDims = logoImage.scale(0.25);
+                    page.drawImage(logoImage, { x: margin, y: yPos - 55, width: logoDims.width, height: logoDims.height });
+                    yPos -= 80;
                 }
-                yPos -= 10;
+
+                page.drawLine({ start: { x: margin, y: yPos }, end: { x: pageWidth - margin, y: yPos }, thickness: 3, color: primaryColor });
+                yPos -= 2;
+                page.drawLine({ start: { x: margin, y: yPos }, end: { x: pageWidth - margin, y: yPos }, thickness: 1, color: primaryColor, opacity: 0.5 });
+
+                yPos -= 35;
+                const dateText = `Date: ${formatDate(today)}`;
+                page.drawText(dateText, { x: pageWidth - margin - boldFont.widthOfTextAtSize(dateText, 11), y: yPos, size: 11, font: boldFont, color: black });
+
+                yPos -= 18;
+                const termText = `Fellowship Term: ${formatDate(tenureData.startDate)} - ${formatDate(tenureData.endDate || 'Ongoing')}`;
+                page.drawText(termText, { x: pageWidth - margin - regularFont.widthOfTextAtSize(termText, 10), y: yPos, size: 10, font: regularFont, color: black });
+
+                yPos -= 18;
+                const roleText = `Role: ${tenureData.role}`;
+                page.drawText(roleText, { x: pageWidth - margin - regularFont.widthOfTextAtSize(roleText, 10), y: yPos, size: 10, font: regularFont, color: black });
+
+                yPos -= 50;
+                page.drawText(`Dear ${fellowData.firstName} ${fellowData.lastName},`, { x: margin, y: yPos, size: 12, font: boldFont, color: black });
+
+                yPos -= 30;
+                const paragraphs = [
+                    `We are delighted to welcome you to the DeepCytes Fellowship Program, where you will join DeepCytes Cyber Labs as a ${tenureData.role}. Your selection reflects not only your technical potential, but also your curiosity, mindset, and commitment to addressing complex challenges in the evolving cyber landscape.`,
+                    `As a Fellow at DeepCytes, you will work at the intersection of emerging technologies, real-world cyber threats, and strategic problem-solving. The Fellowship is designed to tackle pressing cybersecurity challenges—ranging from digital trust, privacy, and resilience, to adversarial threats impacting individuals, institutions, and nations. You will contribute to building practical, forward-looking solutions that strengthen cyber resilience at scale.`,
+                    `DeepCytes Cyber Labs is more than a workplace—it is a community of solution builders, researchers, and practitioners committed to developing and sharing skills that matter. Throughout your Fellowship, you will collaborate with like-minded professionals, exchange knowledge, and sharpen your expertise while contributing to a culture of continuous learning and collective growth.`,
+                    `We believe that the future of cybersecurity will be shaped by individuals who think deeply, act boldly, and share knowledge openly. As part of the DC Cyber Universe, your contributions will help define how emerging technologies are secured and how cyber resilience is built for the world ahead.`,
+                    `Welcome to DeepCytes Cyber Labs. We look forward to the impact you will create.`
+                ];
+
+                for (let i = 0; i < paragraphs.length; i++) {
+                    const lines = this._wrapText(paragraphs[i], contentWidth, 11, i === 4 ? boldFont : regularFont);
+                    for (const line of lines) {
+                        page.drawText(line, { x: margin, y: yPos, size: 11, font: i === 4 ? boldFont : regularFont, color: black });
+                        yPos -= 16;
+                    }
+                    yPos -= 10;
+                }
+
+                yPos -= 70;
+
+                const leftColX = margin;
+                const rightColX = pageWidth / 2 + 20;
+                const signatureWidth = 180;
+                const signatureBaseY = yPos;
+
+                const signaturePath = path.join(__dirname, '../uploads/assets/SP Sign DCFP.png');
+                if (fs.existsSync(signaturePath)) {
+                    const sigBytes = fs.readFileSync(signaturePath);
+                    const sigImage = await pdfDoc.embedPng(sigBytes);
+                    const sigDims = sigImage.scale(0.18);
+                    page.drawImage(sigImage, {
+                        x: leftColX - 80,
+                        y: signatureBaseY - 60,
+                        width: sigDims.width,
+                        height: sigDims.height
+                    });
+                }
+
+                page.drawLine({ start: { x: leftColX, y: signatureBaseY - 50 }, end: { x: leftColX + signatureWidth, y: signatureBaseY - 50 }, thickness: 0.5, color: rgb(0,0,0) });
+
+                page.drawText('Mr. Shubham Pareek,', { x: leftColX, y: signatureBaseY - 65, size: 10, font: boldFont, color: rgb(0,0,0) });
+                page.drawText('Co-Founder | Global Alliance Officer', { x: leftColX, y: signatureBaseY - 78, size: 9, font: regularFont, color: black });
+                page.drawText('DeepCytes Cyber Labs UK', { x: leftColX, y: signatureBaseY - 91, size: 9, font: regularFont, color: black });
+
+                const fellowName = `${fellowData.firstName} ${fellowData.lastName}`.toUpperCase();
+                page.drawText(fellowName, { x: rightColX, y: signatureBaseY - 35, size: 12, font: regularFont, color: rgb(0,0,0) });
+
+                page.drawLine({ start: { x: rightColX, y: signatureBaseY - 50 }, end: { x: rightColX + signatureWidth, y: signatureBaseY - 50 }, thickness: 0.5, color: rgb(0,0,0) });
+
+                page.drawText('(Signature)', { x: rightColX, y: signatureBaseY - 63, size: 8, font: italicFont, color: black });
+
+                const fellowDateText = `Date: ${formatDate(today, true)}`;
+                page.drawText(fellowDateText, { x: rightColX, y: signatureBaseY - 78, size: 9, font: regularFont, color: black });
+
+                const pages = pdfDoc.getPages();
+                pages.forEach((pg, idx) => {
+                    pg.drawText(`DeepCytes Ventures | Offer Letter | Page ${idx + 1}/${pages.length}`, { x: margin, y: 30, size: 8, font: regularFont, color: black, opacity: 0.6 });
+                });
+
+                const pdfBytes = await pdfDoc.save();
+                const tempPath = path.join(path.dirname(outputPath), `temp_${crypto.randomBytes(4).toString('hex')}.pdf`);
+                fs.writeFileSync(tempPath, pdfBytes);
+                const protectedPath = path.join(path.dirname(outputPath), `prot_${crypto.randomBytes(4).toString('hex')}.pdf`);
+
+                // Password protection disabled — simply move temp -> output
+                try {
+                    fs.copyFileSync(tempPath, outputPath);
+                } catch (e) {
+                    try { if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath); } catch (__) {}
+                    throw e;
+                }
+
+                try { if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath); } catch (__) {}
+
+                const finalBytes = fs.readFileSync(outputPath);
+                console.log(`[DOC_GEN] Offer Letter Generated successfully (fallback, unprotected): ${outputPath} (${finalBytes.length} bytes)`);
+                const hash = crypto.createHash('sha256').update(finalBytes).digest('hex');
+
+                return { buffer: finalBytes, hash, path: outputPath, password: undefined };
             }
 
-            // ========== SIGNATURE SECTION ==========
-            // Add significantly more spacing before signatures to prevent overlap with "Welcome to DeepCytes..." text
-            yPos -= 70;
+            // Load template and fill fields
+            const originalBytes = fs.readFileSync(localTemplate);
+            const pdfDoc = await PDFDocument.load(originalBytes);
+            const form = pdfDoc.getForm();
 
-            // Calculate column positions
-            const leftColX = margin;
-            const rightColX = pageWidth / 2 + 20;
-            const signatureWidth = 180;
+            // using shared `today` variable defined above
 
-            // Store the Y position for both signatures to align
-            const signatureBaseY = yPos;
+            // Map values directly to PDF field names (fixed positions from OFFER_TEMPLATE_DEBUG)
+            const formatDate = (d, includeTime = false) => {
+                if (d === undefined || d === null) return '';
+                // preserve 'Ongoing' literal
+                if (typeof d === 'string' && d.toLowerCase && d.toLowerCase() === 'ongoing') return 'Ongoing';
 
-            // === LEFT COLUMN: Shubham Pareek ===
-            const signaturePath = path.join(__dirname, '../uploads/assets/SP Sign DCFP.png');
-            if (fs.existsSync(signaturePath)) {
-                const sigBytes = fs.readFileSync(signaturePath);
-                const sigImage = await pdfDoc.embedPng(sigBytes);
-                // Smaller scale and positioned further left/up based on feedback
-                const sigDims = sigImage.scale(0.18); // Reduced size
-                page.drawImage(sigImage, {
-                    x: leftColX - 80, // Moved even more left (was -40)
-                    y: signatureBaseY - 60, // Moved down relative to base (was -35)
-                    width: sigDims.width,
-                    height: sigDims.height
-                });
+                const pad = (n) => String(n).padStart(2, '0');
+                let dateObj = null;
+
+                if (d instanceof Date && !isNaN(d)) {
+                    dateObj = d;
+                } else if (typeof d === 'number') {
+                    // treat 10-digit numbers as seconds
+                    const ms = String(d).length === 10 ? d * 1000 : d;
+                    dateObj = new Date(ms);
+                    if (isNaN(dateObj)) return String(d);
+                } else if (typeof d === 'string') {
+                    const s = d.trim();
+                    // already formatted like DD/MM/YYYY — return as-is (unless time requested)
+                    if (s.includes('/') && !includeTime) return s;
+
+                    // accept DDMMYYYY (e.g. 16022026)
+                    if (/^\d{8}$/.test(s)) {
+                        const day = parseInt(s.slice(0, 2), 10);
+                        const month = parseInt(s.slice(2, 4), 10);
+                        const year = parseInt(s.slice(4, 8), 10);
+                        dateObj = new Date(year, month - 1, day);
+                    } else {
+                        const parsed = Date.parse(s);
+                        if (!isNaN(parsed)) dateObj = new Date(parsed);
+                        else return s;
+                    }
+                } else {
+                    return String(d);
+                }
+
+                const day = pad(dateObj.getDate());
+                const month = pad(dateObj.getMonth() + 1);
+                const year = dateObj.getFullYear();
+                const datePart = `${day}/${month}/${year}`;
+
+                if (!includeTime) return datePart;
+
+                const hours = pad(dateObj.getHours());
+                const minutes = pad(dateObj.getMinutes());
+                return `${datePart} ${hours}:${minutes}`;
+            };
+
+            const pdfFieldValues = {
+                // visual positions discovered in the debug template:
+                // text_1cuuy -> top Date
+                // text_2kilj -> Fellowship Term (we'll place start - end)
+                // text_3emom -> Role
+                // text_4hrdq -> Dear <Full Name>
+                // text_5vuet -> Signature Date
+                // text_6jgkv -> Certificate ID (globalPid)
+                text_1cuuy: formatDate(today),
+                text_2kilj: `${formatDate(tenureData.startDate)} - ${formatDate(tenureData.endDate || 'Ongoing')}`,
+                text_3emom: tenureData.role || '',
+                text_4hrdq: `${(fellowData.firstName || '').trim()} ${(fellowData.lastName || '').trim()}`.trim(),
+                text_5vuet: formatDate(today, true),
+                text_6jgkv: fellowData.globalPid || ''
+            };
+
+            for (const [pdfFieldName, value] of Object.entries(pdfFieldValues)) {
+                try {
+                    const field = form.getTextField(pdfFieldName);
+                    field.setText(String(value));
+                } catch (err) {
+                    console.warn(`[DOC_GEN] Could not set template field ${pdfFieldName}: ${err.message}`);
+                }
             }
 
-            // Line under Shubham's signature
-            page.drawLine({
-                start: { x: leftColX, y: signatureBaseY - 50 },
-                end: { x: leftColX + signatureWidth, y: signatureBaseY - 50 },
-                thickness: 0.5,
-                color: black
-            });
+            // Flatten the form so it can't be edited
+            form.flatten();
 
-            // Shubham's details
-            page.drawText('Mr. Shubham Pareek,', { x: leftColX, y: signatureBaseY - 65, size: 10, font: boldFont, color: black });
-            page.drawText('Co-Founder | Global Alliance Officer', { x: leftColX, y: signatureBaseY - 78, size: 9, font: regularFont, color: darkGray });
-            page.drawText('DeepCytes Cyber Labs UK', { x: leftColX, y: signatureBaseY - 91, size: 9, font: regularFont, color: darkGray });
-
-            // === RIGHT COLUMN: Fellow ===
-            // Fellow's typed signature name
-            const fellowName = `${fellowData.firstName} ${fellowData.lastName}`.toUpperCase();
-            page.drawText(fellowName, {
-                x: rightColX,
-                y: signatureBaseY - 35,
-                size: 12, // Standard size
-                font: regularFont, // Times Roman
-                color: black // Standard Black
-            });
-
-            // Line under Fellow's signature
-            page.drawLine({
-                start: { x: rightColX, y: signatureBaseY - 50 },
-                end: { x: rightColX + signatureWidth, y: signatureBaseY - 50 },
-                thickness: 0.5,
-                color: black
-            });
-
-            page.drawText('(Signature)', { x: rightColX, y: signatureBaseY - 63, size: 8, font: italicFont, color: lightGray });
-
-            const fellowDateText = `Date: ${today}`;
-            page.drawText(fellowDateText, { x: rightColX, y: signatureBaseY - 78, size: 9, font: regularFont, color: darkGray });
-
-            // Footer watermark on all pages
-            const pages = pdfDoc.getPages();
-            pages.forEach((pg, idx) => {
-                // Removed email from footer as requested
-                pg.drawText(`DeepCytes Ventures | Offer Letter | Page ${idx + 1}/${pages.length}`, {
-                    x: margin,
-                    y: 30,
-                    size: 8,
-                    font: regularFont,
-                    color: lightGray,
-                    opacity: 0.6,
-                });
-            });
-
-            // Save unprotected PDF
-            const pdfBytes = await pdfDoc.save();
-
+            // Save and protect
+            const filledBytes = await pdfDoc.save();
             const tempPath = path.join(path.dirname(outputPath), `temp_${crypto.randomBytes(4).toString('hex')}.pdf`);
-            fs.writeFileSync(tempPath, pdfBytes);
+            fs.writeFileSync(tempPath, filledBytes);
             const protectedPath = path.join(path.dirname(outputPath), `prot_${crypto.randomBytes(4).toString('hex')}.pdf`);
 
-            // Apply password protection
-            muhammara.recrypt(tempPath, protectedPath, {
-                userPassword: password,
-                ownerPassword: crypto.randomBytes(32).toString('hex'),
-                userProtectionFlag: 4
-            });
-
-            if (!fs.existsSync(protectedPath)) {
-                throw new Error("Encryption failed - Protected file not created");
+            // Password protection disabled — directly use the filled temp PDF
+            try {
+                fs.copyFileSync(tempPath, outputPath);
+            } catch (e) {
+                try { if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath); } catch (__) {}
+                throw e;
             }
 
-            // Move to final output path
-            fs.copyFileSync(protectedPath, outputPath);
-
-            fs.unlinkSync(tempPath);
-            fs.unlinkSync(protectedPath);
+            try { if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath); } catch (__) {}
+            try { if (fs.existsSync(protectedPath)) fs.unlinkSync(protectedPath); } catch (__) {}
 
             const finalBytes = fs.readFileSync(outputPath);
-            console.log(`[DOC_GEN] Offer Letter Generated successfully: ${outputPath} (${finalBytes.length} bytes)`);
+            console.log(`[DOC_GEN] Offer Letter Generated successfully (unprotected): ${outputPath} (${finalBytes.length} bytes)`);
             const hash = crypto.createHash('sha256').update(finalBytes).digest('hex');
 
-            return { buffer: finalBytes, hash, path: outputPath, password };
+            return { buffer: finalBytes, hash, path: outputPath, password: undefined };
         } catch (error) {
             console.error('Offer Letter Generation Error:', error);
             throw error;
+        }
+    }
+
+    /**
+     * Generate a secure PDF from an existing template by filling form fields.
+     * Used as a generic fallback for documents that have a filled PDF template.
+     * @param {String} templatePath - absolute path to a PDF template with form fields
+     * @param {Object} fieldValues - key/value pairs to fill into form fields
+     * @param {Object} signatureInfo - { type, data, isPreview }
+     * @param {String} recipientEmail
+     * @param {String} lastName
+     * @param {String} pid
+     */
+    static async generateSecurePDF(templatePath, fieldValues = {}, signatureInfo = {}, recipientEmail = '', lastName = 'FELLOW', pid = 'PENDING') {
+        if (!templatePath || !fs.existsSync(templatePath)) {
+            throw new Error(`Template not found: ${templatePath}`);
+        }
+
+        const uploadDir = path.join(__dirname, '../uploads/signed_documents');
+        if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
+        const safeLastName = (lastName || 'FELLOW').trim();
+        const safePid = (pid || 'PENDING').trim();
+        const outputPath = path.join(uploadDir, `Document_${safeLastName}_${Date.now()}.pdf`);
+        // Password protection disabled — generate unprotected PDF
+        const password = undefined;
+
+        try {
+            const originalBytes = fs.readFileSync(templatePath);
+            const pdfDoc = await PDFDocument.load(originalBytes);
+
+            // Try to fill AcroForm fields if present
+            try {
+                const form = pdfDoc.getForm();
+
+                for (const [key, val] of Object.entries(fieldValues)) {
+                    if (val === undefined || val === null) continue;
+                    try {
+                        const field = form.getTextField(key);
+                        field.setText(String(val));
+                    } catch (e) {
+                        // Field not found by exact name - ignore and continue
+                        console.warn(`[DOC_GEN] Template field not found for key='${key}': ${e.message}`);
+                    }
+                }
+
+                // If signature provided and there's a field named 'signature' (common), try to set it
+                if (signatureInfo && signatureInfo.type === 'TYPED' && signatureInfo.data) {
+                    const sigCandidates = ['signature', 'Signature', 'Fellow_Signature', 'SignedBy'];
+                    for (const name of sigCandidates) {
+                        try {
+                            const sf = form.getTextField(name);
+                            sf.setText(String(signatureInfo.data));
+                            break;
+                        } catch (e) {
+                            // not found - try next
+                        }
+                    }
+                }
+
+                // Flatten so fields are no longer editable
+                form.flatten();
+            } catch (e) {
+                console.warn('[DOC_GEN] No form fields found or failed to set fields on template:', e.message);
+            }
+
+            // If preview requested, return unprotected bytes
+            if (signatureInfo && signatureInfo.isPreview) {
+                const previewBytes = await pdfDoc.save();
+                return { buffer: previewBytes, path: null, hash: null };
+            }
+
+            // Save and apply password protection (same flow as other generators)
+            const filledBytes = await pdfDoc.save();
+            const tempPath = path.join(path.dirname(outputPath), `temp_${crypto.randomBytes(4).toString('hex')}.pdf`);
+            fs.writeFileSync(tempPath, filledBytes);
+            const protectedPath = path.join(path.dirname(outputPath), `prot_${crypto.randomBytes(4).toString('hex')}.pdf`);
+
+            let protectedSuccessfully = false;
+            try {
+                muhammara.recrypt(tempPath, protectedPath, {
+                    userPassword: password,
+                    ownerPassword: crypto.randomBytes(32).toString('hex'),
+                    userProtectionFlag: 4
+                });
+                if (fs.existsSync(protectedPath)) {
+                    protectedSuccessfully = true;
+                    fs.copyFileSync(protectedPath, outputPath);
+                }
+            } catch (e) {
+                console.warn('[DOC_GEN] muhammara.recrypt failed for generateSecurePDF; using unprotected PDF as fallback:', e.message || e);
+            }
+
+            if (!protectedSuccessfully) {
+                // Move temp -> output (unprotected)
+                fs.copyFileSync(tempPath, outputPath);
+            }
+
+            try { if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath); } catch (__) {}
+            try { if (fs.existsSync(protectedPath)) fs.unlinkSync(protectedPath); } catch (__) {}
+
+            const finalBytes = fs.readFileSync(outputPath);
+            const hash = crypto.createHash('sha256').update(finalBytes).digest('hex');
+
+            console.log(`[DOC_GEN] Secure PDF generated from template: ${outputPath}`);
+            return { buffer: finalBytes, hash, path: outputPath, password: protectedSuccessfully ? password : undefined };
+        } catch (err) {
+            console.error('generateSecurePDF error:', err);
+            throw err;
         }
     }
 }

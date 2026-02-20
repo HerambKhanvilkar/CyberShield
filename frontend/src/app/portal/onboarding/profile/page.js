@@ -54,35 +54,45 @@ export default function ProfilePage() {
     return (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-12">
             <div className="border-l-4 border-cyan-500 pl-6">
-                <h2 className="text-3xl font-black uppercase tracking-tighter text-white">Personnel_<span className="text-cyan-500">Registration</span></h2>
-                <p className="text-gray-500 text-[10px] uppercase tracking-widest mt-2 font-bold">Verification of physical and digital identity footprints.</p>
+                <h2 className="text-3xl font-black uppercase tracking-tighter text-white">Fellowship <span className="text-cyan-500">Registration</span></h2>
+                <p className="text-gray-500 text-[10px] uppercase tracking-widest mt-2 font-bold">Lets Build Your Profile.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
                     <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em] flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 bg-cyan-500" /> Given_Name <span className="text-red-500">*</span>
+                        <div className="w-1.5 h-1.5 bg-cyan-500" /> First_Name <span className="text-red-500">*</span>
                     </label>
-                    <Input value={formData.firstName} onChange={e => setFormData({ ...formData, firstName: e.target.value })} className="bg-white/5 border-white/10 h-14 rounded-none font-mono focus:border-cyan-500 transition-all text-cyan-100" />
+                    <Input
+                        value={formData.firstName}
+                        readOnly
+                        tabIndex={-1}
+                        className="bg-white/5 border-white/10 h-14 rounded-none font-mono focus:border-cyan-500 transition-all text-cyan-100 cursor-not-allowed opacity-70"
+                    />
                 </div>
                 <div className="space-y-3">
                     <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em] flex items-center gap-2">
                         <div className="w-1.5 h-1.5 bg-cyan-500" /> Surname <span className="text-red-500">*</span>
                     </label>
-                    <Input value={formData.lastName} onChange={e => setFormData({ ...formData, lastName: e.target.value })} className="bg-white/5 border-white/10 h-14 rounded-none font-mono focus:border-cyan-500 transition-all text-cyan-100" />
+                    <Input
+                        value={formData.lastName}
+                        readOnly
+                        tabIndex={-1}
+                        className="bg-white/5 border-white/10 h-14 rounded-none font-mono focus:border-cyan-500 transition-all text-cyan-100 cursor-not-allowed opacity-70"
+                    />
                 </div>
             </div>
 
             <div className="space-y-3">
                 <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em] flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 bg-cyan-500" /> LinkedIn_Profile_<span className="text-red-500 font-black tracking-widest">[CRITICAL]</span>
+                    <div className="w-1.5 h-1.5 bg-cyan-500" /> LinkedIn Profile <span className="text-red-500">*</span>
                 </label>
                 <Input value={formData.linkedin} onChange={e => setFormData({ ...formData, linkedin: e.target.value })} placeholder="https://linkedin.com/in/yourprofile" className="bg-white/5 border-white/10 h-14 rounded-none font-mono focus:border-cyan-500 transition-all text-cyan-100 placeholder:text-gray-700" />
             </div>
 
             <div className="space-y-3">
                 <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em] flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 bg-cyan-500" /> GitHub_Profile_<span className="text-cyan-500/50">[OPTIONAL]</span>
+                    <div className="w-1.5 h-1.5 bg-cyan-500" /> GitHub Profile
                 </label>
                 <Input value={formData.github} onChange={e => setFormData({ ...formData, github: e.target.value })} placeholder="https://github.com/..." className="bg-white/5 border-white/10 h-14 rounded-none font-mono focus:border-cyan-500 transition-all text-cyan-100" />
             </div>
@@ -93,7 +103,7 @@ export default function ProfilePage() {
                     className="w-full h-16 bg-cyan-600 hover:bg-cyan-500 rounded-none font-black italic tracking-[0.2em] text-white shadow-[0_0_20px_rgba(6,182,212,0.2)] group transition-all"
                     disabled={saving}
                 >
-                    {saving ? "UPLINKING_DATA..." : "EXECUTE_SAVE_&_CONTINUE"}
+                    {saving ? "Saving Data..." : "Save"}
                 </Button>
             </div>
         </motion.div>

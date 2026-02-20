@@ -54,7 +54,7 @@ export default function Footer() {
 
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center print:hidden">
           <span className="text-sm text-gray-400 text-center sm:text-left">
-            © 2025 DeepCytes. All Rights Reserved.
+            © 2026 DeepCytes. All Rights Reserved.
           </span>
 
         <div className="flex justify-center mt-4 sm:mt-0 print:hidden">

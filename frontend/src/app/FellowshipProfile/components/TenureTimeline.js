@@ -4,6 +4,11 @@ import { Calendar, FileText, CheckCircle, Lock, PenTool, Download } from 'lucide
 
 const DocumentBadge = ({ type, doc, onSign, onDownload }) => {
     const isSigned = !!doc?.signedAt;
+    const signedDate = doc?.signedAt ? new Date(doc.signedAt) : null;
+    const signedDateValid = signedDate && !isNaN(signedDate.getTime());
+    const downloadable = !!doc?.pdfPath;
+
+    const label = type === 'nda' ? 'NDA' : type === 'offerLetter' ? 'Offer Letter' : 'Completion Letter';
 
     return (
         <div className={`flex items-center justify-between p-3 rounded-lg border ${isSigned ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-amber-500/30 bg-amber-500/5'} mb-2`}>
@@ -12,29 +17,37 @@ const DocumentBadge = ({ type, doc, onSign, onDownload }) => {
                     {isSigned ? <CheckCircle size={16} /> : <Lock size={16} />}
                 </div>
                 <div>
-                    <p className="text-sm font-bold text-zinc-200 font-mono">
-                        {type === 'nda' ? 'NDA' : type === 'offerLetter' ? 'Offer Letter' : 'Completion Letter'}
-                    </p>
+                    <p className="text-sm font-bold text-zinc-200 font-mono">{label}</p>
                     <p className="text-xs text-zinc-500 font-mono">
-                        {isSigned ? `Signed: ${new Date(doc.signedAt).toLocaleDateString()}` : 'Action Required'}
+                        {isSigned ? (signedDateValid ? `Signed: ${signedDate.toLocaleDateString()}` : 'Signed: Unknown date') : 'Action Required'}
                     </p>
                 </div>
             </div>
 
             <div className="flex gap-2">
-                {!isSigned ? (
+                {/* Signing is allowed only for NDA (fellow should not sign offer/completion) */}
+                {!isSigned && type === 'nda' ? (
                     <button
-                        onClick={onSign}
+                        onClick={() => typeof onSign === 'function' && onSign()}
                         className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-colors text-xs font-mono font-bold uppercase"
                     >
                         <PenTool size={14} />
                         Sign
                     </button>
-                ) : (
+                ) : null}
+
+                {/* Show download only when a PDF path exists and handler provided */}
+                {downloadable ? (
                     <button
-                        onClick={onDownload}
+                        onClick={() => typeof onDownload === 'function' && onDownload()}
                         className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-zinc-800 text-zinc-400 hover:bg-zinc-700 transition-colors text-xs font-mono uppercase"
                     >
+                        <Download size={14} />
+                        PDF
+                    </button>
+                ) : (
+                    // show disabled placeholder when not downloadable
+                    <button disabled className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-zinc-900/40 text-zinc-600 transition-colors text-xs font-mono uppercase cursor-not-allowed">
                         <Download size={14} />
                         PDF
                     </button>

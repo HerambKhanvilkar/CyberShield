@@ -36,11 +36,11 @@ export default function NDAPage() {
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement('a');
             link.href = url;
-            link.setAttribute('download', 'NDA_UNSIGNED_PREVIEW.pdf');
+            link.setAttribute('download', 'NDA_PREVIEW.pdf');
             document.body.appendChild(link);
             link.click();
             link.remove();
-            toast.info("Unsigned Preview Generated.");
+            toast.info("Preview Generated.");
         } catch (error) {
             toast.error("Failed to generate preview.");
         } finally {
@@ -99,11 +99,11 @@ export default function NDAPage() {
     return (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
             <div className="border-l-4 border-purple-500 pl-6">
-                <h2 className="text-3xl font-black uppercase tracking-tighter text-white">Legal_<span className="text-purple-500">Framework</span></h2>
-                <p className="text-gray-500 text-[10px] uppercase tracking-widest mt-2 font-bold">Binding Non-Disclosure & Intellectual Property Agreement.</p>
+                <h2 className="text-3xl font-black uppercase tracking-tighter text-white">Non Disclosure <span className="text-purple-500">Agreement</span></h2>
+                <p className="text-gray-500 text-[10px] uppercase tracking-widest mt-2 font-bold">This Ensures All The Sensitive Work Done During This Fellowship Remains Confidential.</p>
             </div>
 
-            <div className="relative group">
+            {/* <div className="relative group">
                 <div className="p-8 bg-black border border-white/10 max-h-60 overflow-y-auto text-xs text-gray-500 leading-relaxed font-mono custom-scrollbar opacity-50 group-hover:opacity-100 transition-opacity">
                     <h3 className="text-lg font-black mb-6 text-center text-white bg-white/5 py-3 tracking-[0.2em] border-y border-white/10 uppercase">Security_Protocol_NDA</h3>
                     <p className="mb-4">This Non-Disclosure Agreement (the "Agreement") is entered into by and between DeepCytes R&D and the undersigned Participant...</p>
@@ -119,7 +119,7 @@ export default function NDAPage() {
                         Scroll to Review Summary
                     </div>
                 </div>
-            </div>
+            </div> */}
 
             <div className="flex justify-center">
                 <button
@@ -132,7 +132,7 @@ export default function NDAPage() {
                     ) : (
                         <>
                             <Eye className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                            VIEW_FULL_AGREEMENT_PREVIEW_[PDF]
+                            Read the NDA [PDF]
                             <Download className="w-3 h-3 opacity-50" />
                         </>
                     )}
@@ -140,7 +140,7 @@ export default function NDAPage() {
             </div>
 
             <div className="space-y-6 pt-6">
-                <label className="text-[10px] font-black uppercase text-gray-400 tracking-[0.3em] text-center block">Validate Sequence with Full Legal Name <span className="text-purple-400">[ALL CAPS]</span>:</label>
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-[0.3em] text-center block">To Sign The Agreement, Please Enter your Full <span className="text-purple-400">Name</span> Below</label>
                 <Input
                     value={legalName}
                     onChange={e => setLegalName(e.target.value.toUpperCase())}
@@ -154,7 +154,7 @@ export default function NDAPage() {
                         disabled={ndaLoading}
                         className="w-full h-16 bg-purple-600 hover:bg-purple-500 text-white font-black italic tracking-[0.2em] rounded-none transition-all shadow-[0_0_30px_rgba(147,51,234,0.2)]"
                     >
-                        {ndaLoading ? "GENERATING_PERSONNEL_ID..." : "EXECUTE_SIGN_&_ACTIVATE_PID"}
+                        {ndaLoading ? "GENERATING_PERSONNEL_ID..." : "Sign The NDA & Continue"}
                     </Button>
                 </div>
             </div>

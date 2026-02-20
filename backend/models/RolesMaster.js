@@ -13,6 +13,10 @@ const RolesMasterSchema = new mongoose.Schema({
         default: 'Custom',
         enum: ['Technical', 'Design', 'Management', 'Research', 'Custom']
     },
+    description: {
+        type: String,
+        default: ''
+    },
     isActive: {
         type: Boolean,
         default: true
