@@ -98,7 +98,7 @@ export default function OnboardingLayout({ children }) {
                             >
                                 Hello! <span className="text-cyan-500">{user?.firstName || ''}</span>
                             </motion.h1>
-                            <p className="mt-4 text-gray-500 text-[10px] uppercase tracking-[0.2em] font-bold">What's on your rosted today?</p>
+                            <p className="mt-4 text-gray-500 text-[10px] uppercase tracking-[0.2em] font-bold">What's on your roster today?</p>
                         </div>
 
                         {user?.tenures?.length > 1 && userInitialStep >= 2 && (

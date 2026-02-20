@@ -1,39 +1,33 @@
 
-const formData = require('form-data');
-const Mailgun = require('mailgun.js');
 const logger = require('../logger');
 const Badge = require('../models/Badge');
 const { getPremiumTemplate } = require('../emailTemplates/premium');
 const { DateTime } = require('luxon');
 
-// Initialize Mailgun
-const mailgun = new Mailgun(formData);
+let azureClient = null;
 
-let mg = null;
-
-// Initialize Mailgun client
-const initializeMailgun = () => {
-  if (!process.env.MAILGUN_API_KEY || !process.env.MAILGUN_DOMAIN) {
-    logger.warn('Mailgun credentials not found. Email functionality will be disabled.');
+// Initialize Azure Communication Email client
+const initializeAzure = () => {
+  const connectionString = process.env.AZURE_EMAIL_CONNECTION_STRING;
+  if (!connectionString) {
+    logger.warn('Azure Email connection string not provided. Azure email integration disabled.');
     return null;
   }
 
   try {
-    mg = mailgun.client({
-      username: 'api',
-      key: process.env.MAILGUN_API_KEY,
-      url: process.env.MAILGUN_API_URL || 'https://api.mailgun.net' // EU: https://api.eu.mailgun.net
-    });
-    logger.info('Mailgun initialized successfully');
-    return mg;
+    const { EmailClient } = require('@azure/communication-email');
+    azureClient = new EmailClient(connectionString);
+    logger.info('Azure Email client initialized successfully');
+    return azureClient;
   } catch (error) {
-    logger.error('Failed to initialize Mailgun:', error);
+    logger.error('Failed to initialize Azure Email client:', error);
     return null;
   }
 };
 
-// Initialize on module load
-mg = initializeMailgun();
+// Initialize provider on module load
+azureClient = initializeAzure();
+
 
 /**
  * Send email using Mailgun
@@ -45,30 +39,47 @@ mg = initializeMailgun();
  * @returns {Promise<Object>} - Mailgun response
  */
 const sendEmail = async ({ to, subject, html, from = null, attachments = [] }) => {
-  if (!mg) {
-    logger.error('Mailgun not initialized. Cannot send email.');
+  const fromEmail = from ||
+    process.env.AZURE_EMAIL_SENDER ||
+    'DoNotReply@deepcytes.io';
+
+  if (!azureClient) {
+    logger.error('Azure email client not initialized. Cannot send email.');
     throw new Error('Email service not configured');
   }
 
-  // Default: use MAILGUN_FROM_noreply, fallback to noreply@<domain>
-  const fromEmail = from || process.env.MAILGUN_FROM_noreply || `noreply@${process.env.MAILGUN_DOMAIN}`;
+  const emailMessage = {
+    senderAddress: fromEmail,
+    content: {
+      subject,
+      html
+    },
+    recipients: {
+      to: [{ address: to }]
+    }
+  };
+
+  if (attachments && attachments.length) {
+    emailMessage.content.attachments = attachments.map(att => {
+      const encoded = att.data
+        ? att.data.toString('base64')
+        : '';
+      return {
+        name: att.filename,
+        contentType: att.contentType || 'application/octet-stream',
+        content: encoded
+      };
+    });
+  }
 
   try {
-    const messageData = {
-      from: fromEmail,
-      to: [to],
-      subject: subject,
-      html: html,
-      attachment: attachments // Mailgun.js expects 'attachment' field which can be an array of paths or file objects
-    };
-
-    logger.info(`Sending email to ${to} with subject: ${subject}`);
-    const result = await mg.messages.create(process.env.MAILGUN_DOMAIN, messageData);
-
-    logger.info(`Email sent successfully to ${to}. Message ID: ${result.id}`);
+    logger.info(`Sending email via Azure to ${to} with subject: ${subject}`);
+    const poller = await azureClient.beginSend(emailMessage);
+    const result = await poller.pollUntilDone();
+    logger.info(`Azure email send result for ${to}: ${JSON.stringify(result)}`);
     return result;
   } catch (error) {
-    logger.error(`Failed to send email to ${to}:`, error);
+    logger.error(`Azure failed to send email to ${to}:`, error);
     throw error;
   }
 };
