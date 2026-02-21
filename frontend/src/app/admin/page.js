@@ -15,15 +15,22 @@ export default function AdminLogin() {
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
 
     useEffect(() => {
-        // If already logged in as admin, redirect
+        // If already logged in as admin, redirect (only once)
+        if (hasCheckedAuth) return;
+        
         const user = JSON.parse(localStorage.getItem("user") || "null");
         const token = localStorage.getItem("accessToken");
+        
         if (user && user.isAdmin && token) {
+            setHasCheckedAuth(true);
             router.push("/applications");
+        } else {
+            setHasCheckedAuth(true);
         }
-    }, [router]);
+    }, [router, hasCheckedAuth]);
 
     const handleLogin = async (e) => {
         e.preventDefault();

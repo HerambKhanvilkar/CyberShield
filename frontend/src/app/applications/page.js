@@ -114,7 +114,10 @@ function AdminDashboardContent() {
         setLoading(true);
         try {
             const token = localStorage.getItem("accessToken");
-            if (!token) { router.push("/admin"); return; }
+            if (!token) { 
+                setLoading(false);
+                return;
+            }
             const config = { headers: { Authorization: `Bearer ${token}` } };
             const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
             const [appsRes, fellowsRes, orgsRes, rolesRes, projectsRes] = await Promise.all([
@@ -132,7 +135,11 @@ function AdminDashboardContent() {
             // return fetched data so callers can synchronously act on fresh values
             return { apps: appsRes.data, fellows: fellowsRes.data, orgs: orgsRes.data, roles: rolesRes.data, projects: projectsRes.data };
         } catch (error) {
-            if (error.response?.status === 401) { router.push("/admin"); }
+            if (error.response?.status === 401) { 
+                localStorage.removeItem("accessToken");
+                localStorage.removeItem("user");
+                router.push("/admin"); 
+            }
             toast.error("Failed to load dashboard data");
             return null;
         } finally { setLoading(false); }
@@ -556,7 +563,18 @@ function AdminDashboardContent() {
         setEditingRoleTempDesc('');
     };
 
-    useEffect(() => { fetchData(); }, []);
+    // Check authentication before loading data
+    useEffect(() => {
+        const token = localStorage.getItem("accessToken");
+        const user = JSON.parse(localStorage.getItem("user") || "null");
+        
+        if (!token || !user || !user.isAdmin) {
+            router.push("/admin");
+            return;
+        }
+        
+        fetchData();
+    }, []);
 
     const handleUpdateAppStatus = async (status) => {
         setActionLoading(true);
@@ -711,6 +729,33 @@ function AdminDashboardContent() {
         } catch (error) {
             console.error('Export error:', error);
             toast.error('Failed to export CSV');
+        }
+    };
+
+    const handleExportOrgCSV = async (orgCode) => {
+        try {
+            const token = localStorage.getItem("accessToken");
+            const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
+            
+            const response = await axios.get(`${serverUrl}/application/admin/export-org-csv/${orgCode}`, {
+                headers: { Authorization: `Bearer ${token}` },
+                responseType: 'blob'
+            });
+            
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            const filename = `${orgCode}_data_${new Date().toISOString().split('T')[0]}.csv`;
+            link.setAttribute('download', filename);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+            
+            toast.success(`${orgCode} data exported successfully`);
+        } catch (error) {
+            console.error('Org export error:', error);
+            toast.error('Failed to export organization data');
         }
     };
 
@@ -981,9 +1026,16 @@ function AdminDashboardContent() {
                     </div>
                     <div className="flex-1 space-y-2">
                         <h2 className="text-3xl font-bold uppercase tracking-tight text-white">{selectedItem.name}</h2>
-                        <div className="text-xs font-mono text-gray-400 grid grid-cols-2 gap-2">
+                        <div className="text-xs font-mono text-gray-400 grid grid-cols-3 gap-2">
                             <span className="block p-2 border border-white/10">CODE: {selectedItem.code}</span>
                             <span className={`block p-2 border border-white/10 ${selectedItem.isActive ? 'text-green-500' : 'text-red-500'}`}>{selectedItem.isActive ? 'ACTIVE' : 'INACTIVE'}</span>
+                            <button
+                                onClick={() => handleExportOrgCSV(selectedItem.code)}
+                                className="p-2 border border-cyan-500/50 text-cyan-500 hover:bg-cyan-500 hover:text-black flex items-center justify-center gap-2 transition-all text-[10px] font-bold uppercase tracking-widest"
+                                title="Download organization data as CSV"
+                            >
+                                <Download className="w-3.5 h-3.5" /> CSV
+                            </button>
                         </div>
                     </div>
                 </div>

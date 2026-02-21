@@ -270,6 +270,83 @@ router.get('/admin/export-csv', authenticateJWT, isAdmin, async (req, res) => {
     }
 });
 
+// 3.6 Admin: Export Organization Data to CSV
+router.get('/admin/export-org-csv/:orgCode', authenticateJWT, isAdmin, async (req, res) => {
+    try {
+        const { Parser } = require('json2csv');
+        const { orgCode } = req.params;
+
+        // Get all applicants for this organization
+        const apps = await Applicant.find({ orgCode }).sort({ submittedAt: -1 });
+        
+        // Get all fellows for this organization  
+        const fellows = await FellowshipProfile.find().sort({ createdAt: -1 });
+        const orgFellows = fellows.filter(f => f.tenures?.some(t => t.orgCode === orgCode));
+
+        // Transform applicants data
+        const applicantsData = apps.map(app => ({
+            'Type': 'Applicant',
+            'First Name': app.firstName,
+            'Last Name': app.lastName,
+            'Email': app.email,
+            'Organization Code': app.orgCode,
+            'Role': typeof app.role === 'object' ? app.role?.name : app.role,
+            'Preferred Roles': (app.preferredRoles || []).map(r => typeof r === 'object' ? r?.name : r).join('; '),
+            'Status': app.status,
+            'Interview Status': app.interviewDetails?.status || 'N/A',
+            'Scheduled At': app.interviewDetails?.scheduledAt ? new Date(app.interviewDetails.scheduledAt).toLocaleString() : 'N/A',
+            'Meet Link': app.interviewDetails?.meetLink || 'N/A',
+            'Processed By': app.processedBy || 'N/A',
+            'Submitted At': new Date(app.submittedAt).toLocaleString(),
+            'Resume': app.resume || app.data?.resumeLink || 'N/A',
+            'Onboarding State': 'N/A',
+            'Global PID': 'N/A',
+            'Tenure Status': 'N/A',
+            'Start Date': 'N/A',
+            'End Date': 'N/A'
+        }));
+
+        // Transform fellows data
+        const fellowsData = orgFellows.map(fellow => {
+            const orgTenure = fellow.tenures?.find(t => t.orgCode === orgCode) || fellow.tenures?.[fellow.tenures.length - 1] || {};
+            return {
+                'Type': 'Fellow',
+                'First Name': fellow.firstName,
+                'Last Name': fellow.lastName,
+                'Email': fellow.email,
+                'Organization Code': orgTenure.orgCode || orgCode,
+                'Role': typeof orgTenure.role === 'object' ? orgTenure.role?.name : orgTenure.role || 'N/A',
+                'Preferred Roles': 'N/A',
+                'Status': fellow.status || 'N/A',
+                'Interview Status': 'N/A',
+                'Scheduled At': 'N/A',
+                'Meet Link': 'N/A',
+                'Processed By': 'N/A',
+                'Submitted At': 'N/A',
+                'Resume': 'N/A',
+                'Onboarding State': fellow.onboardingState || 'N/A',
+                'Global PID': fellow.globalPid || 'N/A',
+                'Tenure Status': orgTenure.status || 'N/A',
+                'Start Date': orgTenure.startDate ? new Date(orgTenure.startDate).toLocaleDateString() : 'N/A',
+                'End Date': orgTenure.endDate ? new Date(orgTenure.endDate).toLocaleDateString() : 'N/A'
+            };
+        });
+
+        // Combine both datasets
+        const allData = [...applicantsData, ...fellowsData];
+        
+        const parser = new Parser();
+        const csv = parser.parse(allData);
+        
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename=${orgCode}_data_${new Date().toISOString().split('T')[0]}.csv`);
+        res.send(csv);
+    } catch (err) {
+        console.error('Org CSV Export Error:', err);
+        res.status(500).json({ message: "Failed to export organization CSV" });
+    }
+});
+
 // 4. Update Status (Admin)
 router.patch('/admin/status', authenticateJWT, isAdmin, [
     check('applicantId').notEmpty(),
