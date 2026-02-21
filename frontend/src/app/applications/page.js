@@ -687,6 +687,33 @@ function AdminDashboardContent() {
         }
     };
 
+    const handleExportCSV = async () => {
+        try {
+            const token = localStorage.getItem("accessToken");
+            const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
+            
+            const response = await axios.get(`${serverUrl}/application/admin/export-csv`, {
+                headers: { Authorization: `Bearer ${token}` },
+                responseType: 'blob'
+            });
+            
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            const filename = `applicants_${new Date().toISOString().split('T')[0]}.csv`;
+            link.setAttribute('download', filename);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+            
+            toast.success('CSV exported successfully');
+        } catch (error) {
+            console.error('Export error:', error);
+            toast.error('Failed to export CSV');
+        }
+    };
+
     const handleAdminDownload = async (fellowId, tenureIndex, docType, docName) => {
         try {
             const token = localStorage.getItem("accessToken");
@@ -1195,8 +1222,8 @@ function AdminDashboardContent() {
                             </span>
                         </div>
 
-                        <div className="flex items-center gap-2 md:gap-4 w-full md:w-96">
-                            <div className="relative w-full group">
+                        <div className="flex items-center gap-2 md:gap-4 w-full md:w-auto">
+                            <div className="relative flex-1 md:w-96 group">
                                 <Search className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-cyan-500" />
                                 <input
                                     type="text"
@@ -1206,6 +1233,15 @@ function AdminDashboardContent() {
                                     className="w-full h-10 bg-black border border-white/20 pl-9 md:pl-11 pr-4 text-sm focus:border-cyan-500 focus:outline-none transition-all placeholder:text-gray-700 font-mono text-cyan-100 uppercase"
                                 />
                             </div>
+                            {activeTab === 'applications' && (
+                                <button
+                                    onClick={handleExportCSV}
+                                    className="h-10 px-3 md:px-4 border border-green-500/50 text-green-500 hover:bg-green-500 hover:text-black flex items-center gap-2 transition-all text-[10px] font-bold uppercase tracking-widest whitespace-nowrap"
+                                    title="Export applicants to CSV"
+                                >
+                                    <Download className="w-4 h-4" /> <span className="hidden md:inline">CSV</span>
+                                </button>
+                            )}
                             {activeTab === 'orgs' && (
                                 <button onClick={() => { setOrgData({ name: '', code: '', emailDomainWhitelist: [], endDate: sixMonthsFromNow(), defaultTenureEndDate: null, formVar1: [], availableRoles: [], isActive: true }); setIsEditingOrg(true); }} className="h-10 w-10 border border-white/20 hover:border-cyan-500 hover:text-cyan-500 flex items-center justify-center transition-colors">
                                     <Plus className="w-5 h-5" />

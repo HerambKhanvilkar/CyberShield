@@ -235,6 +235,41 @@ router.get('/admin/list', authenticateJWT, isAdmin, async (req, res) => {
     }
 });
 
+// 3.5 Admin: Export Applications to CSV
+router.get('/admin/export-csv', authenticateJWT, isAdmin, async (req, res) => {
+    try {
+        const { Parser } = require('json2csv');
+        const apps = await Applicant.find().sort({ submittedAt: -1 });
+        
+        // Transform data for CSV
+        const csvData = apps.map(app => ({
+            'First Name': app.firstName,
+            'Last Name': app.lastName,
+            'Email': app.email,
+            'Organization Code': app.orgCode,
+            'Role': typeof app.role === 'object' ? app.role?.name : app.role,
+            'Preferred Roles': (app.preferredRoles || []).map(r => typeof r === 'object' ? r?.name : r).join('; '),
+            'Status': app.status,
+            'Interview Status': app.interviewDetails?.status || 'N/A',
+            'Scheduled At': app.interviewDetails?.scheduledAt ? new Date(app.interviewDetails.scheduledAt).toLocaleString() : 'N/A',
+            'Meet Link': app.interviewDetails?.meetLink || 'N/A',
+            'Processed By': app.processedBy || 'N/A',
+            'Submitted At': new Date(app.submittedAt).toLocaleString(),
+            'Resume': app.resume || app.data?.resumeLink || 'N/A'
+        }));
+        
+        const parser = new Parser();
+        const csv = parser.parse(csvData);
+        
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename=applicants_${new Date().toISOString().split('T')[0]}.csv`);
+        res.send(csv);
+    } catch (err) {
+        console.error('CSV Export Error:', err);
+        res.status(500).json({ message: "Failed to export CSV" });
+    }
+});
+
 // 4. Update Status (Admin)
 router.patch('/admin/status', authenticateJWT, isAdmin, [
     check('applicantId').notEmpty(),
