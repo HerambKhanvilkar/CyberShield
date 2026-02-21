@@ -9,9 +9,17 @@ const crypto = require('crypto');
 const Otp = require('../models/Otp'); // We will use a separate Otp if we want strictly separate DB, but for now let's use the hiringDb connection or separate Otp model
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const FellowshipProfile = require('../models/FellowshipProfile');
 const RolesMaster = require('../models/RolesMaster');
 const { sendInterviewScheduledEmail, sendApplicationStatusEmail } = require('../services/emailService');
+
+// Ensure uploads/resumes directory exists
+const resumesDir = path.join(__dirname, '..', 'uploads', 'resumes');
+if (!fs.existsSync(resumesDir)) {
+    fs.mkdirSync(resumesDir, { recursive: true });
+    console.log('Created uploads/resumes directory');
+}
 
 // Multer Storage Configuration
 const storage = multer.diskStorage({
@@ -439,7 +447,7 @@ router.get('/admin/orgs', authenticateJWT, isAdmin, async (req, res) => {
 // 6. Admin: Create/Update Organization
 router.post('/admin/orgs', authenticateJWT, isAdmin, async (req, res) => {
     try {
-        const { id, name, code, emailDomainWhitelist, endDate, defaultTenureEndDate, formVar1, availableRoles, isActive } = req.body;
+        const { id, name, code, emailDomainWhitelist, endDate, defaultTenureEndDate, formVar1, availableRoles, isActive, adminPassword } = req.body;
 
         let org;
         if (id) {
@@ -476,10 +484,18 @@ router.post('/admin/orgs', authenticateJWT, isAdmin, async (req, res) => {
         org.availableRoles = normalizeToObjects(availableRoles || formVar1 || []);
         org.isActive = isActive;
 
+        // Hash and set admin password if provided
+        if (adminPassword) {
+            const bcrypt = require('bcrypt');
+            const hashedPassword = await bcrypt.hash(adminPassword, 10);
+            org.adminPassword = hashedPassword;
+        }
+
         await org.save();
         res.json(org);
     } catch (err) {
-        res.status(500).json({ message: "Server error" });
+        console.error("Org creation error:", err);
+        res.status(500).json({ message: "Server error: " + err.message });
     }
 });
 
