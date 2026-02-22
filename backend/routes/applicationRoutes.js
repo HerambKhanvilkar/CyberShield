@@ -294,7 +294,7 @@ router.patch('/admin/status', authenticateJWT, isAdmin, [
                         role: applicant.role,
                         orgCode: applicant.orgCode,
                         startDate: new Date().toLocaleDateString('en-GB').replace(/\//g, ''),
-                        endDate: tenureEndDate || "",
+                        endDate: finalEndDate || "",
                         status: 'ACTIVE',
                         cohort: 'C1'
                     }]

@@ -18,6 +18,8 @@ frontend/build
 .env.test.local
 .env.production.local
 backend/.env
+# allow templates folder to be tracked so Offer_Letter.pdf is available on deploy
+!backend/uploads/templates/
 backend/uploads*
 *uploads*
 *.env
