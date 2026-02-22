@@ -443,6 +443,49 @@ class DocumentService {
 
         console.log(`[DOC_GEN] Generating Offer Letter for ${fellowData.email}. PID: ${safePid}. (password protection disabled)`);
             const today = new Date();
+
+            // helper to format dates (used by both builders)
+            const formatDate = (d, includeTime = false) => {
+                if (d === undefined || d === null) return '';
+                // preserve 'Ongoing' literal
+                if (typeof d === 'string' && d.toLowerCase && d.toLowerCase() === 'ongoing') return 'Ongoing';
+
+                const pad = (n) => String(n).padStart(2, '0');
+                let dateObj = null;
+
+                if (d instanceof Date && !isNaN(d)) {
+                    dateObj = d;
+                } else if (typeof d === 'number') {
+                    const ms = String(d).length === 10 ? d * 1000 : d;
+                    dateObj = new Date(ms);
+                    if (isNaN(dateObj)) return String(d);
+                } else if (typeof d === 'string') {
+                    const s = d.trim();
+                    if (s.includes('/') && !includeTime) return s;
+                    if (/^\d{8}$/.test(s)) {
+                        const day = parseInt(s.slice(0, 2), 10);
+                        const month = parseInt(s.slice(2, 4), 10);
+                        const year = parseInt(s.slice(4, 8), 10);
+                        dateObj = new Date(year, month - 1, day);
+                    } else {
+                        const parsed = Date.parse(s);
+                        if (!isNaN(parsed)) dateObj = new Date(parsed);
+                        else return s;
+                    }
+                } else {
+                    return String(d);
+                }
+
+                const day = pad(dateObj.getDate());
+                const month = pad(dateObj.getMonth() + 1);
+                const year = dateObj.getFullYear();
+                const datePart = `${day}/${month}/${year}`;
+                if (!includeTime) return datePart;
+                const hours = pad(dateObj.getHours());
+                const minutes = pad(dateObj.getMinutes());
+                return `${datePart} ${hours}:${minutes}`;
+            };
+
         try {
             // Ensure templates dir exists and attempt to use a PDF form template
             const templatesDir = path.join(__dirname, '../uploads/templates');
@@ -599,53 +642,7 @@ class DocumentService {
             // using shared `today` variable defined above
 
             // Map values directly to PDF field names (fixed positions from OFFER_TEMPLATE_DEBUG)
-            const formatDate = (d, includeTime = false) => {
-                if (d === undefined || d === null) return '';
-                // preserve 'Ongoing' literal
-                if (typeof d === 'string' && d.toLowerCase && d.toLowerCase() === 'ongoing') return 'Ongoing';
-
-                const pad = (n) => String(n).padStart(2, '0');
-                let dateObj = null;
-
-                if (d instanceof Date && !isNaN(d)) {
-                    dateObj = d;
-                } else if (typeof d === 'number') {
-                    // treat 10-digit numbers as seconds
-                    const ms = String(d).length === 10 ? d * 1000 : d;
-                    dateObj = new Date(ms);
-                    if (isNaN(dateObj)) return String(d);
-                } else if (typeof d === 'string') {
-                    const s = d.trim();
-                    // already formatted like DD/MM/YYYY — return as-is (unless time requested)
-                    if (s.includes('/') && !includeTime) return s;
-
-                    // accept DDMMYYYY (e.g. 16022026)
-                    if (/^\d{8}$/.test(s)) {
-                        const day = parseInt(s.slice(0, 2), 10);
-                        const month = parseInt(s.slice(2, 4), 10);
-                        const year = parseInt(s.slice(4, 8), 10);
-                        dateObj = new Date(year, month - 1, day);
-                    } else {
-                        const parsed = Date.parse(s);
-                        if (!isNaN(parsed)) dateObj = new Date(parsed);
-                        else return s;
-                    }
-                } else {
-                    return String(d);
-                }
-
-                const day = pad(dateObj.getDate());
-                const month = pad(dateObj.getMonth() + 1);
-                const year = dateObj.getFullYear();
-                const datePart = `${day}/${month}/${year}`;
-
-                if (!includeTime) return datePart;
-
-                const hours = pad(dateObj.getHours());
-                const minutes = pad(dateObj.getMinutes());
-                return `${datePart} ${hours}:${minutes}`;
-            };
-
+            // (formatDate helper already defined above)
             const pdfFieldValues = {
                 // visual positions discovered in the debug template:
                 // text_1cuuy -> top Date
