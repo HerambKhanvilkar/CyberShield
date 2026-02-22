@@ -45,7 +45,6 @@ const {
 } = require("../services/emailService");
 const { awardCompositeBadgesForUser } = require('../services/badgeService');
 const FellowshipProfile = require('../models/FellowshipProfile');
-const ProjectMaster = require('../models/ProjectMaster');
 const LifecycleManager = require('../services/LifecycleManager');
 
 const uploadImage = multer({
@@ -1074,7 +1073,7 @@ router.put('/admin/fellows/:id', authenticateJWT, isAdmin, async (req, res) => {
 // 6. Manual Add Fellow (For existing/prev hires)
 router.post('/admin/fellows/add', authenticateJWT, isAdmin, async (req, res) => {
   try {
-    const { email, firstName, lastName, role, project, orgCode, cohort, startDate } = req.body;
+    const { email, firstName, lastName, role, orgCode, cohort, startDate } = req.body;
 
     if (!email || !firstName || !lastName) {
       return res.status(400).json({ message: "Missing required fields (email, firstName, lastName)" });
@@ -1096,7 +1095,6 @@ router.post('/admin/fellows/add', authenticateJWT, isAdmin, async (req, res) => 
     // Add Tenure
     profile.tenures.push({
       role: role || "Fellow",
-      project: project || "",
       orgCode: orgCode || "", // Org is now optional
       status: 'ACTIVE',
       cohort: cohort || "C1",
@@ -1110,7 +1108,7 @@ router.post('/admin/fellows/add', authenticateJWT, isAdmin, async (req, res) => 
     await HiringAuditLog.create({
       action: "FELLOW_ADD_MANUAL",
       userId: email,
-      details: `Manual fellow addition: ${role} on project ${project || 'N/A'} (Org: ${orgCode || 'None'})`,
+      details: `Manual fellow addition: ${role} (Org: ${orgCode || 'None'})`,
       ipAddress: req.ip
     });
 
@@ -1121,32 +1119,6 @@ router.post('/admin/fellows/add', authenticateJWT, isAdmin, async (req, res) => 
   } catch (err) {
     console.error("Manual Fellow Add Error:", err);
     res.status(500).json({ message: err.message });
-  }
-});
-
-// 7. Projects Master Routes
-router.get('/application/admin/projects', authenticateJWT, isAdmin, async (req, res) => {
-  try {
-    const projects = await ProjectMaster.find().sort({ name: 1 });
-    res.json(projects);
-  } catch (err) {
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-router.post('/application/admin/projects', authenticateJWT, isAdmin, async (req, res) => {
-  try {
-    const { name } = req.body;
-    if (!name) return res.status(400).json({ message: "Project name required" });
-
-    const existing = await ProjectMaster.findOne({ name: { $regex: new RegExp(`^${name.trim()}$`, 'i') } });
-    if (existing) return res.status(400).json({ message: "Project already exists" });
-
-    const project = new ProjectMaster({ name: name.trim() });
-    await project.save();
-    res.status(201).json({ message: "Project added", project: project.name });
-  } catch (err) {
-    res.status(500).json({ message: "Server error" });
   }
 });
 

@@ -32,17 +32,15 @@ function AdminDashboardContent() {
     const [orgInspectorMember, setOrgInspectorMember] = useState(null); // nested member view inside org inspector
     const [actionLoading, setActionLoading] = useState(false);
     const [isEditingOrg, setIsEditingOrg] = useState(false);
-    const [orgData, setOrgData] = useState({ name: '', code: '', emailDomainWhitelist: [], endDate: sixMonthsFromNow(), defaultTenureEndDate: null, formVar1: [], availableRoles: [], isActive: true });
+    const [orgData, setOrgData] = useState({ name: '', code: '', emailDomainWhitelist: [], endDate: sixMonthsFromNow(), defaultTenureEndDate: null, formVar1: [], availableRoles: [], isActive: true, adminPassword: ''});
     const [tenureEndDate, setTenureEndDate] = useState("");
     const [availableRoles, setAvailableRoles] = useState([]);
-    const [availableProjects, setAvailableProjects] = useState([]);
     const [newRole, setNewRole] = useState("");
     const [newRoleDescription, setNewRoleDescription] = useState("");
     const [newOrgRole, setNewOrgRole] = useState("");
     const [newOrgRoleDescription, setNewOrgRoleDescription] = useState("");
     const [editingRoleDesc, setEditingRoleDesc] = useState(null);
     const [editingRoleTempDesc, setEditingRoleTempDesc] = useState("");
-    const [newProject, setNewProject] = useState("");
 
     // Role menu + delete confirm state
     const [roleMenuOpenFor, setRoleMenuOpenFor] = useState(null); // role name
@@ -67,7 +65,6 @@ function AdminDashboardContent() {
         firstName: '',
         lastName: '',
         role: '',
-        project: '',
         orgCode: '',
         cohort: 'C1',
         startDate: new Date().toISOString().split('T')[0]
@@ -120,20 +117,18 @@ function AdminDashboardContent() {
             }
             const config = { headers: { Authorization: `Bearer ${token}` } };
             const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
-            const [appsRes, fellowsRes, orgsRes, rolesRes, projectsRes] = await Promise.all([
+            const [appsRes, fellowsRes, orgsRes, rolesRes] = await Promise.all([
                 axios.get(`${serverUrl}/application/admin/list`, config),
                 axios.get(`${serverUrl}/admin/fellows`, config),
                 axios.get(`${serverUrl}/application/admin/orgs`, config),
-                axios.get(`${serverUrl}/application/admin/roles`, config),
-                axios.get(`${serverUrl}/application/admin/projects`, config)
+                axios.get(`${serverUrl}/application/admin/roles`, config)
             ]);
             setApps(appsRes.data);
             setFellows(fellowsRes.data);
             setOrgs(orgsRes.data);
             setAvailableRoles(rolesRes.data);
-            setAvailableProjects(projectsRes.data);
             // return fetched data so callers can synchronously act on fresh values
-            return { apps: appsRes.data, fellows: fellowsRes.data, orgs: orgsRes.data, roles: rolesRes.data, projects: projectsRes.data };
+            return { apps: appsRes.data, fellows: fellowsRes.data, orgs: orgsRes.data, roles: rolesRes.data };
         } catch (error) {
             if (error.response?.status === 401) { 
                 localStorage.removeItem("accessToken");
@@ -188,30 +183,13 @@ function AdminDashboardContent() {
         }
     };
 
-    const handleAddProject = async () => {
-        if (!newProject.trim()) return;
-        try {
-            const token = localStorage.getItem("accessToken");
-            const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
-            await axios.post(`${serverUrl}/application/admin/projects`,
-                { name: newProject },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            toast.success(`Project "${newProject}" added!`);
-            setNewProject("");
-            fetchData();
-        } catch (error) {
-            toast.error(error.response?.data?.message || "Failed to add project");
-        }
-    };
-
-    const handleQuickAddOrg = async (name, code) => {
-        if (!name || !code) return toast.error("Name and Code required");
+    const handleQuickAddOrg = async (name, code, adminPassword) => {
+        if (!name || !code || !adminPassword) return toast.error("Name, Code & Password required");
         try {
             const token = localStorage.getItem("accessToken");
             const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
             await axios.post(`${serverUrl}/application/admin/orgs`,
-                { name, code, isActive: false, emailDomainWhitelist: [], defaultTenureEndDate: 0, formVar1: [], availableRoles: [] },
+                { name, code, isActive: false, emailDomainWhitelist: [], defaultTenureEndDate: 0, formVar1: [], availableRoles: [], adminPassword},
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             toast.success(`Node "${code}" initialized (Offline)`);
@@ -1295,7 +1273,7 @@ function AdminDashboardContent() {
                                 </button>
                             )}
                             {activeTab === 'orgs' && (
-                                <button onClick={() => { setOrgData({ name: '', code: '', emailDomainWhitelist: [], endDate: sixMonthsFromNow(), defaultTenureEndDate: null, formVar1: [], availableRoles: [], isActive: true }); setIsEditingOrg(true); }} className="h-10 w-10 border border-white/20 hover:border-cyan-500 hover:text-cyan-500 flex items-center justify-center transition-colors">
+                                <button onClick={() => { setOrgData({ name: '', code: '', emailDomainWhitelist: [], endDate: sixMonthsFromNow(), defaultTenureEndDate: null, formVar1: [], availableRoles: [], isActive: true, adminPassword: '' }); setIsEditingOrg(true); }} className="h-10 w-10 border border-white/20 hover:border-cyan-500 hover:text-cyan-500 flex items-center justify-center transition-colors">
                                     <Plus className="w-5 h-5" />
                                 </button>
                             )}
@@ -1552,7 +1530,8 @@ function AdminDashboardContent() {
                                                         defaultTenureEndDate: org.defaultTenureEndDate ? new Date(org.defaultTenureEndDate).getTime() : 0,
                                                         formVar1: availObjects.map(r => r.name),
                                                         availableRoles: availObjects,
-                                                        isActive: org.isActive
+                                                        isActive: org.isActive,
+                                                        adminPassword: org.adminPassword || ''
                                                     });
                                                     setIsEditingOrg(true);
                                                 }}
@@ -1958,6 +1937,10 @@ function AdminDashboardContent() {
                                                 <label className="text-[10px] uppercase font-mono text-gray-500">Access_Code</label>
                                                 <Input value={orgData.code} onChange={e => setOrgData({ ...orgData, code: e.target.value.toUpperCase() })} className="bg-black border-white/20 h-10 text-xs font-mono text-green-500 focus:border-green-500" placeholder="UNIQUE_CODE" />
                                             </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] uppercase font-mono text-gray-500">Node_Login_Pass</label>
+                                                <Input value={orgData.adminPassword} onChange={e => setOrgData({ ...orgData, adminPassword: e.target.value })} className="bg-black border-white/20 h-10 text-xs font-mono text-green-500 focus:border-green-500" placeholder="LOGIN_PASS" />
+                                            </div>
                                         </div>
 
                                         <div className="space-y-2">
@@ -2241,37 +2224,13 @@ function AdminDashboardContent() {
 
                                         <div className="space-y-1.5 pt-2 border-t border-white/5 col-span-2">
                                             <div className="flex justify-between items-center mb-1">
-                                                <label className="text-[10px] uppercase font-bold text-cyan-500 tracking-widest">Primary Project</label>
-                                                <div className="flex gap-2">
-                                                    <input
-                                                        type="text"
-                                                        placeholder="NEW_PROJECT..."
-                                                        className="bg-black border-b border-white/20 text-[10px] w-28 outline-none focus:border-cyan-500 px-1 text-white"
-                                                        value={newProject}
-                                                        onChange={e => setNewProject(e.target.value)}
-                                                        onKeyPress={e => e.key === 'Enter' && handleAddProject()}
-                                                    />
-                                                    <button onClick={handleAddProject} className="text-[10px] text-cyan-400 hover:text-white uppercase font-bold">Add</button>
-                                                </div>
-                                            </div>
-                                            <select
-                                                value={manualFellowData.project}
-                                                onChange={e => setManualFellowData({ ...manualFellowData, project: e.target.value })}
-                                                className="w-full bg-black border border-white/10 h-10 text-xs font-mono text-white focus:border-cyan-500 outline-none px-3"
-                                            >
-                                                <option value="">SELECT_PROJECT</option>
-                                                {availableProjects.map(p => <option key={p.name} value={p.name}>{p.name}</option>)}
-                                            </select>
-                                        </div>
-
-                                        <div className="space-y-1.5 pt-2 border-t border-white/5 col-span-2">
-                                            <div className="flex justify-between items-center mb-1">
                                                 <label className="text-[10px] uppercase font-bold text-green-500 tracking-widest">Assigned Node Code</label>
                                                 <button
                                                     onClick={() => {
                                                         const name = prompt("Enter Node Name:");
                                                         const code = prompt("Enter Node Code:");
-                                                        if (name && code) handleQuickAddOrg(name, code);
+                                                        const password = prompt("Enter Password For Node Login")
+                                                        if (name && code && password) handleQuickAddOrg(name, code, password);
                                                     }}
                                                     className="text-[10px] text-green-400 hover:text-white uppercase font-bold"
                                                 >
