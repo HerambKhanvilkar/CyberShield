@@ -19,9 +19,10 @@ frontend/build
 .env.production.local
 backend/.env
 # allow templates folder to be tracked so Offer_Letter.pdf is available on deploy
+# ignore everything under uploads except the templates subfolder and its contents
+backend/uploads/*
 !backend/uploads/templates/
-backend/uploads*
-*uploads*
+!backend/uploads/templates/**
 *.env
 
 npm-debug.log*
