@@ -16,7 +16,9 @@ const checkBadgeExists = (badgeId, badgesArray) => {
   return badgesArray.some(b => b == badgeId);
 };
 
-const nameRegex = /^[A-Za-z]+$/; // Allow only letters for names (adjust the regex as needed)
+// allow spaces/hyphens/apostrophes in names
+const nameRegex = /^[A-Za-z]+(?:[ '-][A-Za-z]+)*$/; // adjust as needed
+
 
 module.exports = function (agenda) {
   agenda.define('reprocess revision', async job => {
@@ -50,15 +52,21 @@ module.exports = function (agenda) {
           if(data.row){
           console.log("row argument passed");
             revisionRows.push(data.row);
-            if (!data.email || !data.firstName || !data.lastName || !data.badgeIds) {
+            // trim each incoming field
+            const email = data.email ? data.email.trim() : '';
+            const firstName = data.firstName ? data.firstName.trim() : '';
+            const lastName = data.lastName ? data.lastName.trim() : '';
+            const badgeIds = data.badgeIds ? data.badgeIds.trim() : '';
+
+            if (!email || !firstName || !lastName || !badgeIds) {
           console.log("all !!NOT!! props passed for the object");
               invalidRevisionUsers.push({ 
                 row: rowCount, error: "Missing required fields", data 
               });
             } else {
           console.log("all props passed for the object");
-              emails.push(data.email);
-              validRevisionRows.push({ row: rowCount, ...data });
+              emails.push(email);
+              validRevisionRows.push({ row: rowCount, email, firstName, lastName, badgeIds });
             }
           }
 
@@ -90,16 +98,22 @@ module.exports = function (agenda) {
         const { email, firstName, lastName, badgeIds } = user;
         let userErrors = [];
 
-        if (!nameRegex.test(firstName)) {
+        // trim and validate names
+        const fName = firstName.trim();
+        const lName = lastName.trim();
+        if (!nameRegex.test(fName)) {
           userErrors.push(`Invalid firstName: ${firstName}`);
         }
-        if (!nameRegex.test(lastName)) {
+        if (!nameRegex.test(lName)) {
           userErrors.push(`Invalid lastName: ${lastName}`);
         }
         if (userErrors.length > 0) {
           invalidRevisionUsers.push({... user, errors: userErrors });
           return;
         }
+        user.firstName = fName;
+        user.lastName = lName;
+
 
         let badgeIdsArray;
         try {

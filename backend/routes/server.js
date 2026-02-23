@@ -799,9 +799,9 @@ router.post("/revoke-badge", authenticateJWT, async (req, res) => {
 router.get('/users/sample', authenticateJWT, async (req, res) => {
   // Create dummy data
   const sampleData = [
-    { _id: '1', email: 'user1@example.com', firstName: 'John', lastName: 'Doe', badgeIds: ['CA000100', 'CA000101'].toString() },
-    { _id: '2', email: 'user2@example.com', firstName: 'Jane', lastName: 'Smith', badgeIds: ['CA000100'].toString() },
-    { _id: '3', email: 'user3@example.com', firstName: 'Alice', lastName: 'Johnson', badgeIds: ['CA000104', 'CA000111'].toString() },
+    { _id: '1', email: 'user1@example.com', firstName: 'John', lastName: 'Doe', badgeIds: ['309'].toString() },
+    { _id: '2', email: 'user2@example.com', firstName: 'Jane', lastName: 'Smith', badgeIds: ['309'].toString() },
+    { _id: '3', email: 'user3@example.com', firstName: 'Alice', lastName: 'Johnson', badgeIds: ['309'].toString() },
   ];
 
   // Convert JSON to CSV
