@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "react-toastify";
 import { Users,Briefcase,Shield,Database,Search,Plus,ChevronRight,CheckCircle,XCircle,Clock,FileText,Award,History,Settings,ArrowLeft,ExternalLink,Mail,Calendar,Globe,Terminal,Code,Cpu,Zap,Linkedin,Github,Trophy,ArrowUpCircle,Download,Trash,MoreVertical} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { headers } from "../../../next.config";
 
 function AdminDashboardContent() {
     const sixMonthsFromNow = () => {
@@ -41,6 +42,7 @@ function AdminDashboardContent() {
     const [newOrgRoleDescription, setNewOrgRoleDescription] = useState("");
     const [editingRoleDesc, setEditingRoleDesc] = useState(null);
     const [editingRoleTempDesc, setEditingRoleTempDesc] = useState("");
+    const [projectData, setProjectData] = useState([]);
 
     // Role menu + delete confirm state
     const [roleMenuOpenFor, setRoleMenuOpenFor] = useState(null); // role name
@@ -70,6 +72,18 @@ function AdminDashboardContent() {
         startDate: new Date().toISOString().split('T')[0]
     });
 
+    // Create Project State
+    const [showCreateProjectModal, setShowCreateProjectModal] = useState(false);
+    const [newProjectData, setNewProjectData] = useState({
+        title: '',
+        description: '',
+        supportedLinks: [],
+        contributors: [],
+        isActive: true
+    });
+    const [newLink, setNewLink] = useState({ linkName: '', url: '' });
+    const [newContributor, setNewContributor] = useState({ globalPid: '', firstName: '' });
+
     const router = useRouter();
 
     // Scroll refs + persistence (sessionStorage)
@@ -85,6 +99,7 @@ function AdminDashboardContent() {
         }
         if (activeTab === 'applications' && selectedItem) return `admin:scroll:inspector:app:${selectedItem._id}`;
         if (activeTab === 'fellows' && selectedItem) return `admin:scroll:inspector:fellow:${selectedItem._id}`;
+        if (activeTab === 'projects' && selectedItem) return `admin:scroll:inspector:project:${selectedItem._id}`;
         return `admin:scroll:inspector:${activeTab}`;
     };
 
@@ -140,6 +155,30 @@ function AdminDashboardContent() {
         } finally { setLoading(false); }
     };
 
+    const fetchProjects = async () =>{
+        setLoading(true);
+        try{
+            const token = localStorage.getItem("accessToken");
+            if(!token){
+                setLoading(false);
+                return;
+            }
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+            const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
+            const projects = await axios.get(`${serverUrl}/projects`, config);
+            setProjectData(projects.data);
+
+            return projects.data;
+        }catch(error){
+            if(error.response?.status === 401){
+                localStorage.removeItem("accessToken");
+                localStorage.removeItem("user");
+                router.push("/admin");
+            }
+            toast.error("Failed to load the Projects");
+        } finally { setLoading(false); }
+    };
+
     const handleTerminateFellow = async () => {
         setActionLoading(true);
         try {
@@ -181,6 +220,73 @@ function AdminDashboardContent() {
         } finally {
             setActionLoading(false);
         }
+    };
+
+    const handleCreateProject = async () => {
+        if (!newProjectData.title || !newProjectData.description) {
+            toast.error("Title and Description are required");
+            return;
+        }
+        setActionLoading(true);
+        try {
+            const token = localStorage.getItem("accessToken");
+            const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
+            await axios.post(`${serverUrl}/project`, newProjectData, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            toast.success("Project Created Successfully");
+            setShowCreateProjectModal(false);
+            setNewProjectData({
+                title: '',
+                description: '',
+                supportedLinks: [],
+                contributors: [],
+                isActive: true
+            });
+            fetchProjects();
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to create project");
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handleAddLink = () => {
+        if (!newLink.linkName || !newLink.url) {
+            toast.error("Link name and URL are required");
+            return;
+        }
+        setNewProjectData({
+            ...newProjectData,
+            supportedLinks: [...newProjectData.supportedLinks, { ...newLink }]
+        });
+        setNewLink({ linkName: '', url: '' });
+    };
+
+    const handleRemoveLink = (index) => {
+        setNewProjectData({
+            ...newProjectData,
+            supportedLinks: newProjectData.supportedLinks.filter((_, i) => i !== index)
+        });
+    };
+
+    const handleAddContributor = () => {
+        if (!newContributor.globalPid || !newContributor.firstName) {
+            toast.error("PID and Name are required");
+            return;
+        }
+        setNewProjectData({
+            ...newProjectData,
+            contributors: [...newProjectData.contributors, { ...newContributor }]
+        });
+        setNewContributor({ globalPid: '', firstName: '' });
+    };
+
+    const handleRemoveContributor = (index) => {
+        setNewProjectData({
+            ...newProjectData,
+            contributors: newProjectData.contributors.filter((_, i) => i !== index)
+        });
     };
 
     const handleQuickAddOrg = async (name, code, adminPassword) => {
@@ -552,6 +658,7 @@ function AdminDashboardContent() {
         }
         
         fetchData();
+        fetchProjects();
     }, []);
 
     const handleUpdateAppStatus = async (status) => {
@@ -1214,7 +1321,8 @@ function AdminDashboardContent() {
                         {[
                             { id: 'applications', icon: <FileText className="w-6 h-6" />, label: 'REQ' },
                             { id: 'fellows', icon: <Users className="w-6 h-6" />, label: 'OPS' },
-                            { id: 'orgs', icon: <Globe className="w-6 h-6" />, label: 'NET' }
+                            { id: 'orgs', icon: <Globe className="w-6 h-6" />, label: 'NET' },
+                            { id: 'projects', icon: <Code className="w-6 h-6" />, label: 'PRJ' }
                         ].map(t => (
                             <button
                                 key={t.id}
@@ -1230,7 +1338,7 @@ function AdminDashboardContent() {
                     </nav>
 
                     <div className="flex-1" />
-                    <button onClick={fetchData} className="w-10 h-10 md:w-12 md:h-12 border border-white/10 hover:border-cyan-500 hover:text-cyan-500 transition-colors flex items-center justify-center">
+                    <button onClick={() => { fetchData(); fetchProjects(); }} className="w-10 h-10 md:w-12 md:h-12 border border-white/10 hover:border-cyan-500 hover:text-cyan-500 transition-colors flex items-center justify-center">
                         <History className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
                     </button>
                     <div className="h-2 md:h-4" />
@@ -1286,6 +1394,23 @@ function AdminDashboardContent() {
                                     className="h-10 px-4 border border-purple-500/50 text-purple-500 hover:bg-purple-500 hover:text-white flex items-center gap-2 transition-all text-[10px] font-bold uppercase tracking-widest whitespace-nowrap"
                                 >
                                     <Plus className="w-4 h-4" /> MANUAL_ONBOARD
+                                </button>
+                            )}
+                            {activeTab === 'projects' && (
+                                <button
+                                    onClick={() => {
+                                        setNewProjectData({
+                                            title: '',
+                                            description: '',
+                                            supportedLinks: [],
+                                            contributors: [],
+                                            isActive: true
+                                        });
+                                        setShowCreateProjectModal(true);
+                                    }}
+                                    className="h-10 px-4 border border-orange-500/50 text-orange-500 hover:bg-orange-500 hover:text-white flex items-center gap-2 transition-all text-[10px] font-bold uppercase tracking-widest whitespace-nowrap"
+                                >
+                                    <Plus className="w-4 h-4" /> NEW_PROJECT
                                 </button>
                             )}
                         </div>
@@ -1546,6 +1671,36 @@ function AdminDashboardContent() {
                                         </div>
                                     </div>
                                 ))}
+
+                                {activeTab === 'projects' && projectData.filter(p => 
+                                    p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                    p.description.toLowerCase().includes(searchTerm.toLowerCase())
+                                ).map((project, idx) => (
+                                    <div
+                                        key={project._id}
+                                        onClick={() => setSelectedItem(project)}
+                                        className={`group px-8 py-6 border-b border-white/10 hover:bg-white/5 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === project._id ? 'bg-orange-900/10 border-l-[6px] border-l-orange-500' : 'border-l-[6px] border-l-transparent'}`}
+                                    >
+                                        <div className="flex items-center gap-8">
+                                            <span className="text-sm font-mono text-gray-600 w-10">{String(idx + 1).padStart(2, '0')}</span>
+                                            <div>
+                                                <h3 className="font-bold text-2xl text-white group-hover:text-orange-400 transition-colors uppercase tracking-tighter mb-2">{project.title}</h3>
+                                                <div className="flex gap-4 text-xs font-mono text-gray-500 items-center">
+                                                    <span className="text-orange-500 border border-orange-500/20 bg-orange-500/5 px-2 py-0.5 rounded-none flex items-center gap-1">
+                                                        <Users className="w-3 h-3" /> {project.contributors?.length || 0}
+                                                    </span>
+                                                    <span className="text-xs flex items-center gap-1">
+                                                        <ExternalLink className="w-3 h-3" /> {project.supportedLinks?.length || 0} LINKS
+                                                    </span>
+                                                    <span className="text-xs truncate max-w-[300px]">{project.description}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className={`px-4 py-1.5 border text-xs font-bold uppercase tracking-widest ${project.isActive ? 'border-orange-500/50 text-orange-500' : 'border-red-500/50 text-red-500'}`}>
+                                            {project.isActive ? 'ACTIVE' : 'INACTIVE'}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         )}
                     </div>
@@ -1563,14 +1718,84 @@ function AdminDashboardContent() {
                         >
                             <div className="h-20 flex items-center justify-between px-10 border-b border-white/10 bg-black/50 backdrop-blur-md">
                                 <h3 className="font-mono text-sm text-white uppercase tracking-[0.2em] flex items-center gap-3">
-                                    <div className={`w-2 h-2 ${activeTab === 'fellows' ? 'bg-purple-500' : activeTab === 'orgs' ? 'bg-green-500' : 'bg-cyan-500'} animate-pulse`} />
+                                    <div className={`w-2 h-2 ${activeTab === 'fellows' ? 'bg-purple-500' : activeTab === 'orgs' ? 'bg-green-500' : activeTab === 'projects' ? 'bg-orange-500' : 'bg-cyan-500'} animate-pulse`} />
                                     DATA_INSPECTOR
                                 </h3>
                                 <button onClick={() => { setSelectedItem(null); setOrgInspectorMember(null); }} className="hover:text-white text-gray-600 transition-colors"><XCircle className="w-6 h-6" /></button>
                             </div>
 
                             <div ref={inspectorRef} onScroll={saveInspectorScroll} className="flex-1 min-h-0 overflow-y-auto p-10 custom-scrollbar space-y-10">
-                                {activeTab === 'orgs' ? renderOrgInspector() : (
+                                {activeTab === 'orgs' ? renderOrgInspector() : activeTab === 'projects' ? (
+                                    <>
+                                        <div className="flex items-start gap-8 border-b border-white/10 pb-4">
+                                            <div className="w-24 h-24 border border-orange-500/30 flex items-center justify-center text-4xl font-bold bg-orange-500/5 text-orange-500">
+                                                <Code className="w-12 h-12" />
+                                            </div>
+                                            <div className="flex-1 space-y-3">
+                                                <h2 className="text-3xl font-bold uppercase tracking-tight text-white">{selectedItem.title}</h2>
+                                                <div className="text-xs font-mono text-gray-500 grid grid-cols-2 gap-3">
+                                                    <span className="block p-2 border border-white/10">ID: {selectedItem._id}</span>
+                                                    <span className="block p-2 border border-white/10">STATUS: {selectedItem.isActive ? 'ACTIVE' : 'INACTIVE'}</span>
+                                                    <span className="block p-2 border border-white/10 col-span-2">CREATED: {new Date(selectedItem.createdAt).toLocaleDateString()}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-8">
+                                            <div className="p-8 border border-white/10 bg-white/[0.02] space-y-6">
+                                                <h4 className="text-xs font-bold text-orange-500 uppercase tracking-widest border-b border-orange-900/30 pb-3">Project_Details</h4>
+                                                
+                                                <div className="space-y-4">
+                                                    <div className="space-y-2">
+                                                        <div className="text-[10px] text-gray-500 uppercase font-mono tracking-widest">Description</div>
+                                                        <div className="p-4 bg-black/40 border border-white/5 text-xs text-gray-400 font-mono leading-relaxed">
+                                                            {selectedItem.description || "NO_DESCRIPTION"}
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="space-y-2">
+                                                        <div className="text-[10px] text-gray-500 uppercase font-mono tracking-widest">Contributors ({selectedItem.contributors?.length || 0})</div>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {(selectedItem.contributors || []).map((contributor, idx) => (
+                                                                <span key={idx} className="px-3 py-1.5 bg-orange-900/20 border border-orange-500/30 text-orange-400 text-[10px] font-bold uppercase tracking-wider flex items-center gap-2">
+                                                                    <Users className="w-3 h-3" />
+                                                                    {contributor.firstName} ({contributor.globalPid})
+                                                                </span>
+                                                            ))}
+                                                            {(!selectedItem.contributors || selectedItem.contributors.length === 0) && (
+                                                                <span className="px-2 py-1 border border-white/10 text-gray-600 text-[9px] uppercase">NO_CONTRIBUTORS</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="space-y-2">
+                                                        <div className="text-[10px] text-gray-500 uppercase font-mono tracking-widest">Links ({selectedItem.supportedLinks?.length || 0})</div>
+                                                        <div className="space-y-2">
+                                                            {(selectedItem.supportedLinks || []).map((link, idx) => (
+                                                                <a
+                                                                    key={idx}
+                                                                    href={link.url}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="flex items-center justify-between p-3 bg-black/40 border border-white/5 hover:border-orange-500/30 transition-all group"
+                                                                >
+                                                                    <span className="text-[10px] font-mono text-gray-400 uppercase">{link.linkName}</span>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="text-[9px] text-orange-500 font-mono truncate max-w-[200px]">{link.url}</span>
+                                                                        <ExternalLink className="w-3 h-3 text-orange-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                                    </div>
+                                                                </a>
+                                                            ))}
+                                                            {(!selectedItem.supportedLinks || selectedItem.supportedLinks.length === 0) && (
+                                                                <span className="px-2 py-1 border border-white/10 text-gray-600 text-[9px] uppercase block">NO_LINKS_AVAILABLE</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </>
+                                ) : (
                                     <>
                                         <div className="flex items-start gap-8 border-b border-white/10 pb-4">
                                             <div className={`w-24 h-24 border border-white/20 flex items-center justify-center text-4xl font-bold bg-white/5 ${activeTab === 'fellows' ? 'text-purple-500' : 'text-cyan-500'}`}>
@@ -2268,6 +2493,170 @@ function AdminDashboardContent() {
                                         className="w-full h-12 bg-purple-900/20 border border-purple-500/50 text-purple-500 hover:bg-purple-500 hover:text-black font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 text-xs mt-4"
                                     >
                                         {actionLoading ? 'COMMITTING...' : 'INITIALIZE_TENURE'}
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
+
+                {/* Create Project Modal */}
+                <AnimatePresence>
+                    {showCreateProjectModal && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                className="w-full max-w-[700px] bg-black border border-orange-500/30 shadow-[0_0_50px_rgba(249,115,22,0.1)] rounded-2xl overflow-hidden"
+                            >
+                                <div className="h-14 flex items-center justify-between px-6 border-b border-white/10 bg-orange-500/5">
+                                    <h3 className="text-sm font-bold text-orange-400 uppercase tracking-widest flex items-center gap-2">
+                                        <Code className="w-4 h-4" /> CREATE NEW PROJECT
+                                    </h3>
+                                    <button onClick={() => setShowCreateProjectModal(false)} className="text-gray-500 hover:text-white transition-colors">
+                                        <XCircle className="w-5 h-5" />
+                                    </button>
+                                </div>
+
+                                <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
+                                    {/* Basic Info */}
+                                    <div className="space-y-4">
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Project Title *</label>
+                                            <Input 
+                                                value={newProjectData.title} 
+                                                onChange={e => setNewProjectData({ ...newProjectData, title: e.target.value })} 
+                                                className="bg-black border-white/10 h-10 text-xs font-mono text-white focus:border-orange-500" 
+                                                placeholder="PROJECT_NAME"
+                                            />
+                                        </div>
+                                        
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Description *</label>
+                                            <textarea 
+                                                value={newProjectData.description} 
+                                                onChange={e => setNewProjectData({ ...newProjectData, description: e.target.value })} 
+                                                className="w-full bg-black border border-white/10 p-3 text-xs font-mono text-white focus:border-orange-500 outline-none min-h-[80px] custom-scrollbar"
+                                                placeholder="PROJECT_DESCRIPTION..."
+                                            />
+                                        </div>
+
+                                        <div className="flex items-center gap-3">
+                                            <input 
+                                                type="checkbox" 
+                                                id="isActive"
+                                                checked={newProjectData.isActive}
+                                                onChange={e => setNewProjectData({ ...newProjectData, isActive: e.target.checked })}
+                                                className="w-4 h-4 accent-orange-500"
+                                            />
+                                            <label htmlFor="isActive" className="text-xs text-gray-400 cursor-pointer">ACTIVE_PROJECT</label>
+                                        </div>
+                                    </div>
+
+                                    {/* Links Section */}
+                                    <div className="pt-4 border-t border-white/5 space-y-3">
+                                        <label className="text-[10px] uppercase font-bold text-orange-500 tracking-widest">Supported Links</label>
+                                        
+                                        {/* Added Links */}
+                                        {newProjectData.supportedLinks.length > 0 && (
+                                            <div className="space-y-2 mb-3">
+                                                {newProjectData.supportedLinks.map((link, idx) => (
+                                                    <div key={idx} className="flex items-center gap-2 p-2 bg-orange-900/10 border border-orange-500/20">
+                                                        <ExternalLink className="w-3 h-3 text-orange-500" />
+                                                        <div className="flex-1 text-[10px] font-mono">
+                                                            <div className="text-orange-400">{link.linkName}</div>
+                                                            <div className="text-gray-500 truncate">{link.url}</div>
+                                                        </div>
+                                                        <button 
+                                                            onClick={() => handleRemoveLink(idx)}
+                                                            className="text-red-500 hover:text-red-400 p-1"
+                                                        >
+                                                            <XCircle className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {/* Add Link Form */}
+                                        <div className="flex gap-2">
+                                            <Input 
+                                                value={newLink.linkName} 
+                                                onChange={e => setNewLink({ ...newLink, linkName: e.target.value })} 
+                                                className="bg-black border-white/10 h-9 text-xs font-mono text-white focus:border-orange-500 flex-1"
+                                                placeholder="Link Name"
+                                            />
+                                            <Input 
+                                                value={newLink.url} 
+                                                onChange={e => setNewLink({ ...newLink, url: e.target.value })} 
+                                                className="bg-black border-white/10 h-9 text-xs font-mono text-white focus:border-orange-500 flex-1"
+                                                placeholder="https://..."
+                                            />
+                                            <button 
+                                                onClick={handleAddLink}
+                                                className="px-3 h-9 bg-orange-900/20 border border-orange-500/50 text-orange-500 hover:bg-orange-500/10 text-[10px] font-bold uppercase"
+                                            >
+                                                <Plus className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Contributors Section */}
+                                    <div className="pt-4 border-t border-white/5 space-y-3">
+                                        <label className="text-[10px] uppercase font-bold text-orange-500 tracking-widest">Contributors</label>
+                                        
+                                        {/* Added Contributors */}
+                                        {newProjectData.contributors.length > 0 && (
+                                            <div className="space-y-2 mb-3">
+                                                {newProjectData.contributors.map((contributor, idx) => (
+                                                    <div key={idx} className="flex items-center gap-2 p-2 bg-orange-900/10 border border-orange-500/20">
+                                                        <Users className="w-3 h-3 text-orange-500" />
+                                                        <div className="flex-1 text-[10px] font-mono">
+                                                            <span className="text-orange-400">{contributor.firstName}</span>
+                                                            <span className="text-gray-500 ml-2">({contributor.globalPid})</span>
+                                                        </div>
+                                                        <button 
+                                                            onClick={() => handleRemoveContributor(idx)}
+                                                            className="text-red-500 hover:text-red-400 p-1"
+                                                        >
+                                                            <XCircle className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {/* Add Contributor Form */}
+                                        <div className="flex gap-2">
+                                            <Input 
+                                                value={newContributor.globalPid} 
+                                                onChange={e => setNewContributor({ ...newContributor, globalPid: e.target.value })} 
+                                                className="bg-black border-white/10 h-9 text-xs font-mono text-white focus:border-orange-500 flex-1"
+                                                placeholder="PID12345"
+                                            />
+                                            <Input 
+                                                value={newContributor.firstName} 
+                                                onChange={e => setNewContributor({ ...newContributor, firstName: e.target.value })} 
+                                                className="bg-black border-white/10 h-9 text-xs font-mono text-white focus:border-orange-500 flex-1"
+                                                placeholder="Name"
+                                            />
+                                            <button 
+                                                onClick={handleAddContributor}
+                                                className="px-3 h-9 bg-orange-900/20 border border-orange-500/50 text-orange-500 hover:bg-orange-500/10 text-[10px] font-bold uppercase"
+                                            >
+                                                <Plus className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Submit Button */}
+                                    <button
+                                        onClick={handleCreateProject}
+                                        disabled={actionLoading}
+                                        className="w-full h-12 bg-orange-900/20 border border-orange-500/50 text-orange-500 hover:bg-orange-500 hover:text-black font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 text-xs mt-4"
+                                    >
+                                        {actionLoading ? 'CREATING...' : 'CREATE_PROJECT'}
                                     </button>
                                 </div>
                             </motion.div>
