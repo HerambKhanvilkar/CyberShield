@@ -58,7 +58,8 @@ module.exports = function (agenda) {
             const lastName = data.lastName ? data.lastName.trim() : '';
             const badgeIds = data.badgeIds ? data.badgeIds.trim() : '';
 
-            if (!email || !firstName || !lastName || !badgeIds) {
+            // lastName optional
+            if (!email || !firstName || !badgeIds) {
           console.log("all !!NOT!! props passed for the object");
               invalidRevisionUsers.push({ 
                 row: rowCount, error: "Missing required fields", data 
@@ -103,9 +104,6 @@ module.exports = function (agenda) {
         const lName = lastName.trim();
         if (!nameRegex.test(fName)) {
           userErrors.push(`Invalid firstName: ${firstName}`);
-        }
-        if (!nameRegex.test(lName)) {
-          userErrors.push(`Invalid lastName: ${lastName}`);
         }
         if (userErrors.length > 0) {
           invalidRevisionUsers.push({... user, errors: userErrors });

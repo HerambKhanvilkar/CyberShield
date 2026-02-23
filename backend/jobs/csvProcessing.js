@@ -51,7 +51,8 @@ module.exports = function (agenda) {
             const badgeIds = data.badgeIds ? data.badgeIds.trim() : '';
 
             // Basic required field validation
-            if (!email || !firstName || !lastName || !badgeIds) {
+            // NOTE: lastName is optional; we'll store empty string if omitted
+            if (!email || !firstName || !badgeIds) {
               invalidUsers.push({ row: rowCount, error: "Missing required fields", ...data });
             } else {
               emails.push(email);
@@ -88,10 +89,7 @@ module.exports = function (agenda) {
         if (!nameRegex.test(fName)) {
           userErrors.push(`Invalid firstName: ${firstName}`);
         }
-        if (!nameRegex.test(lName)) {
-          userErrors.push(`Invalid lastName: ${lastName}`);
-        }
-        // update the object so later logic works with trimmed values
+        // surname is optional and not validated; accept as provided
         user.firstName = fName;
         user.lastName = lName;
 

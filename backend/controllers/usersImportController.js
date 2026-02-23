@@ -29,9 +29,15 @@ async function validateRevision (data){
   lastName = lastName ? lastName.trim() : '';
   badgeIds = badgeIds ? badgeIds.trim() : '';
 
-  if (!email || !firstName || !lastName || !badgeIds) {
+  // require email, firstName and badges; lastName may be empty
+  if (!email || !firstName || !badgeIds) {
     return { error: "Missing required fields" }
   }
+  // update data for downstream
+  data.email = email;
+  data.firstName = firstName;
+  data.lastName = lastName;
+  data.badgeIds = badgeIds;
 
   // update data object with trimmed values for downstream use
   data.email = email;
@@ -52,11 +58,7 @@ async function validateRevision (data){
   if (!nameRegex.test(fName)) {
     userErrors.push(`Invalid firstName: ${firstName}`);
   }
-  if (!nameRegex.test(lName)) {
-    userErrors.push(`Invalid lastName: ${lastName}`);
-  }
-  // firstName lastName error
-  // assign trimmed back for further processing
+  // no validation for lastName; accept whatever value is supplied
   data.firstName = fName;
   data.lastName = lName;
 
