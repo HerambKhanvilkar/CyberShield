@@ -9,15 +9,15 @@ export default function Footer() {
           <div className="flex items-center">
             <Link href={'/'}>
               <img
-                src="https://static.wixstatic.com/media/e48a18_c949f6282e6a4c8e9568f40916a0c704~mv2.png/v1/crop/x_0,y_151,w_1920,h_746/fill/w_203,h_79,fp_0.50_0.50,q_85,usm_0.66_1.00_0.01,enc_auto/For%20Dark%20Theme.png"
+                src="./dclogoUK.png"
                 className="h-16 me-3"
                 alt="DeepCytes Logo"
               />
             </Link>
           </div>
-          <span className="text-sm grid grid-rows-2 dark:text-gray-400 text-slate-600">
-            <div><Link className="dark:text-white" href={'https://www.deepcytes.io/'} target="_blank">Deepcytes.io</Link></div>
-            <div>© {new Date().getFullYear()} DeepCytes. All Rights Reserved.</div>
+          <span className="text-sm grid grid-rows-2 ">
+            <div className="dark:text-white"><Link href={'https://www.deepcytes.io/'} target="_blank">Deepcytes.io</Link></div>
+            <div className="dark:text-gray-400 text-slate-600">© {new Date().getFullYear()} DeepCytes. All Rights Reserved.</div>
           </span>
         </div>
         <hr className="my-2 sm:mx-auto dark:border-gray-700 border-slate-300" />
