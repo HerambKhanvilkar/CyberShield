@@ -29,7 +29,7 @@ function getAdminDailyEmail(adminName, date, logs = []) {
   <div style="padding:20px;text-align:center;">
     <div style="max-width:700px;margin:0 auto;">
       <div style="text-align:center;padding-bottom:12px;">
-        <img class="logo" src="https://static.wixstatic.com/media/e48a18_c949f6282e6a4c8e9568f40916a0c704~mv2.png" alt="DeepCytes" width="100" style="display:block;margin:0 auto;">
+        <img class="logo" src="https://profile.deepcytes.io/dclogoUK.png" alt="DeepCytes" width="100" style="display:block;margin:0 auto;">
       </div>
       <div class="glass">
         <h1 style="font-family:'Playfair Display', serif;font-size:20px;margin:6px 0;">Admin Daily Summary — ${date}</h1>

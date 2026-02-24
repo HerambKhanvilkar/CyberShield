@@ -29,7 +29,7 @@ function getRevokeUpdateEmail(reasonType, badgeName = '', additionalInfo = '', p
 <body style="margin:0;padding:0;font-family:Arial,sans-serif;background-color:#001133;color:#ffffff;">
   <div style="padding:20px;text-align:center;">
     <div style="max-width:700px;margin:0 auto;">
-      <div style="text-align:center;padding-bottom:12px;"><img src="https://static.wixstatic.com/media/e48a18_c949f6282e6a4c8e9568f40916a0c704~mv2.png" alt="DeepCytes" width="100" style="display:block;margin:0 auto;"/></div>
+      <div style="text-align:center;padding-bottom:12px;"><img src="https://profile.deepcytes.io/dclogoUK.png" alt="DeepCytes" width="100" style="display:block;margin:0 auto;"/></div>
       <div class="glass">
         <h1 style="font-size:20px;margin:6px 0;">${title}</h1>
         <p style="color:#b0b0b0;margin-top:6px;">${intro}</p>

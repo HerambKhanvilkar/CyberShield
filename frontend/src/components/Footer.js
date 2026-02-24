@@ -16,7 +16,7 @@ export default function Footer() {
             </Link>
           </div>
           <span className="text-sm grid grid-rows-2 ">
-            <div className="dark:text-white"><Link href={'https://www.deepcytes.io/'} target="_blank">Deepcytes.io</Link></div>
+            <div className="dark:text-white"><Link href={'https://www.deepcytes.io/'} target="_blank">www.deepcytes.io</Link></div>
             <div className="dark:text-gray-400 text-slate-600">© {new Date().getFullYear()} DeepCytes. All Rights Reserved.</div>
           </span>
         </div>
