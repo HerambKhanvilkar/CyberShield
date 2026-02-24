@@ -1,5 +1,5 @@
 function getRevokeUpdateEmail(reasonType, badgeName = '', additionalInfo = '', profileLink = null) {
-  const defaultProfileLink = profileLink || `${process.env.FRONTEND || 'http://localhost:3000'}/profile`;
+  const defaultProfileLink = profileLink || `${process.env.FRONTEND || 'http://localhost:3000'}/`;
   let title = 'Profile Update';
   let intro = 'Your profile has been updated.';
 
@@ -35,9 +35,9 @@ function getRevokeUpdateEmail(reasonType, badgeName = '', additionalInfo = '', p
         <p style="color:#b0b0b0;margin-top:6px;">${intro}</p>
         ${additionalHtml}
         <div style="margin-top:18px;text-align:center;">
-          <a href="${defaultProfileLink}" style="background:#ffffff;color:#000;padding:10px 14px;border-radius:6px;text-decoration:none;font-weight:bold;">View My Profile</a>
+          <a href="https://profile.deepcytes.io/" style="background:#ffffff;color:#000;padding:10px 14px;border-radius:6px;text-decoration:none;font-weight:bold;">Visit Website</a>
         </div>
-        <p style="font-size:13px;color:#aaaaaa;margin-top:16px;">If you believe this was done in error, contact <a href="mailto:support@deepcytes.com" style="color:#ffffff;">support@deepcytes.com</a>.</p>
+        <p style="font-size:13px;color:#aaaaaa;margin-top:16px;">If you believe this was done in error, contact <a href="mailto:info@deepcytes.io" style="color:#ffffff;">info@deepcytes.io</a>.</p>
       </div>
     </div>
   </div>

@@ -49,7 +49,7 @@ function getAdminDailyEmail(adminName, date, logs = []) {
             </tbody>
           </table>
         </div>
-        <p style="font-size:13px;color:#aaaaaa;margin-top:12px;">This report is automated. For questions, contact <a href="mailto:support@deepcytes.com" style="color:#ffffff;">support@deepcytes.com</a>.</p>
+        <p style="font-size:13px;color:#aaaaaa;margin-top:12px;">This report is automated. For questions, contact <a href="mailto:info@deepcytes.io" style="color:#ffffff;">info@deepcytes.io</a>.</p>
       </div>
     </div>
   </div>

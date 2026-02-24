@@ -19,7 +19,7 @@ function getResetPasswordEmail(otpCode) {
         <p style="color:#b0b0b0;margin-top:6px;">We received a request to reset your password. Use the code below to continue.</p>
         <div style="margin:18px 0;text-align:center;"><span class="otp">${otpCode}</span></div>
         <p style="color:#aaaaaa;margin-top:8px;font-size:13px;">This code expires in 10 minutes. If you didn’t request a password reset, please ignore this email or contact support.</p>
-        <p style="font-size:13px;color:#aaaaaa;margin-top:16px;">Need help? Contact <a href="mailto:support@deepcytes.com" style="color:#ffffff;">support@deepcytes.com</a>.</p>
+        <p style="font-size:13px;color:#aaaaaa;margin-top:16px;">Need help? Contact <a href="mailto:info@deepcytes.io" style="color:#ffffff;">info@deepcytes.io</a>.</p>
       </div>
     </div>
   </div>
