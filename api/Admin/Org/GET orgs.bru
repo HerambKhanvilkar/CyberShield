@@ -1,0 +1,16 @@
+meta {
+  name: GET orgs
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{ADDRESS}}/application/admin/orgs
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
