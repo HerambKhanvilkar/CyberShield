@@ -270,10 +270,10 @@ router.get('/admin/export-csv', authenticateJWT, isAdmin, async (req, res) => {
     }
 });
 
-// 3.6 Admin: Export Organization Data to CSV
+// 3.6 Admin: Export Organization Data to Excel (2 Sheets)
 router.get('/admin/export-org-csv/:orgCode', authenticateJWT, isAdmin, async (req, res) => {
     try {
-        const { Parser } = require('json2csv');
+        const ExcelJS = require('exceljs');
         const { orgCode } = req.params;
 
         // Get all applicants for this organization
@@ -283,67 +283,82 @@ router.get('/admin/export-org-csv/:orgCode', authenticateJWT, isAdmin, async (re
         const fellows = await FellowshipProfile.find().sort({ createdAt: -1 });
         const orgFellows = fellows.filter(f => f.tenures?.some(t => t.orgCode === orgCode));
 
-        // Transform applicants data
-        const applicantsData = apps.map(app => ({
-            'Type': 'Applicant',
-            'First Name': app.firstName,
-            'Last Name': app.lastName,
-            'Email': app.email,
-            'Organization Code': app.orgCode,
-            'Role': typeof app.role === 'object' ? app.role?.name : app.role,
-            'Preferred Roles': (app.preferredRoles || []).map(r => typeof r === 'object' ? r?.name : r).join('; '),
-            'Status': app.status,
-            'Interview Status': app.interviewDetails?.status || 'N/A',
-            'Scheduled At': app.interviewDetails?.scheduledAt ? new Date(app.interviewDetails.scheduledAt).toLocaleString() : 'N/A',
-            'Meet Link': app.interviewDetails?.meetLink || 'N/A',
-            'Processed By': app.processedBy || 'N/A',
-            'Submitted At': new Date(app.submittedAt).toLocaleString(),
-            'Resume': app.resume || app.data?.resumeLink || 'N/A',
-            'Onboarding State': 'N/A',
-            'Global PID': 'N/A',
-            'Tenure Status': 'N/A',
-            'Start Date': 'N/A',
-            'End Date': 'N/A'
-        }));
+        // Create a new workbook
+        const workbook = new ExcelJS.Workbook();
+        
+        // Sheet 1: All Applicants
+        const applicantsSheet = workbook.addWorksheet('Applicants');
+        applicantsSheet.columns = [
+            { header: 'Sr. No.', key: 'srNo', width: 10 },
+            { header: 'First Name', key: 'firstName', width: 15 },
+            { header: 'Last Name', key: 'lastName', width: 15 },
+            { header: 'Email', key: 'email', width: 30 },
+            { header: 'Applied Role', key: 'appliedRole', width: 20 },
+            { header: 'Applied Date', key: 'appliedDate', width: 20 }
+        ];
 
-        // Transform fellows data
-        const fellowsData = orgFellows.map(fellow => {
-            const orgTenure = fellow.tenures?.find(t => t.orgCode === orgCode) || fellow.tenures?.[fellow.tenures.length - 1] || {};
-            return {
-                'Type': 'Fellow',
-                'First Name': fellow.firstName,
-                'Last Name': fellow.lastName,
-                'Email': fellow.email,
-                'Organization Code': orgTenure.orgCode || orgCode,
-                'Role': typeof orgTenure.role === 'object' ? orgTenure.role?.name : orgTenure.role || 'N/A',
-                'Preferred Roles': 'N/A',
-                'Status': fellow.status || 'N/A',
-                'Interview Status': 'N/A',
-                'Scheduled At': 'N/A',
-                'Meet Link': 'N/A',
-                'Processed By': 'N/A',
-                'Submitted At': 'N/A',
-                'Resume': 'N/A',
-                'Onboarding State': fellow.onboardingState || 'N/A',
-                'Global PID': fellow.globalPid || 'N/A',
-                'Tenure Status': orgTenure.status || 'N/A',
-                'Start Date': orgTenure.startDate ? new Date(orgTenure.startDate).toLocaleDateString() : 'N/A',
-                'End Date': orgTenure.endDate ? new Date(orgTenure.endDate).toLocaleDateString() : 'N/A'
-            };
+        // Add applicants data to Sheet 1
+        apps.forEach((app, index) => {
+            applicantsSheet.addRow({
+                srNo: index + 1,
+                firstName: app.firstName,
+                lastName: app.lastName,
+                email: app.email,
+                appliedRole: typeof app.role === 'object' ? app.role?.name : app.role,
+                appliedDate: new Date(app.submittedAt).toLocaleDateString() 
+            });
         });
 
-        // Combine both datasets
-        const allData = [...applicantsData, ...fellowsData];
+        // Style the header row for Sheet 1
+        applicantsSheet.getRow(1).font = { bold: true };
+        applicantsSheet.getRow(1).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFD3D3D3' }
+        };
+
+        // Sheet 2: Accepted Fellows
+        const fellowsSheet = workbook.addWorksheet('Accepted Fellows');
+        fellowsSheet.columns = [
+            { header: 'Sr. No.', key: 'srNo', width: 10 },
+            { header: 'First Name', key: 'firstName', width: 15 },
+            { header: 'Last Name', key: 'lastName', width: 15 },
+            { header: 'Email', key: 'email', width: 30 },
+            { header: 'Tenure Start Date', key: 'tenureStart', width: 20 },
+            { header: 'Tenure End Date', key: 'tenureEnd', width: 20 }
+        ];
+
+        // Add fellows data to Sheet 2
+        orgFellows.forEach((fellow, index) => {
+            const orgTenure = fellow.tenures?.find(t => t.orgCode === orgCode) || fellow.tenures?.[fellow.tenures.length - 1] || {};
+            fellowsSheet.addRow({
+                srNo: index + 1,
+                firstName: fellow.firstName,
+                lastName: fellow.lastName,
+                email: fellow.email,
+                tenureStart: orgTenure.startDate || 'N/A',
+                tenureEnd: orgTenure.endDate || 'N/A'
+            });
+        });
+
+        // Style the header row for Sheet 2
+        fellowsSheet.getRow(1).font = { bold: true };
+        fellowsSheet.getRow(1).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFD3D3D3' }
+        };
+
+        // Set response headers for Excel file
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename=${orgCode}_data_${new Date().toISOString().split('T')[0]}.xlsx`);
         
-        const parser = new Parser();
-        const csv = parser.parse(allData);
-        
-        res.setHeader('Content-Type', 'text/csv');
-        res.setHeader('Content-Disposition', `attachment; filename=${orgCode}_data_${new Date().toISOString().split('T')[0]}.csv`);
-        res.send(csv);
+        // Write to response
+        await workbook.xlsx.write(res);
+        res.end();
     } catch (err) {
-        console.error('Org CSV Export Error:', err);
-        res.status(500).json({ message: "Failed to export organization CSV" });
+        console.error('Org Excel Export Error:', err);
+        res.status(500).json({ message: "Failed to export organization data" });
     }
 });
 
