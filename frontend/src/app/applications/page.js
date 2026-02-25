@@ -26,6 +26,12 @@ function AdminDashboardContent() {
     const [apps, setApps] = useState([]);
     const [fellows, setFellows] = useState([]);
     const [orgs, setOrgs] = useState([]);
+
+    // map org code to display name for badge rendering
+    const getOrgName = (code) => {
+        const o = (orgs || []).find(x => x.code === code);
+        return o ? o.name : "";
+    };
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedItem, setSelectedItem] = useState(null);
@@ -197,6 +203,7 @@ function AdminDashboardContent() {
             toast.error(error.response?.data?.message || "Failed to add project");
         }
     };
+
 
     const handleQuickAddOrg = async (name, code) => {
         if (!name || !code) return toast.error("Name and Code required");
@@ -1277,12 +1284,18 @@ function AdminDashboardContent() {
                                         let counter = 0;
                                         return (
                                             <>
-                                                {upcoming.map((app, i) => { counter++; return (
+                                                {upcoming.map((app, i) => { counter++; const orgName = getOrgName(app.orgCode); return (
                                                     <div key={app._id} onClick={() => setSelectedItem(app)} className={`group px-8 py-5 border-b border-white/10 hover:bg-white/5 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === app._id ? 'bg-cyan-900/10 border-l-[6px] border-l-cyan-500' : 'border-l-[6px] border-l-transparent'}`}>
                                                         <div className="flex items-center gap-8">
                                                             <span className="text-sm font-mono text-gray-600 w-10">{String(counter).padStart(2, '0')}</span>
                                                             <div>
-                                                                <h3 className="font-bold text-xl text-white group-hover:text-cyan-400 transition-colors uppercase tracking-widest mb-1.5">{app.firstName} {app.lastName}</h3>
+                                                                <h3 className="font-bold text-xl text-white group-hover:text-cyan-400 transition-colors uppercase tracking-widest mb-1.5">
+                                                                    {app.firstName} {app.lastName}{orgName && (
+                                                                        <span className="ml-2 text-[10px] px-2 py-0.5 bg-blue-900/10 border border-blue-500/30 text-blue-400 uppercase">
+                                                                            {orgName}
+                                                                        </span>
+                                                                    )}
+                                                                </h3>
                                                                 <div className="flex gap-6 text-xs font-mono text-gray-500 items-center flex-wrap">
                                                                     <span className="text-white/60">{app.email}</span>
                                                                     <span className="inline-flex gap-2 items-center">
@@ -1292,14 +1305,21 @@ function AdminDashboardContent() {
                                                                                 : (app.data?.preferredRoles && app.data.preferredRoles.length)
                                                                                     ? app.data.preferredRoles.slice(0, 2)
                                                                                     : [(typeof app.role === 'object' ? app.role?.name : app.role)].filter(Boolean);
-                                                                            return displayRoles.map((r, idx) => (
-                                                                                <span key={idx} className="text-[10px] px-2 py-0.5 bg-cyan-900/10 border border-cyan-500/30 text-cyan-400 uppercase">
-                                                                                    {r}
-                                                                                </span>
-                                                                            ));
+                                                                            return (
+                                                                                <>
+                                                                                    {displayRoles.map((r, idx) => (
+                                                                                        <span key={idx} className="text-[10px] px-2 py-0.5 bg-cyan-900/10 border border-cyan-500/30 text-cyan-400 uppercase">
+                                                                                            {r}
+                                                                                        </span>
+                                                                                    ))}
+                                                                                </>
+                                                                            );
                                                                         })()}
                                                                     </span>
                                                                     {app.processedBy && (<span className="text-gray-400 border border-white/10 px-2 py-0.5 text-[10px] bg-white/5">AUTH: {app.processedBy}</span>)}
+                                                                    {app.interviewDetails?.status === 'NO_SHOW' && (
+                                                                        <span className="text-[9px] px-2 py-0.5 bg-red-900/10 border border-red-500/30 text-red-400 uppercase">NO-SHOW</span>
+                                                                    )}
                                                                     {app.interviewDetails?.scheduledAt && (<span className="text-orange-400 border border-orange-500/30 px-2 py-0.5 text-[10px] bg-orange-500/5 flex items-center gap-1"><Clock className="w-3 h-3" />{new Date(app.interviewDetails.scheduledAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</span>)}
                                                                 </div>
                                                             </div>
@@ -1311,14 +1331,28 @@ function AdminDashboardContent() {
                                                 {unscheduled.length > 0 && (
                                                     <div className="px-8 py-3 text-xs font-mono text-gray-500">Unscheduled / Pending interviews</div>
                                                 )}
-                                                {unscheduled.map((app) => { counter++; return (
+                                                {unscheduled.map((app) => { counter++; const orgName = getOrgName(app.orgCode); return (
                                                     <div key={app._id} onClick={() => setSelectedItem(app)} className={`group px-8 py-5 border-b border-white/10 hover:bg-white/5 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === app._id ? 'bg-cyan-900/10 border-l-[6px] border-l-cyan-500' : 'border-l-[6px] border-l-transparent'}`}>
                                                         <div className="flex items-center gap-8">
                                                             <span className="text-sm font-mono text-gray-600 w-10">{String(counter).padStart(2, '0')}</span>
                                                             <div>
-                                                                <h3 className="font-bold text-xl text-white group-hover:text-cyan-400 transition-colors uppercase tracking-widest mb-1.5">{app.firstName} {app.lastName}</h3>
+                                                                <h3 className="font-bold text-xl text-white group-hover:text-cyan-400 transition-colors uppercase tracking-widest mb-1.5">
+                                                                    {app.firstName} {app.lastName}{orgName && (
+                                                                        <span className="ml-2 text-[10px] px-2 py-0.5 bg-blue-900/10 border border-blue-500/30 text-blue-400 uppercase">
+                                                                            {orgName}
+                                                                        </span>
+                                                                    )}
+                                                                </h3>
                                                                 <div className="flex gap-6 text-xs font-mono text-gray-500 items-center flex-wrap">
                                                                     <span className="text-white/60">{app.email}</span>
+                                                                    {app.interviewDetails?.status === 'NO_SHOW' && (
+                                                                        <span className="text-[9px] px-2 py-0.5 bg-red-900/10 border border-red-500/30 text-red-400 uppercase">NO-SHOW</span>
+                                                                    )}
+                                                                    {getOrgName(app.orgCode) && (
+                                                                        <span className="text-[10px] px-2 py-0.5 bg-blue-900/10 border border-blue-500/30 text-blue-400 uppercase">
+                                                                            {getOrgName(app.orgCode)}
+                                                                        </span>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -1328,14 +1362,28 @@ function AdminDashboardContent() {
 
                                                 {past.length > 0 && <div className="border-t border-white/10 my-4" />}
 
-                                                {past.map((app, i) => { counter++; return (
+                                                {past.map((app, i) => { counter++; const orgName = getOrgName(app.orgCode); return (
                                                     <div key={app._id} onClick={() => setSelectedItem(app)} className={`group px-8 py-5 border-b border-white/10 hover:bg-white/5 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === app._id ? 'bg-cyan-900/10 border-l-[6px] border-l-cyan-500' : 'border-l-[6px] border-l-transparent'}`}>
                                                         <div className="flex items-center gap-8">
                                                             <span className="text-sm font-mono text-gray-600 w-10">{String(counter).padStart(2, '0')}</span>
                                                             <div>
-                                                                <h3 className="font-bold text-xl text-white group-hover:text-cyan-400 transition-colors uppercase tracking-widest mb-1.5">{app.firstName} {app.lastName}</h3>
+                                                                <h3 className="font-bold text-xl text-white group-hover:text-cyan-400 transition-colors uppercase tracking-widest mb-1.5">
+                                                                    {app.firstName} {app.lastName}{orgName && (
+                                                                        <span className="ml-2 text-[10px] px-2 py-0.5 bg-blue-900/10 border border-blue-500/30 text-blue-400 uppercase">
+                                                                            {orgName}
+                                                                        </span>
+                                                                    )}
+                                                                </h3>
                                                                 <div className="flex gap-6 text-xs font-mono text-gray-500 items-center flex-wrap">
                                                                     <span className="text-white/60">{app.email}</span>
+                                                                    {app.interviewDetails?.status === 'NO_SHOW' && (
+                                                                        <span className="text-[9px] px-2 py-0.5 bg-red-900/10 border border-red-500/30 text-red-400 uppercase">NO-SHOW</span>
+                                                                    )}
+                                                                    {getOrgName(app.orgCode) && (
+                                                                        <span className="text-[10px] px-2 py-0.5 bg-blue-900/10 border border-blue-500/30 text-blue-400 uppercase">
+                                                                            {getOrgName(app.orgCode)}
+                                                                        </span>
+                                                                    )}
                                                                     {app.interviewDetails?.scheduledAt && (<span className="text-orange-400 border border-orange-500/30 px-2 py-0.5 text-[10px] bg-orange-500/5 flex items-center gap-1"><Clock className="w-3 h-3" />{new Date(app.interviewDetails.scheduledAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</span>)}
                                                                 </div>
                                                             </div>
@@ -1346,47 +1394,66 @@ function AdminDashboardContent() {
                                             </>
                                         );
                                     })() : (
-                                        filteredApps.map((app, idx) => (
-                                            <div
-                                                key={app._id}
-                                                onClick={() => setSelectedItem(app)}
-                                                className={`group px-8 py-5 border-b border-white/10 hover:bg-white/5 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === app._id ? 'bg-cyan-900/10 border-l-[6px] border-l-cyan-500' : 'border-l-[6px] border-l-transparent'}`}
-                                            >
-                                        <div className="flex items-center gap-8">
-                                            <span className="text-sm font-mono text-gray-600 w-10">{String(idx + 1).padStart(2, '0')}</span>
-                                            <div>
-                                                <h3 className="font-bold text-xl text-white group-hover:text-cyan-400 transition-colors uppercase tracking-widest mb-1.5">{app.firstName} {app.lastName}</h3>
-                                                <div className="flex gap-6 text-xs font-mono text-gray-500 items-center flex-wrap">
-                                                    <span className="text-white/60">{app.email}</span>
-                                                    {(() => {
-                                                        const displayRoles = (app.preferredRoles && app.preferredRoles.length)
-                                                            ? app.preferredRoles.slice(0, 2)
-                                                            : (app.data?.preferredRoles && app.data.preferredRoles.length)
-                                                                ? app.data.preferredRoles.slice(0, 2)
-                                                                : [(typeof app.role === 'object' ? app.role?.name : app.role)].filter(Boolean);
-                                                        return displayRoles.map((r, idx) => (
-                                                            <span key={idx} className={`text-[10px] px-2 py-0.5 bg-cyan-900/10 border border-cyan-500/30 text-cyan-400 uppercase ${idx > 0 ? 'ml-2' : ''}`}>
-                                                                {r}
-                                                            </span>
-                                                        ));
-                                                    })()}
-                                                    {app.processedBy && (
-                                                        <span className="text-gray-400 border border-white/10 px-2 py-0.5 text-[10px] bg-white/5">AUTH: {app.processedBy}</span>
-                                                    )}
-                                                    {app.interviewDetails?.scheduledAt && (
-                                                        <span className="text-orange-400 border border-orange-500/30 px-2 py-0.5 text-[10px] bg-orange-500/5 flex items-center gap-1">
-                                                            <Clock className="w-3 h-3" />
-                                                            {new Date(app.interviewDetails.scheduledAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}
-                                                        </span>
-                                                    )}
+                                        filteredApps.map((app, idx) => {
+                                            const orgName = getOrgName(app.orgCode);
+                                            return (
+                                                <div
+                                                    key={app._id}
+                                                    onClick={() => setSelectedItem(app)}
+                                                    className={`group px-8 py-5 border-b border-white/10 hover:bg-white/5 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === app._id ? 'bg-cyan-900/10 border-l-[6px] border-l-cyan-500' : 'border-l-[6px] border-l-transparent'}`}
+                                                >
+                                                    <div className="flex items-center gap-8">
+                                                        <span className="text-sm font-mono text-gray-600 w-10">{String(idx + 1).padStart(2, '0')}</span>
+                                                        <div>
+                                                            <h3 className="font-bold text-xl text-white group-hover:text-cyan-400 transition-colors uppercase tracking-widest mb-1.5">
+                                                                {app.firstName} {app.lastName}{orgName && (
+                                                                    <span className="ml-2 text-[10px] px-2 py-0.5 bg-blue-900/10 border border-blue-500/30 text-blue-400 uppercase">
+                                                                        {orgName}
+                                                                    </span>
+                                                                )}
+                                                            </h3>
+                                                            <div className="flex gap-6 text-xs font-mono text-gray-500 items-center flex-wrap">
+                                                                <span className="text-white/60">{app.email}</span>
+                                                                {(() => {
+                                                                    const displayRoles = (app.preferredRoles && app.preferredRoles.length)
+                                                                        ? app.preferredRoles.slice(0, 2)
+                                                                        : (app.data?.preferredRoles && app.data?.preferredRoles.length)
+                                                                            ? app.data.preferredRoles.slice(0, 2)
+                                                                            : [(typeof app.role === 'object' ? app.role?.name : app.role)].filter(Boolean);
+                                                                    return (
+                                                                        <>
+                                                                            {displayRoles.map((r, idx) => (
+                                                                                <span key={idx} className={`text-[10px] px-2 py-0.5 bg-cyan-900/10 border border-cyan-500/30 text-cyan-400 uppercase ${idx > 0 ? 'ml-2' : ''}`}>
+                                                                                    {r}
+                                                                                </span>
+                                                                            ))}
+                                                                        </>
+                                                                    );
+                                                                })()}
+                                                                {app.processedBy && (
+                                                                    <span className="text-gray-400 border border-white/10 px-2 py-0.5 text-[10px] bg-white/5">AUTH: {app.processedBy}</span>
+                                                                )}
+                                                                {app.interviewDetails?.status === 'NO_SHOW' && (
+                                                                    <span className="text-[9px] px-2 py-0.5 bg-red-900/10 border border-red-500/30 text-red-400 uppercase">NO-SHOW</span>
+                                                                )}
+
+                                                                {app.interviewDetails?.scheduledAt && (
+                                                                    <span className="text-orange-400 border border-orange-500/30 px-2 py-0.5 text-[10px] bg-orange-500/5 flex items-center gap-1">
+                                                                        <Clock className="w-3 h-3" />
+                                                                        {new Date(app.interviewDetails.scheduledAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className={`px-4 py-1.5 border text-xs font-bold uppercase tracking-widest ${app.status === 'ACCEPTED' ? 'border-green-500/50 text-green-500 bg-green-500/5' : app.status === 'REJECTED' ? 'border-red-500/50 text-red-500 bg-red-500/5' : app.status === 'INTERVIEW_SCHEDULED' ? 'border-orange-500/50 text-orange-500 bg-orange-500/5' : 'border-yellow-500/50 text-yellow-500 bg-yellow-500/5'}`}>
+                                                        {app.status}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </div>
-                                        <div className={`px-4 py-1.5 border text-xs font-bold uppercase tracking-widest ${app.status === 'ACCEPTED' ? 'border-green-500/50 text-green-500 bg-green-500/5' : app.status === 'REJECTED' ? 'border-red-500/50 text-red-500 bg-red-500/5' : app.status === 'INTERVIEW_SCHEDULED' ? 'border-orange-500/50 text-orange-500 bg-orange-500/5' : 'border-yellow-500/50 text-yellow-500 bg-yellow-500/5'}`}>
-                                            {app.status}
-                                        </div>
-                                    </div>
-                                ))))}
+                                            );
+                                        })))
+                                    }
+
 
                                 {activeTab === 'fellows' && fellows.filter(f => f.email.toLowerCase().includes(searchTerm.toLowerCase())).map((fellow, idx) => (
                                     <div
@@ -1516,6 +1583,7 @@ function AdminDashboardContent() {
                                                     <span className="block p-2 border border-white/10">ORG: {selectedItem.orgCode}</span>
                                                     <span className="block p-2 border border-white/10 col-span-2">MAIL: {selectedItem.email}</span>
                                                 </div>
+
                                             </div>
                                         </div>
 
