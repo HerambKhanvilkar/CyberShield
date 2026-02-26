@@ -9,9 +9,17 @@ const crypto = require('crypto');
 const Otp = require('../models/Otp'); // We will use a separate Otp if we want strictly separate DB, but for now let's use the hiringDb connection or separate Otp model
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const FellowshipProfile = require('../models/FellowshipProfile');
 const RolesMaster = require('../models/RolesMaster');
 const { sendInterviewScheduledEmail, sendApplicationStatusEmail } = require('../services/emailService');
+
+// Ensure uploads/resumes directory exists
+const resumesDir = path.join(__dirname, '..', 'uploads', 'resumes');
+if (!fs.existsSync(resumesDir)) {
+    fs.mkdirSync(resumesDir, { recursive: true });
+    console.log('Created uploads/resumes directory');
+}
 
 // Multer Storage Configuration
 const storage = multer.diskStorage({
@@ -227,24 +235,167 @@ router.get('/admin/list', authenticateJWT, isAdmin, async (req, res) => {
     }
 });
 
+// 3.5 Admin: Export Applications to CSV
+router.get('/admin/export-csv', authenticateJWT, isAdmin, async (req, res) => {
+    try {
+        const { Parser } = require('json2csv');
+        const apps = await Applicant.find().sort({ submittedAt: -1 });
+        
+        // Transform data for CSV
+        const csvData = apps.map(app => ({
+            'First Name': app.firstName,
+            'Last Name': app.lastName,
+            'Email': app.email,
+            'Organization Code': app.orgCode,
+            'Role': typeof app.role === 'object' ? app.role?.name : app.role,
+            'Preferred Roles': (app.preferredRoles || []).map(r => typeof r === 'object' ? r?.name : r).join('; '),
+            'Status': app.status,
+            'Interview Status': app.interviewDetails?.status || 'N/A',
+            'Scheduled At': app.interviewDetails?.scheduledAt ? new Date(app.interviewDetails.scheduledAt).toLocaleString() : 'N/A',
+            'Meet Link': app.interviewDetails?.meetLink || 'N/A',
+            'Processed By': app.processedBy || 'N/A',
+            'Submitted At': new Date(app.submittedAt).toLocaleString(),
+            'Resume': app.resume || app.data?.resumeLink || 'N/A'
+        }));
+        
+        const parser = new Parser();
+        const csv = parser.parse(csvData);
+        
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename=applicants_${new Date().toISOString().split('T')[0]}.csv`);
+        res.send(csv);
+    } catch (err) {
+        console.error('CSV Export Error:', err);
+        res.status(500).json({ message: "Failed to export CSV" });
+    }
+});
+
+// 3.6 Admin: Export Organization Data to Excel (2 Sheets)
+router.get('/admin/export-org-csv/:orgCode', authenticateJWT, isAdmin, async (req, res) => {
+    try {
+        const ExcelJS = require('exceljs');
+        const { orgCode } = req.params;
+
+        // Get all applicants for this organization
+        const apps = await Applicant.find({ orgCode }).sort({ submittedAt: -1 });
+        
+        // Get all fellows for this organization  
+        const fellows = await FellowshipProfile.find().sort({ createdAt: -1 });
+        const orgFellows = fellows.filter(f => f.tenures?.some(t => t.orgCode === orgCode));
+
+        // Create a new workbook
+        const workbook = new ExcelJS.Workbook();
+        
+        // Sheet 1: All Applicants
+        const applicantsSheet = workbook.addWorksheet('Applicants');
+        applicantsSheet.columns = [
+            { header: 'Sr. No.', key: 'srNo', width: 10 },
+            { header: 'First Name', key: 'firstName', width: 15 },
+            { header: 'Last Name', key: 'lastName', width: 15 },
+            { header: 'Email', key: 'email', width: 30 },
+            { header: 'Applied Role', key: 'appliedRole', width: 20 },
+            { header: 'Applied Date', key: 'appliedDate', width: 20 }
+        ];
+
+        // Add applicants data to Sheet 1
+        apps.forEach((app, index) => {
+            applicantsSheet.addRow({
+                srNo: index + 1,
+                firstName: app.firstName,
+                lastName: app.lastName,
+                email: app.email,
+                appliedRole: typeof app.role === 'object' ? app.role?.name : app.role,
+                appliedDate: new Date(app.submittedAt).toLocaleDateString() 
+            });
+        });
+
+        // Style the header row for Sheet 1
+        applicantsSheet.getRow(1).font = { bold: true };
+        applicantsSheet.getRow(1).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFD3D3D3' }
+        };
+
+        // Sheet 2: Accepted Fellows
+        const fellowsSheet = workbook.addWorksheet('Accepted Fellows');
+        fellowsSheet.columns = [
+            { header: 'Sr. No.', key: 'srNo', width: 10 },
+            { header: 'First Name', key: 'firstName', width: 15 },
+            { header: 'Last Name', key: 'lastName', width: 15 },
+            { header: 'Email', key: 'email', width: 30 },
+            { header: 'Tenure Start Date', key: 'tenureStart', width: 20 },
+            { header: 'Tenure End Date', key: 'tenureEnd', width: 20 }
+        ];
+
+        // Add fellows data to Sheet 2
+        orgFellows.forEach((fellow, index) => {
+            const orgTenure = fellow.tenures?.find(t => t.orgCode === orgCode) || fellow.tenures?.[fellow.tenures.length - 1] || {};
+            fellowsSheet.addRow({
+                srNo: index + 1,
+                firstName: fellow.firstName,
+                lastName: fellow.lastName,
+                email: fellow.email,
+                tenureStart: orgTenure.startDate || 'N/A',
+                tenureEnd: orgTenure.endDate || 'N/A'
+            });
+        });
+
+        // Style the header row for Sheet 2
+        fellowsSheet.getRow(1).font = { bold: true };
+        fellowsSheet.getRow(1).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFD3D3D3' }
+        };
+
+        // Set response headers for Excel file
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename=${orgCode}_data_${new Date().toISOString().split('T')[0]}.xlsx`);
+        
+        // Write to response
+        await workbook.xlsx.write(res);
+        res.end();
+    } catch (err) {
+        console.error('Org Excel Export Error:', err);
+        res.status(500).json({ message: "Failed to export organization data" });
+    }
+});
+
 // 4. Update Status (Admin)
 router.patch('/admin/status', authenticateJWT, isAdmin, [
     check('applicantId').notEmpty(),
-    check('status').isIn(['ACCEPTED', 'REJECTED'])
+    check('status').isIn(['ACCEPTED', 'REJECTED']),
+    // assignedRole may be provided by admin when accepting; optional string
+    check('assignedRole').optional().trim().escape()
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array(), message: "Validation failed: " + errors.array().map(e => e.msg).join(", ") });
+        console.log(errors);
+        return res.status(400).json({ error: "Error occured, please provide the applicantId and status of applicant must be accepted or rejected" });
     }
 
     try {
-        const { applicantId, status, tenureEndDate } = req.body;
+        const { applicantId, status, tenureEndDate, assignedRole } = req.body;
         console.log(`[StatusUpdate] ID: ${applicantId}, Status: ${status}, tenureEndDate: ${tenureEndDate}`);
 
         const applicant = await Applicant.findById(applicantId);
         if (!applicant) {
             console.error(`[StatusUpdate] Applicant not found: ${applicantId}`);
-            return res.status(404).json({ message: "Applicant not found" });
+            return res.status(404).json({ error: "Applicant not found" });
+        }
+        // Determine role to use: prefer incoming assignedRole, else existing applicant.role
+        let roleToUse = applicant.role;
+        if (status === 'ACCEPTED') {
+            // Require a role for acceptance (either existing or assigned now)
+            if (!assignedRole && !roleToUse) {
+                return res.status(400).json({ error: "Please assign a role for applicant" });
+            }
+            if (assignedRole) {
+                // assignedRole is expected to be a string in payload
+                roleToUse = String(assignedRole).trim();
+                applicant.role = roleToUse;
+            }
         }
 
         // Logic: Cannot accept if interview pending (unless manually skipped or completed)
@@ -274,6 +425,13 @@ router.patch('/admin/status', authenticateJWT, isAdmin, [
                 const d = new Date(org.defaultTenureEndDate);
                 const pad = n => String(n).padStart(2, '0');
                 finalEndDate = `${pad(d.getDate())}${pad(d.getMonth() + 1)}${d.getFullYear()}`;
+            } else {
+                // Default to 6 months from today when no tenureEndDate or org default provided
+                const now = new Date();
+                const sixMonths = new Date(now);
+                sixMonths.setMonth(sixMonths.getMonth() + 6);
+                const pad = n => String(n).padStart(2, '0');
+                finalEndDate = `${pad(sixMonths.getDate())}${pad(sixMonths.getMonth() + 1)}${sixMonths.getFullYear()}`;
             }
         }
 
@@ -291,7 +449,7 @@ router.patch('/admin/status', authenticateJWT, isAdmin, [
                     status: 'PENDING',
                     onboardingState: 'PROFILE',
                     tenures: [{
-                        role: applicant.role,
+                        role: roleToUse || applicant.role,
                         orgCode: applicant.orgCode,
                         startDate: new Date().toLocaleDateString('en-GB').replace(/\//g, ''),
                         endDate: finalEndDate || "",
@@ -302,7 +460,7 @@ router.patch('/admin/status', authenticateJWT, isAdmin, [
             } else {
                 console.log(`[StatusUpdate] Profile exists for ${applicant.email}, adding tenure`);
                 profile.tenures.push({
-                    role: applicant.role,
+                    role: roleToUse || applicant.role,
                     orgCode: applicant.orgCode,
                     startDate: new Date().toLocaleDateString('en-GB').replace(/\//g, ''),
                     endDate: finalEndDate || "",
@@ -313,11 +471,19 @@ router.patch('/admin/status', authenticateJWT, isAdmin, [
             await profile.save();
             console.log(`[StatusUpdate] FellowshipProfile saved for ${applicant.email}`);
 
-            // Send Acceptance Email
-            await sendApplicationStatusEmail(applicant.email, 'ACCEPTED');
+            // Send Acceptance Email (non-fatal)
+            try {
+                await sendApplicationStatusEmail(applicant.email, 'ACCEPTED');
+            } catch (emailErr) {
+                console.error(`Failed to send acceptance email to ${applicant.email}:`, emailErr);
+            }
         } else if (status === 'REJECTED') {
-            // Send Rejection Email
-            await sendApplicationStatusEmail(applicant.email, 'REJECTED');
+            // Send Rejection Email (non-fatal)
+            try {
+                await sendApplicationStatusEmail(applicant.email, 'REJECTED');
+            } catch (emailErr) {
+                console.error(`Failed to send rejection email to ${applicant.email}:`, emailErr);
+            }
         }
 
         await HiringAuditLog.create({
@@ -404,8 +570,12 @@ router.put('/admin/mark-no-show', authenticateJWT, isAdmin, async (req, res) => 
 
         await applicant.save();
 
-        // Notify applicant (rejection email)
-        await sendApplicationStatusEmail(applicant.email, 'REJECTED');
+        // Notify applicant (rejection email) - don't fail on email errors
+        try {
+            await sendApplicationStatusEmail(applicant.email, 'REJECTED');
+        } catch (emailErr) {
+            console.error(`Failed to send rejection email to ${applicant.email}:`, emailErr);
+        }
 
         await HiringAuditLog.create({
             action: "INTERVIEW_NO_SHOW",
@@ -439,7 +609,7 @@ router.get('/admin/orgs', authenticateJWT, isAdmin, async (req, res) => {
 // 6. Admin: Create/Update Organization
 router.post('/admin/orgs', authenticateJWT, isAdmin, async (req, res) => {
     try {
-        const { id, name, code, emailDomainWhitelist, endDate, defaultTenureEndDate, formVar1, availableRoles, isActive } = req.body;
+        const { id, name, code, emailDomainWhitelist, endDate, defaultTenureEndDate, formVar1, availableRoles, isActive, adminPassword } = req.body;
 
         let org;
         if (id) {
@@ -476,10 +646,18 @@ router.post('/admin/orgs', authenticateJWT, isAdmin, async (req, res) => {
         org.availableRoles = normalizeToObjects(availableRoles || formVar1 || []);
         org.isActive = isActive;
 
+        // Hash and set admin password if provided
+        if (adminPassword) {
+            const bcrypt = require('bcrypt');
+            const hashedPassword = await bcrypt.hash(adminPassword, 10);
+            org.adminPassword = hashedPassword;
+        }
+
         await org.save();
         res.json(org);
     } catch (err) {
-        res.status(500).json({ message: "Server error" });
+        console.error("Org creation error:", err);
+        res.status(500).json({ message: "Server error: " + err.message });
     }
 });
 

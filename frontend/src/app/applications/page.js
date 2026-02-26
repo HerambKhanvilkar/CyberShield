@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "react-toastify";
 import { Users,Briefcase,Shield,Database,Search,Plus,ChevronRight,CheckCircle,XCircle,Clock,FileText,Award,History,Settings,ArrowLeft,ExternalLink,Mail,Calendar,Globe,Terminal,Code,Cpu,Zap,Linkedin,Github,Trophy,ArrowUpCircle,Download,Trash,MoreVertical} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { headers } from "../../../next.config";
 
 function AdminDashboardContent() {
     const sixMonthsFromNow = () => {
@@ -38,17 +39,16 @@ function AdminDashboardContent() {
     const [orgInspectorMember, setOrgInspectorMember] = useState(null); // nested member view inside org inspector
     const [actionLoading, setActionLoading] = useState(false);
     const [isEditingOrg, setIsEditingOrg] = useState(false);
-    const [orgData, setOrgData] = useState({ name: '', code: '', emailDomainWhitelist: [], endDate: sixMonthsFromNow(), defaultTenureEndDate: null, formVar1: [], availableRoles: [], isActive: true });
+    const [orgData, setOrgData] = useState({ name: '', code: '', emailDomainWhitelist: [], endDate: sixMonthsFromNow(), defaultTenureEndDate: null, formVar1: [], availableRoles: [], isActive: true, adminPassword: ''});
     const [tenureEndDate, setTenureEndDate] = useState("");
     const [availableRoles, setAvailableRoles] = useState([]);
-    const [availableProjects, setAvailableProjects] = useState([]);
     const [newRole, setNewRole] = useState("");
     const [newRoleDescription, setNewRoleDescription] = useState("");
     const [newOrgRole, setNewOrgRole] = useState("");
     const [newOrgRoleDescription, setNewOrgRoleDescription] = useState("");
     const [editingRoleDesc, setEditingRoleDesc] = useState(null);
     const [editingRoleTempDesc, setEditingRoleTempDesc] = useState("");
-    const [newProject, setNewProject] = useState("");
+    const [projectData, setProjectData] = useState([]);
 
     // Role menu + delete confirm state
     const [roleMenuOpenFor, setRoleMenuOpenFor] = useState(null); // role name
@@ -61,6 +61,10 @@ function AdminDashboardContent() {
     // Interview Schedule State
     const [showScheduleModal, setShowScheduleModal] = useState(false);
     const [scheduleData, setScheduleData] = useState({ scheduledAt: "", meetLink: "" });
+    // Assign role modal for skipping protocol
+    const [showAssignRoleModal, setShowAssignRoleModal] = useState(false);
+    const [skipModalTarget, setSkipModalTarget] = useState(null);
+    const [skipAssignedRole, setSkipAssignedRole] = useState("");
 
     // Termination State
     const [showTerminateModal, setShowTerminateModal] = useState(false);
@@ -73,11 +77,22 @@ function AdminDashboardContent() {
         firstName: '',
         lastName: '',
         role: '',
-        project: '',
         orgCode: '',
         cohort: 'C1',
         startDate: new Date().toISOString().split('T')[0]
     });
+
+    // Create Project State
+    const [showCreateProjectModal, setShowCreateProjectModal] = useState(false);
+    const [newProjectData, setNewProjectData] = useState({
+        title: '',
+        description: '',
+        supportedLinks: [],
+        contributors: [],
+        isActive: true
+    });
+    const [newLink, setNewLink] = useState({ linkName: '', url: '' });
+    const [newContributor, setNewContributor] = useState({ globalPid: '', firstName: '' });
 
     const router = useRouter();
 
@@ -94,6 +109,7 @@ function AdminDashboardContent() {
         }
         if (activeTab === 'applications' && selectedItem) return `admin:scroll:inspector:app:${selectedItem._id}`;
         if (activeTab === 'fellows' && selectedItem) return `admin:scroll:inspector:fellow:${selectedItem._id}`;
+        if (activeTab === 'projects' && selectedItem) return `admin:scroll:inspector:project:${selectedItem._id}`;
         return `admin:scroll:inspector:${activeTab}`;
     };
 
@@ -120,27 +136,56 @@ function AdminDashboardContent() {
         setLoading(true);
         try {
             const token = localStorage.getItem("accessToken");
-            if (!token) { router.push("/admin"); return; }
+            if (!token) { 
+                setLoading(false);
+                return;
+            }
             const config = { headers: { Authorization: `Bearer ${token}` } };
             const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
-            const [appsRes, fellowsRes, orgsRes, rolesRes, projectsRes] = await Promise.all([
+            const [appsRes, fellowsRes, orgsRes, rolesRes] = await Promise.all([
                 axios.get(`${serverUrl}/application/admin/list`, config),
                 axios.get(`${serverUrl}/admin/fellows`, config),
                 axios.get(`${serverUrl}/application/admin/orgs`, config),
-                axios.get(`${serverUrl}/application/admin/roles`, config),
-                axios.get(`${serverUrl}/application/admin/projects`, config)
+                axios.get(`${serverUrl}/application/admin/roles`, config)
             ]);
             setApps(appsRes.data);
             setFellows(fellowsRes.data);
             setOrgs(orgsRes.data);
             setAvailableRoles(rolesRes.data);
-            setAvailableProjects(projectsRes.data);
             // return fetched data so callers can synchronously act on fresh values
-            return { apps: appsRes.data, fellows: fellowsRes.data, orgs: orgsRes.data, roles: rolesRes.data, projects: projectsRes.data };
+            return { apps: appsRes.data, fellows: fellowsRes.data, orgs: orgsRes.data, roles: rolesRes.data };
         } catch (error) {
-            if (error.response?.status === 401) { router.push("/admin"); }
+            if (error.response?.status === 401) { 
+                localStorage.removeItem("accessToken");
+                localStorage.removeItem("user");
+                router.push("/admin"); 
+            }
             toast.error("Failed to load dashboard data");
             return null;
+        } finally { setLoading(false); }
+    };
+
+    const fetchProjects = async () =>{
+        setLoading(true);
+        try{
+            const token = localStorage.getItem("accessToken");
+            if(!token){
+                setLoading(false);
+                return;
+            }
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+            const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
+            const projects = await axios.get(`${serverUrl}/projects`, config);
+            setProjectData(projects.data);
+
+            return projects.data;
+        }catch(error){
+            if(error.response?.status === 401){
+                localStorage.removeItem("accessToken");
+                localStorage.removeItem("user");
+                router.push("/admin");
+            }
+            toast.error("Failed to load the Projects");
         } finally { setLoading(false); }
     };
 
@@ -187,21 +232,45 @@ function AdminDashboardContent() {
         }
     };
 
-    const handleAddProject = async () => {
-        if (!newProject.trim()) return;
+    const handleCreateProject = async () => {
+        if (!newProjectData.title || !newProjectData.description) {
+            toast.error("Title and Description are required");
+            return;
+        }
+        setActionLoading(true);
         try {
             const token = localStorage.getItem("accessToken");
             const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
-            await axios.post(`${serverUrl}/application/admin/projects`,
-                { name: newProject },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            toast.success(`Project "${newProject}" added!`);
-            setNewProject("");
-            fetchData();
+            await axios.post(`${serverUrl}/project`, newProjectData, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            toast.success("Project Created Successfully");
+            setShowCreateProjectModal(false);
+            setNewProjectData({
+                title: '',
+                description: '',
+                supportedLinks: [],
+                contributors: [],
+                isActive: true
+            });
+            fetchProjects();
         } catch (error) {
-            toast.error(error.response?.data?.message || "Failed to add project");
+            toast.error(error.response?.data?.message || "Failed to create project");
+        } finally {
+            setActionLoading(false);
         }
+    };
+
+    const handleAddLink = () => {
+        if (!newLink.linkName || !newLink.url) {
+            toast.error("Link name and URL are required");
+            return;
+        }
+        setNewProjectData({
+            ...newProjectData,
+            supportedLinks: [...newProjectData.supportedLinks, { ...newLink }]
+        });
+        setNewLink({ linkName: '', url: '' });
     };
 
 
@@ -211,7 +280,7 @@ function AdminDashboardContent() {
             const token = localStorage.getItem("accessToken");
             const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
             await axios.post(`${serverUrl}/application/admin/orgs`,
-                { name, code, isActive: false, emailDomainWhitelist: [], defaultTenureEndDate: 0, formVar1: [], availableRoles: [] },
+                { name, code, isActive: false, emailDomainWhitelist: [], defaultTenureEndDate: 0, formVar1: [], availableRoles: [], adminPassword},
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             toast.success(`Node "${code}" initialized (Offline)`);
@@ -563,7 +632,19 @@ function AdminDashboardContent() {
         setEditingRoleTempDesc('');
     };
 
-    useEffect(() => { fetchData(); }, []);
+    // Check authentication before loading data
+    useEffect(() => {
+        const token = localStorage.getItem("accessToken");
+        const user = JSON.parse(localStorage.getItem("user") || "null");
+        
+        if (!token || !user || !user.isAdmin) {
+            router.push("/admin");
+            return;
+        }
+        
+        fetchData();
+        fetchProjects();
+    }, []);
 
     const handleUpdateAppStatus = async (status) => {
         setActionLoading(true);
@@ -572,10 +653,18 @@ function AdminDashboardContent() {
             const target = orgInspectorMember || selectedItem;
             if (!target || !target._id) { toast.error('No applicant selected'); setActionLoading(false); return; }
 
+            // If accepting, ensure assignedRole is present
+            if (status === 'ACCEPTED' && !(target.assignedRole || '').trim()) {
+                toast.error('Assigned role is required before accepting');
+                setActionLoading(false);
+                return;
+            }
+
             await axios.patch(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/application/admin/status`, {
                 applicantId: target._id,
                 status,
-                tenureEndDate: status === 'ACCEPTED' ? tenureEndDate : undefined
+                tenureEndDate: status === 'ACCEPTED' ? tenureEndDate : undefined,
+                assignedRole: status === 'ACCEPTED' ? (target.assignedRole || '').trim() : undefined
             }, { headers: { Authorization: `Bearer ${token}` } });
 
             toast.success(`Applicant ${status}`);
@@ -647,21 +736,43 @@ function AdminDashboardContent() {
     };
 
     const handleSkipInterview = async () => {
+        const target = (orgInspectorMember && (orgInspectorMember.status || orgInspectorMember.interviewDetails)) ? orgInspectorMember : selectedItem;
+        if (!target || !target._id) { toast.error('No applicant selected'); return; }
+
+        // prepare default selection
+        const defaultRole = (() => {
+            if (target.role) return typeof target.role === 'string' ? target.role : (target.role.name || '');
+            if (Array.isArray(target.preferredRoles) && target.preferredRoles.length) return typeof target.preferredRoles[0] === 'string' ? target.preferredRoles[0] : (target.preferredRoles[0]?.name || '');
+            return '';
+        })();
+
+        setSkipAssignedRole(target.assignedRole || defaultRole || '');
+        setSkipModalTarget(target);
+        setShowAssignRoleModal(true);
+    };
+
+    const confirmSkipInterview = async () => {
+        if (!skipModalTarget || !skipModalTarget._id) return toast.error('No applicant selected');
+        const assignedRole = (skipAssignedRole || '').trim();
+        if (!assignedRole) return toast.error('Assigned role is required to skip protocol');
         if (!window.confirm("Are you sure you want to skip the interview step?")) return;
+
         setActionLoading(true);
         try {
             const token = localStorage.getItem("accessToken");
-            const target = (orgInspectorMember && (orgInspectorMember.status || orgInspectorMember.interviewDetails)) ? orgInspectorMember : selectedItem;
-            if (!target || !target._id) { toast.error('No applicant selected'); setActionLoading(false); return; }
-
             await axios.put(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/application/admin/skip-interview`, {
-                applicantId: target._id
+                applicantId: skipModalTarget._id
             }, { headers: { Authorization: `Bearer ${token}` } });
 
             toast.success("Interview Step Skipped");
             const fresh = await fetchData();
-            const updated = (fresh?.apps || []).find(a => a._id === target._id) || { ...target, status: 'INTERVIEW_SKIPPED', interviewDetails: { ...target.interviewDetails, status: 'SKIPPED' } };
-            if (target === orgInspectorMember) setOrgInspectorMember(updated); else setSelectedItem(updated);
+            const updated = (fresh?.apps || []).find(a => a._id === skipModalTarget._id) || { ...skipModalTarget, status: 'INTERVIEW_SKIPPED', interviewDetails: { ...skipModalTarget.interviewDetails, status: 'SKIPPED' } };
+
+            // Persist assignedRole locally so Accept requires it and includes it in status update
+            updated.assignedRole = assignedRole;
+            if (skipModalTarget === orgInspectorMember) setOrgInspectorMember(updated); else setSelectedItem(updated);
+            setShowAssignRoleModal(false);
+            setSkipModalTarget(null);
         } catch (error) {
             toast.error("Failed to skip interview");
         } finally {
@@ -691,6 +802,60 @@ function AdminDashboardContent() {
             toast.error("Failed to mark no-show");
         } finally {
             setActionLoading(false);
+        }
+    };
+
+    const handleExportCSV = async () => {
+        try {
+            const token = localStorage.getItem("accessToken");
+            const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
+            
+            const response = await axios.get(`${serverUrl}/application/admin/export-csv`, {
+                headers: { Authorization: `Bearer ${token}` },
+                responseType: 'blob'
+            });
+            
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            const filename = `applicants_${new Date().toISOString().split('T')[0]}.csv`;
+            link.setAttribute('download', filename);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+            
+            toast.success('CSV exported successfully');
+        } catch (error) {
+            console.error('Export error:', error);
+            toast.error('Failed to export CSV');
+        }
+    };
+
+    const handleExportOrgCSV = async (orgCode) => {
+        try {
+            const token = localStorage.getItem("accessToken");
+            const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
+            
+            const response = await axios.get(`${serverUrl}/application/admin/export-org-csv/${orgCode}`, {
+                headers: { Authorization: `Bearer ${token}` },
+                responseType: 'blob'
+            });
+            
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            const filename = `${orgCode}_data_${new Date().toISOString().split('T')[0]}.csv`;
+            link.setAttribute('download', filename);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+            
+            toast.success(`${orgCode} data exported successfully`);
+        } catch (error) {
+            console.error('Org export error:', error);
+            toast.error('Failed to export organization data');
         }
     };
 
@@ -961,9 +1126,16 @@ function AdminDashboardContent() {
                     </div>
                     <div className="flex-1 space-y-2">
                         <h2 className="text-3xl font-bold uppercase tracking-tight text-white">{selectedItem.name}</h2>
-                        <div className="text-xs font-mono text-gray-400 grid grid-cols-2 gap-2">
+                        <div className="text-xs font-mono text-gray-400 grid grid-cols-3 gap-2">
                             <span className="block p-2 border border-white/10">CODE: {selectedItem.code}</span>
                             <span className={`block p-2 border border-white/10 ${selectedItem.isActive ? 'text-green-500' : 'text-red-500'}`}>{selectedItem.isActive ? 'ACTIVE' : 'INACTIVE'}</span>
+                            <button
+                                onClick={() => handleExportOrgCSV(selectedItem.code)}
+                                className="p-2 border border-cyan-500/50 text-cyan-500 hover:bg-cyan-500 hover:text-black flex items-center justify-center gap-2 transition-all text-[10px] font-bold uppercase tracking-widest"
+                                title="Download organization data as CSV"
+                            >
+                                <Download className="w-3.5 h-3.5" /> CSV
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1164,7 +1336,8 @@ function AdminDashboardContent() {
                         {[
                             { id: 'applications', icon: <FileText className="w-6 h-6" />, label: 'REQ' },
                             { id: 'fellows', icon: <Users className="w-6 h-6" />, label: 'OPS' },
-                            { id: 'orgs', icon: <Globe className="w-6 h-6" />, label: 'NET' }
+                            { id: 'orgs', icon: <Globe className="w-6 h-6" />, label: 'NET' },
+                            { id: 'projects', icon: <Code className="w-6 h-6" />, label: 'PRJ' }
                         ].map(t => (
                             <button
                                 key={t.id}
@@ -1180,7 +1353,7 @@ function AdminDashboardContent() {
                     </nav>
 
                     <div className="flex-1" />
-                    <button onClick={fetchData} className="w-10 h-10 md:w-12 md:h-12 border border-white/10 hover:border-cyan-500 hover:text-cyan-500 transition-colors flex items-center justify-center">
+                    <button onClick={() => { fetchData(); fetchProjects(); }} className="w-10 h-10 md:w-12 md:h-12 border border-white/10 hover:border-cyan-500 hover:text-cyan-500 transition-colors flex items-center justify-center">
                         <History className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
                     </button>
                     <div className="h-2 md:h-4" />
@@ -1202,8 +1375,8 @@ function AdminDashboardContent() {
                             </span>
                         </div>
 
-                        <div className="flex items-center gap-2 md:gap-4 w-full md:w-96">
-                            <div className="relative w-full group">
+                        <div className="flex items-center gap-2 md:gap-4 w-full md:w-auto">
+                            <div className="relative flex-1 md:w-96 group">
                                 <Search className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-cyan-500" />
                                 <input
                                     type="text"
@@ -1213,8 +1386,17 @@ function AdminDashboardContent() {
                                     className="w-full h-10 bg-black border border-white/20 pl-9 md:pl-11 pr-4 text-sm focus:border-cyan-500 focus:outline-none transition-all placeholder:text-gray-700 font-mono text-cyan-100 uppercase"
                                 />
                             </div>
+                            {activeTab === 'applications' && (
+                                <button
+                                    onClick={handleExportCSV}
+                                    className="h-10 px-3 md:px-4 border border-green-500/50 text-green-500 hover:bg-green-500 hover:text-black flex items-center gap-2 transition-all text-[10px] font-bold uppercase tracking-widest whitespace-nowrap"
+                                    title="Export applicants to CSV"
+                                >
+                                    <Download className="w-4 h-4" /> <span className="hidden md:inline">CSV</span>
+                                </button>
+                            )}
                             {activeTab === 'orgs' && (
-                                <button onClick={() => { setOrgData({ name: '', code: '', emailDomainWhitelist: [], endDate: sixMonthsFromNow(), defaultTenureEndDate: null, formVar1: [], availableRoles: [], isActive: true }); setIsEditingOrg(true); }} className="h-10 w-10 border border-white/20 hover:border-cyan-500 hover:text-cyan-500 flex items-center justify-center transition-colors">
+                                <button onClick={() => { setOrgData({ name: '', code: '', emailDomainWhitelist: [], endDate: sixMonthsFromNow(), defaultTenureEndDate: null, formVar1: [], availableRoles: [], isActive: true, adminPassword: '' }); setIsEditingOrg(true); }} className="h-10 w-10 border border-white/20 hover:border-cyan-500 hover:text-cyan-500 flex items-center justify-center transition-colors">
                                     <Plus className="w-5 h-5" />
                                 </button>
                             )}
@@ -1227,6 +1409,23 @@ function AdminDashboardContent() {
                                     className="h-10 px-4 border border-purple-500/50 text-purple-500 hover:bg-purple-500 hover:text-white flex items-center gap-2 transition-all text-[10px] font-bold uppercase tracking-widest whitespace-nowrap"
                                 >
                                     <Plus className="w-4 h-4" /> MANUAL_ONBOARD
+                                </button>
+                            )}
+                            {activeTab === 'projects' && (
+                                <button
+                                    onClick={() => {
+                                        setNewProjectData({
+                                            title: '',
+                                            description: '',
+                                            supportedLinks: [],
+                                            contributors: [],
+                                            isActive: true
+                                        });
+                                        setShowCreateProjectModal(true);
+                                    }}
+                                    className="h-10 px-4 border border-orange-500/50 text-orange-500 hover:bg-orange-500 hover:text-white flex items-center gap-2 transition-all text-[10px] font-bold uppercase tracking-widest whitespace-nowrap"
+                                >
+                                    <Plus className="w-4 h-4" /> NEW_PROJECT
                                 </button>
                             )}
                         </div>
@@ -1531,7 +1730,8 @@ function AdminDashboardContent() {
                                                         defaultTenureEndDate: org.defaultTenureEndDate ? new Date(org.defaultTenureEndDate).getTime() : 0,
                                                         formVar1: availObjects.map(r => r.name),
                                                         availableRoles: availObjects,
-                                                        isActive: org.isActive
+                                                        isActive: org.isActive,
+                                                        adminPassword: org.adminPassword || ''
                                                     });
                                                     setIsEditingOrg(true);
                                                 }}
@@ -1543,6 +1743,36 @@ function AdminDashboardContent() {
                                             <div className={`px-4 py-1.5 border text-xs font-bold uppercase tracking-widest ${org.isActive ? 'border-green-500/50 text-green-500' : 'border-red-500/50 text-red-500'}`}>
                                                 {org.isActive ? 'ONLINE' : 'OFFLINE'}
                                             </div>
+                                        </div>
+                                    </div>
+                                ))}
+
+                                {activeTab === 'projects' && projectData.filter(p => 
+                                    p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                    p.description.toLowerCase().includes(searchTerm.toLowerCase())
+                                ).map((project, idx) => (
+                                    <div
+                                        key={project._id}
+                                        onClick={() => setSelectedItem(project)}
+                                        className={`group px-8 py-6 border-b border-white/10 hover:bg-white/5 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === project._id ? 'bg-orange-900/10 border-l-[6px] border-l-orange-500' : 'border-l-[6px] border-l-transparent'}`}
+                                    >
+                                        <div className="flex items-center gap-8">
+                                            <span className="text-sm font-mono text-gray-600 w-10">{String(idx + 1).padStart(2, '0')}</span>
+                                            <div>
+                                                <h3 className="font-bold text-2xl text-white group-hover:text-orange-400 transition-colors uppercase tracking-tighter mb-2">{project.title}</h3>
+                                                <div className="flex gap-4 text-xs font-mono text-gray-500 items-center">
+                                                    <span className="text-orange-500 border border-orange-500/20 bg-orange-500/5 px-2 py-0.5 rounded-none flex items-center gap-1">
+                                                        <Users className="w-3 h-3" /> {project.contributors?.length || 0}
+                                                    </span>
+                                                    <span className="text-xs flex items-center gap-1">
+                                                        <ExternalLink className="w-3 h-3" /> {project.supportedLinks?.length || 0} LINKS
+                                                    </span>
+                                                    <span className="text-xs truncate max-w-[300px]">{project.description}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className={`px-4 py-1.5 border text-xs font-bold uppercase tracking-widest ${project.isActive ? 'border-orange-500/50 text-orange-500' : 'border-red-500/50 text-red-500'}`}>
+                                            {project.isActive ? 'ACTIVE' : 'INACTIVE'}
                                         </div>
                                     </div>
                                 ))}
@@ -1563,14 +1793,84 @@ function AdminDashboardContent() {
                         >
                             <div className="h-20 flex items-center justify-between px-10 border-b border-white/10 bg-black/50 backdrop-blur-md">
                                 <h3 className="font-mono text-sm text-white uppercase tracking-[0.2em] flex items-center gap-3">
-                                    <div className={`w-2 h-2 ${activeTab === 'fellows' ? 'bg-purple-500' : activeTab === 'orgs' ? 'bg-green-500' : 'bg-cyan-500'} animate-pulse`} />
+                                    <div className={`w-2 h-2 ${activeTab === 'fellows' ? 'bg-purple-500' : activeTab === 'orgs' ? 'bg-green-500' : activeTab === 'projects' ? 'bg-orange-500' : 'bg-cyan-500'} animate-pulse`} />
                                     DATA_INSPECTOR
                                 </h3>
                                 <button onClick={() => { setSelectedItem(null); setOrgInspectorMember(null); }} className="hover:text-white text-gray-600 transition-colors"><XCircle className="w-6 h-6" /></button>
                             </div>
 
                             <div ref={inspectorRef} onScroll={saveInspectorScroll} className="flex-1 min-h-0 overflow-y-auto p-10 custom-scrollbar space-y-10">
-                                {activeTab === 'orgs' ? renderOrgInspector() : (
+                                {activeTab === 'orgs' ? renderOrgInspector() : activeTab === 'projects' ? (
+                                    <>
+                                        <div className="flex items-start gap-8 border-b border-white/10 pb-4">
+                                            <div className="w-24 h-24 border border-orange-500/30 flex items-center justify-center text-4xl font-bold bg-orange-500/5 text-orange-500">
+                                                <Code className="w-12 h-12" />
+                                            </div>
+                                            <div className="flex-1 space-y-3">
+                                                <h2 className="text-3xl font-bold uppercase tracking-tight text-white">{selectedItem.title}</h2>
+                                                <div className="text-xs font-mono text-gray-500 grid grid-cols-2 gap-3">
+                                                    <span className="block p-2 border border-white/10">ID: {selectedItem._id}</span>
+                                                    <span className="block p-2 border border-white/10">STATUS: {selectedItem.isActive ? 'ACTIVE' : 'INACTIVE'}</span>
+                                                    <span className="block p-2 border border-white/10 col-span-2">CREATED: {new Date(selectedItem.createdAt).toLocaleDateString()}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-8">
+                                            <div className="p-8 border border-white/10 bg-white/[0.02] space-y-6">
+                                                <h4 className="text-xs font-bold text-orange-500 uppercase tracking-widest border-b border-orange-900/30 pb-3">Project_Details</h4>
+                                                
+                                                <div className="space-y-4">
+                                                    <div className="space-y-2">
+                                                        <div className="text-[10px] text-gray-500 uppercase font-mono tracking-widest">Description</div>
+                                                        <div className="p-4 bg-black/40 border border-white/5 text-xs text-gray-400 font-mono leading-relaxed">
+                                                            {selectedItem.description || "NO_DESCRIPTION"}
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="space-y-2">
+                                                        <div className="text-[10px] text-gray-500 uppercase font-mono tracking-widest">Contributors ({selectedItem.contributors?.length || 0})</div>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {(selectedItem.contributors || []).map((contributor, idx) => (
+                                                                <span key={idx} className="px-3 py-1.5 bg-orange-900/20 border border-orange-500/30 text-orange-400 text-[10px] font-bold uppercase tracking-wider flex items-center gap-2">
+                                                                    <Users className="w-3 h-3" />
+                                                                    {contributor.firstName} ({contributor.globalPid})
+                                                                </span>
+                                                            ))}
+                                                            {(!selectedItem.contributors || selectedItem.contributors.length === 0) && (
+                                                                <span className="px-2 py-1 border border-white/10 text-gray-600 text-[9px] uppercase">NO_CONTRIBUTORS</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="space-y-2">
+                                                        <div className="text-[10px] text-gray-500 uppercase font-mono tracking-widest">Links ({selectedItem.supportedLinks?.length || 0})</div>
+                                                        <div className="space-y-2">
+                                                            {(selectedItem.supportedLinks || []).map((link, idx) => (
+                                                                <a
+                                                                    key={idx}
+                                                                    href={link.url}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="flex items-center justify-between p-3 bg-black/40 border border-white/5 hover:border-orange-500/30 transition-all group"
+                                                                >
+                                                                    <span className="text-[10px] font-mono text-gray-400 uppercase">{link.linkName}</span>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="text-[9px] text-orange-500 font-mono truncate max-w-[200px]">{link.url}</span>
+                                                                        <ExternalLink className="w-3 h-3 text-orange-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                                    </div>
+                                                                </a>
+                                                            ))}
+                                                            {(!selectedItem.supportedLinks || selectedItem.supportedLinks.length === 0) && (
+                                                                <span className="px-2 py-1 border border-white/10 text-gray-600 text-[9px] uppercase block">NO_LINKS_AVAILABLE</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </>
+                                ) : (
                                     <>
                                         <div className="flex items-start gap-8 border-b border-white/10 pb-4">
                                             <div className={`w-24 h-24 border border-white/20 flex items-center justify-center text-4xl font-bold bg-white/5 ${activeTab === 'fellows' ? 'text-purple-500' : 'text-cyan-500'}`}>
@@ -1743,6 +2043,42 @@ function AdminDashboardContent() {
                                                                 </motion.div>
                                                             )}
 
+                                                            {showAssignRoleModal && (
+                                                                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="border border-yellow-500/30 bg-black p-4 space-y-4">
+                                                                    <h5 className="text-xs font-bold text-yellow-400 uppercase">Assign Role (required before Accept)</h5>
+                                                                    <div className="text-xs text-gray-400">Choose one of: Applied role, Organization roles, or Global roles</div>
+                                                                    <div>
+                                                                        <select value={skipAssignedRole} onChange={e => setSkipAssignedRole(e.target.value)} className="w-full bg-black border border-white/20 h-10 text-xs font-mono text-white px-2">
+                                                                            {(() => {
+                                                                                const t = skipModalTarget || {};
+                                                                                const defaultRole = t.role ? (typeof t.role === 'string' ? t.role : (t.role.name || '')) : (Array.isArray(t.preferredRoles) && t.preferredRoles.length ? (typeof t.preferredRoles[0] === 'string' ? t.preferredRoles[0] : (t.preferredRoles[0]?.name || '')) : '');
+                                                                                const orgObj = (t.orgCode && Array.isArray(orgs) ? orgs.find(o => o.code === t.orgCode) : null) || (t.code && Array.isArray(orgs) ? orgs.find(o => o.code === t.code) : null);
+                                                                                const orgRoles = orgObj ? (orgObj.formVars?.roles ? orgObj.formVars.roles.map(r => r.name) : (Array.isArray(orgObj.formVar1) ? orgObj.formVar1 : [])) : [];
+                                                                                const globalRoles = (availableRoles || []).map(r => (typeof r === 'string' ? r : (r.name || ''))).filter(Boolean);
+
+                                                                                return (
+                                                                                    <>
+                                                                                        <optgroup label="Applied Role">
+                                                                                            <option value={defaultRole}>{defaultRole || '—'}</option>
+                                                                                        </optgroup>
+                                                                                        <optgroup label="Organization Roles">
+                                                                                            {orgRoles.length ? orgRoles.map((r, i) => <option key={`org-${i}`} value={r}>{r}</option>) : <option value="">-- none --</option>}
+                                                                                        </optgroup>
+                                                                                        <optgroup label="Global Roles">
+                                                                                            {globalRoles.length ? globalRoles.map((r, i) => <option key={`glob-${i}`} value={r}>{r}</option>) : <option value="">-- none --</option>}
+                                                                                        </optgroup>
+                                                                                    </>
+                                                                                );
+                                                                            })()}
+                                                                        </select>
+                                                                    </div>
+                                                                    <div className="flex gap-2">
+                                                                        <button onClick={() => { setShowAssignRoleModal(false); setSkipModalTarget(null); }} className="flex-1 py-2 border border-red-500/50 text-red-500 hover:bg-red-500/10 text-[10px] font-bold uppercase">CANCEL</button>
+                                                                        <button onClick={confirmSkipInterview} className="flex-1 py-2 bg-yellow-400 text-black font-bold text-[10px] uppercase hover:bg-yellow-300">CONFIRM SKIP</button>
+                                                                    </div>
+                                                                </motion.div>
+                                                            )}
+
                                                             <div className="h-px bg-white/10 my-4" />
 
                                                             {/* <label className="text-xs font-mono text-gray-500 uppercase tracking-wider">Tenure Termination Code</label>
@@ -1762,8 +2098,11 @@ function AdminDashboardContent() {
                                                     {selectedItem.status !== 'REJECTED' && (
                                                         <button
                                                             onClick={() => handleUpdateAppStatus('ACCEPTED')}
-                                                            disabled={selectedItem.status === 'PENDING' && (!selectedItem.interviewDetails?.status || selectedItem.interviewDetails?.status === 'PENDING') && selectedItem.status !== 'INTERVIEW_SKIPPED'}
-                                                            className={`h-14 border transition-all text-sm font-bold uppercase tracking-[0.2em] ${selectedItem.status === 'PENDING' && (!selectedItem.interviewDetails?.status || selectedItem.interviewDetails?.status === 'PENDING') && selectedItem.status !== 'INTERVIEW_SKIPPED' ? 'border-gray-800 text-gray-700 cursor-not-allowed bg-transparent' : 'bg-cyan-700/20 border-cyan-500/50 text-cyan-400 hover:bg-cyan-500 hover:text-black'}`}
+                                                            disabled={
+                                                                (selectedItem.status === 'PENDING' && (!selectedItem.interviewDetails?.status || selectedItem.interviewDetails?.status === 'PENDING') && selectedItem.status !== 'INTERVIEW_SKIPPED')
+                                                                || !(selectedItem.assignedRole && String(selectedItem.assignedRole).trim())
+                                                            }
+                                                            className={`h-14 border transition-all text-sm font-bold uppercase tracking-[0.2em] ${((selectedItem.status === 'PENDING' && (!selectedItem.interviewDetails?.status || selectedItem.interviewDetails?.status === 'PENDING') && selectedItem.status !== 'INTERVIEW_SKIPPED') || !(selectedItem.assignedRole && String(selectedItem.assignedRole).trim())) ? 'border-gray-800 text-gray-700 cursor-not-allowed bg-transparent' : 'bg-cyan-700/20 border-cyan-500/50 text-cyan-400 hover:bg-cyan-500 hover:text-black'}`}
                                                         >
                                                             ACCEPT
                                                         </button>
@@ -1937,6 +2276,10 @@ function AdminDashboardContent() {
                                             <div className="space-y-2">
                                                 <label className="text-[10px] uppercase font-mono text-gray-500">Access_Code</label>
                                                 <Input value={orgData.code} onChange={e => setOrgData({ ...orgData, code: e.target.value.toUpperCase() })} className="bg-black border-white/20 h-10 text-xs font-mono text-green-500 focus:border-green-500" placeholder="UNIQUE_CODE" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] uppercase font-mono text-gray-500">Node_Login_Pass</label>
+                                                <Input value={orgData.adminPassword} onChange={e => setOrgData({ ...orgData, adminPassword: e.target.value })} className="bg-black border-white/20 h-10 text-xs font-mono text-green-500 focus:border-green-500" placeholder="LOGIN_PASS" />
                                             </div>
                                         </div>
 
@@ -2221,37 +2564,13 @@ function AdminDashboardContent() {
 
                                         <div className="space-y-1.5 pt-2 border-t border-white/5 col-span-2">
                                             <div className="flex justify-between items-center mb-1">
-                                                <label className="text-[10px] uppercase font-bold text-cyan-500 tracking-widest">Primary Project</label>
-                                                <div className="flex gap-2">
-                                                    <input
-                                                        type="text"
-                                                        placeholder="NEW_PROJECT..."
-                                                        className="bg-black border-b border-white/20 text-[10px] w-28 outline-none focus:border-cyan-500 px-1 text-white"
-                                                        value={newProject}
-                                                        onChange={e => setNewProject(e.target.value)}
-                                                        onKeyPress={e => e.key === 'Enter' && handleAddProject()}
-                                                    />
-                                                    <button onClick={handleAddProject} className="text-[10px] text-cyan-400 hover:text-white uppercase font-bold">Add</button>
-                                                </div>
-                                            </div>
-                                            <select
-                                                value={manualFellowData.project}
-                                                onChange={e => setManualFellowData({ ...manualFellowData, project: e.target.value })}
-                                                className="w-full bg-black border border-white/10 h-10 text-xs font-mono text-white focus:border-cyan-500 outline-none px-3"
-                                            >
-                                                <option value="">SELECT_PROJECT</option>
-                                                {availableProjects.map(p => <option key={p.name} value={p.name}>{p.name}</option>)}
-                                            </select>
-                                        </div>
-
-                                        <div className="space-y-1.5 pt-2 border-t border-white/5 col-span-2">
-                                            <div className="flex justify-between items-center mb-1">
                                                 <label className="text-[10px] uppercase font-bold text-green-500 tracking-widest">Assigned Node Code</label>
                                                 <button
                                                     onClick={() => {
                                                         const name = prompt("Enter Node Name:");
                                                         const code = prompt("Enter Node Code:");
-                                                        if (name && code) handleQuickAddOrg(name, code);
+                                                        const password = prompt("Enter Password For Node Login")
+                                                        if (name && code && password) handleQuickAddOrg(name, code, password);
                                                     }}
                                                     className="text-[10px] text-green-400 hover:text-white uppercase font-bold"
                                                 >
@@ -2289,6 +2608,170 @@ function AdminDashboardContent() {
                                         className="w-full h-12 bg-purple-900/20 border border-purple-500/50 text-purple-500 hover:bg-purple-500 hover:text-black font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 text-xs mt-4"
                                     >
                                         {actionLoading ? 'COMMITTING...' : 'INITIALIZE_TENURE'}
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
+
+                {/* Create Project Modal */}
+                <AnimatePresence>
+                    {showCreateProjectModal && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                className="w-full max-w-[700px] bg-black border border-orange-500/30 shadow-[0_0_50px_rgba(249,115,22,0.1)] rounded-2xl overflow-hidden"
+                            >
+                                <div className="h-14 flex items-center justify-between px-6 border-b border-white/10 bg-orange-500/5">
+                                    <h3 className="text-sm font-bold text-orange-400 uppercase tracking-widest flex items-center gap-2">
+                                        <Code className="w-4 h-4" /> CREATE NEW PROJECT
+                                    </h3>
+                                    <button onClick={() => setShowCreateProjectModal(false)} className="text-gray-500 hover:text-white transition-colors">
+                                        <XCircle className="w-5 h-5" />
+                                    </button>
+                                </div>
+
+                                <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
+                                    {/* Basic Info */}
+                                    <div className="space-y-4">
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Project Title *</label>
+                                            <Input 
+                                                value={newProjectData.title} 
+                                                onChange={e => setNewProjectData({ ...newProjectData, title: e.target.value })} 
+                                                className="bg-black border-white/10 h-10 text-xs font-mono text-white focus:border-orange-500" 
+                                                placeholder="PROJECT_NAME"
+                                            />
+                                        </div>
+                                        
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Description *</label>
+                                            <textarea 
+                                                value={newProjectData.description} 
+                                                onChange={e => setNewProjectData({ ...newProjectData, description: e.target.value })} 
+                                                className="w-full bg-black border border-white/10 p-3 text-xs font-mono text-white focus:border-orange-500 outline-none min-h-[80px] custom-scrollbar"
+                                                placeholder="PROJECT_DESCRIPTION..."
+                                            />
+                                        </div>
+
+                                        <div className="flex items-center gap-3">
+                                            <input 
+                                                type="checkbox" 
+                                                id="isActive"
+                                                checked={newProjectData.isActive}
+                                                onChange={e => setNewProjectData({ ...newProjectData, isActive: e.target.checked })}
+                                                className="w-4 h-4 accent-orange-500"
+                                            />
+                                            <label htmlFor="isActive" className="text-xs text-gray-400 cursor-pointer">ACTIVE_PROJECT</label>
+                                        </div>
+                                    </div>
+
+                                    {/* Links Section */}
+                                    <div className="pt-4 border-t border-white/5 space-y-3">
+                                        <label className="text-[10px] uppercase font-bold text-orange-500 tracking-widest">Supported Links</label>
+                                        
+                                        {/* Added Links */}
+                                        {newProjectData.supportedLinks.length > 0 && (
+                                            <div className="space-y-2 mb-3">
+                                                {newProjectData.supportedLinks.map((link, idx) => (
+                                                    <div key={idx} className="flex items-center gap-2 p-2 bg-orange-900/10 border border-orange-500/20">
+                                                        <ExternalLink className="w-3 h-3 text-orange-500" />
+                                                        <div className="flex-1 text-[10px] font-mono">
+                                                            <div className="text-orange-400">{link.linkName}</div>
+                                                            <div className="text-gray-500 truncate">{link.url}</div>
+                                                        </div>
+                                                        <button 
+                                                            onClick={() => handleRemoveLink(idx)}
+                                                            className="text-red-500 hover:text-red-400 p-1"
+                                                        >
+                                                            <XCircle className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {/* Add Link Form */}
+                                        <div className="flex gap-2">
+                                            <Input 
+                                                value={newLink.linkName} 
+                                                onChange={e => setNewLink({ ...newLink, linkName: e.target.value })} 
+                                                className="bg-black border-white/10 h-9 text-xs font-mono text-white focus:border-orange-500 flex-1"
+                                                placeholder="Link Name"
+                                            />
+                                            <Input 
+                                                value={newLink.url} 
+                                                onChange={e => setNewLink({ ...newLink, url: e.target.value })} 
+                                                className="bg-black border-white/10 h-9 text-xs font-mono text-white focus:border-orange-500 flex-1"
+                                                placeholder="https://..."
+                                            />
+                                            <button 
+                                                onClick={handleAddLink}
+                                                className="px-3 h-9 bg-orange-900/20 border border-orange-500/50 text-orange-500 hover:bg-orange-500/10 text-[10px] font-bold uppercase"
+                                            >
+                                                <Plus className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Contributors Section */}
+                                    <div className="pt-4 border-t border-white/5 space-y-3">
+                                        <label className="text-[10px] uppercase font-bold text-orange-500 tracking-widest">Contributors</label>
+                                        
+                                        {/* Added Contributors */}
+                                        {newProjectData.contributors.length > 0 && (
+                                            <div className="space-y-2 mb-3">
+                                                {newProjectData.contributors.map((contributor, idx) => (
+                                                    <div key={idx} className="flex items-center gap-2 p-2 bg-orange-900/10 border border-orange-500/20">
+                                                        <Users className="w-3 h-3 text-orange-500" />
+                                                        <div className="flex-1 text-[10px] font-mono">
+                                                            <span className="text-orange-400">{contributor.firstName}</span>
+                                                            <span className="text-gray-500 ml-2">({contributor.globalPid})</span>
+                                                        </div>
+                                                        <button 
+                                                            onClick={() => handleRemoveContributor(idx)}
+                                                            className="text-red-500 hover:text-red-400 p-1"
+                                                        >
+                                                            <XCircle className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {/* Add Contributor Form */}
+                                        <div className="flex gap-2">
+                                            <Input 
+                                                value={newContributor.globalPid} 
+                                                onChange={e => setNewContributor({ ...newContributor, globalPid: e.target.value })} 
+                                                className="bg-black border-white/10 h-9 text-xs font-mono text-white focus:border-orange-500 flex-1"
+                                                placeholder="PID12345"
+                                            />
+                                            <Input 
+                                                value={newContributor.firstName} 
+                                                onChange={e => setNewContributor({ ...newContributor, firstName: e.target.value })} 
+                                                className="bg-black border-white/10 h-9 text-xs font-mono text-white focus:border-orange-500 flex-1"
+                                                placeholder="Name"
+                                            />
+                                            <button 
+                                                onClick={handleAddContributor}
+                                                className="px-3 h-9 bg-orange-900/20 border border-orange-500/50 text-orange-500 hover:bg-orange-500/10 text-[10px] font-bold uppercase"
+                                            >
+                                                <Plus className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Submit Button */}
+                                    <button
+                                        onClick={handleCreateProject}
+                                        disabled={actionLoading}
+                                        className="w-full h-12 bg-orange-900/20 border border-orange-500/50 text-orange-500 hover:bg-orange-500 hover:text-black font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 text-xs mt-4"
+                                    >
+                                        {actionLoading ? 'CREATING...' : 'CREATE_PROJECT'}
                                     </button>
                                 </div>
                             </motion.div>

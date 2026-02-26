@@ -2,12 +2,12 @@ require("dotenv").config();
 const mongoose = require("mongoose");
 const User = require("./models/User");
 
-// Get username from command line
-const username = process.argv[2];
+// Get email from command line
+const email = process.argv[2];
 
-if (!username) {
-  console.error("Please provide a username!");
-  console.log("Usage: node makeAdmin.js <username>");
+if (!email) {
+  console.error("Please provide an email address!");
+  console.log("Usage: node makeAdmin.js <email>");
   process.exit(1);
 }
 
@@ -17,11 +17,11 @@ mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopol
     console.log("MongoDB Connected");
     
     try {
-      // Find the user
-      const user = await User.findOne({ username });
+      // Find the user by email
+      const user = await User.findOne({ email: email.toLowerCase() });
       
       if (!user) {
-        console.error(`User "${username}" not found!`);
+        console.error(`User with email "${email}" not found!`);
         mongoose.disconnect();
         return;
       }
@@ -30,7 +30,8 @@ mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopol
       user.isAdmin = true;
       await user.save();
       
-      console.log(`User "${username}" is now an admin!`);
+      console.log(`User "${email}" (${user.firstName} ${user.lastName}) is now an admin!`);
+      console.log(`isAdmin: ${user.isAdmin}`);
     } catch (error) {
       console.error("Error:", error);
     } finally {

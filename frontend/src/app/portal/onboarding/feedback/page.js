@@ -320,7 +320,7 @@ export default function FeedbackPage() {
                 <div className="bg-black p-10 sm:p-14 relative">
                     {/* Lock Overlay */}
                     {!isTenureEnded && (
-                        <div className="absolute inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center flex-col gap-6 p-8 text-center">
+                        <div className="absolute inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center flex-col gap-6 p-8 text-center pointer-events-auto">
                             <div className="w-20 h-20 bg-white/5 flex items-center justify-center border border-white/10 rotate-45">
                                 <Clock className="w-8 h-8 text-gray-600 -rotate-45" />
                             </div>
@@ -328,6 +328,13 @@ export default function FeedbackPage() {
                                 <p className="text-xs font-black uppercase tracking-[0.4em] text-cyan-500">Access_Restricted</p>
                                 <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-700">Form locked until graduation sequence initialized.</p>
                             </div>
+                            <Button 
+                                onClick={() => router.push('/FellowshipProfile')}
+                                className="bg-cyan-600 text-white hover:bg-cyan-500 rounded-none font-black text-[10px] uppercase tracking-widest h-12 px-8 transition-all shadow-[0_0_20px_rgba(6,182,212,0.2)] mt-4"
+                            >
+                                <ChevronLeft className="w-4 h-4 mr-2" />
+                                [RETURN_TO_FELLOWSHIP_PORTAL]
+                            </Button>
                         </div>
                     )}
 

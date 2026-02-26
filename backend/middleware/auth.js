@@ -61,6 +61,9 @@ const FellowshipProfile = require('../models/FellowshipProfile');
 
 // Admin verification middleware
 const isAdmin = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ msg: "Authentication required" });
+  }
   if (!req.user.isAdmin) {
     return res.status(403).json({ msg: "Admin privileges required" });
   }
@@ -69,6 +72,9 @@ const isAdmin = (req, res, next) => {
 
 // Check if user is a Fellow (Active/Completed/etc, NOT Pending)
 const isFellow = async (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ msg: "Authentication required" });
+  }
   try {
     const profile = await FellowshipProfile.findOne({ email: req.user.email });
     // If no profile, or status is PENDING/REJECTED, they are NOT a fellow yet
@@ -85,6 +91,9 @@ const isFellow = async (req, res, next) => {
 
 // Check if user is an Applicant (or Pending Fellow) - should NOT access Fellowship Dashboard
 const isApplicant = async (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ msg: "Authentication required" });
+  }
   try {
     const profile = await FellowshipProfile.findOne({ email: req.user.email });
     // If they ARE a fellow (Active+), they should go to dashboard, not portal

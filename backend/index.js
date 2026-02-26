@@ -12,6 +12,7 @@ const escapeHtml = require("escape-html");
 const serverRoutes = require("./routes/server");
 const authRoutes = require("./routes/authRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const projectRoutes = require("./routes/projectRoutes");
 const jobRoutes = require("./routes/jobStatus");
 const slowDown = require('express-slow-down');
 const cors = require("cors");
@@ -176,4 +177,7 @@ app.use((err, req, res, next) => {
   // app.use("/api/audit", strictLimiter, auditRoutes);
 
   // app.use("/api", speedLimiter, looseLimiter);
+
+  //Project Routes
+  app.use("/api", projectRoutes);
 })();
