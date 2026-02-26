@@ -48,7 +48,7 @@ function getBulkUserEmail(email, password, loginUrl) {
 
       <!-- Logo -->
       <div style="text-align: center; padding-bottom: 10px;">
-        <img class="logo" src="https://static.wixstatic.com/media/e48a18_c949f6282e6a4c8e9568f40916a0c704~mv2.png/v1/crop/x_0,y_151,w_1920,h_746/fill/w_310,h_120,fp_0.50_0.50,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/For%20Dark%20Theme.png" alt="DeepCytes Logo" width="100" style="display: block; margin: 0 auto;">
+        <img class="logo" src="https://profile.deepcytes.io/dclogoUK.png" alt="DeepCytes Logo" width="100" style="display: block; margin: 0 auto;">
       </div>
 
       <!-- Header -->
@@ -66,7 +66,7 @@ function getBulkUserEmail(email, password, loginUrl) {
 
       <!-- Button -->
       <div style="margin-top: 20px; text-align: center;">
-        <a href="${loginUrl}" class="button" style="background: white; color: black; padding: 12px 20px; font-size: 14px; font-weight: bold; border-radius: 6px; text-decoration: none; display: inline-block;">
+        <a href="https://profile.deepcytes.io/" class="button" style="background: white; color: black; padding: 12px 20px; font-size: 14px; font-weight: bold; border-radius: 6px; text-decoration: none; display: inline-block;">
           Log In Now
         </a>
       </div>
@@ -74,7 +74,7 @@ function getBulkUserEmail(email, password, loginUrl) {
       <!-- Footer Note -->
       <p style="font-size: 13px; color: #aaaaaa; margin-top: 30px;">
         If you were not expecting this email, please contact support immediately.<br/>
-        Need help? <a href="mailto:support@deepcytes.com" style="color: #ffffff;">support@deepcytes.com</a>
+        Need help? <a href="mailto:info@deepcytes.io" style="color: #ffffff;">info@deepcytes.io</a>
       </p>
     </div>
   </div>

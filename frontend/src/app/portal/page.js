@@ -1,6 +1,5 @@
 "use client";
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
@@ -15,7 +14,7 @@ export default function ApplicationStatus() {
         const [resendCooldown, setResendCooldown] = useState(0);
 
         // Cooldown timer effect
-        useState(() => {
+        useEffect(() => {
             let timer;
             if (resendCooldown > 0) {
                 timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);

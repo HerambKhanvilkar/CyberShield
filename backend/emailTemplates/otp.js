@@ -79,7 +79,7 @@ function getOTPEmail(otpCode) {
           <!-- Footer / CTA -->
           <div style="margin-top: 30px; font-size: 13px; color: #888888;">
             If you didn’t request this, you can safely ignore this email.<br/>
-            Need help? <a href="mailto:support@deepcytes.com" style="color: #ffffff;">Contact Support</a>
+            Need help? <a href="mailto:info@deepcytes.io" style="color: #ffffff;">Contact Support</a>
           </div>
         </div>
       </div>

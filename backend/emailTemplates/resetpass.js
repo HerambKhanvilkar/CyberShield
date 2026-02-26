@@ -13,13 +13,13 @@ function getResetPasswordEmail(otpCode) {
 <body style="margin:0;padding:0;font-family:Arial, sans-serif;background-color:#001133;color:#ffffff;">
   <div style="padding:20px;text-align:center;">
     <div style="max-width:700px;margin:0 auto;">
-      <div style="text-align:center;padding-bottom:12px;"><img src="https://static.wixstatic.com/media/e48a18_c949f6282e6a4c8e9568f40916a0c704~mv2.png" alt="DeepCytes" width="100" style="display:block;margin:0 auto;"/></div>
+      <div style="text-align:center;padding-bottom:12px;"><img src="https://profile.deepcytes.io/dclogoUK.png" alt="DeepCytes" width="100" style="display:block;margin:0 auto;"/></div>
       <div class="glass">
         <h1 style="font-size:20px;margin:6px 0;">Reset Your Password</h1>
         <p style="color:#b0b0b0;margin-top:6px;">We received a request to reset your password. Use the code below to continue.</p>
         <div style="margin:18px 0;text-align:center;"><span class="otp">${otpCode}</span></div>
         <p style="color:#aaaaaa;margin-top:8px;font-size:13px;">This code expires in 10 minutes. If you didn’t request a password reset, please ignore this email or contact support.</p>
-        <p style="font-size:13px;color:#aaaaaa;margin-top:16px;">Need help? Contact <a href="mailto:support@deepcytes.com" style="color:#ffffff;">support@deepcytes.com</a>.</p>
+        <p style="font-size:13px;color:#aaaaaa;margin-top:16px;">Need help? Contact <a href="mailto:info@deepcytes.io" style="color:#ffffff;">info@deepcytes.io</a>.</p>
       </div>
     </div>
   </div>

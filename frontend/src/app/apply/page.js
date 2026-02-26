@@ -205,7 +205,7 @@ export default function ApplyLanding() {
                         </AnimatePresence>
                     </div>
 
-                    <div className="mt-12 flex items-center justify-center gap-8 opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all">
+                    {/* <div className="mt-12 flex items-center justify-center gap-8 opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all">
                         <div className="flex items-center gap-2">
                             <ShieldCheck className="w-4 h-4" />
                             <span className="text-[10px] font-bold tracking-widest uppercase">Verified System</span>
@@ -214,7 +214,7 @@ export default function ApplyLanding() {
                             <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                             <span className="text-[10px] font-bold tracking-widest uppercase">Gated Access</span>
                         </div>
-                    </div>
+                    </div> */}
                 </motion.div>
             </main>
 

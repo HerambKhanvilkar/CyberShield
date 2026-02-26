@@ -103,7 +103,9 @@ const checkBadgeExists = (badgeId, badgesArray) => {
   return badgesArray.some(b => b == badgeId);
 };
 
-const nameRegex = /^[A-Za-z]+$/; // Allow only letters for names (adjust the regex as needed)
+// allow spaces/hyphens/apostrophes in names (admin operations should accept realistic names)
+const nameRegex = /^[A-Za-z]+(?:[ '-][A-Za-z]+)*$/; // adjust as needed
+
 
 // Add Course
 router.post('/users/courses', authenticateJWT, async (req, res) => {

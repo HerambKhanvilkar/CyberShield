@@ -362,14 +362,14 @@ export default function ApplicationForm() {
                         <form onSubmit={handleSubmit} className="space-y-7 sm:space-y-10 relative z-10">
                             {/* Personal Info */}
                             <div className="mb-2">
-                                <p className="text-cyan-300 text-xs sm:text-sm font-semibold mb-2">Please enter your name as it appears on your official documents</p>
+                                <p className="text-gray-400 text-xs sm:text-sm font-semibold mb-2">Please enter your name as it appears on your official documents</p>
                             </div>
                             <div className="grid md:grid-cols-2 gap-5">
                                 <div className="space-y-2">
                                     <Label className="text-gray-400 flex items-center gap-2 text-sm sm:text-base">
                                         <User className="w-4 h-4" /> First Name
                                         <span className="text-red-500 font-bold ml-1">*</span>
-                                        <span className="text-xs text-red-500 ml-1">Mandatory</span>
+                                        {/* <span className="text-xs text-red-500 ml-1">Mandatory</span> */}
                                     </Label>
                                     <Input value={formData.firstName} onChange={e => setFormData({ ...formData, firstName: e.target.value })} required className="bg-black/50 border-white/10 h-10 sm:h-12 rounded-xl focus:border-cyan-500/50 text-sm sm:text-base" />
                                 </div>
@@ -377,7 +377,7 @@ export default function ApplicationForm() {
                                     <Label className="text-gray-400 flex items-center gap-2 text-sm sm:text-base">
                                         Last Name
                                         <span className="text-red-500 font-bold ml-1">*</span>
-                                        <span className="text-xs text-red-500 ml-1">Mandatory</span>
+                                        {/* <span className="text-xs text-red-500 ml-1">Mandatory</span> */}
                                     </Label>
                                     <Input value={formData.lastName} onChange={e => setFormData({ ...formData, lastName: e.target.value })} required className="bg-black/50 border-white/10 h-10 sm:h-12 rounded-xl focus:border-cyan-500/50 text-sm sm:text-base" />
                                 </div>
@@ -387,7 +387,7 @@ export default function ApplicationForm() {
                                 <Label className="text-gray-400 flex items-center gap-2 text-sm sm:text-base">
                                     <Mail className="w-4 h-4" /> Email Verification
                                     <span className="text-red-500 font-bold ml-1">*</span>
-                                    <span className="text-xs text-red-500 ml-1">Mandatory</span>
+                                    {/* <span className="text-xs text-red-500 ml-1">Mandatory</span> */}
                                 </Label>
                                 <div className="flex gap-2 flex-wrap">
                                     <Input
@@ -496,7 +496,7 @@ export default function ApplicationForm() {
                                 <Label className="text-gray-400 flex items-center gap-2 text-sm sm:text-base">
                                     <FileText className="w-4 h-4" /> Curriculum Vitae (CV) / Portfolio
                                     <span className="text-red-500 font-bold ml-1">*</span>
-                                    <span className="text-xs text-red-500 ml-1">Mandatory</span>
+                                    {/* <span className="text-xs text-red-500 ml-1">Mandatory</span> */}
                                 </Label>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -515,7 +515,7 @@ export default function ApplicationForm() {
                                     </div>
 
                                     {/* Portfolio Link */}
-                                    <div className="h-20 bg-white/5 rounded-2xl p-3 border border-white/5">
+                                    {/* <div className="h-20 bg-white/5 rounded-2xl p-3 border border-white/5">
                                         <span className="text-xs font-black uppercase text-gray-600 mb-1 block">Portfolio or Supporting Materials (Link)</span>
                                         <Input
                                             value={formData.resume}
@@ -524,7 +524,7 @@ export default function ApplicationForm() {
                                             className="bg-transparent border-0 border-b border-white/10 rounded-none h-8 px-0 focus:ring-0 focus:border-cyan-500 text-sm sm:text-base"
                                         />
                                         <div className="text-[11px] text-gray-500 mt-1">You may upload a PDF or paste a public URL (include https://). Admins can open links directly from the application.</div>
-                                    </div>
+                                    </div> */}
                                 </div>
                             </div>
 
@@ -534,7 +534,7 @@ export default function ApplicationForm() {
                                     <Label className="text-gray-400 font-bold mb-2 block text-base sm:text-lg">
                                         What Makes You Stand Apart?
                                         <span className="text-red-500 font-bold ml-1">*</span>
-                                        <span className="text-xs text-red-500 ml-1">Mandatory</span>
+                                        {/* <span className="text-xs text-red-500 ml-1">Mandatory</span> */}
                                     </Label>
                                     <textarea
                                         className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white min-h-[120px] focus:border-cyan-500/50 focus:ring-0 resize-none text-sm sm:text-base"
@@ -545,7 +545,7 @@ export default function ApplicationForm() {
                                     />
                                 </div>
                                 <div>
-                                    <Label className="text-gray-400 font-bold mb-2 block text-base sm:text-lg">Do you have any innovative ideas or projects you would like to pursue?</Label>
+                                    <Label className="text-gray-400 font-bold mb-2 block text-base sm:text-lg">Any innovative ideas/projects you would like to pursue at DC?</Label>
                                     <textarea
                                         className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white min-h-[120px] focus:border-cyan-500/50 focus:ring-0 resize-none text-sm sm:text-base"
                                         placeholder="Share any innovative ideas or projects you would like to pursue as part of the Fellowship."
@@ -557,7 +557,7 @@ export default function ApplicationForm() {
 
                             {/* Submission Description */}
                             <div className="mt-7 mb-4 p-4 bg-cyan-900/10 border border-cyan-400/20 rounded-2xl text-cyan-200 text-sm sm:text-base font-medium shadow-cyan-500/10 shadow">
-                                We’re excited to learn more about you and your potential to join our mission in building a safer digital world. Please ensure that all details are accurate before submitting.
+                                We look forward to learning more about you and your potential to join our mission in building a safer digital world. Kindly ensure that all details are accurate.
                             </div>
 
                             {/* Consent Checkbox */}
@@ -577,7 +577,7 @@ export default function ApplicationForm() {
                                     />
                                     <span className="text-white">I consent to the use of my data for these purposes.</span>
                                     <span className="text-red-500 font-bold ml-1">*</span>
-                                    <span className="text-xs text-red-500 ml-1">Mandatory</span>
+                                    {/* <span className="text-xs text-red-500 ml-1">Mandatory</span> */}
                                 </label>
                             </div>
 
@@ -599,9 +599,9 @@ export default function ApplicationForm() {
                     >
                         <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-600/10 blur-[100px] rounded-full" />
                         <header className="mb-4 border-b border-white/5 pb-4 relative z-10">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-black uppercase tracking-widest text-cyan-400 mb-2">
+                            {/* <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-black uppercase tracking-widest text-cyan-400 mb-2">
                                 <ShieldCheck className="w-3 h-3" /> Application Status
-                            </div>
+                            </div> */}
                             <h2 className="text-lg sm:text-xl font-bold tracking-tight italic mb-2 leading-tight text-cyan-500">Applied already?</h2>
                         </header>
                         <div className="text-center space-y-4 relative z-10">
@@ -611,7 +611,7 @@ export default function ApplicationForm() {
                                 onClick={() => router.push('/portal')}
                                 className="w-full h-12 sm:h-14 text-base sm:text-lg font-black italic tracking-[0.05em] sm:tracking-[0.1em] bg-white text-black hover:bg-cyan-400 transition-all rounded-[2rem] shadow-2xl shadow-cyan-500/10 group flex items-center justify-center px-3 sm:px-6 whitespace-normal"
                             >
-                                <span className="flex-1 text-center truncate">CHECK APPLICATION STATUS</span>
+                                <span className="flex-1 text-center truncate">CHECK APPLICATION STATUS HERE</span>
                                 <ChevronRight className="ml-2 sm:ml-3 w-4 sm:w-5 h-4 sm:h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform flex-shrink-0" />
                             </Button>
                         </div>

@@ -57,9 +57,9 @@ function getPremiumTemplate({ title, message, bodyContent, footerExtra = "" }) {
 
           <!-- Footer / CTA -->
           <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); font-size: 13px; color: #666666;">
-            [SECURE_TRANSMISSION_PROTOCOL: v4.1]<br/>
+            <br/>
             ${footerExtra}
-            Need assistance? <a href="mailto:support@deepcytes.io" style="color: #06b6d0; text-decoration: none;">Contact Mission Control</a>
+            Need assistance? <a href="mailto:info@deepcytes.io" style="color: #06b6d0; text-decoration: none;">Contact Support</a>
           </div>
         </div>
       </div>

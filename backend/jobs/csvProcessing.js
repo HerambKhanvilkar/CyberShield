@@ -18,7 +18,10 @@ const checkBadgeExists = (badgeId, badgesArray) => {
   return badgesArray.some(b => b == badgeId);
 };
 
-const nameRegex = /^[A-Za-z]+$/; // Allow only letters for names (adjust the regex as needed)
+// names may contain letters, spaces, hyphens or apostrophes (e.g. "Doe Jr", "O'Neil")
+// regex ensures each word starts with a letter and permits separators
+const nameRegex = /^[A-Za-z]+(?:[ '-][A-Za-z]+)*$/; // adjust as needed
+
 
 module.exports = function (agenda) {
   agenda.define('process csv file', async job => {
@@ -41,12 +44,19 @@ module.exports = function (agenda) {
           .pipe(csv())
           .on('data', data => {
             rowCount++;
+            // trim whitespace from each field to avoid false negatives
+            const email = data.email ? data.email.trim() : '';
+            const firstName = data.firstName ? data.firstName.trim() : '';
+            const lastName = data.lastName ? data.lastName.trim() : '';
+            const badgeIds = data.badgeIds ? data.badgeIds.trim() : '';
+
             // Basic required field validation
-            if (!data.email || !data.firstName || !data.lastName || !data.badgeIds) {
-              invalidUsers.push({ row: rowCount, error: "Missing required fields",... data  });
+            // NOTE: lastName is optional; we'll store empty string if omitted
+            if (!email || !firstName || !badgeIds) {
+              invalidUsers.push({ row: rowCount, error: "Missing required fields", ...data });
             } else {
-              emails.push(data.email);
-              validRows.push({ row: rowCount, ... data });
+              emails.push(email);
+              validRows.push({ row: rowCount, email, firstName, lastName, badgeIds });
             }
           })
           .on('end', () => resolve())
@@ -73,12 +83,16 @@ module.exports = function (agenda) {
         const { email, firstName, lastName, badgeIds } = user;
         let userErrors = [];
 
-        if (!nameRegex.test(firstName)) {
+        // trim values before validating so extra spaces don't break the regex
+        const fName = firstName.trim();
+        const lName = lastName.trim();
+        if (!nameRegex.test(fName)) {
           userErrors.push(`Invalid firstName: ${firstName}`);
         }
-        if (!nameRegex.test(lastName)) {
-          userErrors.push(`Invalid lastName: ${lastName}`);
-        }
+        // surname is optional and not validated; accept as provided
+        user.firstName = fName;
+        user.lastName = lName;
+
         if (userErrors.length > 0) {
           invalidUsers.push({... user, errors: userErrors });
           return;
@@ -124,7 +138,6 @@ module.exports = function (agenda) {
           invalidUsers.push({... user,  error: "User already exist." });
           return;
         }
-
 
         // const password = 'Pass@123';
         // const hashedPassword = await bcrypt.hash(password, 10);

@@ -16,16 +16,34 @@ const checkBadgeExists = (badgeId, badgesArray) => {
   return badgesArray.some(b => b == badgeId);
 };
 
-const nameRegex = /^[A-Za-z]+$/; // Allow only letters for names (adjust the regex as needed)
+// names may contain spaces/hyphens/apostrophes, e.g. "Smith Jr" or "O'Connor"
+const nameRegex = /^[A-Za-z]+(?:[ '-][A-Za-z]+)*$/; // adjust as needed
+
 
 
 async function validateRevision (data){
 
-  const {  email, firstName, lastName, badgeIds } = data;
+  let { email, firstName, lastName, badgeIds } = data;
+  email = email ? email.trim() : '';
+  firstName = firstName ? firstName.trim() : '';
+  lastName = lastName ? lastName.trim() : '';
+  badgeIds = badgeIds ? badgeIds.trim() : '';
 
-  if (!email || !firstName || !lastName || !badgeIds) {
+  // require email, firstName and badges; lastName may be empty
+  if (!email || !firstName || !badgeIds) {
     return { error: "Missing required fields" }
   }
+  // update data for downstream
+  data.email = email;
+  data.firstName = firstName;
+  data.lastName = lastName;
+  data.badgeIds = badgeIds;
+
+  // update data object with trimmed values for downstream use
+  data.email = email;
+  data.firstName = firstName;
+  data.lastName = lastName;
+  data.badgeIds = badgeIds;
 
   let isUserExist = await User.findOne({ email });
 
@@ -34,13 +52,16 @@ async function validateRevision (data){
 
   let userErrors = [];
 
-  if (!nameRegex.test(firstName)) {
+  // normalize and validate names
+  const fName = firstName.trim();
+  const lName = lastName.trim();
+  if (!nameRegex.test(fName)) {
     userErrors.push(`Invalid firstName: ${firstName}`);
   }
-  if (!nameRegex.test(lastName)) {
-    userErrors.push(`Invalid lastName: ${lastName}`);
-  }
-  // firstName lastName error
+  // no validation for lastName; accept whatever value is supplied
+  data.firstName = fName;
+  data.lastName = lName;
+
   if (userErrors.length > 0) {
     return ({errors: userErrors });
   }
