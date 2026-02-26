@@ -365,21 +365,37 @@ router.get('/admin/export-org-csv/:orgCode', authenticateJWT, isAdmin, async (re
 // 4. Update Status (Admin)
 router.patch('/admin/status', authenticateJWT, isAdmin, [
     check('applicantId').notEmpty(),
-    check('status').isIn(['ACCEPTED', 'REJECTED'])
+    check('status').isIn(['ACCEPTED', 'REJECTED']),
+    // assignedRole may be provided by admin when accepting; optional string
+    check('assignedRole').optional().trim().escape()
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array(), message: "Validation failed: " + errors.array().map(e => e.msg).join(", ") });
+        console.log(errors);
+        return res.status(400).json({ error: "Error occured, please provide the applicantId and status of applicant must be accepted or rejected" });
     }
 
     try {
-        const { applicantId, status, tenureEndDate } = req.body;
+        const { applicantId, status, tenureEndDate, assignedRole } = req.body;
         console.log(`[StatusUpdate] ID: ${applicantId}, Status: ${status}, tenureEndDate: ${tenureEndDate}`);
 
         const applicant = await Applicant.findById(applicantId);
         if (!applicant) {
             console.error(`[StatusUpdate] Applicant not found: ${applicantId}`);
-            return res.status(404).json({ message: "Applicant not found" });
+            return res.status(404).json({ error: "Applicant not found" });
+        }
+        // Determine role to use: prefer incoming assignedRole, else existing applicant.role
+        let roleToUse = applicant.role;
+        if (status === 'ACCEPTED') {
+            // Require a role for acceptance (either existing or assigned now)
+            if (!assignedRole && !roleToUse) {
+                return res.status(400).json({ error: "Please assign a role for applicant" });
+            }
+            if (assignedRole) {
+                // assignedRole is expected to be a string in payload
+                roleToUse = String(assignedRole).trim();
+                applicant.role = roleToUse;
+            }
         }
 
         // Logic: Cannot accept if interview pending (unless manually skipped or completed)
@@ -409,6 +425,13 @@ router.patch('/admin/status', authenticateJWT, isAdmin, [
                 const d = new Date(org.defaultTenureEndDate);
                 const pad = n => String(n).padStart(2, '0');
                 finalEndDate = `${pad(d.getDate())}${pad(d.getMonth() + 1)}${d.getFullYear()}`;
+            } else {
+                // Default to 6 months from today when no tenureEndDate or org default provided
+                const now = new Date();
+                const sixMonths = new Date(now);
+                sixMonths.setMonth(sixMonths.getMonth() + 6);
+                const pad = n => String(n).padStart(2, '0');
+                finalEndDate = `${pad(sixMonths.getDate())}${pad(sixMonths.getMonth() + 1)}${sixMonths.getFullYear()}`;
             }
         }
 
@@ -426,7 +449,7 @@ router.patch('/admin/status', authenticateJWT, isAdmin, [
                     status: 'PENDING',
                     onboardingState: 'PROFILE',
                     tenures: [{
-                        role: applicant.role,
+                        role: roleToUse || applicant.role,
                         orgCode: applicant.orgCode,
                         startDate: new Date().toLocaleDateString('en-GB').replace(/\//g, ''),
                         endDate: finalEndDate || "",
@@ -437,7 +460,7 @@ router.patch('/admin/status', authenticateJWT, isAdmin, [
             } else {
                 console.log(`[StatusUpdate] Profile exists for ${applicant.email}, adding tenure`);
                 profile.tenures.push({
-                    role: applicant.role,
+                    role: roleToUse || applicant.role,
                     orgCode: applicant.orgCode,
                     startDate: new Date().toLocaleDateString('en-GB').replace(/\//g, ''),
                     endDate: finalEndDate || "",
@@ -448,11 +471,19 @@ router.patch('/admin/status', authenticateJWT, isAdmin, [
             await profile.save();
             console.log(`[StatusUpdate] FellowshipProfile saved for ${applicant.email}`);
 
-            // Send Acceptance Email
-            await sendApplicationStatusEmail(applicant.email, 'ACCEPTED');
+            // Send Acceptance Email (non-fatal)
+            try {
+                await sendApplicationStatusEmail(applicant.email, 'ACCEPTED');
+            } catch (emailErr) {
+                console.error(`Failed to send acceptance email to ${applicant.email}:`, emailErr);
+            }
         } else if (status === 'REJECTED') {
-            // Send Rejection Email
-            await sendApplicationStatusEmail(applicant.email, 'REJECTED');
+            // Send Rejection Email (non-fatal)
+            try {
+                await sendApplicationStatusEmail(applicant.email, 'REJECTED');
+            } catch (emailErr) {
+                console.error(`Failed to send rejection email to ${applicant.email}:`, emailErr);
+            }
         }
 
         await HiringAuditLog.create({
@@ -539,8 +570,12 @@ router.put('/admin/mark-no-show', authenticateJWT, isAdmin, async (req, res) => 
 
         await applicant.save();
 
-        // Notify applicant (rejection email)
-        await sendApplicationStatusEmail(applicant.email, 'REJECTED');
+        // Notify applicant (rejection email) - don't fail on email errors
+        try {
+            await sendApplicationStatusEmail(applicant.email, 'REJECTED');
+        } catch (emailErr) {
+            console.error(`Failed to send rejection email to ${applicant.email}:`, emailErr);
+        }
 
         await HiringAuditLog.create({
             action: "INTERVIEW_NO_SHOW",

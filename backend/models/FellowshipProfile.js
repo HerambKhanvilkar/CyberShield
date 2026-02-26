@@ -17,6 +17,10 @@ const FellowshipProfileSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    assigned_role: {
+        type: String,
+        trim: true
+    },
     globalPid: {
         type: String,
         default: "" // Assigned post-NDA: F00000 format

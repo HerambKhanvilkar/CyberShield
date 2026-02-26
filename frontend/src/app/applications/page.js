@@ -55,6 +55,10 @@ function AdminDashboardContent() {
     // Interview Schedule State
     const [showScheduleModal, setShowScheduleModal] = useState(false);
     const [scheduleData, setScheduleData] = useState({ scheduledAt: "", meetLink: "" });
+    // Assign role modal for skipping protocol
+    const [showAssignRoleModal, setShowAssignRoleModal] = useState(false);
+    const [skipModalTarget, setSkipModalTarget] = useState(null);
+    const [skipAssignedRole, setSkipAssignedRole] = useState("");
 
     // Termination State
     const [showTerminateModal, setShowTerminateModal] = useState(false);
@@ -668,10 +672,18 @@ function AdminDashboardContent() {
             const target = orgInspectorMember || selectedItem;
             if (!target || !target._id) { toast.error('No applicant selected'); setActionLoading(false); return; }
 
+            // If accepting, ensure assignedRole is present
+            if (status === 'ACCEPTED' && !(target.assignedRole || '').trim()) {
+                toast.error('Assigned role is required before accepting');
+                setActionLoading(false);
+                return;
+            }
+
             await axios.patch(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/application/admin/status`, {
                 applicantId: target._id,
                 status,
-                tenureEndDate: status === 'ACCEPTED' ? tenureEndDate : undefined
+                tenureEndDate: status === 'ACCEPTED' ? tenureEndDate : undefined,
+                assignedRole: status === 'ACCEPTED' ? (target.assignedRole || '').trim() : undefined
             }, { headers: { Authorization: `Bearer ${token}` } });
 
             toast.success(`Applicant ${status}`);
@@ -743,21 +755,43 @@ function AdminDashboardContent() {
     };
 
     const handleSkipInterview = async () => {
+        const target = (orgInspectorMember && (orgInspectorMember.status || orgInspectorMember.interviewDetails)) ? orgInspectorMember : selectedItem;
+        if (!target || !target._id) { toast.error('No applicant selected'); return; }
+
+        // prepare default selection
+        const defaultRole = (() => {
+            if (target.role) return typeof target.role === 'string' ? target.role : (target.role.name || '');
+            if (Array.isArray(target.preferredRoles) && target.preferredRoles.length) return typeof target.preferredRoles[0] === 'string' ? target.preferredRoles[0] : (target.preferredRoles[0]?.name || '');
+            return '';
+        })();
+
+        setSkipAssignedRole(target.assignedRole || defaultRole || '');
+        setSkipModalTarget(target);
+        setShowAssignRoleModal(true);
+    };
+
+    const confirmSkipInterview = async () => {
+        if (!skipModalTarget || !skipModalTarget._id) return toast.error('No applicant selected');
+        const assignedRole = (skipAssignedRole || '').trim();
+        if (!assignedRole) return toast.error('Assigned role is required to skip protocol');
         if (!window.confirm("Are you sure you want to skip the interview step?")) return;
+
         setActionLoading(true);
         try {
             const token = localStorage.getItem("accessToken");
-            const target = (orgInspectorMember && (orgInspectorMember.status || orgInspectorMember.interviewDetails)) ? orgInspectorMember : selectedItem;
-            if (!target || !target._id) { toast.error('No applicant selected'); setActionLoading(false); return; }
-
             await axios.put(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/application/admin/skip-interview`, {
-                applicantId: target._id
+                applicantId: skipModalTarget._id
             }, { headers: { Authorization: `Bearer ${token}` } });
 
             toast.success("Interview Step Skipped");
             const fresh = await fetchData();
-            const updated = (fresh?.apps || []).find(a => a._id === target._id) || { ...target, status: 'INTERVIEW_SKIPPED', interviewDetails: { ...target.interviewDetails, status: 'SKIPPED' } };
-            if (target === orgInspectorMember) setOrgInspectorMember(updated); else setSelectedItem(updated);
+            const updated = (fresh?.apps || []).find(a => a._id === skipModalTarget._id) || { ...skipModalTarget, status: 'INTERVIEW_SKIPPED', interviewDetails: { ...skipModalTarget.interviewDetails, status: 'SKIPPED' } };
+
+            // Persist assignedRole locally so Accept requires it and includes it in status update
+            updated.assignedRole = assignedRole;
+            if (skipModalTarget === orgInspectorMember) setOrgInspectorMember(updated); else setSelectedItem(updated);
+            setShowAssignRoleModal(false);
+            setSkipModalTarget(null);
         } catch (error) {
             toast.error("Failed to skip interview");
         } finally {
@@ -1967,6 +2001,42 @@ function AdminDashboardContent() {
                                                                 </motion.div>
                                                             )}
 
+                                                            {showAssignRoleModal && (
+                                                                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="border border-yellow-500/30 bg-black p-4 space-y-4">
+                                                                    <h5 className="text-xs font-bold text-yellow-400 uppercase">Assign Role (required before Accept)</h5>
+                                                                    <div className="text-xs text-gray-400">Choose one of: Applied role, Organization roles, or Global roles</div>
+                                                                    <div>
+                                                                        <select value={skipAssignedRole} onChange={e => setSkipAssignedRole(e.target.value)} className="w-full bg-black border border-white/20 h-10 text-xs font-mono text-white px-2">
+                                                                            {(() => {
+                                                                                const t = skipModalTarget || {};
+                                                                                const defaultRole = t.role ? (typeof t.role === 'string' ? t.role : (t.role.name || '')) : (Array.isArray(t.preferredRoles) && t.preferredRoles.length ? (typeof t.preferredRoles[0] === 'string' ? t.preferredRoles[0] : (t.preferredRoles[0]?.name || '')) : '');
+                                                                                const orgObj = (t.orgCode && Array.isArray(orgs) ? orgs.find(o => o.code === t.orgCode) : null) || (t.code && Array.isArray(orgs) ? orgs.find(o => o.code === t.code) : null);
+                                                                                const orgRoles = orgObj ? (orgObj.formVars?.roles ? orgObj.formVars.roles.map(r => r.name) : (Array.isArray(orgObj.formVar1) ? orgObj.formVar1 : [])) : [];
+                                                                                const globalRoles = (availableRoles || []).map(r => (typeof r === 'string' ? r : (r.name || ''))).filter(Boolean);
+
+                                                                                return (
+                                                                                    <>
+                                                                                        <optgroup label="Applied Role">
+                                                                                            <option value={defaultRole}>{defaultRole || '—'}</option>
+                                                                                        </optgroup>
+                                                                                        <optgroup label="Organization Roles">
+                                                                                            {orgRoles.length ? orgRoles.map((r, i) => <option key={`org-${i}`} value={r}>{r}</option>) : <option value="">-- none --</option>}
+                                                                                        </optgroup>
+                                                                                        <optgroup label="Global Roles">
+                                                                                            {globalRoles.length ? globalRoles.map((r, i) => <option key={`glob-${i}`} value={r}>{r}</option>) : <option value="">-- none --</option>}
+                                                                                        </optgroup>
+                                                                                    </>
+                                                                                );
+                                                                            })()}
+                                                                        </select>
+                                                                    </div>
+                                                                    <div className="flex gap-2">
+                                                                        <button onClick={() => { setShowAssignRoleModal(false); setSkipModalTarget(null); }} className="flex-1 py-2 border border-red-500/50 text-red-500 hover:bg-red-500/10 text-[10px] font-bold uppercase">CANCEL</button>
+                                                                        <button onClick={confirmSkipInterview} className="flex-1 py-2 bg-yellow-400 text-black font-bold text-[10px] uppercase hover:bg-yellow-300">CONFIRM SKIP</button>
+                                                                    </div>
+                                                                </motion.div>
+                                                            )}
+
                                                             <div className="h-px bg-white/10 my-4" />
 
                                                             {/* <label className="text-xs font-mono text-gray-500 uppercase tracking-wider">Tenure Termination Code</label>
@@ -1986,8 +2056,11 @@ function AdminDashboardContent() {
                                                     {selectedItem.status !== 'REJECTED' && (
                                                         <button
                                                             onClick={() => handleUpdateAppStatus('ACCEPTED')}
-                                                            disabled={selectedItem.status === 'PENDING' && (!selectedItem.interviewDetails?.status || selectedItem.interviewDetails?.status === 'PENDING') && selectedItem.status !== 'INTERVIEW_SKIPPED'}
-                                                            className={`h-14 border transition-all text-sm font-bold uppercase tracking-[0.2em] ${selectedItem.status === 'PENDING' && (!selectedItem.interviewDetails?.status || selectedItem.interviewDetails?.status === 'PENDING') && selectedItem.status !== 'INTERVIEW_SKIPPED' ? 'border-gray-800 text-gray-700 cursor-not-allowed bg-transparent' : 'bg-cyan-700/20 border-cyan-500/50 text-cyan-400 hover:bg-cyan-500 hover:text-black'}`}
+                                                            disabled={
+                                                                (selectedItem.status === 'PENDING' && (!selectedItem.interviewDetails?.status || selectedItem.interviewDetails?.status === 'PENDING') && selectedItem.status !== 'INTERVIEW_SKIPPED')
+                                                                || !(selectedItem.assignedRole && String(selectedItem.assignedRole).trim())
+                                                            }
+                                                            className={`h-14 border transition-all text-sm font-bold uppercase tracking-[0.2em] ${((selectedItem.status === 'PENDING' && (!selectedItem.interviewDetails?.status || selectedItem.interviewDetails?.status === 'PENDING') && selectedItem.status !== 'INTERVIEW_SKIPPED') || !(selectedItem.assignedRole && String(selectedItem.assignedRole).trim())) ? 'border-gray-800 text-gray-700 cursor-not-allowed bg-transparent' : 'bg-cyan-700/20 border-cyan-500/50 text-cyan-400 hover:bg-cyan-500 hover:text-black'}`}
                                                         >
                                                             ACCEPT
                                                         </button>
