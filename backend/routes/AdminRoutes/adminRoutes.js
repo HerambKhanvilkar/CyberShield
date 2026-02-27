@@ -107,6 +107,253 @@ const checkBadgeExists = (badgeId, badgesArray) => {
 const nameRegex = /^[A-Za-z]+(?:[ '-][A-Za-z]+)*$/; // adjust as needed
 
 
+// --- common import logic --------------------------------------------------
+
+// generate a random password of given length (used during import)
+function generateRandomPassword() {
+  const length = 12;
+  const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+  const numbers = '0123456789';
+  const special = '!@#$%^&*';
+  const allChars = uppercase + lowercase + numbers + special;
+
+  let pwd = '';
+  pwd += uppercase[Math.floor(Math.random() * uppercase.length)];
+  pwd += lowercase[Math.floor(Math.random() * lowercase.length)];
+  pwd += numbers[Math.floor(Math.random() * numbers.length)];
+  pwd += special[Math.floor(Math.random() * special.length)];
+  for (let i = 4; i < length; i++) {
+    pwd += allChars[Math.floor(Math.random() * allChars.length)];
+  }
+  return pwd.split('').sort(() => Math.random() - 0.5).join('');
+}
+
+/**
+ * Perform user import given a set of valid/invalid user rows.
+ * This is the core of the existing `/users/import/:jobId` handler but
+ * extracted so we can call it from multiple routes.
+ *
+ * @param {{validUsers: Array, invalidUsers: Array}} jobResult
+ * @param {boolean} upsert                      whether to update existing users
+ * @param {string} requestingUserEmail         email of the admin/originator
+ * @returns {Promise<object>}                  result summary (same shape returned
+ *                                              by the original endpoint)
+ */
+async function performUserImport(jobResult, upsert, requestingUserEmail) {
+  // note: jobResult.validUsers and jobResult.invalidUsers are assumed
+  // to already have been validated by csvProcessing.js or the caller.
+  const userPasswordMap = new Map();
+  const usersToBeInserted = await Promise.all(
+    jobResult.validUsers.map(async u => {
+      const badgeIdsArray = JSON.parse('[' + u.badgeIds + ']');
+      const badges = [];
+      for (const b of badgeIdsArray) {
+        let badgeDoc =
+          (await Badge.findOne({ id: b })) ||
+          (await Badge.findOne({ badgeId: String(b) }));
+        if (!badgeDoc) {
+          badges.push({ badgeId: b, earnedDate: new Date() });
+          continue;
+        }
+        const updated = await Badge.findOneAndUpdate(
+          { _id: badgeDoc._id },
+          { $inc: { certificateCounter: 1 } },
+          { new: true },
+        );
+        const counter = updated.certificateCounter || 1;
+        const seq = String(counter).padStart(4, '0');
+        const fmtAbbr = val => {
+          if (!val) return ''.padEnd(4, '0');
+          const s = String(val)
+            .toUpperCase()
+            .replace(/[^A-Z0-9]/g, '');
+          return s.length >= 4 ? s.slice(0, 4) : s.padEnd(4, '0');
+        };
+        const abbrPart =
+          updated.abbreviation && String(updated.abbreviation).trim() !== ''
+            ? fmtAbbr(updated.abbreviation)
+            : updated.badgeId
+            ? fmtAbbr(String(updated.badgeId).slice(0, 4))
+            : fmtAbbr(String(updated.id));
+        const badgeIdPart = String(updated.id);
+        const certificateId = `${abbrPart}${badgeIdPart}${seq}`;
+        badges.push({
+          badgeId: updated.badgeId || String(updated.id),
+          earnedDate: new Date(),
+          certificateId,
+        });
+      }
+
+      const plainPassword = generateRandomPassword();
+      const hashedPassword = await bcrypt.hash(plainPassword, 10);
+      userPasswordMap.set(u.email, plainPassword);
+
+      return {
+        email: u.email,
+        firstName: u.firstName,
+        lastName: u.lastName,
+        badges,
+        password: hashedPassword,
+      };
+    }),
+  );
+
+  let usersToBeUpdated = [];
+  const updateBadgeMap = new Map();
+
+  if (upsert) {
+    for (const u of jobResult.invalidUsers) {
+      if (typeof u.error === 'string' && u.error.includes('Badge')) {
+        throw new Error('Badge related Errors need resolution.');
+      }
+      const { email, firstName, lastName, badgeIds } = u;
+      const rawBadgeIds = JSON.parse('[' + badgeIds + ']');
+      const newBadges = [];
+      for (const b of rawBadgeIds) {
+        let badgeDoc =
+          (await Badge.findOne({ id: b })) ||
+          (await Badge.findOne({ badgeId: String(b) }));
+        if (!badgeDoc) {
+          newBadges.push({ badgeId: b, earnedDate: new Date() });
+          continue;
+        }
+        const updated = await Badge.findOneAndUpdate(
+          { _id: badgeDoc._id },
+          { $inc: { certificateCounter: 1 } },
+          { new: true },
+        );
+        const counter = updated.certificateCounter || 1;
+        const seq = String(counter).padStart(4, '0');
+        const fmtAbbr = val => {
+          if (!val) return ''.padEnd(4, '0');
+          const s = String(val)
+            .toUpperCase()
+            .replace(/[^A-Z0-9]/g, '');
+          return s.length >= 4 ? s.slice(0, 4) : s.padEnd(4, '0');
+        };
+        const abbrPart =
+          updated.abbreviation && String(updated.abbreviation).trim() !== ''
+            ? fmtAbbr(updated.abbreviation)
+            : updated.badgeId
+            ? fmtAbbr(String(updated.badgeId).slice(0, 4))
+            : fmtAbbr(String(updated.id));
+        const badgeIdPart = String(updated.id);
+        const certificateId = `${abbrPart}${badgeIdPart}${seq}`;
+        newBadges.push({ badgeId: updated.badgeId || String(updated.id), earnedDate: new Date(), certificateId });
+      }
+
+      usersToBeUpdated.push({
+        updateOne: {
+          filter: { email },
+          update: {
+            $set: { email, firstName, lastName },
+            $push: { badges: { $each: newBadges } },
+          },
+          upsert: false,
+        },
+      });
+      updateBadgeMap.set(email, newBadges);
+    }
+  }
+
+  if (usersToBeInserted.length > 0) {
+    const inserted = await User.insertMany(usersToBeInserted);
+    const mailsPerSec = parseInt(process.env.MAILS_PER_SEC || '1', 10);
+    await rateLimitAsync(usersToBeInserted, mailsPerSec, async user => {
+      try {
+        const plainPassword = userPasswordMap.get(user.email);
+        await sendBulkUserWelcomeEmail(user.email, plainPassword);
+      } catch (emailError) {
+        console.error(`Failed to send welcome email to ${user.email}:`, emailError);
+      }
+    });
+
+    await rateLimitAsync(inserted, mailsPerSec, async savedUser => {
+      try {
+        if (!savedUser.badges || savedUser.badges.length === 0) return;
+        const prefs = savedUser.emailPreferences || {};
+        if (prefs.badgeReceived === false) return;
+        for (const badgeEntry of savedUser.badges) {
+          try {
+            const badgeDoc =
+              (await Badge.findOne({ badgeId: String(badgeEntry.badgeId) })) ||
+              (await Badge.findOne({ id: badgeEntry.badgeId }));
+            const badgeName = badgeDoc && badgeDoc.name ? badgeDoc.name : badgeEntry.badgeId || 'a badge';
+            const badgeDesc = badgeDoc && badgeDoc.description ? badgeDoc.description : '';
+            const backendBase = process.env.BACKEND_URL || process.env.FRONTEND || `http://localhost:${process.env.PORT || '3001'}`;
+            const imageUrl =
+              badgeDoc && badgeDoc.id
+                ? `${backendBase}/api/badge/images/${badgeDoc.id}`
+                : `${backendBase}/api/badge/images/${badgeEntry.badgeId}`;
+            const certificateId = badgeEntry.certificateId || null;
+            await sendBadgeReceivedEmail(savedUser.email, badgeName, badgeDesc, null, certificateId, imageUrl);
+          } catch (emailError) {
+            console.error(`Failed to send badge email to ${savedUser.email}:`, emailError);
+          }
+        }
+        await awardCompositeBadgesForUser(savedUser);
+      } catch (err) {
+        console.error(`Error processing badge emails for inserted user ${savedUser.email}:`, err);
+      }
+    });
+    userPasswordMap.clear();
+  }
+
+  if (usersToBeUpdated.length > 0) {
+    await User.bulkWrite(usersToBeUpdated);
+    for (const [email, newBadges] of updateBadgeMap.entries()) {
+      try {
+        const savedUser = await User.findOne({ email }).select('email emailPreferences');
+        const prefs = savedUser?.emailPreferences || {};
+        if (prefs.profileUpdate !== false) {
+          await sendProfileUpdateEmail(
+            email,
+            'profile_update',
+            '',
+            'Your profile has been updated with new badges by an administrator.',
+          );
+        }
+      } catch (emailError) {
+        console.error(`Failed to send update email to ${email}:`, emailError);
+      }
+
+      try {
+        const savedUser = await User.findOne({ email }).select('email emailPreferences');
+        const prefs = savedUser?.emailPreferences || {};
+        if (prefs.badgeReceived === false) continue;
+        for (const badgeEntry of newBadges) {
+          try {
+            const badgeDoc =
+              (await Badge.findOne({ badgeId: String(badgeEntry.badgeId) })) ||
+              (await Badge.findOne({ id: badgeEntry.badgeId }));
+            const badgeName = badgeDoc && badgeDoc.name ? badgeDoc.name : badgeEntry.badgeId || 'a badge';
+            const badgeDesc = badgeDoc && badgeDoc.description ? badgeDoc.description : '';
+            const backendBase = process.env.BACKEND_URL || process.env.FRONTEND || `http://localhost:${process.env.PORT || '3001'}`;
+            const imageUrl =
+              badgeDoc && badgeDoc.id
+                ? `${backendBase}/api/badge/images/${badgeDoc.id}`
+                : `${backendBase}/api/badge/images/${badgeEntry.badgeId}`;
+            const certificateId = badgeEntry.certificateId || null;
+            await sendBadgeReceivedEmail(email, badgeName, badgeDesc, null, certificateId, imageUrl);
+          } catch (emailError) {
+            console.error(`Failed to send badge email to ${email} for badge ${badgeEntry.badgeId}:`, emailError);
+          }
+        }
+      } catch (err) {
+        console.error(`Error sending badge notifications for updated user ${email}:`, err);
+      }
+    }
+  }
+
+  return {
+    message: 'Import completed',
+    inserted: usersToBeInserted.length,
+    updated: usersToBeUpdated.length,
+  };
+}
+
+
 // Add Course
 router.post('/users/courses', authenticateJWT, async (req, res) => {
   const { email, course } = req.body;
@@ -657,6 +904,44 @@ router.post("/users/import/preview", authenticateJWT, uploadCsv.single('file'), 
   } catch (error) {
     console.error("Internal Server Error:", error);
     return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+
+// public API – allow an external system to POST user/badge data directly
+// this route is intentionally **unauthenticated** so it can be called by
+// another site.  In production you should protect it with an API key,
+// shared secret, or IP whitelist rather than leaving it wide open.
+//
+// body: { users: [ { email, firstName, lastName?, badgeIds } ], upsert: bool }
+router.post('/users/import/external', async (req, res) => {
+  try {
+    const { users, upsert = false } = req.body;
+    if (!Array.isArray(users) || users.length === 0) {
+      return res.status(400).json({ message: 'no users provided' });
+    }
+
+    // basic validation identical to csvProcessing.js; push missing fields
+    const validUsers = [];
+    const invalidUsers = [];
+    users.forEach((u, idx) => {
+      const { email, firstName, lastName = '', badgeIds } = u;
+      if (!email || !firstName || !badgeIds) {
+        invalidUsers.push({ row: idx + 1, ...u, error: 'Missing required fields' });
+      } else {
+        validUsers.push({ row: idx + 1, email, firstName, lastName, badgeIds });
+      }
+    });
+
+    const summary = await performUserImport(
+      { validUsers, invalidUsers },
+      upsert,
+      /*requestingUserEmail=*/'external',
+    );
+    return res.status(200).json({ result: summary });
+  } catch (err) {
+    console.error('External import failed', err);
+    return res.status(500).json({ message: 'External import error' });
   }
 });
 

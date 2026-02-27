@@ -1,0 +1,15 @@
+meta {
+  name: External Bulk Import
+  type: http
+  seq: 10
+}
+
+post {
+  url: http://localhost:3001/users/import/external
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}
