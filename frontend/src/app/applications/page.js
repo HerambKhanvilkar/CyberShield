@@ -19,11 +19,12 @@ function AdminDashboardContent() {
         d.setHours(0,0,0,0);
         return d.getTime();
     };
-
+    const router = useRouter();
     const [activeTab, setActiveTab] = useState("applications");
     const [activeSubTab, setActiveSubTab] = useState("PENDING");
     // Org sub-tab (ACTIVE / ARCHIVED)
     const [orgSubTab, setOrgSubTab] = useState('ACTIVE');
+    const [projectSubTab, setProjectSubTab] = useState('ALL');
     const [apps, setApps] = useState([]);
     const [fellows, setFellows] = useState([]);
     const [orgs, setOrgs] = useState([]);
@@ -103,13 +104,49 @@ function AdminDashboardContent() {
         description: '',
         supportedLinks: [],
         contributors: [],
-        isActive: true
+        status: 'ongoing' // options: ongoing, completed, onhold
     });
     const [newLink, setNewLink] = useState({ linkName: '', url: '' });
-    const [newContributor, setNewContributor] = useState({ globalPid: '', firstName: '' });
+    const [newContributor, setNewContributor] = useState({ emailId: '', firstName: '', role: '' });
+    const [contributorMode, setContributorMode] = useState('name');
+    const [contributorQuery, setContributorQuery] = useState('');
+    const [contributorSuggestions, setContributorSuggestions] = useState([]);
+    const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+    const suggestionTimerRef = useRef(null);
 
-    const router = useRouter();
+    const fetchContributorSuggestions = async(query) => {
+        if(!query || query.length === 0){
+            setContributorSuggestions([]);
+            return;
+        }
+        const letter = encodeURIComponent(query[0].toLowerCase());
+        const serverUrl = process.env.SERVER_URL || 'http://localhost:3000/api';
+        const endpoint = contributorMode === 'name' ? `${serverUrl}/contributor/autocompleteByname?letter=${letter}` : `${serverUrl}/contributor/autocompleteByrole?letter=${letter}`
 
+        try{
+            setSuggestionsLoading(true);
+            const res = await fetch(endpoint, { headers: { 'Content-Type' : 'application/json' }});
+            if(!res.ok) throw new Error('Network response was not ok');
+            const data = await res.json();
+            setContributorSuggestions(Array.isArray(data) ? data : []);
+        }catch (err){
+            console.error('Autocomplete fetch error');
+            setContributorSuggestions([]);
+        } finally {
+            setSuggestionsLoading(false);
+        }
+    }
+
+    useEffect(() => {
+        if (suggestionTimerRef.current) clearTimeout(suggestionTimerRef.current);
+        // debounce
+        suggestionTimerRef.current = setTimeout(() => {
+            fetchContributorSuggestions(contributorQuery);
+        }, 250);
+        return () => {
+            if (suggestionTimerRef.current) clearTimeout(suggestionTimerRef.current);
+        };
+    }, [contributorQuery, contributorMode]);
     // Scroll refs + persistence (sessionStorage)
     const listRef = useRef(null);
     const inspectorRef = useRef(null);
@@ -255,7 +292,20 @@ function AdminDashboardContent() {
         try {
             const token = localStorage.getItem("accessToken");
             const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
-            await axios.post(`${serverUrl}/project`, newProjectData, {
+            // build payload for API (omit local-only fields like isActive)
+            const payload = {
+                title: newProjectData.title,
+                description: newProjectData.description,
+                supportedLinks: newProjectData.supportedLinks || [],
+                contributors: (newProjectData.contributors || []).map(c => ({
+                    firstName: c.firstName,
+                    email: c.emailId || c.email || c.globalPid || '',
+                    role: c.role || c.assignedRole || ''
+                })),
+                status: newProjectData.status
+            };
+
+            await axios.post(`${serverUrl}/project`, payload, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             toast.success("Project Created Successfully");
@@ -265,7 +315,7 @@ function AdminDashboardContent() {
                 description: '',
                 supportedLinks: [],
                 contributors: [],
-                isActive: true
+                status: 'ongoing'
             });
             fetchProjects();
         } catch (error) {
@@ -287,9 +337,52 @@ function AdminDashboardContent() {
         setNewLink({ linkName: '', url: '' });
     };
 
+    const handleRemoveLink = (index) => {
+        setNewProjectData({
+            ...newProjectData,
+            supportedLinks: newProjectData.supportedLinks.filter((_, i) => i !== index)
+        });
+    };
 
-    const handleQuickAddOrg = async (name, code) => {
-        if (!name || !code) return toast.error("Name and Code required");
+    const handleAddContributor = () => {
+        if (!newContributor.emailId || !newContributor.firstName) {
+            toast.error("Email and Name are required");
+            return;
+        }
+        setNewProjectData({
+            ...newProjectData,
+            contributors: [...newProjectData.contributors, { ...newContributor }]
+        });
+        setNewContributor({ emailId: '', firstName: '', role: '' });
+        setContributorQuery('');
+        setContributorSuggestions([]);
+    };
+
+    const handleSelectContributor = (item) => {
+        // item expected shape: { email, firstName, assigned_role }
+        const contributorObj = {
+            firstName: item.firstName || '',
+            emailId: item.email || item.emailId || '',
+            role: item.assigned_role || item.assignedRole || item.role || ''
+        };
+
+        // Add directly to contributors list so admin selects from suggestions only
+        setNewProjectData(prev => ({ ...prev, contributors: [...(prev.contributors || []), contributorObj] }));
+
+        // clear search state
+        setContributorQuery('');
+        setContributorSuggestions([]);
+    };
+
+    const handleRemoveContributor = (index) => {
+        setNewProjectData({
+            ...newProjectData,
+            contributors: newProjectData.contributors.filter((_, i) => i !== index)
+        });
+    };
+
+    const handleQuickAddOrg = async (name, code, adminPassword) => {
+        if (!name || !code || !adminPassword) return toast.error("Name, Code & Password required");
         try {
             const token = localStorage.getItem("accessToken");
             const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
@@ -1440,7 +1533,7 @@ function AdminDashboardContent() {
                                             description: '',
                                             supportedLinks: [],
                                             contributors: [],
-                                            isActive: true
+                                            status: 'ongoing'
                                         });
                                         setShowCreateProjectModal(true);
                                     }}
@@ -1492,6 +1585,21 @@ function AdminDashboardContent() {
                                 >
                                     {st}
                                     {orgSubTab === st && <motion.div layoutId="org-sub-tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500 shadow-[0_0_10px_#06b6d4]" />}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {activeTab === 'projects' && (
+                        <div className="flex bg-black border-b border-white/10 px-2 md:px-8 h-10 md:h-12 items-center gap-4 md:gap-8 relative z-20 overflow-x-auto">
+                            {['ONGOING', 'ONHOLD', 'COMPLETED', 'ALL'].map(st => (
+                                <button
+                                    key={st}
+                                    onClick={() => setProjectSubTab(st)}
+                                    className={`relative h-full text-[10px] font-bold tracking-[0.2em] transition-all flex items-center ${projectSubTab === st ? 'text-cyan-400' : 'text-gray-500 hover:text-white'}`}
+                                >
+                                    {st}
+                                    {projectSubTab === st && <motion.div layoutId="project-sub-tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500 shadow-[0_0_10px_#06b6d4]" />}
                                 </button>
                             ))}
                         </div>
@@ -1782,10 +1890,16 @@ function AdminDashboardContent() {
                                     </div>
                                 ))}
 
-                                {activeTab === 'projects' && projectData.filter(p => 
-                                    p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                    p.description.toLowerCase().includes(searchTerm.toLowerCase())
-                                ).map((project, idx) => (
+                                {activeTab === 'projects' && projectData.filter(p => {
+                                    const matchesSearch = (p.title || '').toLowerCase().includes(searchTerm.toLowerCase()) || (p.description || '').toLowerCase().includes(searchTerm.toLowerCase());
+                                    if (!matchesSearch) return false;
+                                    const status = (p.status || '').toString().toLowerCase();
+                                    if (projectSubTab === 'ALL') return true;
+                                    if (projectSubTab === 'ONGOING') return status === 'ongoing' || status === 'ongoing';
+                                    if (projectSubTab === 'ONHOLD') return status === 'onhold' || status === 'on-hold' || status === 'on hold';
+                                    if (projectSubTab === 'COMPLETED') return status === 'completed' || status === 'done' || status === 'finished';
+                                    return true;
+                                }).map((project, idx) => (
                                     <div
                                         key={project._id}
                                         onClick={() => setSelectedItem(project)}
@@ -1806,8 +1920,13 @@ function AdminDashboardContent() {
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className={`px-4 py-1.5 border text-xs font-bold uppercase tracking-widest ${project.isActive ? 'border-orange-500/50 text-orange-500' : 'border-red-500/50 text-red-500'}`}>
-                                            {project.isActive ? 'ACTIVE' : 'INACTIVE'}
+                                        <div className={`px-4 py-1.5 border text-xs font-bold uppercase tracking-widest ${
+                                            (project.status || '').toLowerCase() === 'ongoing' ? 'border-blue-500/50 text-blue-500' :
+                                            (project.status || '').toLowerCase() === 'completed' ? 'border-green-500/50 text-green-500' :
+                                            (project.status || '').toLowerCase() === 'onhold' || (project.status || '').toLowerCase() === 'on-hold' ? 'border-red-500/50 text-red-500' :
+                                            project.isActive ? 'border-orange-500/50 text-orange-500' : 'border-red-500/50 text-red-500'
+                                        }`}>
+                                            {((project.status || project.isActive) ? (project.status || (project.isActive ? 'ACTIVE' : 'INACTIVE')) : 'UNKNOWN').toString().toUpperCase()}
                                         </div>
                                     </div>
                                 ))}
@@ -1841,12 +1960,37 @@ function AdminDashboardContent() {
                                             <div className="w-24 h-24 border border-orange-500/30 flex items-center justify-center text-4xl font-bold bg-orange-500/5 text-orange-500">
                                                 <Code className="w-12 h-12" />
                                             </div>
-                                            <div className="flex-1 space-y-3">
-                                                <h2 className="text-3xl font-bold uppercase tracking-tight text-white">{selectedItem.title}</h2>
-                                                <div className="text-xs font-mono text-gray-500 grid grid-cols-2 gap-3">
-                                                    <span className="block p-2 border border-white/10">ID: {selectedItem._id}</span>
-                                                    <span className="block p-2 border border-white/10">STATUS: {selectedItem.isActive ? 'ACTIVE' : 'INACTIVE'}</span>
-                                                    <span className="block p-2 border border-white/10 col-span-2">CREATED: {new Date(selectedItem.createdAt).toLocaleDateString()}</span>
+
+                                            <div className="flex-1">
+                                                <div className="flex items-start justify-between gap-4">
+                                                    <div className="flex-1">
+                                                        <h2 className="text-3xl font-bold uppercase tracking-tight text-white">{selectedItem.title}</h2>
+
+                                                        {/* Links icons row (only icons) */}
+                                                        <div className="flex items-center gap-3 mt-3">
+                                                            {(selectedItem.supportedLinks || []).map((link, i) => {
+                                                                const url = (link.url || '').toLowerCase();
+                                                                if (url.includes('github.com')) return (<a key={i} href={link.url} target="_blank" rel="noreferrer" className="text-gray-300 hover:opacity-80"><Github className="w-5 h-5" /></a>);
+                                                                // fallback generic icon for other services
+                                                                return (<a key={i} href={link.url} target="_blank" rel="noreferrer" className="text-gray-300 hover:opacity-80"><ExternalLink className="w-5 h-5" /></a>);
+                                                            })}
+                                                        </div>
+
+                                                        <div className="mt-4 text-base text-gray-300 leading-relaxed">
+                                                            {selectedItem.description || 'NO_DESCRIPTION'}
+                                                        </div>
+
+                                                        <div className="mt-3 text-sm text-gray-400">Started on: {selectedItem.createdAt ? new Date(selectedItem.createdAt).toLocaleDateString() : 'N/A'}</div>
+                                                    </div>
+
+                                                    <div className="w-36 flex-shrink-0 flex items-start justify-end">
+                                                        {(() => {
+                                                            const st = (selectedItem.status || (selectedItem.isActive ? 'ACTIVE' : '')).toString().toLowerCase();
+                                                            const cls = st === 'ongoing' ? 'border-blue-500/50 text-blue-500' : st === 'completed' ? 'border-green-500/50 text-green-500' : (st === 'onhold' || st === 'on-hold' ? 'border-red-500/50 text-red-500' : (selectedItem.isActive ? 'border-orange-500/50 text-orange-500' : 'border-red-500/50 text-red-500'));
+                                                            const label = (selectedItem.status || (selectedItem.isActive ? 'ACTIVE' : 'UNKNOWN')).toString().toUpperCase();
+                                                            return (<div className={`px-4 py-2 border text-sm font-bold uppercase tracking-widest ${cls}`}>{label}</div>);
+                                                        })()}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1856,20 +2000,13 @@ function AdminDashboardContent() {
                                                 <h4 className="text-xs font-bold text-orange-500 uppercase tracking-widest border-b border-orange-900/30 pb-3">Project_Details</h4>
                                                 
                                                 <div className="space-y-4">
-                                                    <div className="space-y-2">
-                                                        <div className="text-[10px] text-gray-500 uppercase font-mono tracking-widest">Description</div>
-                                                        <div className="p-4 bg-black/40 border border-white/5 text-xs text-gray-400 font-mono leading-relaxed">
-                                                            {selectedItem.description || "NO_DESCRIPTION"}
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="space-y-2">
+                                                        <div className="space-y-2">
                                                         <div className="text-[10px] text-gray-500 uppercase font-mono tracking-widest">Contributors ({selectedItem.contributors?.length || 0})</div>
                                                         <div className="flex flex-wrap gap-2">
                                                             {(selectedItem.contributors || []).map((contributor, idx) => (
                                                                 <span key={idx} className="px-3 py-1.5 bg-orange-900/20 border border-orange-500/30 text-orange-400 text-[10px] font-bold uppercase tracking-wider flex items-center gap-2">
                                                                     <Users className="w-3 h-3" />
-                                                                    {contributor.firstName} ({contributor.globalPid})
+                                                                    {contributor.firstName} ({contributor.emailId}){contributor.role ? ` [${contributor.role}]` : ''}
                                                                 </span>
                                                             ))}
                                                             {(!selectedItem.contributors || selectedItem.contributors.length === 0) && (
@@ -1885,14 +2022,18 @@ function AdminDashboardContent() {
                                                                 <a
                                                                     key={idx}
                                                                     href={link.url}
+                                                                    title={link.url}
                                                                     target="_blank"
                                                                     rel="noopener noreferrer"
                                                                     className="flex items-center justify-between p-3 bg-black/40 border border-white/5 hover:border-orange-500/30 transition-all group"
                                                                 >
-                                                                    <span className="text-[10px] font-mono text-gray-400 uppercase">{link.linkName}</span>
+                                                                    <span className="text-sm font-mono text-gray-300 uppercase">{link.linkName || 'LINK'}</span>
                                                                     <div className="flex items-center gap-2">
-                                                                        <span className="text-[9px] text-orange-500 font-mono truncate max-w-[200px]">{link.url}</span>
-                                                                        <ExternalLink className="w-3 h-3 text-orange-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                                        {((link.url || '').toLowerCase().includes('github.com')) ? (
+                                                                            <Github className="w-4 h-4 text-orange-500" />
+                                                                        ) : (
+                                                                            <ExternalLink className="w-4 h-4 text-orange-500" />
+                                                                        )}
                                                                     </div>
                                                                 </a>
                                                             ))}
@@ -2668,8 +2809,207 @@ function AdminDashboardContent() {
                         </div>
                     )}
                 </AnimatePresence>
-            </div>
 
+                {/* Create Project Modal */}
+                <AnimatePresence>
+                    {showCreateProjectModal && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                className="w-full max-w-[700px] bg-black border border-orange-500/30 shadow-[0_0_50px_rgba(249,115,22,0.1)] rounded-2xl overflow-hidden"
+                            >
+                                <div className="h-14 flex items-center justify-between px-6 border-b border-white/10 bg-orange-500/5">
+                                    <h3 className="text-lg font-bold text-orange-400 uppercase tracking-widest flex items-center gap-2">
+                                        <Code className="w-4 h-4" /> CREATE NEW PROJECT
+                                    </h3>
+                                    <button onClick={() => setShowCreateProjectModal(false)} className="text-gray-500 hover:text-white transition-colors">
+                                        <XCircle className="w-5 h-5" />
+                                    </button>
+                                </div>
+
+                                <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
+                                    {/* Basic Info */}
+                                    <div className="space-y-4">
+                                        <div className="space-y-1.5">
+                                            <label className="text-base uppercase font-bold text-gray-200 tracking-widest">Project Title *</label>
+                                            <Input 
+                                                value={newProjectData.title} 
+                                                onChange={e => setNewProjectData({ ...newProjectData, title: e.target.value })} 
+                                                className="bg-black border-white/10 h-10 text-base font-mono text-white focus:border-orange-500" 
+                                                placeholder="PROJECT_NAME"
+                                            />
+                                        </div>
+                                        
+                                        <div className="space-y-1.5">
+                                            <label className="text-base uppercase font-bold text-gray-200 tracking-widest">Description *</label>
+                                            <textarea 
+                                                value={newProjectData.description} 
+                                                onChange={e => setNewProjectData({ ...newProjectData, description: e.target.value })} 
+                                                className="w-full bg-black border border-white/10 p-3 text-base font-mono text-white focus:border-orange-500 outline-none min-h-[100px] custom-scrollbar"
+                                                placeholder="PROJECT_DESCRIPTION..."
+                                            />
+                                        </div>
+
+                                        {/* isActive removed: API no longer accepts this field */}
+                                        <div className="flex items-center gap-3">
+                                            <label className="text-base uppercase font-bold text-gray-200 tracking-widest">Status</label>
+                                            <div className="flex items-center gap-2">
+                                                <select
+                                                    value={newProjectData.status}
+                                                    onChange={e => setNewProjectData({ ...newProjectData, status: e.target.value })}
+                                                    className="bg-black border border-white/10 h-10 text-base font-mono text-white px-3"
+                                                >
+                                                    <option value="ongoing">Ongoing</option>
+                                                    <option value="completed">Completed</option>
+                                                    <option value="onhold">On Hold</option>
+                                                </select>
+                                                {/* color indicator */}
+                                                <span className={`w-3 h-3 rounded-full ${newProjectData.status === 'ongoing' ? 'bg-blue-500' : newProjectData.status === 'completed' ? 'bg-green-500' : 'bg-red-500'}`} />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Links Section */}
+                                    <div className="pt-4 border-t border-white/5 space-y-3">
+                                        <label className="text-base uppercase font-bold text-orange-400 tracking-widest">Supported Links</label>
+                                        
+                                        {/* Added Links */}
+                                        {newProjectData.supportedLinks.length > 0 && (
+                                            <div className="space-y-2 mb-3">
+                                                {newProjectData.supportedLinks.map((link, idx) => (
+                                                    <div key={idx} className="flex items-center gap-2 p-2 bg-orange-900/10 border border-orange-500/20">
+                                                        <ExternalLink className="w-3 h-3 text-orange-500" />
+                                                        <div className="flex-1 text-base font-mono">
+                                                            <div className="text-orange-400">{link.linkName}</div>
+                                                            <div className="text-gray-500 truncate">{link.url}</div>
+                                                        </div>
+                                                        <button 
+                                                            onClick={() => handleRemoveLink(idx)}
+                                                            className="text-red-500 hover:text-red-400 p-1"
+                                                        >
+                                                            <XCircle className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {/* Add Link Form */}
+                                        <div className="flex gap-2">
+                                            <Input 
+                                                value={newLink.linkName} 
+                                                onChange={e => setNewLink({ ...newLink, linkName: e.target.value })} 
+                                                className="bg-black border-white/10 h-9 text-sm font-mono text-white focus:border-orange-500 flex-1"
+                                                placeholder="Link Name"
+                                            />
+                                            <Input 
+                                                value={newLink.url} 
+                                                onChange={e => setNewLink({ ...newLink, url: e.target.value })} 
+                                                className="bg-black border-white/10 h-9 text-sm font-mono text-white focus:border-orange-500 flex-1"
+                                                placeholder="https://..."
+                                            />
+                                            <button 
+                                                onClick={handleAddLink}
+                                                className="px-3 h-9 bg-orange-900/20 border border-orange-500/50 text-orange-500 hover:bg-orange-500/10 text-sm font-bold uppercase"
+                                            >
+                                                <Plus className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Contributors Section */}
+                                    <div className="pt-4 border-t border-white/5 space-y-3">
+                                        <label className="text-sm uppercase font-bold text-orange-400 tracking-widest">Contributors</label>
+                                        
+                                        {/* Added Contributors */}
+                                        {newProjectData.contributors.length > 0 && (
+                                            <div className="space-y-2 mb-3">
+                                                {newProjectData.contributors.map((contributor, idx) => (
+                                                    <div key={idx} className="flex items-center gap-2 p-2 bg-orange-900/10 border border-orange-500/20">
+                                                        <Users className="w-3 h-3 text-orange-500" />
+                                                        <div className="flex-1 text-base font-mono">
+                                                            <span className="text-orange-400">{contributor.firstName}</span>
+                                                            <span className="text-gray-500 ml-2">({contributor.emailId})</span>
+                                                            {contributor.role && <span className="text-base text-cyan-400 ml-2">[{contributor.role}]</span>}
+                                                        </div>
+                                                        <button 
+                                                            onClick={() => handleRemoveContributor(idx)}
+                                                            className="text-red-500 hover:text-red-400 p-1"
+                                                        >
+                                                            <XCircle className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                                                                {/* Add Contributor Form */}
+                                                                                <div className="relative">
+                                                                                    <div className="flex gap-2 mb-2">
+                                                                                        <button
+                                                                                            type="button"
+                                                                                            onClick={() => setContributorMode('name')}
+                                                                                            className={`px-2 py-1 text-base font-bold uppercase ${contributorMode === 'name' ? 'bg-orange-500 text-black' : 'bg-black border border-white/10 text-orange-500'}`}
+                                                                                        >
+                                                                                            Search by name
+                                                                                        </button>
+                                                                                        <button
+                                                                                            type="button"
+                                                                                            onClick={() => setContributorMode('role')}
+                                                                                            className={`px-2 py-1 text-base font-bold uppercase ${contributorMode === 'role' ? 'bg-orange-500 text-black' : 'bg-black border border-white/10 text-orange-500'}`}
+                                                                                        >
+                                                                                            Search by role
+                                                                                        </button>
+                                                                                    </div>
+
+                                                                                    <div className="flex gap-2">
+                                                                                        <Input
+                                                                                            value={contributorQuery}
+                                                                                            onChange={e => setContributorQuery(e.target.value)}
+                                                                                            className="bg-black border-white/10 h-9 text-base font-mono text-white focus:border-orange-500 flex-1"
+                                                                                            placeholder={contributorMode === 'name' ? 'Type name to search and select' : 'Type role to search and select'}
+                                                                                        />
+                                                                                    </div>
+
+                                                                                    {/* Suggestions dropdown */}
+                                                                                    { (contributorSuggestions.length > 0 || suggestionsLoading) && (
+                                                                                        <div className="absolute left-0 right-0 mt-2 z-50 bg-black border border-white/10 shadow-lg max-h-56 overflow-auto">
+                                                                                            {suggestionsLoading && (
+                                                                                                <div className="p-2 text-xs text-gray-400">Searching...</div>
+                                                                                            )}
+                                                                                            {contributorSuggestions.map((s, i) => (
+                                                                                                <div
+                                                                                                    key={i}
+                                                                                                    onClick={() => handleSelectContributor(s)}
+                                                                                                    className="p-3 hover:bg-white/5 cursor-pointer"
+                                                                                                >
+                                                                                                    <div className="flex justify-between items-center">
+                                                                                                        <div className="text-lg font-mono text-orange-400">{s.firstName} <span className="text-base text-gray-500 ml-2">({s.assigned_role})</span></div>
+                                                                                                        <div className="text-base text-gray-500">{s.email}</div>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            ))}
+                                                                                        </div>
+                                                                                    )}
+                                                                                </div>
+                                    </div>
+
+                                    {/* Submit Button */}
+                                    <button
+                                        onClick={handleCreateProject}
+                                        disabled={actionLoading}
+                                        className="w-full h-12 bg-orange-900/20 border border-orange-500/50 text-orange-500 hover:bg-orange-500 hover:text-black font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 text-sm mt-4"
+                                    >
+                                        {actionLoading ? 'CREATING...' : 'CREATE_PROJECT'}
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
+            </div>
             <Footer />
         </div>
     );

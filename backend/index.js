@@ -11,8 +11,10 @@ const mongoSanitize = require("mongo-sanitize");
 const escapeHtml = require("escape-html");
 const serverRoutes = require("./routes/server");
 const authRoutes = require("./routes/authRoutes");
-const adminRoutes = require("./routes/adminRoutes");
-const projectRoutes = require("./routes/projectRoutes");
+const adminRoutes = require("./routes/AdminRoutes/adminRoutes");
+const adminProjectRoutes = require("./routes/AdminRoutes/projectRoutes");
+const projectRoutes = require("./routes/ProjectManagment/projectRoutes");
+const fellowProjectRoutes = require("./routes/ProjectManagment/fellowProjectProfileManagementRoute");
 const jobRoutes = require("./routes/jobStatus");
 const slowDown = require('express-slow-down');
 const cors = require("cors");
@@ -156,6 +158,7 @@ app.use((err, req, res, next) => {
   app.use("/api/auth", authRoutes);
   app.use("/api", jobRoutes);
   app.use("/api", adminRoutes);
+  app.use("/api", adminProjectRoutes);
   app.use("/api", serverRoutes);
 
   // New Routes for Portal and Application
@@ -180,4 +183,5 @@ app.use((err, req, res, next) => {
 
   //Project Routes
   app.use("/api", projectRoutes);
+  app.use("/api", fellowProjectRoutes);
 })();
