@@ -21,31 +21,31 @@ function rateLimitAsync(items, perSec, asyncFn) {
     nextBatch();
   });
 }
-const { authenticateJWT, isAdmin } = require('../middleware/auth');
+const { authenticateJWT, isAdmin } = require('../../middleware/auth.js');
 const express = require("express");
 const router = express.Router();
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
-const Badge = require("../models/Badge");
-const BadgeImage = require("../models/BadgeImage");
-const User = require("../models/User");
-const JobResult = require("../models/JobResult");
+const Badge = require("../../models/Badge.js");
+const BadgeImage = require("../../models/BadgeImage.js");
+const User = require("../../models/User.js");
+const JobResult = require("../../models/JobResult.js");
 const jwt = require('jsonwebtoken');
 const csv = require('csv-parser');
 const bcrypt = require("bcrypt");
 const { Parser } = require('json2csv');
-const agenda = require('../worker.js'); // path to your agenda initialization module
+const agenda = require('../../worker.js'); // path to your agenda initialization module
 const { validateMIMEType } = require("validate-image-type");
 const sharp = require('sharp');
 const {
   sendBulkUserWelcomeEmail,
   sendBadgeReceivedEmail,
   sendProfileUpdateEmail
-} = require("../services/emailService");
-const { awardCompositeBadgesForUser } = require('../services/badgeService');
-const FellowshipProfile = require('../models/FellowshipProfile');
-const LifecycleManager = require('../services/LifecycleManager');
+} = require("../../services/emailService.js");
+const { awardCompositeBadgesForUser } = require('../../services/badgeService.js');
+const FellowshipProfile = require('../../models/FellowshipProfile.js');
+const LifecycleManager = require('../../services/LifecycleManager.js');
 
 const uploadImage = multer({
   limits: { fileSize: 5 * 1000 * 1000 }, // 5MB max file size
@@ -489,7 +489,7 @@ router.delete('/badge/:id', authenticateJWT, async (req, res) => {
       try {
         const freshUser = await User.findOne({ email: u.email });
         if (!freshUser) continue;
-        const { revokeDependentBadgesForUser } = require('../services/badgeService');
+        const { revokeDependentBadgesForUser } = require('../../services/badgeService.js');
         const revoked = await revokeDependentBadgesForUser(freshUser, [String(badge._id || badge.id)]);
         if (revoked && revoked.length > 0) {
           console.log(`Cascade revoked ${revoked.length} composite badges for ${freshUser.email}`);
@@ -977,7 +977,7 @@ router.post('/admin/fellows/:id/promote', authenticateJWT, isAdmin, async (req, 
     });
 
     // Logging
-    const HiringAuditLog = require('../models/HiringAuditLog');
+    const HiringAuditLog = require('../../models/HiringAuditLog.js');
     await HiringAuditLog.create({
       action: "FELLOW_PROMOTE",
       userId: fellow.email,
@@ -986,7 +986,7 @@ router.post('/admin/fellows/:id/promote', authenticateJWT, isAdmin, async (req, 
     });
 
     // Send Promotion Email
-    const { sendPromotionEmail } = require('../services/emailService');
+    const { sendPromotionEmail } = require('../../services/emailService.js');
     try {
       if (fellow.email) await sendPromotionEmail(fellow.email, newRole || "Senior Fellow");
     } catch (e) {
@@ -1026,7 +1026,7 @@ router.post('/admin/fellows/:id/terminate', authenticateJWT, isAdmin, async (req
     }
 
     // 2. Logging (Before deletion)
-    const HiringAuditLog = require('../models/HiringAuditLog');
+    const HiringAuditLog = require('../../models/HiringAuditLog.js');
     await HiringAuditLog.create({
       action: "FELLOW_TERMINATE",
       userId: fellow.email,
@@ -1035,7 +1035,7 @@ router.post('/admin/fellows/:id/terminate', authenticateJWT, isAdmin, async (req
     });
 
     // 3. Send Termination Email with Attachments
-    const { sendTerminationEmail } = require('../services/emailService');
+    const { sendTerminationEmail } = require('../../services/emailService.js');
     try {
       if (fellow.email) {
         await sendTerminationEmail(fellow.email, reason, attachments);
@@ -1049,7 +1049,7 @@ router.post('/admin/fellows/:id/terminate', authenticateJWT, isAdmin, async (req
     await FellowshipProfile.findByIdAndDelete(fellow._id);
 
     // Also delete any existing application records
-    const Applicant = require('../models/Applicant');
+    const Applicant = require('../../models/Applicant.js');
     await Applicant.deleteMany({ email: userEmail });
 
     // Also delete from main Badge-Viewer DB
@@ -1106,7 +1106,7 @@ router.post('/admin/fellows/add', authenticateJWT, isAdmin, async (req, res) => 
     await profile.save();
 
     // Audit Log
-    const HiringAuditLog = require('../models/HiringAuditLog');
+    const HiringAuditLog = require('../../models/HiringAuditLog.js');
     await HiringAuditLog.create({
       action: "FELLOW_ADD_MANUAL",
       userId: email,

@@ -446,6 +446,7 @@ router.patch('/admin/status', authenticateJWT, isAdmin, [
                     email: applicant.email,
                     firstName: applicant.firstName,
                     lastName: applicant.lastName,
+                    assigned_role: roleToUse,
                     status: 'PENDING',
                     onboardingState: 'PROFILE',
                     tenures: [{

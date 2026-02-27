@@ -1,11 +1,10 @@
 const mongoose = require('mongoose');
-const projectDBconnection = require('./connectiondb/projectsDB');
-const { unique } = require('agenda/dist/job/unique');
+const projectDBconnection = require('../connectiondb/projectsDB');
 
 const projectSchema = new mongoose.Schema({
     title:{
         type: String,
-        require: true,
+        required: true,
         unique: true,
         trim: true
     },
@@ -27,21 +26,24 @@ const projectSchema = new mongoose.Schema({
     ],
     contributors: [
         {
-            globalPid: {
-                type: String,
-                trim: true
-            },
             firstName: {
                 type: String,
                 trim: true
+            },
+            email: {
+                type: String,
+                trim: true,
+            },
+            role: {
+                type: String,
+                trim: true,
             }
         }
     ],
-    isActive: {
-        type: Boolean,
-        require: true,
-        default: true
-    },
+    status: {
+        type: String,
+        trim: true,
+    }
 }, {timestamps: true});
 
 module.exports = projectDBconnection.model('Project', projectSchema);
