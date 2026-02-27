@@ -67,19 +67,8 @@ export default function OfferPage() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl px-4">
-                {/* NDA Box */}
-                <div className="p-8 bg-black border border-white/10 relative group hover:border-purple-500/50 transition-colors">
-                    <div className="absolute top-0 left-0 w-2 h-2 bg-purple-500" />
-                    <ShieldCheck className="w-10 h-10 mb-4 text-purple-400/50 group-hover:text-purple-400 transition-colors" />
-                    <h3 className="text-xs font-black uppercase tracking-widest text-white mb-2">Signed_NDA</h3>
-                    <p className="text-[9px] font-mono text-gray-500 mb-6 uppercase">NDA_Executed_{user.lastName}.pdf</p>
-                    <Button onClick={() => handleDownload('download-nda', `Signed_NDA_${user.lastName}.pdf`)} className="w-full h-12 bg-purple-500 text-white hover:bg-purple-600 rounded-none font-black text-[10px] uppercase tracking-widest">
-                        <Download className="w-3 h-3 mr-2" /> RETRIEVE_NDA
-                    </Button>
-                </div>
-                
-                {/* Offer Letter Box */}
+            <div className="grid grid-cols-1 gap-6 w-full max-w-2xl px-4">
+                {/* /* Offer Letter Box */}
                 <div className="p-8 bg-black border border-white/10 relative group hover:border-cyan-500/50 transition-colors">
                     <div className="absolute top-0 left-0 w-2 h-2 bg-cyan-500" />
                     <FileText className="w-10 h-10 mb-4 text-cyan-400/50 group-hover:text-cyan-400 transition-colors" />

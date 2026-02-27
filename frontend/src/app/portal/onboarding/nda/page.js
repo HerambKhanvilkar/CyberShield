@@ -11,11 +11,39 @@ import { motion } from "framer-motion";
 import { Eye, Download, ShieldCheck } from "lucide-react";
 
 export default function NDAPage() {
-    const { fetchUser } = useOnboarding();
+    const { user, fetchUser } = useOnboarding();
     const router = useRouter();
     const [legalName, setLegalName] = useState("");
     const [ndaLoading, setNdaLoading] = useState(false);
     const [previewLoading, setPreviewLoading] = useState(false);
+
+    const handleDownloadSigned = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const response = await axios.get(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/portal/download-nda`, {
+                headers: { Authorization: `Bearer ${token}` },
+                responseType: 'blob'
+            });
+
+            if (response.data.type === 'application/json') {
+                const text = await response.data.text();
+                const errorJson = JSON.parse(text);
+                toast.error(`Download Error: ${errorJson.message}`);
+                return;
+            }
+
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `NDA_${user.lastName}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            toast.success("Signed NDA retrieved.");
+        } catch (error) {
+            toast.error("Failed to download signed NDA.");
+        }
+    };
 
     const handleDownloadPreview = async () => {
         setPreviewLoading(true);
@@ -138,6 +166,19 @@ export default function NDAPage() {
                     )}
                 </button>
             </div>
+
+            {/* signed copy box if already executed */}
+            {user?.nda?.dateTimeUser && user.nda.dateTimeUser !== "0" && (
+                <div className="p-8 bg-black border border-white/10 relative group hover:border-purple-500/50 transition-colors mt-6">
+                    <div className="absolute top-0 left-0 w-2 h-2 bg-purple-500" />
+                    <ShieldCheck className="w-10 h-10 mb-4 text-purple-400/50 group-hover:text-purple-400 transition-colors" />
+                    <h3 className="text-xs font-black uppercase tracking-widest text-white mb-2">Signed_NDA</h3>
+                    <p className="text-[9px] font-mono text-gray-500 mb-6 uppercase">NDA_Executed_{user.lastName}.pdf</p>
+                    <Button onClick={handleDownloadSigned} className="w-full h-12 bg-purple-500 text-white hover:bg-purple-600 rounded-none font-black text-[10px] uppercase tracking-widest">
+                        <Download className="w-3 h-3 mr-2" /> RETRIEVE_NDA
+                    </Button>
+                </div>
+            )}
 
             <div className="space-y-6 pt-6">
                 <label className="text-[10px] font-black uppercase text-gray-400 tracking-[0.3em] text-center block">To Sign The Agreement, Please Enter your Full <span className="text-purple-400">Name</span> Below</label>

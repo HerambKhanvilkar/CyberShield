@@ -3,7 +3,14 @@ module.exports = {
     images: {
       localPatterns: [
         {
+          // existing assets folder pattern
           pathname: '/assets/images/**',
+          search: '',
+        },
+        {
+          // allow images located in public root (e.g. /dclogoUK.png)
+          pathname: '/**/*',
+          // you can restrict to specific extensions if desired: '/**/*.{png,jpg,jpeg,svg}'
           search: '',
         },
       ],

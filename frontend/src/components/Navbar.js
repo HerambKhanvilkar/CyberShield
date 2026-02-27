@@ -188,12 +188,6 @@ function Navbar() {
           {/* Desktop Menu Links, center-aligned (optional, can be removed if not needed) */}
           <div className="hidden sm:block md:hidden lg:block flex-1">
             <div className="flex space-x-4 text-white font-medium justify-center">
-              <Link
-                href="/"
-                className="hover:text-[#3DB5DA] transition-colors flex items-center gap-2"
-              >
-                <span>Home</span>
-              </Link>
               <a
                 href="https://learn.deepcytes.io/"
                 target="_blank"

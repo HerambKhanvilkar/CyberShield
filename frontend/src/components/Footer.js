@@ -9,7 +9,7 @@ export default function Footer() {
           <div className="flex items-center">
             <Link href={'/'}>
               <img
-                src="./dclogoUK.png"
+                src="/dclogoUK.png" // absolute path from public folder
                 className="h-16 me-3"
                 alt="DeepCytes Logo"
               />

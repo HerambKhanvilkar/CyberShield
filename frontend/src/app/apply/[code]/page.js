@@ -11,9 +11,22 @@ import { toast } from "react-toastify";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Calendar, Mail, FileText, Send, ChevronRight, CheckCircle2, ShieldCheck, Clock, Lock } from "lucide-react";
+import { User, Calendar, Mail, FileText, Send, ChevronRight, CheckCircle2, ShieldCheck, Clock, Lock, Info } from "lucide-react";
 
 export default function ApplicationForm() {
+        // initial form object for dirty checking
+        const initialForm = {
+            firstName: "",
+            lastName: "",
+            email: "",
+            otp: "",
+            roles: [],
+            resume: "",
+            whyFellowship: "",
+            innovativeIdeas: "",
+            consent: false
+        };
+
         // Cooldown state for resend OTP
         const [resendCooldown, setResendCooldown] = useState(0);
 
@@ -40,21 +53,42 @@ export default function ApplicationForm() {
     const [statusStep, setStatusStep] = useState("start"); // start, otp_sent
     const [statusLoading, setStatusLoading] = useState(false);
 
-    const [formData, setFormData] = useState({
-        firstName: "",
-        lastName: "",
-        email: "",
-        otp: "",
-        roles: [],
-        resume: "",
-        whyFellowship: "",
-        innovativeIdeas: "",
-        consent: false
-    });
+    const [formData, setFormData] = useState(initialForm);
     const [resumeFile, setResumeFile] = useState(null);
     const [emailStep, setEmailStep] = useState("start"); // start, otp_sent, verified
     const [otpLoading, setOtpLoading] = useState(false);
     const [submitLoading, setSubmitLoading] = useState(false);
+    // Track which role card has its description expanded via info toggle
+    const [expandedRole, setExpandedRole] = useState(null);
+
+    // determine if form has any user-entered data
+    const isFormDirty = () => {
+        if (resumeFile) return true;
+        if (emailStep !== 'start') return true;
+        return JSON.stringify(formData) !== JSON.stringify(initialForm);
+    };
+
+    // hook: warn user when trying to leave with unsaved data
+    useEffect(() => {
+        const handleBeforeUnload = (e) => {
+            if (!isFormDirty()) return;
+            e.preventDefault();
+            e.returnValue = '';
+        };
+        const handlePopstate = () => {
+            if (!isFormDirty()) return;
+            // push state back so navigation is cancelled if user cancels
+            if (!confirm('You have entered information on this form. Leaving will clear everything. Continue?')) {
+                history.pushState(null, '', window.location.pathname);
+            }
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        window.addEventListener('popstate', handlePopstate);
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+            window.removeEventListener('popstate', handlePopstate);
+        };
+    }, [formData, resumeFile, emailStep]);
 
     useEffect(() => {
         const fetchOrg = async () => {
@@ -441,22 +475,32 @@ export default function ApplicationForm() {
                                     )}
                                 </AnimatePresence>
                             </div>
+
                             {/* Role Selection */}
                             <div className="space-y-4">
                                 <Label className="text-gray-400 text-sm sm:text-base flex items-center gap-2">
                                     Target Roles (Select up to 2)
                                 </Label>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                {/* grid layout with dense flow; expanded cards span extra rows to create a bento-like rearrangement */}
+                                <motion.div layout layoutGroup transition={{ layout: { type: 'spring', stiffness: 260, damping: 25 } }} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-auto grid-flow-row-dense">
                                     {(org.formVars?.roles || []).map((role) => {
                                         // Handle both string and object roles
                                         const roleName = typeof role === 'object' ? role.name : role;
                                         const roleDesc = typeof role === 'object' ? (role.description || '') : '';
                                         const isSelected = formData.roles.includes(roleName);
+                                        const showDesc = isSelected || expandedRole === roleName;
                                         return (
-                                            <button
+                                            <motion.button
                                                 key={roleName}
+                                                layout
+                                                transition={{ layout: { type: 'spring', stiffness: 280, damping: 30, bounce: 0.25 } }}
+                                                whileHover={{ scale: 1.03, boxShadow: '0 0 15px rgba(6,182,212,0.3)' }}
                                                 type="button"
+                                                className={`mb-3 break-inside-avoid p-4 rounded-xl border text-sm transition-all duration-200 transform text-left flex items-center justify-between group ${isSelected
+                                                    ? "bg-cyan-500/10 border-cyan-500 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.1)]"
+                                                    : "bg-white/5 border-white/10 text-gray-400 hover:border-white/30 hover:bg-white/[0.08] hover:scale-[1.02] hover:shadow-[0_0_10px_rgba(6,182,212,0.2)]"
+                                                    } ${!roleDesc ? 'h-20 overflow-hidden' : ''}`}
                                                 onClick={() => {
                                                     let newRoles = [...formData.roles];
                                                     if (isSelected) {
@@ -470,25 +514,46 @@ export default function ApplicationForm() {
                                                     }
                                                     setFormData({ ...formData, roles: newRoles });
                                                 }}
-                                                className={`p-4 rounded-xl border text-sm transition-all duration-200 text-left flex items-center justify-between group ${isSelected
-                                                    ? "bg-cyan-500/10 border-cyan-500 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.1)]"
-                                                    : "bg-white/5 border-white/10 text-gray-400 hover:border-white/30 hover:bg-white/[0.08]"
-                                                    }`}
+                                                aria-pressed={isSelected}
+                                                aria-describedby={showDesc && roleDesc ? `role-desc-${roleName}` : undefined}
                                             >
                                                 <div className="flex-1 text-left">
-                                                    <div className="truncate font-bold text-sm text-white">{roleName}</div>
-                                                    {roleDesc ? (
-                                                        <div className="mt-1 text-[11px] text-gray-400 truncate">{roleDesc}</div>
-                                                    ) : null}
+                                                    <div className="font-bold text-sm text-white whitespace-normal break-words line-clamp-2">{roleName}</div>
+                                                    <AnimatePresence>
+                                                        {showDesc && roleDesc && (
+                                                            <motion.div
+                                                                id={`role-desc-${roleName}`}
+                                                                layout
+                                                                initial={{ height: 0, opacity: 0 }}
+                                                                animate={{ height: 'auto', opacity: 1 }}
+                                                                exit={{ height: 0, opacity: 0 }}
+                                                                transition={{ duration: 0.2 }}
+                                                                className="mt-1 text-[11px] text-gray-400"
+                                                            >
+                                                                {roleDesc}
+                                                            </motion.div>
+                                                        )}
+                                                    </AnimatePresence>
                                                 </div>
 
+                                                {/* info icon toggles description expansion; click only */}
+                                                {roleDesc && expandedRole !== roleName && (
+                                                    <Info
+                                                        onClick={e => {
+                                                            e.stopPropagation();
+                                                            setExpandedRole(prev => prev === roleName ? null : roleName);
+                                                        }}
+                                                        className="w-4 h-4 flex-shrink-0 text-gray-400 cursor-pointer transition-opacity mr-2"
+                                                        title="Click for details"
+                                                    />
+                                                )}
                                                 {isSelected && (
                                                     <CheckCircle2 className="w-4 h-4 flex-shrink-0 animate-in zoom-in duration-300" />
                                                 )}
-                                            </button>
+                                            </motion.button>
                                         );
                                     })}
-                                </div>
+                                </motion.div>
                             </div>
                             
                             {/* Resume + Portfolio */}
@@ -499,7 +564,7 @@ export default function ApplicationForm() {
                                     {/* <span className="text-xs text-red-500 ml-1">Mandatory</span> */}
                                 </Label>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 gap-4">
                                     {/* Resume upload */}
                                     <div className="relative group">
                                         <input
@@ -539,19 +604,37 @@ export default function ApplicationForm() {
                                     <textarea
                                         className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white min-h-[120px] focus:border-cyan-500/50 focus:ring-0 resize-none text-sm sm:text-base"
                                         placeholder="In 100-200 words, tell us about your skills, research abilities, and why you’re passionate about the field of cybersecurity."
+                                        maxLength={1000}
                                         value={formData.whyFellowship || ''}
-                                        onChange={e => setFormData({ ...formData, whyFellowship: e.target.value })}
+                                        onChange={e => {
+                                            const v = e.target.value;
+                                            if (v.length <= 1000) {
+                                                setFormData({ ...formData, whyFellowship: v });
+                                            }
+                                        }}
                                         required
                                     />
+                                    <div className="text-right text-xs text-gray-400 mt-1">
+                                        {(formData.whyFellowship || '').length}/1000
+                                    </div>
                                 </div>
                                 <div>
                                     <Label className="text-gray-400 font-bold mb-2 block text-base sm:text-lg">Any innovative ideas/projects you would like to pursue at DC?</Label>
                                     <textarea
                                         className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white min-h-[120px] focus:border-cyan-500/50 focus:ring-0 resize-none text-sm sm:text-base"
                                         placeholder="Share any innovative ideas or projects you would like to pursue as part of the Fellowship."
+                                        maxLength={500}
                                         value={formData.innovativeIdeas || ''}
-                                        onChange={e => setFormData({ ...formData, innovativeIdeas: e.target.value })}
+                                        onChange={e => {
+                                            const v = e.target.value;
+                                            if (v.length <= 500) {
+                                                setFormData({ ...formData, innovativeIdeas: v });
+                                            }
+                                        }}
                                     />
+                                    <div className="text-right text-xs text-gray-400 mt-1">
+                                        {(formData.innovativeIdeas || '').length}/500
+                                    </div>
                                 </div>
                             </div>
 
@@ -591,6 +674,7 @@ export default function ApplicationForm() {
                             </Button>
                         </form>
                     </motion.div>
+
                     {/* Application Status Box */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}

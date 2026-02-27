@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, Suspense } from "react";
+import { useEffect, useState, useRef, useMemo, Suspense } from "react";
 import axios from "axios";
 import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "react-toastify";
-import { Users,Briefcase,Shield,Database,Search,Plus,ChevronRight,CheckCircle,XCircle,Clock,FileText,Award,History,Settings,ArrowLeft,ExternalLink,Mail,Calendar,Globe,Terminal,Code,Cpu,Zap,Linkedin,Github,Trophy,ArrowUpCircle,Download,Trash,MoreVertical} from "lucide-react";
+import { Users,Briefcase,Shield,Database,Search,Plus,ChevronRight,CheckCircle,XCircle,Clock,FileText,Award,History,Settings,ArrowLeft,ExternalLink,Mail,Calendar,Globe,Terminal,Code,Cpu,Zap,Linkedin,Github,Trophy,ArrowUpCircle,Download,Trash,MoreVertical,ClipboardCopy } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { headers } from "../../../next.config";
 
@@ -28,6 +28,19 @@ function AdminDashboardContent() {
     const [fellows, setFellows] = useState([]);
     const [orgs, setOrgs] = useState([]);
 
+    // counts for unread‑style badges on sub-tabs
+    const statusCounts = useMemo(() => {
+        const c = { PENDING: 0, INTERVIEW: 0, ACCEPTED: 0, REJECTED: 0, ALL: 0 };
+        c.ALL = apps.length;
+        apps.forEach(a => {
+            if (a.status === 'PENDING') c.PENDING++;
+            if (a.status === 'ACCEPTED') c.ACCEPTED++;
+            if (a.status === 'REJECTED') c.REJECTED++;
+            if (a.status === 'INTERVIEW_SCHEDULED' || a.status === 'INTERVIEW_SKIPPED') c.INTERVIEW++;
+        });
+        return c;
+    }, [apps]);
+
     // map org code to display name for badge rendering
     const getOrgName = (code) => {
         const o = (orgs || []).find(x => x.code === code);
@@ -35,6 +48,7 @@ function AdminDashboardContent() {
     };
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    const [orgFilter, setOrgFilter] = useState(""); // filter by organization code
     const [selectedItem, setSelectedItem] = useState(null);
     const [orgInspectorMember, setOrgInspectorMember] = useState(null); // nested member view inside org inspector
     const [actionLoading, setActionLoading] = useState(false);
@@ -939,9 +953,13 @@ function AdminDashboardContent() {
             a.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             a.lastName.toLowerCase().includes(searchTerm.toLowerCase());
 
+        // org filter if selected
+        if (orgFilter && a.orgCode !== orgFilter) return false;
+
         if (activeSubTab === 'PENDING') return matchesSearch && a.status === 'PENDING';
         if (activeSubTab === 'INTERVIEW') return matchesSearch && (a.status === 'INTERVIEW_SCHEDULED' || a.status === 'INTERVIEW_SKIPPED');
-        if (activeSubTab === 'ARCHIVED') return matchesSearch && (a.status === 'ACCEPTED' || a.status === 'REJECTED');
+        if (activeSubTab === 'ACCEPTED') return matchesSearch && a.status === 'ACCEPTED';
+        if (activeSubTab === 'REJECTED') return matchesSearch && a.status === 'REJECTED';
         return matchesSearch; // ALL
     });
 
@@ -1370,9 +1388,6 @@ function AdminDashboardContent() {
                             <h2 className="text-lg md:text-2xl font-bold tracking-tighter text-white uppercase flex items-center gap-2">
                                 <span className="text-cyan-500">/</span> {activeTab}_CONSOLE
                             </h2>
-                            <span className="text-xs bg-cyan-900/20 border border-cyan-500/30 text-cyan-400 px-2 md:px-3 py-1 rounded-none font-bold">
-                                CNT: {activeTab === 'applications' ? filteredApps.length : activeTab === 'fellows' ? fellows.length : (orgSubTab === 'ARCHIVED' ? orgs.filter(o => !o.isActive).length : orgs.filter(o => o.isActive).length)}
-                            </span>
                         </div>
 
                         <div className="flex items-center gap-2 md:gap-4 w-full md:w-auto">
@@ -1386,15 +1401,21 @@ function AdminDashboardContent() {
                                     className="w-full h-10 bg-black border border-white/20 pl-9 md:pl-11 pr-4 text-sm focus:border-cyan-500 focus:outline-none transition-all placeholder:text-gray-700 font-mono text-cyan-100 uppercase"
                                 />
                             </div>
+
+                            {/* org filter dropdown for applications */}
                             {activeTab === 'applications' && (
-                                <button
-                                    onClick={handleExportCSV}
-                                    className="h-10 px-3 md:px-4 border border-green-500/50 text-green-500 hover:bg-green-500 hover:text-black flex items-center gap-2 transition-all text-[10px] font-bold uppercase tracking-widest whitespace-nowrap"
-                                    title="Export applicants to CSV"
+                                <select
+                                    value={orgFilter}
+                                    onChange={e => setOrgFilter(e.target.value)}
+                                    className="ml-2 bg-black border border-white/20 h-10 text-xs font-mono text-cyan-100 focus:border-cyan-500 outline-none px-2"
                                 >
-                                    <Download className="w-4 h-4" /> <span className="hidden md:inline">CSV</span>
-                                </button>
+                                    <option value="">ALL_ORGS</option>
+                                    {orgs.map(o => (
+                                        <option key={o.code} value={o.code}>{o.name}</option>
+                                    ))}
+                                </select>
                             )}
+
                             {activeTab === 'orgs' && (
                                 <button onClick={() => { setOrgData({ name: '', code: '', emailDomainWhitelist: [], endDate: sixMonthsFromNow(), defaultTenureEndDate: null, formVar1: [], availableRoles: [], isActive: true, adminPassword: '' }); setIsEditingOrg(true); }} className="h-10 w-10 border border-white/20 hover:border-cyan-500 hover:text-cyan-500 flex items-center justify-center transition-colors">
                                     <Plus className="w-5 h-5" />
@@ -1434,13 +1455,27 @@ function AdminDashboardContent() {
                     {/* Sub-tabs for Applications */}
                     {activeTab === 'applications' && (
                         <div className="flex bg-black border-b border-white/10 px-2 md:px-8 h-10 md:h-12 items-center gap-4 md:gap-8 relative z-20 overflow-x-auto">
-                            {['PENDING', 'INTERVIEW', 'ARCHIVED', 'ALL'].map(st => (
+                            {['PENDING', 'INTERVIEW', 'ACCEPTED', 'REJECTED', 'ALL'].map(st => (
                                 <button
                                     key={st}
                                     onClick={() => setActiveSubTab(st)}
                                     className={`relative h-full text-[10px] font-bold tracking-[0.2em] transition-all flex items-center ${activeSubTab === st ? 'text-cyan-400' : 'text-gray-500 hover:text-white'}`}
                                 >
                                     {st}
+                                    {statusCounts[st] > 0 && (
+                                        <span
+                                            className="ml-2 inline-flex items-center justify-center text-[8px] font-bold font-mono text-cyan-400"
+                                            style={{
+                                                border: '1px solid #06b6d4',
+                                                padding: '0.15rem 0.35rem',
+                                                position: 'relative',
+                                                clipPath: 'polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 5px 100%, 0 calc(100% - 5px))',
+                                                backgroundColor: 'transparent'
+                                            }}
+                                        >
+                                            {statusCounts[st]}
+                                        </span>
+                                    )}
                                     {activeSubTab === st && <motion.div layoutId="app-sub-tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500 shadow-[0_0_10px_#06b6d4]" />}
                                 </button>
                             ))}
@@ -1881,7 +1916,22 @@ function AdminDashboardContent() {
                                                 <div className="text-xs font-mono text-gray-500 grid grid-cols-2 gap-3">
                                                     <span className="block p-2 border border-white/10">ID: {selectedItem.globalPid || 'NULL'}</span>
                                                     <span className="block p-2 border border-white/10">ORG: {selectedItem.orgCode}</span>
-                                                    <span className="block p-2 border border-white/10 col-span-2">MAIL: {selectedItem.email}</span>
+                                                    <span className="block p-2 border border-white/10 col-span-2 flex items-center justify-between">
+                                                    MAIL: {selectedItem.email}
+                                                    <button
+                                                        onClick={() => {
+                                                            navigator.clipboard.writeText(selectedItem.email).then(() => {
+                                                                toast.success("Email copied to clipboard");
+                                                            }).catch(() => {
+                                                                toast.error("Copy failed");
+                                                            });
+                                                        }}
+                                                        className="ml-2 p-1 hover:bg-white/10 rounded"
+                                                        title="Copy email"
+                                                    >
+                                                        <ClipboardCopy className="w-4 h-4 text-gray-400 hover:text-cyan-400" />
+                                                    </button>
+                                                </span>
                                                 </div>
 
                                             </div>
@@ -1931,7 +1981,8 @@ function AdminDashboardContent() {
                                                             </div>
                                                         </div>
 
-                                                        <div className="space-y-2">
+                                                        <div className="space-y-2 grid grid-cols-2 gap-4">
+                                                            <div>
                                                             <div className="text-[10px] text-gray-500 uppercase font-mono tracking-widest">Preferred_Specializations</div>
                                                             <div className="flex flex-wrap gap-2">
                                                                 {(selectedItem.preferredRoles || []).length > 0 ? (
@@ -1944,8 +1995,37 @@ function AdminDashboardContent() {
                                                                     <span className="px-2 py-1 border border-white/10 text-gray-600 text-[9px] uppercase">LEGACY_ROLE: {typeof selectedItem.role === 'object' ? selectedItem.role?.name : selectedItem.role}</span>
                                                                 )}
                                                             </div>
+                                                            </div>
+                                                            {(selectedItem.resume || selectedItem.data?.resumeLink) && (
+                                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                                    {selectedItem.resume && (
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={(e) => { e.stopPropagation(); const serverUrl = process.env.SERVER_URL || 'http://localhost:3001'; const url = selectedItem.resume.startsWith('http') ? selectedItem.resume : `${serverUrl}${selectedItem.resume}`; window.open(url, '_blank'); }}
+                                                                            className="w-full py-4 border border-white/10 hover:bg-white/5 transition-all flex items-center justify-center gap-3 group rounded-lg"
+                                                                        >
+                                                                            <FileText className="w-5 h-5" />
+                                                                            <span className="text-sm font-mono font-bold uppercase tracking-[0.08em]">Open uploaded CV</span>
+                                                                            <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                                        </button>
+                                                                    )}
+
+                                                                    {selectedItem.data?.resumeLink && (
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={(e) => { e.stopPropagation(); window.open(ensureExternalLink(selectedItem.data.resumeLink), '_blank'); }}
+                                                                            className="w-full py-4 border border-white/10 hover:bg-white/5 transition-all flex items-center justify-center gap-3 group rounded-lg"
+                                                                        >
+                                                                            <ExternalLink className="w-5 h-5" />
+                                                                            <span className="text-sm font-mono font-bold uppercase tracking-[0.08em]">Open resume link</span>
+                                                                            <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                )}
                                                         </div>
                                                     </div>
+
                                                     {selectedItem.processedBy && (
                                                         <div className="flex justify-between items-center text-[10px] text-gray-500 font-mono mt-2">
                                                             <span className="uppercase">Authenticated_By:</span>
@@ -2110,33 +2190,7 @@ function AdminDashboardContent() {
                                                     </div>
                                                 </div>
 
-                                                {(selectedItem.resume || selectedItem.data?.resumeLink) && (
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                        {selectedItem.resume && (
-                                                            <button
-                                                                type="button"
-                                                                onClick={(e) => { e.stopPropagation(); const serverUrl = process.env.SERVER_URL || 'http://localhost:3001'; const url = selectedItem.resume.startsWith('http') ? selectedItem.resume : `${serverUrl}${selectedItem.resume}`; window.open(url, '_blank'); }}
-                                                                className="w-full py-4 border border-white/10 hover:bg-white/5 transition-all flex items-center justify-center gap-3 group rounded-lg"
-                                                            >
-                                                                <FileText className="w-5 h-5" />
-                                                                <span className="text-sm font-mono font-bold uppercase tracking-[0.08em]">Open uploaded CV</span>
-                                                                <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                            </button>
-                                                        )}
-
-                                                        {selectedItem.data?.resumeLink && (
-                                                            <button
-                                                                type="button"
-                                                                onClick={(e) => { e.stopPropagation(); window.open(ensureExternalLink(selectedItem.data.resumeLink), '_blank'); }}
-                                                                className="w-full py-4 border border-white/10 hover:bg-white/5 transition-all flex items-center justify-center gap-3 group rounded-lg"
-                                                            >
-                                                                <ExternalLink className="w-5 h-5" />
-                                                                <span className="text-sm font-mono font-bold uppercase tracking-[0.08em]">Open resume link</span>
-                                                                <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                )}
+                                                
                                             </div>
                                         ) : (
                                             <div className="space-y-10">
@@ -2583,7 +2637,7 @@ function AdminDashboardContent() {
                                                 className="w-full bg-black border border-white/10 h-10 text-xs font-mono text-white focus:border-green-500 outline-none px-3"
                                             >
                                                 <option value="">NO_NODE_ASSIGNED (OPTIONAL)</option>
-                                                {orgs.map(o => <option key={o.code} value={o.code}>{o.code} - {o.name}</option>)}
+                                                {orgs.map(o => <option key={o.code} value={o.code}>{o.name}</option>)}
                                             </select>
                                         </div>
 
@@ -2614,171 +2668,8 @@ function AdminDashboardContent() {
                         </div>
                     )}
                 </AnimatePresence>
-
-                {/* Create Project Modal */}
-                <AnimatePresence>
-                    {showCreateProjectModal && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.95 }}
-                                className="w-full max-w-[700px] bg-black border border-orange-500/30 shadow-[0_0_50px_rgba(249,115,22,0.1)] rounded-2xl overflow-hidden"
-                            >
-                                <div className="h-14 flex items-center justify-between px-6 border-b border-white/10 bg-orange-500/5">
-                                    <h3 className="text-sm font-bold text-orange-400 uppercase tracking-widest flex items-center gap-2">
-                                        <Code className="w-4 h-4" /> CREATE NEW PROJECT
-                                    </h3>
-                                    <button onClick={() => setShowCreateProjectModal(false)} className="text-gray-500 hover:text-white transition-colors">
-                                        <XCircle className="w-5 h-5" />
-                                    </button>
-                                </div>
-
-                                <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
-                                    {/* Basic Info */}
-                                    <div className="space-y-4">
-                                        <div className="space-y-1.5">
-                                            <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Project Title *</label>
-                                            <Input 
-                                                value={newProjectData.title} 
-                                                onChange={e => setNewProjectData({ ...newProjectData, title: e.target.value })} 
-                                                className="bg-black border-white/10 h-10 text-xs font-mono text-white focus:border-orange-500" 
-                                                placeholder="PROJECT_NAME"
-                                            />
-                                        </div>
-                                        
-                                        <div className="space-y-1.5">
-                                            <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Description *</label>
-                                            <textarea 
-                                                value={newProjectData.description} 
-                                                onChange={e => setNewProjectData({ ...newProjectData, description: e.target.value })} 
-                                                className="w-full bg-black border border-white/10 p-3 text-xs font-mono text-white focus:border-orange-500 outline-none min-h-[80px] custom-scrollbar"
-                                                placeholder="PROJECT_DESCRIPTION..."
-                                            />
-                                        </div>
-
-                                        <div className="flex items-center gap-3">
-                                            <input 
-                                                type="checkbox" 
-                                                id="isActive"
-                                                checked={newProjectData.isActive}
-                                                onChange={e => setNewProjectData({ ...newProjectData, isActive: e.target.checked })}
-                                                className="w-4 h-4 accent-orange-500"
-                                            />
-                                            <label htmlFor="isActive" className="text-xs text-gray-400 cursor-pointer">ACTIVE_PROJECT</label>
-                                        </div>
-                                    </div>
-
-                                    {/* Links Section */}
-                                    <div className="pt-4 border-t border-white/5 space-y-3">
-                                        <label className="text-[10px] uppercase font-bold text-orange-500 tracking-widest">Supported Links</label>
-                                        
-                                        {/* Added Links */}
-                                        {newProjectData.supportedLinks.length > 0 && (
-                                            <div className="space-y-2 mb-3">
-                                                {newProjectData.supportedLinks.map((link, idx) => (
-                                                    <div key={idx} className="flex items-center gap-2 p-2 bg-orange-900/10 border border-orange-500/20">
-                                                        <ExternalLink className="w-3 h-3 text-orange-500" />
-                                                        <div className="flex-1 text-[10px] font-mono">
-                                                            <div className="text-orange-400">{link.linkName}</div>
-                                                            <div className="text-gray-500 truncate">{link.url}</div>
-                                                        </div>
-                                                        <button 
-                                                            onClick={() => handleRemoveLink(idx)}
-                                                            className="text-red-500 hover:text-red-400 p-1"
-                                                        >
-                                                            <XCircle className="w-4 h-4" />
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-
-                                        {/* Add Link Form */}
-                                        <div className="flex gap-2">
-                                            <Input 
-                                                value={newLink.linkName} 
-                                                onChange={e => setNewLink({ ...newLink, linkName: e.target.value })} 
-                                                className="bg-black border-white/10 h-9 text-xs font-mono text-white focus:border-orange-500 flex-1"
-                                                placeholder="Link Name"
-                                            />
-                                            <Input 
-                                                value={newLink.url} 
-                                                onChange={e => setNewLink({ ...newLink, url: e.target.value })} 
-                                                className="bg-black border-white/10 h-9 text-xs font-mono text-white focus:border-orange-500 flex-1"
-                                                placeholder="https://..."
-                                            />
-                                            <button 
-                                                onClick={handleAddLink}
-                                                className="px-3 h-9 bg-orange-900/20 border border-orange-500/50 text-orange-500 hover:bg-orange-500/10 text-[10px] font-bold uppercase"
-                                            >
-                                                <Plus className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Contributors Section */}
-                                    <div className="pt-4 border-t border-white/5 space-y-3">
-                                        <label className="text-[10px] uppercase font-bold text-orange-500 tracking-widest">Contributors</label>
-                                        
-                                        {/* Added Contributors */}
-                                        {newProjectData.contributors.length > 0 && (
-                                            <div className="space-y-2 mb-3">
-                                                {newProjectData.contributors.map((contributor, idx) => (
-                                                    <div key={idx} className="flex items-center gap-2 p-2 bg-orange-900/10 border border-orange-500/20">
-                                                        <Users className="w-3 h-3 text-orange-500" />
-                                                        <div className="flex-1 text-[10px] font-mono">
-                                                            <span className="text-orange-400">{contributor.firstName}</span>
-                                                            <span className="text-gray-500 ml-2">({contributor.globalPid})</span>
-                                                        </div>
-                                                        <button 
-                                                            onClick={() => handleRemoveContributor(idx)}
-                                                            className="text-red-500 hover:text-red-400 p-1"
-                                                        >
-                                                            <XCircle className="w-4 h-4" />
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-
-                                        {/* Add Contributor Form */}
-                                        <div className="flex gap-2">
-                                            <Input 
-                                                value={newContributor.globalPid} 
-                                                onChange={e => setNewContributor({ ...newContributor, globalPid: e.target.value })} 
-                                                className="bg-black border-white/10 h-9 text-xs font-mono text-white focus:border-orange-500 flex-1"
-                                                placeholder="PID12345"
-                                            />
-                                            <Input 
-                                                value={newContributor.firstName} 
-                                                onChange={e => setNewContributor({ ...newContributor, firstName: e.target.value })} 
-                                                className="bg-black border-white/10 h-9 text-xs font-mono text-white focus:border-orange-500 flex-1"
-                                                placeholder="Name"
-                                            />
-                                            <button 
-                                                onClick={handleAddContributor}
-                                                className="px-3 h-9 bg-orange-900/20 border border-orange-500/50 text-orange-500 hover:bg-orange-500/10 text-[10px] font-bold uppercase"
-                                            >
-                                                <Plus className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Submit Button */}
-                                    <button
-                                        onClick={handleCreateProject}
-                                        disabled={actionLoading}
-                                        className="w-full h-12 bg-orange-900/20 border border-orange-500/50 text-orange-500 hover:bg-orange-500 hover:text-black font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 text-xs mt-4"
-                                    >
-                                        {actionLoading ? 'CREATING...' : 'CREATE_PROJECT'}
-                                    </button>
-                                </div>
-                            </motion.div>
-                        </div>
-                    )}
-                </AnimatePresence>
             </div>
+
             <Footer />
         </div>
     );

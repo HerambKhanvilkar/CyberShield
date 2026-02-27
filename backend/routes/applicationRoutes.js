@@ -3,6 +3,7 @@ const router = express.Router();
 const Organization = require('../models/Organization');
 const Applicant = require('../models/Applicant');
 const { check, validationResult } = require('express-validator');
+const validator = require('validator'); // for unescaping previously escaped input
 const { authenticateJWT, isAdmin } = require('../middleware/auth');
 const HiringAuditLog = require('../models/HiringAuditLog');
 const crypto = require('crypto');
@@ -109,9 +110,11 @@ router.post('/apply', (req, res, next) => {
     check('email').isEmail().normalizeEmail(),
     check('firstName').notEmpty().trim().escape(),
     check('lastName').notEmpty().trim().escape(),
-    check('role').optional().trim().escape(),
-    check('whyJoin').optional().trim().escape(),
-    check('ideas').optional().trim().escape()
+    // Role is mostly for internal use; we still trim but do not escape so that slashes or URLs aren't mangled.
+    check('role').optional().trim(),
+    // Remove escape() on the long‑text fields so characters like '/', '%', etc. are preserved exactly.
+    check('whyJoin').optional().trim(),
+    check('ideas').optional().trim()
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -228,7 +231,16 @@ router.post('/apply', (req, res, next) => {
 // 3. Admin: List Applications
 router.get('/admin/list', authenticateJWT, isAdmin, async (req, res) => {
     try {
-        const apps = await Applicant.find().sort({ submittedAt: -1 });
+        // use lean() to get plain objects so we can mutate safely
+        let apps = await Applicant.find().sort({ submittedAt: -1 }).lean();
+        // decode any previously escaped user text so slashes, links, etc. "look right" in the UI
+        apps = apps.map(a => {
+            if (a.data) {
+                a.data.whyJoin = a.data.whyJoin ? validator.unescape(a.data.whyJoin) : a.data.whyJoin;
+                a.data.ideas = a.data.ideas ? validator.unescape(a.data.ideas) : a.data.ideas;
+            }
+            return a;
+        });
         res.json(apps);
     } catch (err) {
         res.status(500).json({ message: "Server error" });

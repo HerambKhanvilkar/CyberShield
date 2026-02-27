@@ -30,6 +30,9 @@ export default function ProfilePage() {
         if (!formData.linkedin || !formData.linkedin.includes("linkedin.com")) {
             return toast.warning("Personnel Validation Failed: LinkedIN profile is mandatory for verification.");
         }
+        if (!formData.github || !formData.github.includes("github.com")) {
+            return toast.warning("Personnel Validation Failed: GitHub profile is mandatory and must be a valid URL.");
+        }
         if (!formData.firstName || !formData.lastName) {
             return toast.warning("Personnel Validation Failed: Full legal name is required.");
         }
@@ -92,9 +95,9 @@ export default function ProfilePage() {
 
             <div className="space-y-3">
                 <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em] flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 bg-cyan-500" /> GitHub Profile
+                    <div className="w-1.5 h-1.5 bg-cyan-500" /> GitHub Profile <span className="text-red-500">*</span>
                 </label>
-                <Input value={formData.github} onChange={e => setFormData({ ...formData, github: e.target.value })} placeholder="https://github.com/..." className="bg-white/5 border-white/10 h-14 rounded-none font-mono focus:border-cyan-500 transition-all text-cyan-100" />
+                <Input value={formData.github} onChange={e => setFormData({ ...formData, github: e.target.value })} placeholder="https://github.com/..." className="bg-white/5 border-white/10 h-14 rounded-none font-mono focus:border-cyan-500 transition-all text-cyan-100 placeholder:text-gray-700" />
             </div>
 
             <div className="flex flex-col gap-4 mt-12">
