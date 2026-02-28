@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
-
 const Profile = require('../../models/Project/FellowProjectprofile');
 const FellowshipProfile = require('../../models/FellowshipProfile');
+const projectContributionLogController = require('../../controllers/projectContributionLogController');
 
 // Helper to get or create a Profile document for a fellowship profile id
 async function getOrCreateProfileForFellowshipId(fellowshipId) {
@@ -45,17 +45,18 @@ router.post('/profile/add-active', async (req, res) => {
         const fellowship = await FellowshipProfile.findOne({ email: email.toLowerCase().trim() });
         if (!fellowship) return res.status(404).json({ error: 'FellowshipProfile not found for provided email' });
 
-        const profile = await getOrCreateProfileForFellowshipId(fellowship._id);
+        const ProjectProfile = await getOrCreateProfileForFellowshipId(fellowship._id);
 
         const projObjectId = mongoose.Types.ObjectId(projectId);
 
         // avoid duplicates
-        const existsInActive = profile.activeProject_id.some(p => p.ref_id && p.ref_id.equals(projObjectId));
+        const existsInActive = ProjectProfile.activeProject_id.some(p => p.ref_id && p.ref_id.equals(projObjectId));
         if (existsInActive) return res.status(409).json({ error: 'Project already present in activeProject_id' });
 
-        profile.activeProject_id.push({ ref_id: projObjectId, role: role || '' });
-        await profile.save();
-        return res.json({ success: true, profile });
+        ProjectProfile.activeProject_id.push({ ref_id: projObjectId, role: role || '' });
+        await ProjectProfile.save();
+        await projectContributionLogController.markContributorJoin(projObjectId, ProjectProfile._id, role || '');
+        return res.json({ success: true, ProjectProfile });
     } catch (err) {
         console.error('add active project error', err);
         return res.status(500).json({ error: 'internal server error' });
@@ -85,6 +86,7 @@ router.post('/profile/move-project', async (req, res) => {
             if (idx === -1) return res.status(404).json({ error: 'Project not found in activeProject_id' });
             const item = profile.activeProject_id[idx];
             profile.nonActiveProject_id.push({ ref_id: item.ref_id, role: item.role });
+            await projectContributionLogController.markContributorLeave(item.ref_id, profile._id);
             profile.activeProject_id.splice(idx, 1);
         } else {
             // move to active from nonActive
@@ -92,6 +94,7 @@ router.post('/profile/move-project', async (req, res) => {
             if (idx === -1) return res.status(404).json({ error: 'Project not found in nonActiveProject_id' });
             const item = profile.nonActiveProject_id[idx];
             profile.activeProject_id.push({ ref_id: item.ref_id, role: item.role });
+            await projectContributionLogController.markContributorJoin(item.ref_id, profile._id, item.role);
             profile.nonActiveProject_id.splice(idx, 1);
         }
 
