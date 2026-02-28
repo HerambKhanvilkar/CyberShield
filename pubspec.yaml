@@ -1,0 +1,33 @@
+name: cyber_shield
+description: "A device info app similar to DevCheck."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  device_info_plus: ^11.0.0
+  battery_plus: ^6.1.0
+  system_info2: ^4.0.0
+  connectivity_plus: ^6.1.0
+  installed_apps: ^1.1.0
+  storage_space: ^1.2.0
+  camera: ^0.11.0+2
+  sensors_plus: ^6.1.1
+  network_info_plus: ^7.0.0
+  permission_handler: ^12.0.1
+  android_intent_plus: ^6.0.0
+  app_settings: ^7.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
