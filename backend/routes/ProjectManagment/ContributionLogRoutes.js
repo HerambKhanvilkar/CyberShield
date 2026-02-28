@@ -2,7 +2,21 @@ const express = require('express');
 const router = express.Router();
 const ContributionLog = require('../../models/Project/ContributionLog');
 const projectContributionLogController = require('../../controllers/projectContributionLogController');
+const fellowshipProfileModel = require('../../models/FellowshipProfile');
 const { authenticateJWT, isAdmin} = require('../../middleware/auth');
+
+
+// Get all contribution logs for a project, sorted by latest first
+router.get('/logs/:projectId', authenticateJWT, async (req, res) => {
+	try {
+		const logs = await ContributionLog.find({
+			projectId: req.params.projectId
+		}).sort({ createdAt: -1 }).populate('profileId');
+		res.json(logs);
+	} catch (err) {
+		res.status(500).json({ error: err.message });
+	}
+});
 
 // 1️⃣ Get Active Contributors of a Project
 router.get('/active-contributors/:projectId', authenticateJWT, async (req, res) => {
