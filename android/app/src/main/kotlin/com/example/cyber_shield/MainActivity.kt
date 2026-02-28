@@ -273,6 +273,9 @@ class MainActivity : FlutterActivity() {
 
     val intentFilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
     val statusIntent = ctx.registerReceiver(null, intentFilter)
+    val powerManager = ctx.getSystemService(Context.POWER_SERVICE) as? android.os.PowerManager
+    val batterySaverEnabled = powerManager?.isPowerSaveMode
+    val batteryProtection: Boolean? = null
 
     val level = statusIntent?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
     val scale = statusIntent?.getIntExtra(BatteryManager.EXTRA_SCALE, -1) ?: -1
@@ -358,6 +361,8 @@ class MainActivity : FlutterActivity() {
       "temperatureC" to tempC,
       "voltageV" to voltageV,
       "powerW" to powerW,
+      "batterySaver" to batterySaverEnabled,
+      "batteryProtection" to batteryProtection,
       "currentMa" to currentMa,
       "chargeCounterMah" to chargeCounterMah,
       "estimatedFullCapacityMah" to estimatedFullCapacityMah,
