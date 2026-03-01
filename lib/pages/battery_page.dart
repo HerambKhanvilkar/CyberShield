@@ -94,7 +94,7 @@ class _BatteryPageState extends State<BatteryPage> with SingleTickerProviderStat
         try {
           await AndroidIntent(
             action: action,
-            flags: <int>[Flag.FLAG_ACTIVITY_NEW_TASK],
+            flags: const <int>[Flag.FLAG_ACTIVITY_NEW_TASK],
           ).launch();
           return;
         } catch (_) {
@@ -131,7 +131,7 @@ class _BatteryPageState extends State<BatteryPage> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
-    final neonGreen = const Color(0xFFC6FF00);
+    const neonGreen = Color(0xFFC6FF00);
     final surface = Theme.of(context).colorScheme.surface;
 
     final temp = _tempC();
@@ -276,7 +276,7 @@ class _BatteryPageState extends State<BatteryPage> with SingleTickerProviderStat
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.35),
+                  color: Colors.black.withValues(alpha: 0.35),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
@@ -380,30 +380,6 @@ class _BatteryPageState extends State<BatteryPage> with SingleTickerProviderStat
   }
 }
 
-class _MiniStat extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _MiniStat({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(color: Colors.grey, fontSize: 11),
-        ),
-        Text(
-          value,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
-        ),
-      ],
-    );
-  }
-}
-
 class _InfoPair extends StatelessWidget {
   final String label;
   final String value;
@@ -446,7 +422,7 @@ class _BatteryWavePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = color.withOpacity(0.8)
+      ..color = color.withValues(alpha: 0.8)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
 

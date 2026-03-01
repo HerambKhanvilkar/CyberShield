@@ -7,8 +7,6 @@ import 'pages/network_page.dart';
 import 'pages/apps_page.dart';
 import 'pages/camera_page.dart';
 import 'pages/sensors_page.dart';
-import 'pages/tests_page.dart';
-import 'pages/tools_page.dart';
 import 'pages/settings_page.dart';
 
 final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.dark);
@@ -81,7 +79,7 @@ class MainDashboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 10,
+      length: 8,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('CYBER SHIELD', style: TextStyle(letterSpacing: 2, fontWeight: FontWeight.bold)),
@@ -104,8 +102,6 @@ class MainDashboard extends StatelessWidget {
               Tab(text: 'APPS'),
               Tab(text: 'CAMERA'),
               Tab(text: 'SENSORS'),
-              Tab(text: 'TESTS'),
-              Tab(text: 'TOOLS'),
             ],
           ),
         ),
@@ -119,8 +115,6 @@ class MainDashboard extends StatelessWidget {
             AppsPage(),
             CameraPage(),
             SensorsPage(),
-            TestsPage(),
-            ToolsPage(),
           ],
         ),
       ),
