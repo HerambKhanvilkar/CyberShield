@@ -3,8 +3,25 @@ const router = express.Router();
 const { authenticateJWT, isFellow, isAdmin } = require('../middleware/auth');
 const DocumentTemplate = require('../models/DocumentTemplate');
 const DocumentService = require('../services/DocumentService');
+const FellowshipProfile = require('../models/FellowshipProfile');
 const path = require('path');
 const fs = require('fs');
+
+// 0. Get Fellowship Profile by ID (Admin/General Access)
+router.get('/profile/:id', authenticateJWT, async (req, res) => {
+    try {
+        const profile = await FellowshipProfile.findById(req.params.id);
+        
+        if (!profile) {
+            return res.status(404).json({ message: "Profile not found" });
+        }
+
+        res.json(profile);
+    } catch (err) {
+        console.error("Profile fetch error:", err);
+        res.status(500).json({ message: "Server error", details: err.message });
+    }
+});
 
 // 1. Get Fellow Profile (Dashboard Overview)
 router.get('/profile', authenticateJWT, isFellow, async (req, res) => {

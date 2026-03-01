@@ -2,17 +2,47 @@ const express = require('express');
 const router = express.Router();
 const ContributionLog = require('../../models/Project/ContributionLog');
 const projectContributionLogController = require('../../controllers/projectContributionLogController');
-const fellowshipProfileModel = require('../../models/FellowshipProfile');
+const FellowshipProfile = require('../../models/FellowshipProfile');
 const { authenticateJWT, isAdmin} = require('../../middleware/auth');
 
 
 // Get all contribution logs for a project, sorted by latest first
+// profileId is populated from projects_db (Profile doc).
+// fellowshipProfile_id inside Profile lives in the Hiring db (different connection),
+// so we do a manual cross-db lookup to attach firstName.
 router.get('/logs/:projectId', authenticateJWT, async (req, res) => {
 	try {
 		const logs = await ContributionLog.find({
 			projectId: req.params.projectId
 		}).sort({ createdAt: -1 }).populate('profileId');
-		res.json(logs);
+
+		// Collect all fellowshipProfile_id values from populated Profile docs
+		const fellowshipIds = logs
+			.map(log => log.profileId?.fellowshipProfile_id)
+			.filter(Boolean);
+
+		// Fetch only firstName from FellowshipProfile (Hiring db) in a single query
+		const fellowshipDocs = await FellowshipProfile.find(
+			{ _id: { $in: fellowshipIds } },
+			{ firstName: 1 }
+		).lean();
+
+		// Build a quick lookup map: fellowshipProfile_id.toString() → firstName
+		const firstNameMap = {};
+		fellowshipDocs.forEach(doc => {
+			firstNameMap[doc._id.toString()] = doc.firstName;
+		});
+
+		// Attach firstName to each log result
+		const result = logs.map(log => {
+			const plain = log.toObject();
+			if (plain.profileId?.fellowshipProfile_id) {
+				plain.profileId.firstName = firstNameMap[plain.profileId.fellowshipProfile_id.toString()] || null;
+			}
+			return plain;
+		});
+
+		res.json(result);
 	} catch (err) {
 		res.status(500).json({ error: err.message });
 	}
@@ -25,7 +55,31 @@ router.get('/active-contributors/:projectId', authenticateJWT, async (req, res) 
 			projectId: req.params.projectId,
 			isActive: true
 		}).populate('profileId');
-		res.json(contributors);
+
+		// Collect fellowshipProfile_id values and fetch firstName from Hiring db
+		const fellowshipIds = contributors
+			.map(c => c.profileId?.fellowshipProfile_id)
+			.filter(Boolean);
+
+		const fellowshipDocs = await FellowshipProfile.find(
+			{ _id: { $in: fellowshipIds } },
+			{ firstName: 1 }
+		).lean();
+
+		const firstNameMap = {};
+		fellowshipDocs.forEach(doc => {
+			firstNameMap[doc._id.toString()] = doc.firstName;
+		});
+
+		const result = contributors.map(c => {
+			const plain = c.toObject();
+			if (plain.profileId?.fellowshipProfile_id) {
+				plain.profileId.firstName = firstNameMap[plain.profileId.fellowshipProfile_id.toString()] || null;
+			}
+			return plain;
+		});
+
+		res.json(result);
 	} catch (err) {
 		res.status(500).json({ error: err.message });
 	}
@@ -37,8 +91,32 @@ router.get('/active-projects/:profileId', authenticateJWT, async (req, res) => {
 		const projects = await ContributionLog.find({
 			profileId: req.params.profileId,
 			isActive: true
-		}).populate('projectId');
-		res.json(projects);
+		}).populate('projectId').populate('profileId');
+
+		// Collect fellowshipProfile_id values and fetch firstName from Hiring db
+		const fellowshipIds = projects
+			.map(p => p.profileId?.fellowshipProfile_id)
+			.filter(Boolean);
+
+		const fellowshipDocs = await FellowshipProfile.find(
+			{ _id: { $in: fellowshipIds } },
+			{ firstName: 1 }
+		).lean();
+
+		const firstNameMap = {};
+		fellowshipDocs.forEach(doc => {
+			firstNameMap[doc._id.toString()] = doc.firstName;
+		});
+
+		const result = projects.map(p => {
+			const plain = p.toObject();
+			if (plain.profileId?.fellowshipProfile_id) {
+				plain.profileId.firstName = firstNameMap[plain.profileId.fellowshipProfile_id.toString()] || null;
+			}
+			return plain;
+		});
+
+		res.json(result);
 	} catch (err) {
 		res.status(500).json({ error: err.message });
 	}

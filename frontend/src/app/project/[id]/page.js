@@ -469,9 +469,12 @@ export default function ProjectDetailPage() {
                                                         <div className="flex items-center justify-between">
                                                             <div className="flex items-center gap-3">
                                                                 <div className={`w-2 h-2 rounded-full ${log.isActive ? 'bg-green-500 shadow-[0_0_8px_#22c55e]' : 'bg-gray-700'}`} />
-                                                                <span className="text-sm font-bold text-white uppercase tracking-wider">
-                                                                    Profile: {typeof profileId === 'string' ? profileId?.slice(-8) : 'UNKNOWN'}...
-                                                                </span>
+                                                                <button
+                                                                    onClick={() => router.push(`/contributor/${profileId}`)}
+                                                                    className="text-sm font-bold text-white uppercase tracking-wider hover:text-orange-400 transition-colors"
+                                                                >
+                                                                    {log.profileId?.firstName || `Profile: ${typeof profileId === 'string' ? profileId?.slice(-8) : 'UNKNOWN'}...`}
+                                                                </button>
                                                             </div>
                                                             <div className="flex items-center gap-2">
                                                                 {/* Time tracking badge */}
@@ -622,7 +625,7 @@ export default function ProjectDetailPage() {
                                             </div>
                                             {projectLogs.map((log, idx) => {
                                                 const profileId = log.profileId?._id || log.profileId;
-                                                const profileLabel = typeof profileId === 'string' ? profileId.slice(-8) : 'UNKNOWN';
+                                                const firstName = log.profileId?.firstName || 'UNKNOWN';
                                                 return (
                                                     <div
                                                         key={log._id || idx}
@@ -634,9 +637,13 @@ export default function ProjectDetailPage() {
                                                     >
                                                         <div className="flex items-center gap-2 min-w-0">
                                                             <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${log.isActive ? 'bg-green-500 shadow-[0_0_6px_#22c55e]' : 'bg-gray-700'}`} />
-                                                            <span className="text-[11px] font-mono text-gray-300 truncate" title={profileId}>
-                                                                {profileLabel}...
-                                                            </span>
+                                                            <button
+                                                                onClick={() => router.push(`/contributor/${profileId}`)}
+                                                                className="text-[11px] font-mono text-gray-300 hover:text-orange-400 transition-colors truncate text-left"
+                                                                title={firstName}
+                                                            >
+                                                                {firstName}
+                                                            </button>
                                                         </div>
                                                         <span className="text-[11px] font-mono text-cyan-400 truncate">
                                                             {log.role || 'N/A'}
