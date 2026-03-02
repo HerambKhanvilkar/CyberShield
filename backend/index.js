@@ -15,6 +15,7 @@ const adminRoutes = require("./routes/AdminRoutes/adminRoutes");
 const adminProjectRoutes = require("./routes/AdminRoutes/projectRoutes");
 const projectRoutes = require("./routes/ProjectManagment/projectRoutes");
 const fellowProjectRoutes = require("./routes/ProjectManagment/fellowProjectProfileManagementRoute");
+const ContributionLogRoutes = require("./routes/ProjectManagment/ContributionLogRoutes");
 const jobRoutes = require("./routes/jobStatus");
 const slowDown = require('express-slow-down');
 const cors = require("cors");
@@ -184,4 +185,5 @@ app.use((err, req, res, next) => {
   //Project Routes
   app.use("/api", projectRoutes);
   app.use("/api", fellowProjectRoutes);
+  app.use('/api', ContributionLogRoutes);
 })();

@@ -329,6 +329,19 @@ router.get('/admin/export-org-csv/:orgCode', authenticateJWT, isAdmin, async (re
             fgColor: { argb: 'FFD3D3D3' }
         };
 
+        // Helper function to format date from "DDMMYYYY" to "DD/MM/YYYY"
+        const formatDate = (dateStr) => {
+            if (!dateStr || dateStr === '0' || dateStr.trim() === '') return 'N/A';
+            const cleaned = dateStr.trim();
+            if (cleaned.length === 8) {
+                const day = cleaned.substring(0, 2);
+                const month = cleaned.substring(2, 4);
+                const year = cleaned.substring(4, 8);
+                return `${day}/${month}/${year}`;
+            }
+            return dateStr; // Return as-is if not in expected format
+        };
+
         // Sheet 2: Accepted Fellows
         const fellowsSheet = workbook.addWorksheet('Accepted Fellows');
         fellowsSheet.columns = [
@@ -336,6 +349,7 @@ router.get('/admin/export-org-csv/:orgCode', authenticateJWT, isAdmin, async (re
             { header: 'First Name', key: 'firstName', width: 15 },
             { header: 'Last Name', key: 'lastName', width: 15 },
             { header: 'Email', key: 'email', width: 30 },
+            { header: 'Assigned Role', key: 'assignedRole', width: 25 },
             { header: 'Tenure Start Date', key: 'tenureStart', width: 20 },
             { header: 'Tenure End Date', key: 'tenureEnd', width: 20 }
         ];
@@ -348,8 +362,9 @@ router.get('/admin/export-org-csv/:orgCode', authenticateJWT, isAdmin, async (re
                 firstName: fellow.firstName,
                 lastName: fellow.lastName,
                 email: fellow.email,
-                tenureStart: orgTenure.startDate || 'N/A',
-                tenureEnd: orgTenure.endDate || 'N/A'
+                assignedRole: fellow.assigned_role || orgTenure.role || 'N/A',
+                tenureStart: formatDate(orgTenure.startDate),
+                tenureEnd: formatDate(orgTenure.endDate)
             });
         });
 

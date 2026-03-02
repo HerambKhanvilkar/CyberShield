@@ -1920,13 +1920,22 @@ function AdminDashboardContent() {
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className={`px-4 py-1.5 border text-xs font-bold uppercase tracking-widest ${
-                                            (project.status || '').toLowerCase() === 'ongoing' ? 'border-blue-500/50 text-blue-500' :
-                                            (project.status || '').toLowerCase() === 'completed' ? 'border-green-500/50 text-green-500' :
-                                            (project.status || '').toLowerCase() === 'onhold' || (project.status || '').toLowerCase() === 'on-hold' ? 'border-red-500/50 text-red-500' :
-                                            project.isActive ? 'border-orange-500/50 text-orange-500' : 'border-red-500/50 text-red-500'
-                                        }`}>
-                                            {((project.status || project.isActive) ? (project.status || (project.isActive ? 'ACTIVE' : 'INACTIVE')) : 'UNKNOWN').toString().toUpperCase()}
+                                        <div className="flex items-center gap-3">
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); window.open(`/project/${project._id}`, '_blank'); }}
+                                                className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-orange-500/10 border border-transparent hover:border-orange-500/30"
+                                                title="Open project in new window"
+                                            >
+                                                <ExternalLink className="w-4 h-4 text-orange-400" />
+                                            </button>
+                                            <div className={`px-4 py-1.5 border text-xs font-bold uppercase tracking-widest ${
+                                                (project.status || '').toLowerCase() === 'ongoing' ? 'border-blue-500/50 text-blue-500' :
+                                                (project.status || '').toLowerCase() === 'completed' ? 'border-green-500/50 text-green-500' :
+                                                (project.status || '').toLowerCase() === 'onhold' || (project.status || '').toLowerCase() === 'on-hold' ? 'border-red-500/50 text-red-500' :
+                                                project.isActive ? 'border-orange-500/50 text-orange-500' : 'border-red-500/50 text-red-500'
+                                            }`}>
+                                                {((project.status || project.isActive) ? (project.status || (project.isActive ? 'ACTIVE' : 'INACTIVE')) : 'UNKNOWN').toString().toUpperCase()}
+                                            </div>
                                         </div>
                                     </div>
                                 ))}

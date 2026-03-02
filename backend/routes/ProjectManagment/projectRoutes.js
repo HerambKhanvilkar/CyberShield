@@ -5,6 +5,7 @@ const { authenticateJWT, isAdmin } = require('../../middleware/auth');
 const Project = require('../../models/Project/project');
 const FellowProjectProfile = require('../../models/Project/FellowProjectprofile');
 const FellowshipProfile = require('../../models/FellowshipProfile');
+const projectContributionLogController = require('../../controllers/projectContributionLogController');
 
 router.post('/project', authenticateJWT, isAdmin, async (req, res) => {
     try{
@@ -43,15 +44,16 @@ router.post('/project', authenticateJWT, isAdmin, async (req, res) => {
                 const fellow = await FellowshipProfile.findOne({ email });
                 if (!fellow) continue; // skip if no fellowship profile exists for this email
 
-                let profile = await FellowProjectProfile.findOne({ fellowshipProfile_id: fellow._id });
-                if (!profile) {
-                    profile = new FellowProjectProfile({ fellowshipProfile_id: fellow._id });
+                let ProjectProfile = await FellowProjectProfile.findOne({ fellowshipProfile_id: fellow._id });
+                if (!ProjectProfile) {
+                    ProjectProfile = new FellowProjectProfile({ fellowshipProfile_id: fellow._id });
                 }
-
-                const already = profile.activeProject_id.some(p => p.ref_id && p.ref_id.equals(projectId));
+                
+                const already = ProjectProfile.activeProject_id.some(p => p.ref_id && p.ref_id.equals(projectId));
                 if (!already) {
-                    profile.activeProject_id.push({ ref_id: projectId, role: c.role || '' });
-                    await profile.save();
+                    ProjectProfile.activeProject_id.push({ ref_id: projectId, role: c.role || '' });
+                    await ProjectProfile.save();
+                    await projectContributionLogController.markContributorJoin(projectId, ProjectProfile._id, c.role);
                 }
             }
         } catch (err) {
@@ -79,6 +81,23 @@ router.get('/projects', authenticateJWT, async(req, res)=>{
     }
 })
 
+// Get a single project by id
+router.get('/project/:id', authenticateJWT, async (req, res) => {
+    const id = req.params.id;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ error: 'Invalid project ID format' });
+    }
+    try {
+        const project = await Project.findById(id);
+        if (!project) {
+            return res.status(404).json({ error: 'Project not found' });
+        }
+        res.status(200).json(project);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch project', details: err.message });
+    }
+});
+
 router.patch('/project/:id', authenticateJWT, isAdmin, async(req, res) => {
     const id = req.params.id;
     const body = req.body;
@@ -92,11 +111,6 @@ router.patch('/project/:id', authenticateJWT, isAdmin, async(req, res) => {
     // Validate status if provided (should be a string)
     if (req.body.status !== undefined && typeof req.body.status !== 'string') {
         return res.status(400).json({ error: "status must be a string" });
-    }
-
-    // Validate isActive if provided
-    if(req.body.isActive !== undefined && typeof req.body.isActive !== 'boolean'){
-        return res.status(400).json({ error: "isActive must be a boolean" });
     }
 
     try{

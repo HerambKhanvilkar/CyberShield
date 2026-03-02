@@ -1,0 +1,21 @@
+meta {
+  name: Total Time Spend on project
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{ADDRESS}}/total-time/:projectId/:profileId
+  body: none
+  auth: inherit
+}
+
+params:path {
+  projectId: 69a2a690462260b81f55d447
+  profileId: 69a1a1845c0ece3cadfc8e94
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
