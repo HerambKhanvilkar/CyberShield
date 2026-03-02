@@ -314,14 +314,16 @@ class MainActivity : FlutterActivity() {
     }
 
     val currentMicroA = try {
-      bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW)
+    bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW)
     } catch (_: Throwable) {
-      Int.MIN_VALUE
+    Int.MIN_VALUE
     }
-    val currentMa: Double? = if (currentMicroA == Int.MIN_VALUE) {
-      null
+    android.util.Log.d("BATTERY_DEBUG", "Current µA: $currentMicroA")
+
+    val currentMa: Double? = if (currentMicroA == Int.MIN_VALUE || currentMicroA == 0) {
+    null
     } else {
-      currentMicroA / 1000.0
+      currentMicroA.toDouble() / 1000.0
     }
 
     val chargeCounterUah = try {
@@ -339,17 +341,18 @@ class MainActivity : FlutterActivity() {
     val voltageV: Double? = if (voltageMv > 0) voltageMv / 1000.0 else null
 
     val powerW: Double? = if (currentMa != null && voltageV != null) {
-      (currentMa / 1000.0) * voltageV
+    (currentMa * voltageV) / 1000.0
     } else {
       null
     }
+    android.util.Log.d("BATTERY_DEBUG", "Power W: $powerW")
 
     // Rough estimate of full capacity based on charge counter and level.
-    val estimatedFullCapacityMah: Double? = if (chargeCounterMah != null && percent != null && percent > 0) {
-      chargeCounterMah * (100.0 / percent.toDouble())
-    } else {
-      null
-    }
+   val estimatedFullCapacityMah: Double? = if (chargeCounterMah != null && percent != null && percent in 1..100) {
+    chargeCounterMah * (100.0 / percent.toDouble())
+  } else {
+    null
+  }
 
     return mapOf(
       "available" to true,

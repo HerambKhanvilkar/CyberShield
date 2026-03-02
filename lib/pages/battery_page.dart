@@ -46,11 +46,9 @@ class _BatteryPageState extends State<BatteryPage>
       if (!mounted) return;
       setState(() => _batteryState = state);
     });
+    _pollTimer = Timer.periodic(const Duration(seconds: 1), (_) => _refreshBatteryDetails());
 
-    _pollTimer =
-        Timer.periodic(const Duration(seconds: 1), (_) => _refreshBatteryDetails());
-
-    _refreshBatteryDetails();
+    unawaited(_refreshBatteryDetails());
   }
 
   @override
@@ -141,12 +139,13 @@ class _BatteryPageState extends State<BatteryPage>
     final tempLabel = temp != null ? '${temp.toStringAsFixed(0)}°C' : '—';
     final voltLabel = volt != null ? '${volt.toStringAsFixed(3)} V' : '—';
     final powerLabel = power != null ? '${power.toStringAsFixed(1)} W' : '0.0 W';
-    final currentLabel = '${(current ?? 0).round().abs()} mA';
+    final currentLabel =
+    current != null ? '${current.round().abs()} mA' : '—';
 
     final tech = (_batteryDetails?['technology'] as String?) ?? 'Unknown';
     final health = (_batteryDetails?['health'] as String?) ?? 'Unknown';
 
-    // 🔥 Battery Saver & Protection
+  
     final batterySaver = _batteryDetails?['batterySaver'] as bool?;
     final batteryProtection =
         _batteryDetails?['batteryProtection'] as bool?;
@@ -185,17 +184,19 @@ class _BatteryPageState extends State<BatteryPage>
     final statusNative = _batteryDetails?['status'] as String?;
     final isCharging = statusNative == 'Charging';
     final isDischarging = statusNative == 'Discharging';
-
     if (estimatedFullMah != null &&
-        chargeCounterMah != null &&
-        current != null &&
-        current.abs() > 100) {
+    chargeCounterMah != null &&
+    current != null &&
+    current != 0)  {
 
       final percentPerMinute =
           (current / estimatedFullMah) * 100 / 60;
 
       rateText =
           '${percentPerMinute.abs().toStringAsFixed(2)}%/m';
+        debugPrint('RATE_DEBUG -> ' 'current: $current, ''estimatedFullMah: $estimatedFullMah, ''percentPerMinute: $percentPerMinute',
+);
+      
 
       if (isCharging && current > 0) {
         final remainingMah =
