@@ -1,0 +1,23 @@
+meta {
+  name: Add Status
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{ADDRESS}}/addstatus
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name":"research",
+    "color":"purple"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,0 +1,56 @@
+meta {
+  name: Create Project
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{ADDRESS}}/project
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwt_token}}
+}
+
+body:json {
+  {
+    "title": "AI Research Portal",
+    "description": "A collaborative platform for AI research projects and knowledge sharing",
+    "supportedLinks": [
+      {
+        "linkName": "Project Wiki",
+        "url": "https://wiki.ai-research.org"
+      },
+      {
+        "linkName": "API Documentation",
+        "url": "https://api.ai-research.org/docs"
+      },
+      {
+        "linkName": "Slack Community",
+        "url": "https://ai-research.slack.com"
+      }
+    ],
+    "contributors": [
+      {
+        "globalPid": "PID54321",
+        "firstName": "Alice"
+      },
+      {
+        "globalPid": "PID98765",
+        "firstName": "Bob"
+      },
+      {
+        "globalPid": "PID11223",
+        "firstName": "Charlie"
+      }
+    ],
+    "isActive": true
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

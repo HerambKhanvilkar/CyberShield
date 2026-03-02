@@ -1,0 +1,20 @@
+meta {
+  name: Get FellowshipProfile
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{ADDRESS}}/fellowship/profile/:id
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: 69a1162e23174fef2cb4db11
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

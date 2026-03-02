@@ -1,0 +1,30 @@
+meta {
+  name: Create Organization
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{ADDRESS}}/application/admin/orgs
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwt_token}}
+}
+
+body:json {
+  {
+    "code": "LTCE",
+    "name": "Lokmanya Tilak College Of Engineering",
+    "emailDomainWhitelist": ["@gmail.com", "@ltce.in"],
+    "endDate": null,
+    "availableRoles": [
+      { "name": "Developer", "description": "Software Development Role" },
+      { "name": "Designer", "description": "UI/UX Design Role" },
+      { "name": "Manager", "description": "Project Management" }
+    ],
+    "adminPassword": "Pass@123"
+  }
+}

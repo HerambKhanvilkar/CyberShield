@@ -1,0 +1,20 @@
+meta {
+  name: Get active contributors of project
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{ADDRESS}}/active-contributors/:projectId
+  body: none
+  auth: inherit
+}
+
+params:path {
+  projectId: 69a2bcd7aebff39b4a045fe0
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

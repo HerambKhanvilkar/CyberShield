@@ -1,0 +1,24 @@
+meta {
+  name: Patch Fields
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{ADDRESS}}/project/:id
+  body: json
+  auth: inherit
+}
+
+params:path {
+  id: 699c5622a132a140250d3e8e
+}
+
+body:json {
+  { "status": "699db588d117172a98863c25" }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

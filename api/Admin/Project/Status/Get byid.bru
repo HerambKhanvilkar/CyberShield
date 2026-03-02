@@ -1,0 +1,20 @@
+meta {
+  name: Get byid
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{ADDRESS}}/status/:id
+  body: json
+  auth: inherit
+}
+
+params:path {
+  id: 699db56bd117172a98863c23
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

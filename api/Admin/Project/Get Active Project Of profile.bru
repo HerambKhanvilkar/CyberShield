@@ -1,0 +1,20 @@
+meta {
+  name: Get Active Project Of profile
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{ADDRESS}}/active-projects/:profileId
+  body: none
+  auth: inherit
+}
+
+params:path {
+  profileId: 69a1a1845c0ece3cadfc8e94
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
