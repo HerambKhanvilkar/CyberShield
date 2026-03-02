@@ -15,6 +15,8 @@ dependencies:
   battery_plus: ^6.1.0
   system_info2: ^4.0.0
   connectivity_plus: ^6.1.0
+  torch_light: ^1.0.1
+  vibration: ^2.0.1
   installed_apps: ^1.1.0
   storage_space: ^1.2.0
   camera: ^0.11.0+2

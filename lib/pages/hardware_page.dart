@@ -116,12 +116,34 @@ class _HardwarePageState extends State<HardwarePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    children: [
-                      const Icon(Icons.grid_view, color: neon, size: 40),
-                      const SizedBox(width: 16),
-                      Text(android?.display ?? 'Adreno 710', style: const TextStyle(color: neon, fontSize: 20, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
+  children: [
+    const Icon(Icons.grid_view, color: neon, size: 40),
+    const SizedBox(width: 16),
+    Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            android?.display ?? 'Adreno 710',
+            style: const TextStyle(
+              color: neon,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Graphics Processor',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.6),
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    ),
+  ],
+),
                   const SizedBox(height: 16),
                   _buildSimpleRow('Vendor', android?.brand ?? 'Unknown'),
                   _buildSimpleRow('Renderer', android?.model ?? 'Unknown'),
