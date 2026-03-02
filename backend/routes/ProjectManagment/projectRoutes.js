@@ -114,14 +114,87 @@ router.patch('/project/:id', authenticateJWT, isAdmin, async(req, res) => {
     }
 
     try{
+        // Get the old project first to compare contributors
+        const oldProject = await Project.findById(id);
+        if(!oldProject){
+            return res.status(404).json({ error: "Project not found" });
+        }
+
+        // Update the project
         const PatchedProject = await Project.findOneAndUpdate(
             { _id: id },
             { $set: req.body },
             { new: true, runValidators: true }
         );
 
-        if(!PatchedProject){
-            return res.status(404).json({ error: "Project not found" });
+        // Handle contributor changes if contributors array was provided
+        if (req.body.contributors && Array.isArray(req.body.contributors)) {
+            const oldContributors = oldProject.contributors || [];
+            const newContributors = req.body.contributors || [];
+
+            // Normalize emails for comparison
+            const oldEmails = oldContributors.map(c => String(c.email || '').toLowerCase().trim()).filter(Boolean);
+            const newEmails = newContributors.map(c => String(c.email || '').toLowerCase().trim()).filter(Boolean);
+
+            // Find added contributors (in new but not in old)
+            const addedContributors = newContributors.filter(c => {
+                const email = String(c.email || '').toLowerCase().trim();
+                return email && !oldEmails.includes(email);
+            });
+
+            // Find removed contributors (in old but not in new)
+            const removedContributors = oldContributors.filter(c => {
+                const email = String(c.email || '').toLowerCase().trim();
+                return email && !newEmails.includes(email);
+            });
+
+            // Process added contributors
+            try {
+                for (const c of addedContributors) {
+                    if (!c || !c.email) continue;
+                    const email = String(c.email).toLowerCase().trim();
+                    const fellow = await FellowshipProfile.findOne({ email });
+                    if (!fellow) continue;
+
+                    let ProjectProfile = await FellowProjectProfile.findOne({ fellowshipProfile_id: fellow._id });
+                    if (!ProjectProfile) {
+                        ProjectProfile = new FellowProjectProfile({ fellowshipProfile_id: fellow._id });
+                    }
+
+                    const already = ProjectProfile.activeProject_id.some(p => p.ref_id && p.ref_id.equals(id));
+                    if (!already) {
+                        ProjectProfile.activeProject_id.push({ ref_id: id, role: c.role || '' });
+                        await ProjectProfile.save();
+                        await projectContributionLogController.markContributorJoin(id, ProjectProfile._id, c.role);
+                    }
+                }
+            } catch (err) {
+                console.error('Error adding new contributors:', err);
+                // don't fail update if contributor profile updates fail
+            }
+
+            // Process removed contributors
+            try {
+                for (const c of removedContributors) {
+                    if (!c || !c.email) continue;
+                    const email = String(c.email).toLowerCase().trim();
+                    const fellow = await FellowshipProfile.findOne({ email });
+                    if (!fellow) continue;
+
+                    let ProjectProfile = await FellowProjectProfile.findOne({ fellowshipProfile_id: fellow._id });
+                    if (!ProjectProfile) continue;
+
+                    const projectIndex = ProjectProfile.activeProject_id.findIndex(p => p.ref_id && p.ref_id.equals(id));
+                    if (projectIndex !== -1) {
+                        ProjectProfile.activeProject_id.splice(projectIndex, 1);
+                        await ProjectProfile.save();
+                        await projectContributionLogController.markContributorLeave(id, ProjectProfile._id);
+                    }
+                }
+            } catch (err) {
+                console.error('Error removing old contributors:', err);
+                // don't fail update if contributor profile updates fail
+            }
         }
 
         res.status(200).json({ message: "Project updated successfully", project: PatchedProject });
