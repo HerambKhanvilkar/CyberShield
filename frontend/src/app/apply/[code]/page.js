@@ -14,6 +14,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { User, Calendar, Mail, FileText, Send, ChevronRight, CheckCircle2, ShieldCheck, Clock, Lock, Info } from "lucide-react";
 
 export default function ApplicationForm() {
+        // helper: insert soft hyphen characters into long unbroken words so browsers can wrap with hyphen
+        const insertSoftHyphens = (s) => {
+            if (!s) return s;
+            // insert soft hyphen every 10 non-space characters if not already hyphenated
+            return s.replace(/([^\s]{10})(?=[^\s])/g, '$1\u00AD');
+        };
         // initial form object for dirty checking
         const initialForm = {
             firstName: "",
@@ -518,7 +524,7 @@ export default function ApplicationForm() {
                                                 aria-describedby={showDesc && roleDesc ? `role-desc-${roleName}` : undefined}
                                             >
                                                 <div className="flex-1 text-left">
-                                                    <div className="font-bold text-sm text-white whitespace-normal break-words line-clamp-2">{roleName}</div>
+                                                    <div className="font-bold text-sm text-white whitespace-normal break-words break-all hyphens-auto line-clamp-2">{insertSoftHyphens(roleName)}</div>
                                                     <AnimatePresence>
                                                         {showDesc && roleDesc && (
                                                             <motion.div
@@ -528,16 +534,16 @@ export default function ApplicationForm() {
                                                                 animate={{ height: 'auto', opacity: 1 }}
                                                                 exit={{ height: 0, opacity: 0 }}
                                                                 transition={{ duration: 0.2 }}
-                                                                className="mt-1 text-[11px] text-gray-400"
+                                                                className="mt-1 text-[11px] text-gray-400 break-words break-all hyphens-auto"
                                                             >
-                                                                {roleDesc}
+                                                                {insertSoftHyphens(roleDesc)}
                                                             </motion.div>
                                                         )}
                                                     </AnimatePresence>
                                                 </div>
 
                                                 {/* info icon toggles description expansion; click only */}
-                                                {roleDesc && expandedRole !== roleName && (
+                                                {roleDesc && !showDesc && (
                                                     <Info
                                                         onClick={e => {
                                                             e.stopPropagation();

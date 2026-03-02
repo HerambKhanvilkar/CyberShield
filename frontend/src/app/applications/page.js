@@ -17,8 +17,30 @@ function AdminDashboardContent() {
         const d = new Date();
         d.setMonth(d.getMonth() + 6);
         d.setHours(0,0,0,0);
-        return d.getTime();
+        return d.toISOString().split('T')[0];
     };
+    const oneWeekFromNow = () => {
+        const d = new Date();
+        d.setDate(d.getDate() + 7);
+        d.setHours(0,0,0,0);
+        return d.toISOString().split('T')[0];
+    };
+    
+    // ensure calendar picker icon is white (only) on datetime inputs
+    useEffect(() => {
+        const style = document.createElement('style');
+        style.textContent = `
+            input[type=\"datetime-local\"].white-icon::-webkit-calendar-picker-indicator {
+                filter: invert(1) !important;
+            }
+            input[type=\"datetime-local\"].white-icon::-moz-calendar-picker-indicator {
+                filter: invert(1) !important;
+            }
+        `;
+        document.head.appendChild(style);
+        return () => document.head.removeChild(style);
+    }, []);
+
     const router = useRouter();
     const [activeTab, setActiveTab] = useState("applications");
     const [activeSubTab, setActiveSubTab] = useState("PENDING");
@@ -54,8 +76,8 @@ function AdminDashboardContent() {
     const [orgInspectorMember, setOrgInspectorMember] = useState(null); // nested member view inside org inspector
     const [actionLoading, setActionLoading] = useState(false);
     const [isEditingOrg, setIsEditingOrg] = useState(false);
-    const [orgData, setOrgData] = useState({ name: '', code: '', emailDomainWhitelist: [], endDate: sixMonthsFromNow(), defaultTenureEndDate: null, formVar1: [], availableRoles: [], isActive: true, adminPassword: ''});
-    const [tenureEndDate, setTenureEndDate] = useState("");
+    const [orgData, setOrgData] = useState({ name: '', code: '', emailDomainWhitelist: [], endDate: oneWeekFromNow(), defaultTenureEndDate: sixMonthsFromNow(), formVar1: [], availableRoles: [], isActive: true, adminPassword: ''});
+    const [tenureEndDate, setTenureEndDate] = useState(sixMonthsFromNow());
     const [availableRoles, setAvailableRoles] = useState([]);
     const [newRole, setNewRole] = useState("");
     const [newRoleDescription, setNewRoleDescription] = useState("");
@@ -80,6 +102,17 @@ function AdminDashboardContent() {
     const [showAssignRoleModal, setShowAssignRoleModal] = useState(false);
     const [skipModalTarget, setSkipModalTarget] = useState(null);
     const [skipAssignedRole, setSkipAssignedRole] = useState("");
+
+    // Ensure orgData date fields are always pre-filled when creating a new org
+    useEffect(() => {
+        if (isEditingOrg && (!orgData.endDate || !orgData.defaultTenureEndDate)) {
+            setOrgData(prev => ({
+                ...prev,
+                endDate: prev.endDate || oneWeekFromNow(),
+                defaultTenureEndDate: prev.defaultTenureEndDate || sixMonthsFromNow()
+            }));
+        }
+    }, [isEditingOrg]);
 
     // Termination State
     const [showTerminateModal, setShowTerminateModal] = useState(false);
@@ -387,7 +420,17 @@ function AdminDashboardContent() {
             const token = localStorage.getItem("accessToken");
             const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
             await axios.post(`${serverUrl}/application/admin/orgs`,
-                { name, code, isActive: false, emailDomainWhitelist: [], defaultTenureEndDate: 0, formVar1: [], availableRoles: [], adminPassword},
+                {
+                    name,
+                    code,
+                    isActive: false,
+                    emailDomainWhitelist: [],
+                    endDate: new Date(oneWeekFromNow()).getTime(),
+                    defaultTenureEndDate: new Date(sixMonthsFromNow()).getTime(),
+                    formVar1: [],
+                    availableRoles: [],
+                    adminPassword
+                },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             toast.success(`Node "${code}" initialized (Offline)`);
@@ -1073,7 +1116,14 @@ function AdminDashboardContent() {
         setActionLoading(true);
         try {
             const token = localStorage.getItem("accessToken");
+            // copy and convert date fields to timestamps before sending
             const payload = { ...orgData };
+            if (payload.endDate) {
+                payload.endDate = new Date(payload.endDate).getTime();
+            }
+            if (payload.defaultTenureEndDate) {
+                payload.defaultTenureEndDate = new Date(payload.defaultTenureEndDate).getTime();
+            }
 
             // Ensure selected roles (formVar1) are stored with descriptions when available
             if (Array.isArray(orgData.formVar1) && orgData.formVar1.length) {
@@ -1510,7 +1560,7 @@ function AdminDashboardContent() {
                             )}
 
                             {activeTab === 'orgs' && (
-                                <button onClick={() => { setOrgData({ name: '', code: '', emailDomainWhitelist: [], endDate: sixMonthsFromNow(), defaultTenureEndDate: null, formVar1: [], availableRoles: [], isActive: true, adminPassword: '' }); setIsEditingOrg(true); }} className="h-10 w-10 border border-white/20 hover:border-cyan-500 hover:text-cyan-500 flex items-center justify-center transition-colors">
+                                <button onClick={() => { setOrgData({ name: '', code: '', emailDomainWhitelist: [], endDate: oneWeekFromNow(), defaultTenureEndDate: sixMonthsFromNow(), formVar1: [], availableRoles: [], isActive: true, adminPassword: '' }); setIsEditingOrg(true); }} className="h-10 w-10 border border-white/20 hover:border-cyan-500 hover:text-cyan-500 flex items-center justify-center transition-colors">
                                     <Plus className="w-5 h-5" />
                                 </button>
                             )}
@@ -1864,13 +1914,24 @@ function AdminDashboardContent() {
                                                     const availObjects = Array.isArray(rawRoles)
                                                         ? rawRoles.map(r => typeof r === 'string' ? { name: r, description: '' } : { name: r.name || '', description: r.description || '' })
                                                         : [];
+                                                    // normalize date fields to ISO strings for inputs
+                                                    let endDateVal = '';
+                                                    if (org.endDate) {
+                                                        endDateVal = typeof org.endDate === 'number' ? new Date(org.endDate).toISOString().split('T')[0] : org.endDate;
+                                                    }
+                                                    let tenureVal = '';
+                                                    if (org.defaultTenureEndDate) {
+                                                        tenureVal = typeof org.defaultTenureEndDate === 'number'
+                                                            ? new Date(org.defaultTenureEndDate).toISOString().split('T')[0]
+                                                            : org.defaultTenureEndDate;
+                                                    }
                                                     setOrgData({
                                                         id: org._id,
                                                         name: org.name,
                                                         code: org.code,
                                                         emailDomainWhitelist: org.emailDomainWhitelist || [],
-                                                        endDate: org.endDate || sixMonthsFromNow(),
-                                                        defaultTenureEndDate: org.defaultTenureEndDate ? new Date(org.defaultTenureEndDate).getTime() : 0,
+                                                        endDate: endDateVal || sixMonthsFromNow(),
+                                                        defaultTenureEndDate: tenureVal || '',
                                                         formVar1: availObjects.map(r => r.name),
                                                         availableRoles: availObjects,
                                                         isActive: org.isActive,
@@ -2133,26 +2194,26 @@ function AdminDashboardContent() {
 
                                                         <div className="space-y-2 grid grid-cols-2 gap-4">
                                                             <div>
-                                                            <div className="text-[10px] text-gray-500 uppercase font-mono tracking-widest">Preferred_Specializations</div>
-                                                            <div className="flex flex-wrap gap-2">
-                                                                {(selectedItem.preferredRoles || []).length > 0 ? (
-                                                                    selectedItem.preferredRoles.map((role, idx) => (
-                                                                        <span key={idx} className="px-2 py-1 bg-cyan-900/30 border border-cyan-500/30 text-cyan-400 text-[9px] font-bold uppercase tracking-wider">
-                                                                            {typeof role === 'object' ? role?.name : role}
-                                                                        </span>
-                                                                    ))
-                                                                ) : (
-                                                                    <span className="px-2 py-1 border border-white/10 text-gray-600 text-[9px] uppercase">LEGACY_ROLE: {typeof selectedItem.role === 'object' ? selectedItem.role?.name : selectedItem.role}</span>
-                                                                )}
-                                                            </div>
-                                                            </div>
+                                                                <div className="text-[10px] text-gray-500 uppercase font-mono tracking-widest">Preferred_Specializations</div>
+                                                                    <div className="flex flex-wrap gap-2">
+                                                                        {(selectedItem.preferredRoles || []).length > 0 ? (
+                                                                            selectedItem.preferredRoles.map((role, idx) => (
+                                                                                <span key={idx} className="px-2 py-1 bg-cyan-900/30 border border-cyan-500/30 text-cyan-400 text-[9px] font-bold uppercase tracking-wider">
+                                                                                    {typeof role === 'object' ? role?.name : role}
+                                                                                </span>
+                                                                            ))
+                                                                        ) : (
+                                                                            <span className="px-2 py-1 border border-white/10 text-gray-600 text-[9px] uppercase">LEGACY_ROLE: {typeof selectedItem.role === 'object' ? selectedItem.role?.name : selectedItem.role}</span>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
                                                             {(selectedItem.resume || selectedItem.data?.resumeLink) && (
-                                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                                <div>
                                                                     {selectedItem.resume && (
                                                                         <button
                                                                             type="button"
                                                                             onClick={(e) => { e.stopPropagation(); const serverUrl = process.env.SERVER_URL || 'http://localhost:3001'; const url = selectedItem.resume.startsWith('http') ? selectedItem.resume : `${serverUrl}${selectedItem.resume}`; window.open(url, '_blank'); }}
-                                                                            className="w-full py-4 border border-white/10 hover:bg-white/5 transition-all flex items-center justify-center gap-3 group rounded-lg"
+                                                                            className="py-4 px-6 border border-white/10 hover:bg-white/5 transition-all inline-flex items-center justify-center gap-3 group rounded-lg"
                                                                         >
                                                                             <FileText className="w-5 h-5" />
                                                                             <span className="text-sm font-mono font-bold uppercase tracking-[0.08em]">Open uploaded CV</span>
@@ -2160,7 +2221,7 @@ function AdminDashboardContent() {
                                                                         </button>
                                                                     )}
 
-                                                                    {selectedItem.data?.resumeLink && (
+                                                                    {/* {selectedItem.data?.resumeLink && (
                                                                         <button
                                                                             type="button"
                                                                             onClick={(e) => { e.stopPropagation(); window.open(ensureExternalLink(selectedItem.data.resumeLink), '_blank'); }}
@@ -2170,9 +2231,9 @@ function AdminDashboardContent() {
                                                                             <span className="text-sm font-mono font-bold uppercase tracking-[0.08em]">Open resume link</span>
                                                                             <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                                                                         </button>
-                                                                    )}
+                                                                    )} */}
                                                                 </div>
-                                                )}
+                                                            )}
                                                         </div>
                                                     </div>
 
@@ -2258,7 +2319,7 @@ function AdminDashboardContent() {
                                                                         type="datetime-local"
                                                                         value={scheduleData.scheduledAt}
                                                                         onChange={e => setScheduleData({ ...scheduleData, scheduledAt: e.target.value })}
-                                                                        className="bg-black border-white/20 h-10 text-xs font-mono text-white"
+                                                                        className="bg-black border-white/20 h-10 text-xs font-mono text-white white-icon"
                                                                     />
                                                                     <Input
                                                                         placeholder="GMEET_UPLINK_URL"
@@ -2616,16 +2677,16 @@ function AdminDashboardContent() {
                                                 <label className="text-[10px] uppercase font-mono text-gray-500">End Of Application Date</label>
                                                 <Input
                                                     type="date"
-                                                    value={orgData.endDate ? new Date(orgData.endDate).toISOString().split('T')[0] : ''}
-                                                    onChange={e => setOrgData({ ...orgData, endDate: new Date(e.target.value).getTime() })}
+                                                    value={orgData.endDate || ''}
+                                                    onChange={e => setOrgData({ ...orgData, endDate: e.target.value })}
                                                     className="bg-black border-white/20 h-10 text-xs font-mono text-gray-300 focus:border-green-500"
                                                 />
 
                                                 <label className="text-[10px] uppercase font-mono text-gray-500 mt-3">Tenure End Date</label>
                                                 <Input
                                                     type="date"
-                                                    value={orgData.defaultTenureEndDate ? new Date(orgData.defaultTenureEndDate).toISOString().split('T')[0] : ''}
-                                                    onChange={e => setOrgData({ ...orgData, defaultTenureEndDate: e.target.value ? new Date(e.target.value).getTime() : 0 })}
+                                                    value={orgData.defaultTenureEndDate || ''}
+                                                    onChange={e => setOrgData({ ...orgData, defaultTenureEndDate: e.target.value })}
                                                     className="bg-black border-white/20 h-10 text-xs font-mono text-gray-300 focus:border-green-500"
                                                 />
                                             </div>
@@ -2954,55 +3015,55 @@ function AdminDashboardContent() {
                                             </div>
                                         )}
 
-                                                                                {/* Add Contributor Form */}
-                                                                                <div className="relative">
-                                                                                    <div className="flex gap-2 mb-2">
-                                                                                        <button
-                                                                                            type="button"
-                                                                                            onClick={() => setContributorMode('name')}
-                                                                                            className={`px-2 py-1 text-base font-bold uppercase ${contributorMode === 'name' ? 'bg-orange-500 text-black' : 'bg-black border border-white/10 text-orange-500'}`}
-                                                                                        >
-                                                                                            Search by name
-                                                                                        </button>
-                                                                                        <button
-                                                                                            type="button"
-                                                                                            onClick={() => setContributorMode('role')}
-                                                                                            className={`px-2 py-1 text-base font-bold uppercase ${contributorMode === 'role' ? 'bg-orange-500 text-black' : 'bg-black border border-white/10 text-orange-500'}`}
-                                                                                        >
-                                                                                            Search by role
-                                                                                        </button>
-                                                                                    </div>
+                                        {/* Add Contributor Form */}
+                                        <div className="relative">
+                                            <div className="flex gap-2 mb-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setContributorMode('name')}
+                                                    className={`px-2 py-1 text-base font-bold uppercase ${contributorMode === 'name' ? 'bg-orange-500 text-black' : 'bg-black border border-white/10 text-orange-500'}`}
+                                                >
+                                                    Search by name
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setContributorMode('role')}
+                                                    className={`px-2 py-1 text-base font-bold uppercase ${contributorMode === 'role' ? 'bg-orange-500 text-black' : 'bg-black border border-white/10 text-orange-500'}`}
+                                                >
+                                                    Search by role
+                                                </button>
+                                            </div>
 
-                                                                                    <div className="flex gap-2">
-                                                                                        <Input
-                                                                                            value={contributorQuery}
-                                                                                            onChange={e => setContributorQuery(e.target.value)}
-                                                                                            className="bg-black border-white/10 h-9 text-base font-mono text-white focus:border-orange-500 flex-1"
-                                                                                            placeholder={contributorMode === 'name' ? 'Type name to search and select' : 'Type role to search and select'}
-                                                                                        />
-                                                                                    </div>
+                                            <div className="flex gap-2">
+                                                <Input
+                                                    value={contributorQuery}
+                                                    onChange={e => setContributorQuery(e.target.value)}
+                                                    className="bg-black border-white/10 h-9 text-base font-mono text-white focus:border-orange-500 flex-1"
+                                                    placeholder={contributorMode === 'name' ? 'Type name to search and select' : 'Type role to search and select'}
+                                                />
+                                            </div>
 
-                                                                                    {/* Suggestions dropdown */}
-                                                                                    { (contributorSuggestions.length > 0 || suggestionsLoading) && (
-                                                                                        <div className="absolute left-0 right-0 mt-2 z-50 bg-black border border-white/10 shadow-lg max-h-56 overflow-auto">
-                                                                                            {suggestionsLoading && (
-                                                                                                <div className="p-2 text-xs text-gray-400">Searching...</div>
-                                                                                            )}
-                                                                                            {contributorSuggestions.map((s, i) => (
-                                                                                                <div
-                                                                                                    key={i}
-                                                                                                    onClick={() => handleSelectContributor(s)}
-                                                                                                    className="p-3 hover:bg-white/5 cursor-pointer"
-                                                                                                >
-                                                                                                    <div className="flex justify-between items-center">
-                                                                                                        <div className="text-lg font-mono text-orange-400">{s.firstName} <span className="text-base text-gray-500 ml-2">({s.assigned_role})</span></div>
-                                                                                                        <div className="text-base text-gray-500">{s.email}</div>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            ))}
-                                                                                        </div>
-                                                                                    )}
-                                                                                </div>
+                                            {/* Suggestions dropdown */}
+                                            { (contributorSuggestions.length > 0 || suggestionsLoading) && (
+                                                <div className="absolute left-0 right-0 mt-2 z-50 bg-black border border-white/10 shadow-lg max-h-56 overflow-auto">
+                                                    {suggestionsLoading && (
+                                                        <div className="p-2 text-xs text-gray-400">Searching...</div>
+                                                    )}
+                                                    {contributorSuggestions.map((s, i) => (
+                                                        <div
+                                                            key={i}
+                                                            onClick={() => handleSelectContributor(s)}
+                                                            className="p-3 hover:bg-white/5 cursor-pointer"
+                                                        >
+                                                            <div className="flex justify-between items-center">
+                                                                <div className="text-lg font-mono text-orange-400">{s.firstName} <span className="text-base text-gray-500 ml-2">({s.assigned_role})</span></div>
+                                                                <div className="text-base text-gray-500">{s.email}</div>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
 
                                     {/* Submit Button */}
