@@ -5,7 +5,6 @@ import axios from "axios";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { toast } from "react-toastify";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -43,7 +42,6 @@ export default function ProfilePage() {
       emailPreferences: {
         badgeReceived: true,
         profileUpdate: true,
-        adminDaily: true,
       },
     }));
   }, []);
@@ -299,7 +297,6 @@ const fetchUser = async () => {
       emailPreferences: user.emailPreferences || prev.emailPreferences || {
         badgeReceived: true,
         profileUpdate: true,
-        adminDaily: true,
       },
     }));
 
@@ -734,12 +731,7 @@ const BadgeMetrics = ({ badge }) => (
                         <input type="checkbox" name="profileUpdate" checked={!!formData.emailPreferences?.profileUpdate} onChange={handlePreferenceChange} />
                         <span className="text-sm text-gray-300">Profile updates</span>
                       </label>
-                      {userData?.isAdmin && (
-                        <label className="flex items-center gap-2">
-                          <input type="checkbox" name="adminDaily" checked={!!formData.emailPreferences?.adminDaily} onChange={handlePreferenceChange} />
-                          <span className="text-sm text-gray-300">Admin daily report</span>
-                        </label>
-                      )}
+
                     </div>
                   </div>
 

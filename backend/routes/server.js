@@ -920,7 +920,6 @@ router.put('/user/profile', authenticateJWT, uploadImage.single('profileImage'),
         if (typeof prefs === 'object') {
           if (typeof prefs.badgeReceived !== 'undefined') user.emailPreferences.badgeReceived = !!prefs.badgeReceived;
           if (typeof prefs.profileUpdate !== 'undefined') user.emailPreferences.profileUpdate = !!prefs.profileUpdate;
-          if (typeof prefs.adminDaily !== 'undefined') user.emailPreferences.adminDaily = !!prefs.adminDaily;
         }
       } catch (err) {
         console.warn('Invalid emailPreferences payload', err);

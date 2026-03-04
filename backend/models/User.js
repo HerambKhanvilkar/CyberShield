@@ -113,8 +113,7 @@ const UserSchema = new mongoose.Schema({
   // Email notification preferences
   emailPreferences: {
     badgeReceived: { type: Boolean, default: true },
-    profileUpdate: { type: Boolean, default: true },
-    adminDaily: { type: Boolean, default: true }
+    profileUpdate: { type: Boolean, default: true }
   },
   refreshToken: {
     type: String,
