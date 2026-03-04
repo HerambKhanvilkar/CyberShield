@@ -1,0 +1,16 @@
+meta {
+  name: GET Org roles
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{ADDRESS}}/application/org/LTCE
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

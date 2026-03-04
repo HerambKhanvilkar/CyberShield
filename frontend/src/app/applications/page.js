@@ -1285,7 +1285,52 @@ function AdminDashboardContent() {
                                                             <a href={orgInspectorMember.interviewDetails?.meetLink?.startsWith('http') ? orgInspectorMember.interviewDetails.meetLink : `https://${orgInspectorMember.interviewDetails?.meetLink}`} target="_blank" rel="noopener noreferrer" className="text-xs font-mono text-cyan-400 hover:underline truncate max-w-[200px]">{orgInspectorMember.interviewDetails?.meetLink || 'N/A'}</a>
                                                         </div>
                                                     </div>
-                                                    <button onClick={() => { setScheduleData({ scheduledAt: orgInspectorMember.interviewDetails?.scheduledAt ? new Date(orgInspectorMember.interviewDetails.scheduledAt).toISOString().slice(0,16) : '', meetLink: orgInspectorMember.interviewDetails?.meetLink || '' }); setShowScheduleModal(true); }} className="w-full h-10 border border-orange-500/50 text-orange-400 bg-orange-900/10 hover:bg-orange-500/20 text-xs font-bold uppercase tracking-wider">Reschedule Interview</button>
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <button onClick={() => { setScheduleData({ scheduledAt: orgInspectorMember.interviewDetails?.scheduledAt ? new Date(orgInspectorMember.interviewDetails.scheduledAt).toISOString().slice(0,16) : '', meetLink: orgInspectorMember.interviewDetails?.meetLink || '' }); setShowScheduleModal(true); }} className="w-full h-10 border border-orange-500/50 text-orange-400 bg-orange-900/10 hover:bg-orange-500/20 text-xs font-bold uppercase tracking-wider">Reschedule</button>
+                                                        <button onClick={handleMarkNoShow} className="w-full h-10 border border-red-500/20 text-red-500 hover:bg-red-500/10 text-xs font-bold uppercase tracking-wider">No-show</button>
+                                                    </div>
+
+                                                    {/* Role Assignment UI */}
+                                                    <div className="space-y-2 pt-2 border-t border-white/10">
+                                                        <label className="text-xs font-mono text-gray-400 uppercase tracking-wider">Assign Role (Required)</label>
+                                                        <select
+                                                            value={orgInspectorMember.assignedRole || ''}
+                                                            onChange={(e) => {
+                                                                const updatedItem = { ...orgInspectorMember, assignedRole: e.target.value };
+                                                                setOrgInspectorMember(updatedItem);
+                                                                toast.success(`Role "${e.target.value}" assigned`);
+                                                            }}
+                                                            className="w-full bg-black border border-white/20 h-10 text-xs font-mono text-white px-2"
+                                                        >
+                                                            <option value="">SELECT_ROLE</option>
+                                                            {(() => {
+                                                                const defaultRole = orgInspectorMember.role ? (typeof orgInspectorMember.role === 'string' ? orgInspectorMember.role : (orgInspectorMember.role.name || '')) : (Array.isArray(orgInspectorMember.preferredRoles) && orgInspectorMember.preferredRoles.length ? (typeof orgInspectorMember.preferredRoles[0] === 'string' ? orgInspectorMember.preferredRoles[0] : (orgInspectorMember.preferredRoles[0]?.name || '')) : '');
+                                                                const orgObj = (orgInspectorMember.orgCode && Array.isArray(orgs) ? orgs.find(o => o.code === orgInspectorMember.orgCode) : null);
+                                                                const orgRoles = orgObj ? (orgObj.formVars?.roles ? orgObj.formVars.roles.map(r => r.name) : (Array.isArray(orgObj.formVar1) ? orgObj.formVar1 : [])) : [];
+                                                                const globalRoles = (availableRoles || []).map(r => (typeof r === 'string' ? r : (r.name || ''))).filter(Boolean);
+
+                                                                return (
+                                                                    <>
+                                                                        {defaultRole && (
+                                                                            <optgroup label="Applied Role">
+                                                                                <option value={defaultRole}>{defaultRole}</option>
+                                                                            </optgroup>
+                                                                        )}
+                                                                        {orgRoles.length > 0 && (
+                                                                            <optgroup label="Organization Roles">
+                                                                                {orgRoles.map((r, i) => <option key={`org-${i}`} value={r}>{r}</option>)}
+                                                                            </optgroup>
+                                                                        )}
+                                                                        {globalRoles.length > 0 && (
+                                                                            <optgroup label="Global Roles">
+                                                                                {globalRoles.map((r, i) => <option key={`glob-${i}`} value={r}>{r}</option>)}
+                                                                            </optgroup>
+                                                                        )}
+                                                                    </>
+                                                                );
+                                                            })()}
+                                                        </select>
+                                                    </div>
                                                 </div>
                                             ) : null}
                                         </div>
@@ -2319,6 +2364,48 @@ function AdminDashboardContent() {
                                                                         </button>
                                                                         <button onClick={handleMarkNoShow} className="w-full h-10 border border-red-500/20 text-red-500 hover:bg-red-500/10 text-xs font-bold uppercase tracking-wider">Mark No-show</button>
                                                                     </div>
+
+                                                                    {/* Role Assignment UI for INTERVIEW_SCHEDULED */}
+                                                                    <div className="space-y-2 pt-3 border-t border-white/10">
+                                                                        <label className="text-xs font-mono text-gray-400 uppercase tracking-wider">Assign Role (Required for Accept)</label>
+                                                                        <select
+                                                                            value={selectedItem.assignedRole || ''}
+                                                                            onChange={(e) => {
+                                                                                const updatedItem = { ...selectedItem, assignedRole: e.target.value };
+                                                                                setSelectedItem(updatedItem);
+                                                                                toast.success(`Role "${e.target.value}" assigned`);
+                                                                            }}
+                                                                            className="w-full bg-black border border-white/20 h-10 text-xs font-mono text-white px-2"
+                                                                        >
+                                                                            <option value="">SELECT_ROLE</option>
+                                                                            {(() => {
+                                                                                const defaultRole = selectedItem.role ? (typeof selectedItem.role === 'string' ? selectedItem.role : (selectedItem.role.name || '')) : (Array.isArray(selectedItem.preferredRoles) && selectedItem.preferredRoles.length ? (typeof selectedItem.preferredRoles[0] === 'string' ? selectedItem.preferredRoles[0] : (selectedItem.preferredRoles[0]?.name || '')) : '');
+                                                                                const orgObj = (selectedItem.orgCode && Array.isArray(orgs) ? orgs.find(o => o.code === selectedItem.orgCode) : null);
+                                                                                const orgRoles = orgObj ? (orgObj.formVars?.roles ? orgObj.formVars.roles.map(r => r.name) : (Array.isArray(orgObj.formVar1) ? orgObj.formVar1 : [])) : [];
+                                                                                const globalRoles = (availableRoles || []).map(r => (typeof r === 'string' ? r : (r.name || ''))).filter(Boolean);
+
+                                                                                return (
+                                                                                    <>
+                                                                                        {defaultRole && (
+                                                                                            <optgroup label="Applied Role">
+                                                                                                <option value={defaultRole}>{defaultRole}</option>
+                                                                                            </optgroup>
+                                                                                        )}
+                                                                                        {orgRoles.length > 0 && (
+                                                                                            <optgroup label="Organization Roles">
+                                                                                                {orgRoles.map((r, i) => <option key={`org-${i}`} value={r}>{r}</option>)}
+                                                                                            </optgroup>
+                                                                                        )}
+                                                                                        {globalRoles.length > 0 && (
+                                                                                            <optgroup label="Global Roles">
+                                                                                                {globalRoles.map((r, i) => <option key={`glob-${i}`} value={r}>{r}</option>)}
+                                                                                            </optgroup>
+                                                                                        )}
+                                                                                    </>
+                                                                                );
+                                                                            })()}
+                                                                        </select>
+                                                                    </div>
                                                                 </div>
                                                             ) : (
                                                                 <div className="p-3 bg-cyan-900/10 border border-cyan-500/30 text-xs font-mono text-cyan-400">
@@ -2405,10 +2492,10 @@ function AdminDashboardContent() {
                                                         <button
                                                             onClick={() => handleUpdateAppStatus('ACCEPTED')}
                                                             disabled={
-                                                                (selectedItem.status === 'PENDING' && (!selectedItem.interviewDetails?.status || selectedItem.interviewDetails?.status === 'PENDING') && selectedItem.status !== 'INTERVIEW_SKIPPED')
+                                                                (selectedItem.status === 'PENDING')
                                                                 || !(selectedItem.assignedRole && String(selectedItem.assignedRole).trim())
                                                             }
-                                                            className={`h-14 border transition-all text-sm font-bold uppercase tracking-[0.2em] ${((selectedItem.status === 'PENDING' && (!selectedItem.interviewDetails?.status || selectedItem.interviewDetails?.status === 'PENDING') && selectedItem.status !== 'INTERVIEW_SKIPPED') || !(selectedItem.assignedRole && String(selectedItem.assignedRole).trim())) ? 'border-gray-800 text-gray-700 cursor-not-allowed bg-transparent' : 'bg-cyan-700/20 border-cyan-500/50 text-cyan-400 hover:bg-cyan-500 hover:text-black'}`}
+                                                            className={`h-14 border transition-all text-sm font-bold uppercase tracking-[0.2em] ${(selectedItem.status === 'PENDING' || !(selectedItem.assignedRole && String(selectedItem.assignedRole).trim())) ? 'border-gray-800 text-gray-700 cursor-not-allowed bg-transparent' : 'bg-cyan-700/20 border-cyan-500/50 text-cyan-400 hover:bg-cyan-500 hover:text-black'}`}
                                                         >
                                                             ACCEPT
                                                         </button>

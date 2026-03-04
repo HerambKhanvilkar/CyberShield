@@ -1,0 +1,20 @@
+meta {
+  name: Cont role autocomplete
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{ADDRESS}}/contributor/autocompleteByrole?letter=b
+  body: none
+  auth: inherit
+}
+
+params:query {
+  letter: b
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

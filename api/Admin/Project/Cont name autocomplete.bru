@@ -1,0 +1,20 @@
+meta {
+  name: Cont name autocomplete
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{ADDRESS}}/contributor/autocompleteByname?letter=k
+  body: none
+  auth: inherit
+}
+
+params:query {
+  letter: k
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

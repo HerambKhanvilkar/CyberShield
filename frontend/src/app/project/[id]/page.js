@@ -38,6 +38,12 @@ export default function ProjectDetailPage() {
     const [editData, setEditData] = useState({ title: '', description: '', status: '', supportedLinks: [], contributors: [] });
     const [newLink, setNewLink] = useState({ linkName: '', url: '' });
     const [newContributor, setNewContributor] = useState({ firstName: '', email: '', role: '' });
+    
+    // Contributor autocomplete for edit modal
+    const [contributorMode, setContributorMode] = useState('name');
+    const [contributorQuery, setContributorQuery] = useState('');
+    const [contributorSuggestions, setContributorSuggestions] = useState([]);
+    const [suggestionsLoading, setSuggestionsLoading] = useState(false);
 
     // Join modal
     const [showJoinModal, setShowJoinModal] = useState(false);
@@ -56,6 +62,39 @@ export default function ProjectDetailPage() {
         setIsAdmin(user?.isAdmin || false);
         fetchProjectData(token);
     }, [id]);
+
+    // Autocomplete search for contributors
+    const fetchContributorSuggestions = async (query) => {
+        if (!query || query.length === 0) {
+            setContributorSuggestions([]);
+            return;
+        }
+        const letter = encodeURIComponent(query[0].toLowerCase());
+        const endpoint = contributorMode === 'name' 
+            ? `${serverUrl}/contributor/autocompleteByname?letter=${letter}` 
+            : `${serverUrl}/contributor/autocompleteByrole?letter=${letter}`;
+
+        try {
+            setSuggestionsLoading(true);
+            const res = await fetch(endpoint, { headers: { 'Content-Type': 'application/json' } });
+            if (!res.ok) throw new Error('Network response was not ok');
+            const data = await res.json();
+            setContributorSuggestions(Array.isArray(data) ? data : []);
+        } catch (err) {
+            console.error('Autocomplete fetch error', err);
+            setContributorSuggestions([]);
+        } finally {
+            setSuggestionsLoading(false);
+        }
+    };
+
+    // Debounced autocomplete
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            fetchContributorSuggestions(contributorQuery);
+        }, 250);
+        return () => clearTimeout(timer);
+    }, [contributorQuery, contributorMode]);
 
     const fetchProjectData = async (token) => {
         setLoading(true);
@@ -190,6 +229,17 @@ export default function ProjectDetailPage() {
         if (!newContributor.email || !newContributor.firstName) return toast.error("Name and Email are required");
         setEditData({ ...editData, contributors: [...editData.contributors, { ...newContributor }] });
         setNewContributor({ firstName: '', email: '', role: '' });
+    };
+
+    const handleSelectContributor = (item) => {
+        const contributorObj = {
+            firstName: item.firstName || '',
+            email: item.email || item.emailId || '',
+            role: item.assigned_role || item.assignedRole || item.role || ''
+        };
+        setEditData({ ...editData, contributors: [...editData.contributors, contributorObj] });
+        setContributorQuery('');
+        setContributorSuggestions([]);
     };
 
     const handleRemoveEditContributor = (idx) => {
@@ -913,7 +963,7 @@ export default function ProjectDetailPage() {
                                 <div className="pt-4 border-t border-white/5 space-y-3">
                                     <label className="text-[10px] uppercase font-bold text-orange-400 tracking-widest">Contributors</label>
                                     {editData.contributors.length > 0 && (
-                                        <div className="space-y-2">
+                                        <div className="space-y-2 mb-3">
                                             {editData.contributors.map((c, idx) => (
                                                 <div key={idx} className="flex items-center gap-2 p-2 bg-orange-900/10 border border-orange-500/20">
                                                     <Users className="w-3 h-3 text-orange-500 shrink-0" />
@@ -929,28 +979,67 @@ export default function ProjectDetailPage() {
                                             ))}
                                         </div>
                                     )}
-                                    <div className="flex gap-2">
-                                        <input
-                                            value={newContributor.firstName}
-                                            onChange={e => setNewContributor({ ...newContributor, firstName: e.target.value })}
-                                            className="bg-black border border-white/10 h-9 text-xs font-mono text-white focus:border-orange-500 outline-none px-2 flex-1"
-                                            placeholder="Name"
-                                        />
-                                        <input
-                                            value={newContributor.email}
-                                            onChange={e => setNewContributor({ ...newContributor, email: e.target.value })}
-                                            className="bg-black border border-white/10 h-9 text-xs font-mono text-white focus:border-orange-500 outline-none px-2 flex-1"
-                                            placeholder="Email"
-                                        />
-                                        <input
-                                            value={newContributor.role}
-                                            onChange={e => setNewContributor({ ...newContributor, role: e.target.value })}
-                                            className="bg-black border border-white/10 h-9 text-xs font-mono text-white focus:border-orange-500 outline-none px-2 w-28"
-                                            placeholder="Role"
-                                        />
-                                        <button onClick={handleAddEditContributor} className="px-3 h-9 bg-orange-900/20 border border-orange-500/50 text-orange-500 hover:bg-orange-500/10 text-xs font-bold uppercase">
-                                            <Plus className="w-4 h-4" />
+
+                                    {/* Search mode toggle */}
+                                    <div className="flex gap-2 mb-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => { setContributorMode('name'); setContributorQuery(''); setContributorSuggestions([]); }}
+                                            className={`px-3 py-1.5 text-[10px] font-bold uppercase transition-all ${
+                                                contributorMode === 'name' 
+                                                    ? 'bg-orange-500 text-black' 
+                                                    : 'bg-black border border-white/10 text-orange-500 hover:bg-white/5'
+                                            }`}
+                                        >
+                                            Search by Name
                                         </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => { setContributorMode('role'); setContributorQuery(''); setContributorSuggestions([]); }}
+                                            className={`px-3 py-1.5 text-[10px] font-bold uppercase transition-all ${
+                                                contributorMode === 'role' 
+                                                    ? 'bg-orange-500 text-black' 
+                                                    : 'bg-black border border-white/10 text-orange-500 hover:bg-white/5'
+                                            }`}
+                                        >
+                                            Search by Role
+                                        </button>
+                                    </div>
+
+                                    {/* Autocomplete search */}
+                                    <div className="relative">
+                                        <input
+                                            value={contributorQuery}
+                                            onChange={e => setContributorQuery(e.target.value)}
+                                            className="w-full bg-black border border-white/10 h-9 text-xs font-mono text-white focus:border-orange-500 outline-none px-3"
+                                            placeholder={contributorMode === 'name' ? 'Type name to search and select' : 'Type role to search and select'}
+                                        />
+
+                                        {/* Suggestions dropdown */}
+                                        {(contributorSuggestions.length > 0 || suggestionsLoading) && (
+                                            <div className="absolute left-0 right-0 mt-1 z-50 bg-black border border-white/10 shadow-lg max-h-48 overflow-auto">
+                                                {suggestionsLoading && (
+                                                    <div className="p-2 text-xs text-gray-400">Searching...</div>
+                                                )}
+                                                {contributorSuggestions.map((s, i) => (
+                                                    <div
+                                                        key={i}
+                                                        onClick={() => handleSelectContributor(s)}
+                                                        className="p-3 hover:bg-white/5 cursor-pointer border-b border-white/5 last:border-b-0"
+                                                    >
+                                                        <div className="flex justify-between items-center">
+                                                            <div>
+                                                                <div className="text-xs font-mono text-orange-400">
+                                                                    {s.firstName}
+                                                                    <span className="text-gray-500 ml-2">({s.assigned_role || 'No role'})</span>
+                                                                </div>
+                                                                <div className="text-[10px] text-gray-500 mt-0.5">{s.email}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
