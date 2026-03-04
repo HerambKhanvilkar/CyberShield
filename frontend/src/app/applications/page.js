@@ -303,10 +303,25 @@ function AdminDashboardContent() {
         try {
             const token = localStorage.getItem("accessToken");
             const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
-            await axios.post(`${serverUrl}/admin/fellows/add`, manualFellowData, {
+
+            // ensure startDate is sent as DDMMYYYY since the backend expects that format
+            const formatToDDMMYYYY = (val) => {
+                if (!val) return "";
+                const d = new Date(val);
+                if (isNaN(d.getTime())) return "";
+                const pad = n => String(n).padStart(2, '0');
+                return `${pad(d.getDate())}${pad(d.getMonth()+1)}${d.getFullYear()}`;
+            };
+
+            const payload = {
+                ...manualFellowData,
+                startDate: formatToDDMMYYYY(manualFellowData.startDate)
+            };
+
+            await axios.post(`${serverUrl}/admin/fellows/add`, payload, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            toast.success("Fellow Added Successfully");
+            toast.success("Fellow Added Successfully; acceptance email sent to the user");
             setShowManualModal(false);
             fetchData();
         } catch (error) {
@@ -1241,7 +1256,7 @@ function AdminDashboardContent() {
                             ) : (
                                 <div className="space-y-3">
                                     <div className="text-[10px] text-gray-500 uppercase font-mono tracking-widest flex justify-between">
-                                        <span>Motivation_Payload</span>
+                                        <span>What Makes You Stand Apart?</span>
                                         <span className={((orgInspectorMember?.whyJoinDeepCytes ?? orgInspectorMember?.data?.whyJoin ?? '').length < 100) ? "text-red-500" : "text-green-500"}>
                                             LEN_{(orgInspectorMember?.whyJoinDeepCytes ?? orgInspectorMember?.data?.whyJoin ?? '').length}
                                         </span>
@@ -2175,7 +2190,7 @@ function AdminDashboardContent() {
                                                     <div className="space-y-4">
                                                         <div className="space-y-2">
                                                             <div className="text-[10px] text-gray-500 uppercase font-mono tracking-widest flex justify-between">
-                                                                <span>Motivation_Payload</span>
+                                                                <span>What Makes You Stand Apart?</span>
                                                                 <span className={( (selectedItem?.whyJoinDeepCytes ?? selectedItem?.data?.whyJoin ?? '').length < 100) ? "text-red-500" : "text-green-500"}>
                                                                     LEN_{(selectedItem?.whyJoinDeepCytes ?? selectedItem?.data?.whyJoin ?? '').length}
                                                                 </span>
@@ -2186,7 +2201,7 @@ function AdminDashboardContent() {
                                                         </div>
 
                                                         <div className="space-y-2">
-                                                            <div className="text-[10px] text-gray-500 uppercase font-mono tracking-widest">Initial_Proposal</div>
+                                                            <div className="text-[10px] text-gray-500 uppercase font-mono tracking-widest">Any innovative ideas/projects you would like to pursue at DC?</div>
                                                             <div className="p-4 bg-black/40 border border-white/5 text-xs text-gray-400 font-mono leading-relaxed max-h-40 overflow-y-auto custom-scrollbar">
                                                                 {selectedItem.data?.ideas || "NO_PROPOSAL_SUBMITTED"}
                                                             </div>

@@ -136,8 +136,12 @@ export default function FellowshipDashboard() {
             link.remove();
         } catch (err) {
             console.error(err);
-            if (err.response?.status === 404) toast.info('Signed document not available yet');
-            else toast.error(err.response?.data?.message || 'Download failed');
+            if (err.response?.status === 404) {
+                // show server-provided message if available, otherwise fallback generic
+                toast.info(err.response?.data?.message || 'Signed document not available yet');
+            } else {
+                toast.error(err.response?.data?.message || 'Download failed');
+            }
         }
     };
 
