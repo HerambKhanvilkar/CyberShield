@@ -212,14 +212,91 @@ router.get('/download-document/:tenureIndex/:documentType', authenticateJWT, isF
     try {
         const { tenureIndex, documentType } = req.params;
         const fellow = req.fellow;
+
         // Access mixed type safely
         const docRecord = fellow.tenures[tenureIndex]?.signedDocuments?.[documentType];
 
-        if (!docRecord || !docRecord.pdfPath || !fs.existsSync(docRecord.pdfPath)) {
-            return res.status(404).json({ message: "Document not found" });
+        // Helper to normalise path and check existance
+        const resolvePath = (p) => {
+            if (!p) return null;
+            // Convert to absolute based on cwd, handling leading slash or backslash
+            let candidate = p;
+            if (!path.isAbsolute(candidate)) {
+                candidate = path.resolve(process.cwd(), candidate);
+            }
+            return candidate;
+        };
+
+        let filePath = docRecord && docRecord.pdfPath ? resolvePath(docRecord.pdfPath) : null;
+
+        if (filePath && fs.existsSync(filePath)) {
+            console.log(`[DOC_DOWNLOAD] Serving existing file for ${documentType} -> ${filePath}`);
+            return res.download(filePath, `${documentType}_${fellow.lastName}.pdf`);
         }
 
-        res.download(docRecord.pdfPath, `${documentType}_${fellow.lastName}.pdf`);
+        // If we reach here, the stored record either doesn't exist or file is missing.
+        // Attempt fallback generation to avoid broken downloads.
+        console.warn(`[DOC_DOWNLOAD] Stored document missing for user ${fellow.email}, type=${documentType}, path=${docRecord?.pdfPath}`);
+
+        // Prepare helper functions for generation
+        const fellowData = {
+            firstName: fellow.firstName,
+            lastName: fellow.lastName,
+            email: fellow.email,
+            globalPid: fellow.globalPid
+        };
+        const tenure = fellow.tenures[tenureIndex] || fellow.tenures[0] || {};
+        const tenureData = {
+            role: tenure.role || 'Fellow',
+            startDate: tenure.startDate || new Date().toLocaleDateString('en-GB'),
+            endDate: tenure.endDate || 'Ongoing'
+        };
+
+        let buffer;
+        if (documentType === 'nda') {
+            // cannot generate NDA if not signed
+            if (fellow.nda.dateTimeUser === '0' || !fellow.nda.signedName) {
+                return res.status(404).json({ message: 'NDA not signed yet' });
+            }
+            const signatureInfo = { type: 'TYPED', data: fellow.nda.signedName };
+            const result = await DocumentService.generateNDA(fellowData, signatureInfo);
+            buffer = result.buffer;
+        } else if (documentType === 'offerLetter') {
+            const result = await DocumentService.generateOfferLetter(fellowData, tenureData);
+            buffer = result.buffer;
+        } else {
+            // generic fallback using secure generator
+            const templateNameMap = {
+                nda: 'NDA_Template.pdf',
+                offerLetter: 'Offer_Letter.pdf',
+                completionLetter: 'Completion_Letter.pdf'
+            };
+            const templatePath = path.join(__dirname, '../uploads/templates', templateNameMap[documentType] || '');
+            const signatureInfo = { type: 'TYPED', data: fellow.nda.signedName || '' };
+            const secureRes = await DocumentService.generateSecurePDF(
+                templatePath,
+                {
+                    fullName: `${fellow.firstName} ${fellow.lastName}`,
+                    role: tenure.role || 'Fellow',
+                    globalPid: fellow.globalPid,
+                    email: fellow.email
+                },
+                signatureInfo,
+                fellow.email,
+                fellow.lastName,
+                fellow.globalPid
+            );
+            buffer = secureRes.buffer;
+        }
+
+        if (buffer) {
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `attachment; filename=${documentType}_${fellow.lastName}.pdf`);
+            return res.send(Buffer.from(buffer));
+        }
+
+        // if all else fails
+        return res.status(404).json({ message: 'Document not available' });
     } catch (err) {
         console.error("Download error:", err);
         res.status(500).json({ message: "Download error" });

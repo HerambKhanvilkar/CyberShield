@@ -224,23 +224,7 @@ const sendProfileUpdateEmail = async (email, reasonType, badgeName = '', additio
 };
 
 /**
- * Send admin daily report
- * @param {string} email - Admin email
- * @param {string} adminName - Admin name
- * @param {string} date - Report date
- * @param {Array} logs - Array of log objects with {time, action, target, status}
- */
-const sendAdminDailyReport = async (email, adminName, date, logs) => {
-  const { getAdminDailyEmail } = require('../emailTemplates/admindaily');
-  const html = getAdminDailyEmail(adminName, date, logs);
 
-  return sendEmail({
-    to: email,
-    subject: `🛡️ Admin Daily Report - ${date}`,
-    html: html,
-    from: process.env.MAILGUN_FROM
-  });
-};
 
 /**
  * Send interview scheduled notification
@@ -443,7 +427,7 @@ module.exports = {
   sendBulkUserWelcomeEmail,
   sendBadgeReceivedEmail,
   sendProfileUpdateEmail,
-  sendAdminDailyReport,
+
   sendInterviewScheduledEmail,
   sendApplicationStatusEmail,
   sendTerminationEmail,

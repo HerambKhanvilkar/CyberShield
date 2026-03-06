@@ -1366,6 +1366,19 @@ router.post('/admin/fellows/add', authenticateJWT, isAdmin, async (req, res) => 
       return res.status(400).json({ message: "Missing required fields (email, firstName, lastName)" });
     }
 
+    // helper to normalise any incoming date/string to DDMMYYYY format
+    const formatToDDMMYYYY = (val) => {
+      if (!val) return "";
+      // if already in DDMMYYYY, return as-is
+      if (/^\d{2}\d{2}\d{4}$/.test(val.replace(/\D/g, "")) && val.length >= 8) {
+        return val.replace(/\D/g, "").substring(0, 8);
+      }
+      const d = new Date(val);
+      if (isNaN(d.getTime())) return "";
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${pad(d.getDate())}${pad(d.getMonth() + 1)}${d.getFullYear()}`;
+    };
+
     let profile = await FellowshipProfile.findOne({ email: email.toLowerCase().trim() });
     const isNewProfile = !profile;
 
@@ -1374,21 +1387,56 @@ router.post('/admin/fellows/add', authenticateJWT, isAdmin, async (req, res) => 
         email: email.toLowerCase().trim(),
         firstName,
         lastName,
-        status: 'ACTIVE',
-        onboardingState: 'COMPLETION'
+        assigned_role: role || '',
+        status: 'PENDING',          // treat as recently accepted
+        onboardingState: 'PROFILE' // start at beginning of onboarding
       });
+    } else {
+      // existing profile – append a new tenure and reset lifecycle so that
+      // the manual add behaves identically to a new acceptance
+      if (role) profile.assigned_role = role;
+      profile.status = 'PENDING';
+      profile.onboardingState = 'PROFILE';
     }
 
-    // Add Tenure
+    // Add Tenure (active immediately)
+    // compute default end date similar to application acceptance flow
+    let finalEndDate = "";
+    if (orgCode) {
+      const Organization = require('../../models/Organization');
+      const org = await Organization.findOne({ code: orgCode });
+      if (org && org.defaultTenureEndDate) {
+        const d = new Date(org.defaultTenureEndDate);
+        const pad = n => String(n).padStart(2, '0');
+        finalEndDate = `${pad(d.getDate())}${pad(d.getMonth() + 1)}${d.getFullYear()}`;
+      }
+    }
+    if (!finalEndDate) {
+      const now = new Date();
+      const sixMonths = new Date(now);
+      sixMonths.setMonth(sixMonths.getMonth() + 6);
+      const pad = n => String(n).padStart(2, '0');
+      finalEndDate = `${pad(sixMonths.getDate())}${pad(sixMonths.getMonth() + 1)}${sixMonths.getFullYear()}`;
+    }
+
     profile.tenures.push({
       role: role || "Fellow",
       orgCode: orgCode || "", // Org is now optional
       status: 'ACTIVE',
       cohort: cohort || "C1",
-      startDate: startDate || new Date().toISOString().split('T')[0]
+      startDate: formatToDDMMYYYY(startDate) || formatToDDMMYYYY(new Date()),
+      endDate: finalEndDate
     });
 
     await profile.save();
+
+    // Send acceptance email so the fellow is notified & can log in
+    try {
+      const { sendApplicationStatusEmail } = require('../../services/emailService');
+      await sendApplicationStatusEmail(profile.email, 'ACCEPTED');
+    } catch (emailErr) {
+      console.error("Manual add email failure:", emailErr);
+    }
 
     // Audit Log
     const HiringAuditLog = require('../../models/HiringAuditLog.js');

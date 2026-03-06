@@ -80,13 +80,13 @@ export default function OfferPage() {
                 </div>
             </div>
 
-            {/* Password Hint */}
+            {/* Password Hint
             <div className="w-full max-w-sm p-4 bg-orange-500/5 border border-orange-500/20 text-orange-400/80">
                 <p className="text-[10px] font-mono uppercase leading-relaxed tracking-wider">
                     <span className="text-orange-400 font-bold">[SECURITY NOTICE]</span>: All documents are AES-encrypted. <br />
                     Password Format: <span className="text-white font-bold">{user.lastName.toUpperCase()}_{user.globalPid}</span>
                 </p>
-            </div>
+            </div> */}
 
             <Button onClick={handleProceed} className="h-16 px-12 bg-green-500/5 border border-green-500/30 text-green-500 hover:bg-green-500 hover:text-white rounded-none font-black text-xs uppercase tracking-widest transition-all group">
                 ADVANCE_TO_RESOURCES <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-2 transition-transform" />
