@@ -1,0 +1,20 @@
+meta {
+  name: Get the resume
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{ADDRESS}}/admin/resume/:applicantId
+  body: none
+  auth: inherit
+}
+
+params:path {
+  applicantId: 699c6d4c76c78f9f58b91e6c
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
