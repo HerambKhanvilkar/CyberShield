@@ -932,7 +932,7 @@ const BadgeDescription = () => (
         Badge Details
       </h2>
 
-      <p className="text-gray-300 max-h-[170px] overflow-y-auto scrollbar leading-relaxed text-sm font-medium">
+      <p className="text-gray-300 max-h-[170px] overflow-y-auto scrollbar leading-relaxed text-sm font-medium whitespace-pre-line">
         {currentBadge?.description || 'No description available for this badge.'}
       </p>
     </div>

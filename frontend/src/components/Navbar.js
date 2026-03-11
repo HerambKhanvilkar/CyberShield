@@ -197,7 +197,7 @@ function Navbar() {
                 <span>Learn</span>
               </a>
               <Link
-                href="/allbadges"
+                href="/badges"
                 className="hover:text-[#3DB5DA] transition-colors flex items-center gap-2"
               >
                 <span>Badges</span>
@@ -333,7 +333,7 @@ function Navbar() {
             </button> */}
 
             <Link
-              href="/allbadges"
+              href="/badges"
               onClick={() => setIsSidenavOpen(false)}
               className="text-gray-400 text-2xl hover:text-white"
             >
