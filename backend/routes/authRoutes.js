@@ -24,7 +24,7 @@ const JWT_SECRET_KEY = process.env.JWT_SECRET || 'your_secret_key_change_in_prod
 const registerValidationRules = [
   body("firstName").trim().notEmpty().withMessage("Name is required").escape(),
   body("lastName").trim().notEmpty().withMessage("Name is required").escape(),
-  body("email").isEmail().withMessage("Invalid email").normalizeEmail(),
+  body("email").isEmail().withMessage("Invalid email").normalizeEmail({ gmail_remove_dots: false }),
   body("password")
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/)
     .withMessage("Password must be at least 8 characters long, contain uppercase, lowercase, number, and special character"),
@@ -32,12 +32,12 @@ const registerValidationRules = [
 ];
 
 const loginValidationRules = [
-  body("email").isEmail().withMessage("Invalid email").normalizeEmail(),
+  body("email").isEmail().withMessage("Invalid email").normalizeEmail({ gmail_remove_dots: false }),
   body("password").notEmpty().withMessage("Password is required"),
 ];
 
 const resetPasswordValidationRules = [
-  body("email").isEmail().withMessage("Invalid email").normalizeEmail(),
+  body("email").isEmail().withMessage("Invalid email").normalizeEmail({ gmail_remove_dots: false }),
   body("otp").isNumeric().withMessage("OTP must be numeric"),
   body("newPassword")
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/)
@@ -114,7 +114,7 @@ router.post("/register", registerValidationRules, validateRequest, async (req, r
 });
 
 // Route to request OTP for registration
-router.post("/register/otp", [body("email").isEmail().withMessage("Invalid email").normalizeEmail()], validateRequest, async (req, res) => {
+router.post("/register/otp", [body("email").isEmail().withMessage("Invalid email").normalizeEmail({ gmail_remove_dots: false })], validateRequest, async (req, res) => {
   try {
     const { email } = req.body;
 
@@ -495,7 +495,7 @@ router.post("/reset-password", resetPasswordValidationRules, validateRequest, as
 // --- OTP Login Flow for Portal ---
 
 // 1. Request OTP for Login
-router.post("/login-otp", [body("email").isEmail().withMessage("Invalid email").normalizeEmail()], validateRequest, async (req, res) => {
+router.post("/login-otp", [body("email").isEmail().withMessage("Invalid email").normalizeEmail({ gmail_remove_dots: false })], validateRequest, async (req, res) => {
   try {
     const { email } = req.body;
 
@@ -533,7 +533,7 @@ router.post("/login-otp", [body("email").isEmail().withMessage("Invalid email").
 
 // 2. Verify OTP and Login
 router.post("/verify-login-otp", [
-  body("email").isEmail().withMessage("Invalid email").normalizeEmail(),
+  body("email").isEmail().withMessage("Invalid email").normalizeEmail({ gmail_remove_dots: false }),
   body("otp").isNumeric().withMessage("OTP must be numeric")
 ], validateRequest, async (req, res) => {
   try {

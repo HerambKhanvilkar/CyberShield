@@ -107,7 +107,7 @@ router.post('/apply', (req, res, next) => {
     });
 }, [
     check('orgCode').notEmpty().trim().escape(),
-    check('email').isEmail().normalizeEmail(),
+    check('email').isEmail().normalizeEmail({ gmail_remove_dots: false }),
     check('firstName').notEmpty().trim().escape(),
     check('lastName').notEmpty().trim().escape(),
     // Role is mostly for internal use; we still trim but do not escape so that slashes or URLs aren't mangled.
