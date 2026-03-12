@@ -38,6 +38,7 @@ const { Parser } = require('json2csv');
 const agenda = require('../../worker.js'); // path to your agenda initialization module
 const { validateMIMEType } = require("validate-image-type");
 const sharp = require('sharp');
+const Applicant = require('../../models/Applicant.js');
 const {
   sendBulkUserWelcomeEmail,
   sendBadgeReceivedEmail,
@@ -46,6 +47,7 @@ const {
 const { awardCompositeBadgesForUser } = require('../../services/badgeService.js');
 const FellowshipProfile = require('../../models/FellowshipProfile.js');
 const LifecycleManager = require('../../services/LifecycleManager.js');
+const { verify } = require('crypto');
 
 const uploadImage = multer({
   limits: { fileSize: 5 * 1000 * 1000 }, // 5MB max file size
@@ -1334,7 +1336,6 @@ router.post('/admin/fellows/:id/terminate', authenticateJWT, isAdmin, async (req
     await FellowshipProfile.findByIdAndDelete(fellow._id);
 
     // Also delete any existing application records
-    const Applicant = require('../../models/Applicant.js');
     await Applicant.deleteMany({ email: userEmail });
 
     // Also delete from main Badge-Viewer DB
@@ -1456,5 +1457,37 @@ router.post('/admin/fellows/add', authenticateJWT, isAdmin, async (req, res) => 
     res.status(500).json({ message: err.message });
   }
 });
+
+router.get('/admin/resume/:applicantId', authenticateJWT, isAdmin,  async (req, res) => {
+  try {
+    const { applicantId } = req.params;
+
+    // Find the applicant 
+    const applicant = await Applicant.findById(applicantId);
+    if( !applicant || !applicant.resume ){
+      return res.status(404).json({ error: 'Resume not found' });
+    }
+
+    // Construct file path (go up two levels from AdminRoutes to backend root)
+    const resumePath = applicant.resume.startsWith('/') ? applicant.resume.substring(1) : applicant.resume;
+    const filePath = path.join(__dirname, '..', '..', resumePath);
+    console.log(filePath);
+    // Check if file exists
+    if(!fs.existsSync(filePath)){
+      return res.status(404).json({ error: 'File not found on server' });
+    }
+
+    // Set header and stream file
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${applicant.firstName}_${applicant.lastName}_Resume.pdf"`);
+
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.pipe(res);
+
+  }catch(error){
+    console.error('Resume fetch error: ', error);
+    res.status(500).json({ error: 'Failed to fetch resume' })
+  }
+})
 
 module.exports = router;

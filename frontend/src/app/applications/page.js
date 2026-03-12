@@ -2280,7 +2280,36 @@ function AdminDashboardContent() {
                                                                     {selectedItem.resume && (
                                                                         <button
                                                                             type="button"
-                                                                            onClick={(e) => { e.stopPropagation(); const serverUrl = process.env.SERVER_URL || 'http://localhost:3001'; const url = selectedItem.resume.startsWith('http') ? selectedItem.resume : `${serverUrl}${selectedItem.resume}`; window.open(url, '_blank'); }}
+                                                                            onClick={async (e) => { 
+                                                                                e.stopPropagation(); 
+                                                                                try {
+                                                                                    const token = localStorage.getItem("accessToken");
+                                                                                    const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
+                                                                                    
+                                                                                    // Fetch resume via authenticated endpoint
+                                                                                    const response = await fetch(`${serverUrl}/admin/resume/${selectedItem._id}`, {
+                                                                                        headers: { 
+                                                                                            'Authorization': `Bearer ${token}`
+                                                                                        }
+                                                                                    });
+                                                                                    
+                                                                                    if (!response.ok) throw new Error('Failed to fetch resume');
+                                                                                    
+                                                                                    // Create blob URL (hides actual file path)
+                                                                                    const blob = await response.blob();
+                                                                                    const blobUrl = URL.createObjectURL(blob);
+                                                                                    
+                                                                                    // Open in new tab
+                                                                                    window.open(blobUrl, '_blank');
+                                                                                    
+                                                                                    // Clean up blob URL after sufficient delay (5 seconds allows PDF to load even on slow connections)
+                                                                                    // Once the PDF is loaded in the new tab, it stays there even after URL is revoked
+                                                                                    setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+                                                                                } catch (error) {
+                                                                                    console.error('Resume fetch error:', error);
+                                                                                    toast.error('Failed to open resume');
+                                                                                }
+                                                                            }}
                                                                             className="py-4 px-6 border border-white/10 hover:bg-white/5 transition-all inline-flex items-center justify-center gap-3 group rounded-lg"
                                                                         >
                                                                             <FileText className="w-5 h-5" />
