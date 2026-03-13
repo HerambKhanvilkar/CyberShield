@@ -68,6 +68,7 @@ class _AppsPageState extends State<AppsPage> {
 
   @override
   Widget build(BuildContext context) {
+    const neon = Color(0xFFC6FF00);
     Iterable<AppInfo> visible = _allApps;
 
     if (_filter == _AppsFilter.user) {
@@ -83,151 +84,161 @@ class _AppsPageState extends State<AppsPage> {
     final totalSystem =
         _allApps.where((a) => _isSystemApp(a)).length;
 
-    return Column(
-      children: [
-        Padding(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Installed Apps',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'User: $totalUser  •  System: $totalSystem',
-                style: const TextStyle(
-                  color: Colors.grey,
-                  fontSize: 11,
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              /// 🔥 Stable Segmented Button (no resizing)
-              SizedBox(
-                height: 38,
-                child: SegmentedButton<_AppsFilter>(
-                  style: const ButtonStyle(
-                    visualDensity: VisualDensity.compact,
-                  ),
-                  segments: const [
-                    ButtonSegment(
-                      value: _AppsFilter.all,
-                      label: SizedBox(
-                        width: 70,
-                        child: Center(child: Text('All')),
-                      ),
-                    ),
-                    ButtonSegment(
-                      value: _AppsFilter.user,
-                      label: SizedBox(
-                        width: 70,
-                        child: Center(child: Text('User')),
-                      ),
-                    ),
-                    ButtonSegment(
-                      value: _AppsFilter.system,
-                      label: SizedBox(
-                        width: 80,
-                        child: Center(child: Text('System')),
-                      ),
-                    ),
-                  ],
-                  selected: {_filter},
-                  onSelectionChanged: (selection) {
-                    if (selection.isEmpty) return;
-                    setState(() {
-                      _filter = selection.first;
-                    });
-                  },
-                ),
-              ),
-            ],
-          ),
+    return Scaffold(
+      backgroundColor: const Color(0xFF121212),
+      appBar: AppBar(
+        title: const Text('APPS', style: TextStyle(letterSpacing: 1.5)),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
         ),
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: _loadApps,
-            child: Builder(
-              builder: (context) {
-                if (_loading) {
-                  return const Center(
-                      child: CircularProgressIndicator());
-                }
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Installed Apps',
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: neon,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'User: $totalUser  •  System: $totalSystem',
+                  style: const TextStyle(
+                    color: Colors.grey,
+                    fontSize: 11,
+                  ),
+                ),
+                const SizedBox(height: 12),
 
-                if (_error != null) {
-                  return ListView(
-                    physics:
-                        const AlwaysScrollableScrollPhysics(),
-                    children: [
-                      const SizedBox(height: 80),
-                      Center(
-                        child: Text(
-                          'Failed to load apps\n$_error',
-                          textAlign: TextAlign.center,
-                        ),
+                /// 🔥 Stable Segmented Button (no resizing)
+                SizedBox(
+                  height: 38,
+                  child: SegmentedButton<_AppsFilter>(
+                    style: SegmentedButton.styleFrom(
+                      selectedForegroundColor: Colors.black,
+                      selectedBackgroundColor: neon,
+                      foregroundColor: Colors.white70,
+                      side: const BorderSide(color: Colors.white10),
+                    ),
+                    segments: const [
+                      ButtonSegment(
+                        value: _AppsFilter.all,
+                        label: Text('All'),
+                      ),
+                      ButtonSegment(
+                        value: _AppsFilter.user,
+                        label: Text('User'),
+                      ),
+                      ButtonSegment(
+                        value: _AppsFilter.system,
+                        label: Text('System'),
                       ),
                     ],
-                  );
-                }
-
-                if (visibleList.isEmpty) {
-                  return ListView(
-                    physics:
-                        const AlwaysScrollableScrollPhysics(),
-                    children: const [
-                      SizedBox(height: 80),
-                      Center(child: Text('No apps found')),
-                    ],
-                  );
-                }
-
-                return ListView.builder(
-                  physics:
-                      const AlwaysScrollableScrollPhysics(),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8),
-                  itemCount: visibleList.length,
-                  itemBuilder: (context, index) {
-                    final app = visibleList[index];
-
-                    return Card(
-                      margin:
-                          const EdgeInsets.symmetric(vertical: 4),
-                      child: ListTile(
-                        leading: app.icon != null
-                            ? Image.memory(
-                                app.icon!,
-                                width: 40,
-                                height: 40,
-                              )
-                            : const Icon(Icons.android),
-                        title: Text(app.name ?? 'Unknown'),
-                        subtitle: Text(
-                          app.packageName ?? '',
-                          style:
-                              const TextStyle(fontSize: 11),
-                        ),
-                        onTap: () {
-                          if (app.packageName != null) {
-                            InstalledApps.startApp(
-                                app.packageName!);
-                          }
-                        },
-                      ),
-                    );
-                  },
-                );
-              },
+                    selected: {_filter},
+                    onSelectionChanged: (selection) {
+                      if (selection.isEmpty) return;
+                      setState(() {
+                        _filter = selection.first;
+                      });
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
-      ],
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _loadApps,
+              color: neon,
+              child: Builder(
+                builder: (context) {
+                  if (_loading) {
+                    return const Center(
+                        child: CircularProgressIndicator(color: neon));
+                  }
+
+                  if (_error != null) {
+                    return ListView(
+                      physics:
+                          const AlwaysScrollableScrollPhysics(),
+                      children: [
+                        const SizedBox(height: 80),
+                        Center(
+                          child: Text(
+                            'Failed to load apps\n$_error',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(color: Colors.white70),
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+
+                  if (visibleList.isEmpty) {
+                    return ListView(
+                      physics:
+                          const AlwaysScrollableScrollPhysics(),
+                      children: const [
+                        SizedBox(height: 80),
+                        Center(child: Text('No apps found', style: TextStyle(color: Colors.white70))),
+                      ],
+                    );
+                  }
+
+                  return ListView.builder(
+                    physics:
+                        const AlwaysScrollableScrollPhysics(),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8),
+                    itemCount: visibleList.length,
+                    itemBuilder: (context, index) {
+                      final app = visibleList[index];
+
+                      return Card(
+                        color: const Color(0xFF161616),
+                        margin:
+                            const EdgeInsets.symmetric(vertical: 4),
+                        child: ListTile(
+                          leading: app.icon != null
+                              ? Image.memory(
+                                  app.icon!,
+                                  width: 40,
+                                  height: 40,
+                                )
+                              : const Icon(Icons.android, color: neon),
+                          title: Text(app.name ?? 'Unknown', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          subtitle: Text(
+                            app.packageName ?? '',
+                            style:
+                                const TextStyle(fontSize: 11, color: Colors.grey),
+                          ),
+                          onTap: () {
+                            if (app.packageName != null) {
+                              InstalledApps.startApp(
+                                  app.packageName!);
+                            }
+                          },
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -8,7 +8,6 @@ import 'package:android_intent_plus/android_intent.dart';
 import 'package:android_intent_plus/flag.dart';
 import 'package:app_settings/app_settings.dart';
 
-import '../widgets/info_tile.dart';
 import '../services/native_network_service.dart';
 
 class BatteryPage extends StatefulWidget {
@@ -20,7 +19,6 @@ class BatteryPage extends StatefulWidget {
 
 class _BatteryPageState extends State<BatteryPage>
     with SingleTickerProviderStateMixin {
-
   final Battery _battery = Battery();
   final NativeNetworkService _native = NativeNetworkService();
 
@@ -46,7 +44,8 @@ class _BatteryPageState extends State<BatteryPage>
       if (!mounted) return;
       setState(() => _batteryState = state);
     });
-    _pollTimer = Timer.periodic(const Duration(seconds: 1), (_) => _refreshBatteryDetails());
+    _pollTimer = Timer.periodic(
+        const Duration(seconds: 1), (_) => _refreshBatteryDetails());
 
     unawaited(_refreshBatteryDetails());
   }
@@ -128,27 +127,24 @@ class _BatteryPageState extends State<BatteryPage>
 
   @override
   Widget build(BuildContext context) {
-    final neonGreen = const Color(0xFFC6FF00);
-    final surface = Theme.of(context).colorScheme.surface;
+    const neonGreen = Color(0xFFC6FF00);
+    const surface = Color(0xFF161616);
 
     final temp = _tempC();
     final volt = _voltageV();
     final power = _powerW();
     final current = _currentMa();
 
-    final tempLabel = temp != null ? '${temp.toStringAsFixed(0)}°C' : '—';
+    final tempLabel = temp != null ? '${temp.toStringAsFixed(1)}°C' : '—';
     final voltLabel = volt != null ? '${volt.toStringAsFixed(3)} V' : '—';
-    final powerLabel = power != null ? '${power.toStringAsFixed(1)} W' : '0.0 W';
-    final currentLabel =
-    current != null ? '${current.round().abs()} mA' : '—';
+    final powerLabel = volt != null && current != null ? '${((volt * current.abs()) / 1000).toStringAsFixed(1)} W' : '—';
+    final currentLabel = current != null ? '${current.round().abs()} mA' : '—';
 
     final tech = (_batteryDetails?['technology'] as String?) ?? 'Unknown';
     final health = (_batteryDetails?['health'] as String?) ?? 'Unknown';
 
-  
     final batterySaver = _batteryDetails?['batterySaver'] as bool?;
-    final batteryProtection =
-        _batteryDetails?['batteryProtection'] as bool?;
+    final batteryProtection = _batteryDetails?['batteryProtection'] as bool?;
 
     final saverLabel = batterySaver == null
         ? 'Unknown'
@@ -172,342 +168,246 @@ class _BatteryPageState extends State<BatteryPage>
 
     final estimatedCapacityLabel = estimatedFullMah != null
         ? '${estimatedFullMah.round()} mAh'
-        : 'Learning… Charge until full';
+        : 'Learning...';
 
     final chargeCounterLabel =
         chargeCounterMah != null ? '${chargeCounterMah.round()} mAh' : 'Unknown';
 
-    // ETA Logic (UNCHANGED)
-    String etaText = 'Not available';
-    String rateText = '-- %/m';
+    String etaText = 'Calculating...';
+    String rateText = '-- %/h';
 
     final statusNative = _batteryDetails?['status'] as String?;
     final isCharging = statusNative == 'Charging';
-    final isDischarging = statusNative == 'Discharging';
-    if (estimatedFullMah != null &&
-    chargeCounterMah != null &&
-    current != null &&
-    current != 0)  {
-
-      final percentPerMinute =
-          (current / estimatedFullMah) * 100 / 60;
-
-      rateText =
-          '${percentPerMinute.abs().toStringAsFixed(2)}%/m';
-        debugPrint('RATE_DEBUG -> ' 'current: $current, ''estimatedFullMah: $estimatedFullMah, ''percentPerMinute: $percentPerMinute',
-);
-      
+    
+    if (estimatedFullMah != null && chargeCounterMah != null && current != null && current != 0) {
+      final ratePerHour = (current.abs() / estimatedFullMah) * 100;
+      rateText = '${ratePerHour.toStringAsFixed(1)} %/h';
 
       if (isCharging && current > 0) {
-        final remainingMah =
-            (estimatedFullMah - chargeCounterMah)
-                .clamp(0.0, estimatedFullMah);
-
+        final remainingMah = (estimatedFullMah - chargeCounterMah).clamp(0.0, estimatedFullMah);
         final hours = remainingMah / current;
-
-        if (hours > 0 && hours < 24) {
+        if (hours > 0 && hours < 48) {
           final totalMinutes = (hours * 60).round();
           final h = totalMinutes ~/ 60;
           final m = totalMinutes % 60;
-          etaText =
-              h > 0 ? '${h}h ${m.toString().padLeft(2, '0')}m' : '${m}m';
-        } else {
-          etaText = 'Calculating...';
-        }
-      } else if (isDischarging && current < 0) {
-        final hours = chargeCounterMah / current.abs();
-
-        if (hours > 0 && hours < 24) {
-          final totalMinutes = (hours * 60).round();
-          final h = totalMinutes ~/ 60;
-          final m = totalMinutes % 60;
-          etaText =
-              h > 0 ? '${h}h ${m.toString().padLeft(2, '0')}m' : '${m}m';
-        } else {
-          etaText = 'Calculating...';
+          etaText = h > 0 ? '${h}h ${m}m' : '${m}m';
         }
       }
     }
 
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-      children: [
-
-        /// ================= MAIN STATUS CARD =================
-        Container(
-          decoration: BoxDecoration(
-            color: surface,
-            borderRadius: BorderRadius.circular(24),
-          ),
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-
-              Row(
-                children: [
-                  const Text(
-                    'Status',
-                    style: TextStyle(
-                      color: Color(0xFFC6FF00),
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    visualDensity: VisualDensity.compact,
-                    icon: const Icon(Icons.settings, size: 18),
-                    onPressed: _openBatterySettings,
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 8),
-
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-
-                  Text(
-                    '$_batteryLevel%',
-                    style: const TextStyle(
-                      fontSize: 40,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.greenAccent,
-                    ),
-                  ),
-
-                  const SizedBox(width: 16),
-
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-
-                        Text(
-                          _statusLine(),
-                          style: const TextStyle(
-                            color: Colors.greenAccent,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-
-                        const SizedBox(height: 4),
-
-                        Text(
-                          etaText,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-
-                        const SizedBox(height: 2),
-
-                        const Text(
-                          'Time until full',
-                          style: TextStyle(color: Colors.grey, fontSize: 11),
-                        ),
-
-                        const SizedBox(height: 2),
-
-                        Text(
-                          'Slow $rateText',
-                          style: const TextStyle(color: Colors.grey, fontSize: 11),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              Row(
-                children: [
-                  Text(tempLabel, style: const TextStyle(fontSize: 12)),
-                  const SizedBox(width: 16),
-                  Text(voltLabel, style: const TextStyle(fontSize: 12)),
-                  const SizedBox(width: 16),
-                  Text(powerLabel, style: const TextStyle(fontSize: 12)),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.35),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
+    return Scaffold(
+      backgroundColor: const Color(0xFF0A0A0A),
+      appBar: AppBar(
+        title: const Text('BATTERY', style: TextStyle(letterSpacing: 1.5)),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        physics: const BouncingScrollPhysics(),
+        children: [
+          // Main Status Card
+          _buildDetailedCard(
+            title: 'Status',
+            onSettingsTap: _openBatterySettings,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-
-                    Row(
-                      children: [
-                        const Text(
-                          'Current',
-                          style: TextStyle(color: Colors.grey, fontSize: 11),
-                        ),
-                        const Spacer(),
-                        Text(
-                          currentLabel,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
+                    Text(
+                      '$_batteryLevel%',
+                      style: const TextStyle(
+                        fontSize: 48,
+                        fontWeight: FontWeight.bold,
+                        color: neonGreen,
+                      ),
                     ),
-
-                    const SizedBox(height: 8),
-
-                    SizedBox(
-                      height: 40,
-                      width: double.infinity,
-                      child: AnimatedBuilder(
-                        animation: _waveController,
-                        builder: (context, child) {
-
-                          final absCurrent = (current ?? 0).abs();
-                          final dynamicPart =
-                              (absCurrent / 1500.0).clamp(0.0, 0.85);
-                          final intensity = 0.15 + dynamicPart;
-
-                          return CustomPaint(
-                            painter: _BatteryWavePainter(
-                              phase: _waveController.value,
-                              intensity: intensity.clamp(0.1, 1.0),
-                              color: neonGreen,
-                            ),
-                          );
-                        },
+                    const SizedBox(width: 24),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _statusLine(),
+                            style: const TextStyle(
+                                color: neonGreen,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            etaText,
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14),
+                          ),
+                          const Text(
+                            'Time until full',
+                            style: TextStyle(color: Colors.grey, fontSize: 11),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            rateText,
+                            style: const TextStyle(color: Colors.grey, fontSize: 11),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 12),
-
-        /// ================= INFO CARD (IMPROVED) =================
-        Container(
-          decoration: BoxDecoration(
-            color: surface,
-            borderRadius: BorderRadius.circular(24),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-
-              const Text(
-                'Info',
-                style: TextStyle(
-                  color: Color(0xFFC6FF00),
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildMiniMetric(tempLabel, 'Temperature'),
+                    _buildMiniMetric(voltLabel, 'Voltage'),
+                    _buildMiniMetric(powerLabel, 'Power'),
+                  ],
                 ),
-              ),
-
-              const SizedBox(height: 16),
-
-              Row(
-                children: [
-                  Expanded(child: _InfoPair(label: 'Technology', value: tech)),
-                  Expanded(child: _InfoPair(label: 'Health', value: health)),
-                ],
-              ),
-
-              const SizedBox(height: 14),
-
-              Row(
-                children: [
-                  Expanded(child: _InfoPair(label: 'Battery protection', value: protectionLabel)),
-                  Expanded(child: _InfoPair(label: 'Battery saver', value: saverLabel)),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-              Divider(color: Colors.white.withOpacity(0.08)),
-              const SizedBox(height: 20),
-
-              const Text(
-                'Capacity & health',
-                style: TextStyle(
-                  color: Color(0xFFC6FF00),
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
+                const SizedBox(height: 24),
+                const Text('Current',
+                    style: TextStyle(color: Colors.grey, fontSize: 12)),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const SizedBox(),
+                    Text(currentLabel,
+                        style: const TextStyle(
+                            color: neonGreen,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14)),
+                  ],
                 ),
-              ),
-
-              const SizedBox(height: 16),
-
-              Row(
-                children: [
-                  Expanded(child: _InfoPair(label: 'Design capacity', value: designCapacityLabel)),
-                  Expanded(child: _InfoPair(label: 'Capacity (estimated)', value: estimatedCapacityLabel)),
-                ],
-              ),
-
-              const SizedBox(height: 14),
-
-              Row(
-                children: [
-                  Expanded(child: _InfoPair(label: 'Charge counter', value: chargeCounterLabel)),
-                  const Expanded(child: _InfoPair(label: 'Charge cycles', value: 'NA')),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-class _InfoPair extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _InfoPair({
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.grey,
-              fontSize: 11,
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 40,
+                  width: double.infinity,
+                  child: AnimatedBuilder(
+                    animation: _waveController,
+                    builder: (context, child) {
+                      return CustomPaint(
+                        painter: _BatteryWavePainter(
+                          phase: _waveController.value,
+                          intensity: 0.5,
+                          color: neonGreen,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 2),
-          Text(
-            value,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
+
+          const SizedBox(height: 16),
+
+          // Info Card
+          _buildDetailedCard(
+            title: 'Info',
+            child: GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 2,
+              childAspectRatio: 2.5,
+              children: [
+                _buildLabelValue('Technology', tech),
+                _buildLabelValue('Health', health),
+                _buildLabelValue('Battery protection', protectionLabel),
+                _buildLabelValue('Battery saver', saverLabel),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Capacity Card
+          _buildDetailedCard(
+            title: 'Capacity & health',
+            child: GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 2,
+              childAspectRatio: 2.5,
+              children: [
+                _buildLabelValue('Design capacity', designCapacityLabel),
+                _buildLabelValue('Capacity (estimated)', estimatedCapacityLabel),
+                _buildLabelValue('Charge counter', chargeCounterLabel),
+                _buildLabelValue('Charge cycles', 'N/A'),
+              ],
             ),
           ),
         ],
       ),
     );
   }
+
+  Widget _buildDetailedCard(
+      {required String title, required Widget child, VoidCallback? onSettingsTap}) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF161616),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(title,
+                  style: const TextStyle(
+                      color: Color(0xFFC6FF00),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14)),
+              if (onSettingsTap != null)
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  icon: const Icon(Icons.settings, size: 18, color: Colors.grey),
+                  onPressed: onSettingsTap,
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMiniMetric(String value, String label) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(value,
+            style: const TextStyle(
+                color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 10)),
+      ],
+    );
+  }
+
+  Widget _buildLabelValue(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 11)),
+        const SizedBox(height: 2),
+        Text(value,
+            style: const TextStyle(
+                color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+      ],
+    );
+  }
 }
+
 class _BatteryWavePainter extends CustomPainter {
   final double phase;
   final double intensity;
@@ -527,8 +427,8 @@ class _BatteryWavePainter extends CustomPainter {
       ..strokeWidth = 2;
 
     final path = Path();
-    final midY = size.height * 0.6;
-    final amp = size.height * 0.25 * intensity;
+    final midY = size.height * 0.5;
+    final amp = size.height * 0.3 * intensity;
 
     for (double x = 0; x <= size.width; x += 2) {
       final t = (x / size.width * 2 * math.pi) + phase * 2 * math.pi;

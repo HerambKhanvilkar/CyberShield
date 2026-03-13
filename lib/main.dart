@@ -1,14 +1,6 @@
 import 'package:flutter/material.dart';
 import 'pages/dashboard_page.dart';
-import 'pages/device_info_page.dart';
-import 'pages/hardware_page.dart';
-import 'pages/battery_page.dart';
-import 'pages/network_page.dart';
-import 'pages/apps_page.dart';
-import 'pages/camera_page.dart';
-import 'pages/sensors_page.dart';
-import 'pages/tests_page.dart';
-import 'pages/tools_page.dart';
+import 'pages/feed_page.dart';
 import 'pages/settings_page.dart';
 
 final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.dark);
@@ -44,10 +36,18 @@ class CyberShieldApp extends StatelessWidget {
               backgroundColor: Color(0xFFF5F5F5),
               foregroundColor: Colors.black,
               elevation: 0,
+              centerTitle: true,
+              titleTextStyle: TextStyle(
+                letterSpacing: 2,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
             ),
-            tabBarTheme: const TabBarThemeData(
-              labelColor: Colors.black,
-              indicatorColor: neonGreen,
+            bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+              selectedItemColor: neonGreen,
+              unselectedItemColor: Colors.grey,
+              backgroundColor: Colors.white,
+              type: BottomNavigationBarType.fixed,
             ),
           ),
           darkTheme: ThemeData(
@@ -62,67 +62,86 @@ class CyberShieldApp extends StatelessWidget {
             appBarTheme: const AppBarTheme(
               backgroundColor: Color(0xFF0A0A0A),
               elevation: 0,
+              centerTitle: true,
+              titleTextStyle: TextStyle(
+                letterSpacing: 2,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
             ),
-            tabBarTheme: const TabBarThemeData(
-              labelColor: neonGreen,
-              indicatorColor: neonGreen,
+            bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+              selectedItemColor: neonGreen,
+              unselectedItemColor: Colors.white24,
+              backgroundColor: Color(0xFF0A0A0A),
+              type: BottomNavigationBarType.fixed,
             ),
           ),
-          home: const MainDashboard(),
+          home: const MainScreen(),
         );
       },
     );
   }
 }
 
-class MainDashboard extends StatelessWidget {
-  const MainDashboard({super.key});
+class MainScreen extends StatefulWidget {
+  const MainScreen({super.key});
+
+  @override
+  State<MainScreen> createState() => _MainScreenState();
+}
+
+class _MainScreenState extends State<MainScreen> {
+  int _currentIndex = 0;
+
+  final List<Widget> _pages = [
+    const DashboardPage(),
+    const FeedPage(),
+    const SettingsPage(),
+  ];
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 10,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('CYBER SHIELD', style: TextStyle(letterSpacing: 2, fontWeight: FontWeight.bold)),
-          leading: const Icon(Icons.shield, color: Color(0xFFC6FF00)),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.settings),
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsPage())),
-            ),
-          ],
-          bottom: const TabBar(
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            tabs: [
-              Tab(text: 'DASHBOARD'),
-              Tab(text: 'SYSTEM'),
-              Tab(text: 'HARDWARE'),
-              Tab(text: 'BATTERY'),
-              Tab(text: 'NETWORK'),
-              Tab(text: 'APPS'),
-              Tab(text: 'CAMERA'),
-              Tab(text: 'SENSORS'),
-              Tab(text: 'TESTS'),
-              Tab(text: 'TOOLS'),
-            ],
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('CYBER SHIELD'),
+        leading: const Padding(
+          padding: EdgeInsets.all(12.0),
+          child: CircleAvatar(
+            backgroundColor: Color(0xFFC6FF00),
+            child: Icon(Icons.shield, size: 16, color: Colors.black),
           ),
         ),
-        body: const TabBarView(
-          children: [
-            DashboardPage(),
-            DeviceInfoPage(),
-            HardwarePage(),
-            BatteryPage(),
-            NetworkPage(),
-            AppsPage(),
-            CameraPage(),
-            SensorsPage(),
-            TestsPage(),
-            ToolsPage(),
-          ],
-        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_none),
+            onPressed: () {},
+          ),
+        ],
+      ),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _pages,
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) => setState(() => _currentIndex = index),
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard_outlined),
+            activeIcon: Icon(Icons.dashboard),
+            label: 'Dashboard',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.rss_feed_outlined),
+            activeIcon: Icon(Icons.rss_feed),
+            label: 'Feed',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings_outlined),
+            activeIcon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
+        ],
       ),
     );
   }

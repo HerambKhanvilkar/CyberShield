@@ -5,8 +5,16 @@ import 'package:storage_space/storage_space.dart';
 import 'package:app_settings/app_settings.dart';
 import 'package:installed_apps/installed_apps.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:camera/camera.dart';
 import 'dart:async';
 import 'dart:io';
+import 'hardware_page.dart';
+import 'device_info_page.dart';
+import 'battery_page.dart';
+import 'network_page.dart';
+import 'apps_page.dart';
+import 'camera_page.dart';
+import 'sensors_page.dart';
 import 'tests_page.dart';
 import 'tools_page.dart';
 import 'widgets_popup.dart';
@@ -35,6 +43,7 @@ class _DashboardPageState extends State<DashboardPage> {
   double _memPercent = 0;
   int _userAppsCount = 0;
   int _systemAppsCount = 0;
+  int _cameraCount = 0;
 
   @override
   void initState() {
@@ -62,18 +71,19 @@ class _DashboardPageState extends State<DashboardPage> {
 
     final userApps = await InstalledApps.getInstalledApps(false, false);
     final systemApps = await InstalledApps.getInstalledApps(true, false);
+    final cameras = await availableCameras();
 
     if (!mounted) return;
     String deviceName = 'Unknown Device';
     String processor = 'Unknown Processor';
     String androidVersion = 'Unknown';
 
-if (Platform.isAndroid) {
-  final info = await _deviceInfo.androidInfo;
-  deviceName = '${info.manufacturer} ${info.model}';
-  processor = info.hardware;
-  androidVersion = 'Android ${info.version.release}';
-}
+    if (Platform.isAndroid) {
+      final info = await _deviceInfo.androidInfo;
+      deviceName = '${info.manufacturer} ${info.model}';
+      processor = info.hardware;
+      androidVersion = 'Android ${info.version.release}';
+    }
 
     setState(() {
       _batteryLevel = level;
@@ -84,6 +94,7 @@ if (Platform.isAndroid) {
       _storage = storage;
       _userAppsCount = userApps.length;
       _systemAppsCount = systemApps.length - _userAppsCount;
+      _cameraCount = cameras.length;
       
       _totalMemory = SysInfo.getTotalPhysicalMemory() ~/ (1024 * 1024);
       _usedMemory = (SysInfo.getTotalPhysicalMemory() - SysInfo.getFreePhysicalMemory()) ~/ (1024 * 1024);
@@ -91,154 +102,8 @@ if (Platform.isAndroid) {
     });
   }
 
-  void _showInfoPopup(String title, List<Map<String, String>> info, {VoidCallback? onSettings, Widget? customAction}) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E1E),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Icon(
-              _getIconForTitle(title),
-              color: const Color(0xFFC6FF00),
-            ),
-            const SizedBox(width: 12),
-            Text(title, style: const TextStyle(color: Color(0xFFC6FF00))),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Divider(color: Colors.white24),
-            ...info.map((item) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(item['label']!, style: const TextStyle(color: Colors.grey)),
-                  Expanded(
-                    child: Text(
-                      item['value']!, 
-                      textAlign: TextAlign.right,
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
-              ),
-            )).toList(),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('CANCEL', style: TextStyle(color: Colors.grey)),
-          ),
-          if (customAction != null) customAction,
-          if (customAction == null)
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                if (onSettings != null) {
-                  onSettings();
-                } else {
-                  AppSettings.openAppSettings();
-                }
-              },
-              child: const Text('SETTINGS', style: TextStyle(color: Color(0xFFC6FF00))),
-            ),
-        ],
-      ),
-    );
-  }
-
-  IconData _getIconForTitle(String title) {
-    if (title == 'Battery') return Icons.battery_charging_full;
-    if (title == 'Network') return Icons.network_check;
-    if (title == 'RAM') return Icons.memory;
-    if (title == 'Apps') return Icons.apps;
-    if (title == 'Operating System') return Icons.android;
-    if (title == 'Tests') return Icons.check_box_outlined;
-    if (title == 'Tools') return Icons.handyman_outlined;
-    if (title == 'Widgets') return Icons.widgets_outlined;
-    return Icons.storage;
-  }
-
-  Future<void> _showOsPopup() async {
-    Map<String, String> osInfo = {};
-    if (Platform.isAndroid) {
-      final info = await _deviceInfo.androidInfo;
-      osInfo = {
-        'Android Version': '${info.version.release} (${info.version.codename})',
-        'Security patch': info.version.securityPatch ?? 'Unknown',
-        'Build': info.id,
-        'Kernel': '5.10.233-android12-9-00008-gf5...',
-        'Architecture': SysInfo.kernelArchitecture.name,
-        'Instruction sets': info.supportedAbis.join(', '),
-      };
-    }
-
-    _showInfoPopup('Operating System', osInfo.entries.map((e) => {'label': e.key, 'value': e.value}).toList());
-  }
-
-  void _showTestsPopup() {
-    _showInfoPopup(
-      'Tests', 
-      [
-        {'label': 'Flashlight', 'value': 'Interactive'},
-        {'label': 'Vibration', 'value': 'Interactive'},
-        {'label': 'Multi-touch', 'value': 'Interactive'},
-        {'label': 'Biometrics', 'value': 'System'},
-      ], 
-      customAction: TextButton(
-        onPressed: () {
-          Navigator.pop(context);
-          Navigator.push(context, MaterialPageRoute(builder: (context) => const TestsPage()));
-        },
-        child: const Text('OPEN TESTS', style: TextStyle(color: Color(0xFFC6FF00))),
-      ),
-    );
-  }
-
-  void _showToolsPopup() {
-    _showInfoPopup(
-      'Tools', 
-      [
-        {'label': 'Root Checker', 'value': 'Ready'},
-        {'label': 'SafetyNet', 'value': 'Ready'},
-        {'label': 'Wi-Fi Analyzer', 'value': 'Ready'},
-        {'label': 'GPS Tools', 'value': 'Ready'},
-      ], 
-      customAction: TextButton(
-        onPressed: () {
-          Navigator.pop(context);
-          Navigator.push(context, MaterialPageRoute(builder: (context) => const ToolsPage()));
-        },
-        child: const Text('OPEN TOOLS', style: TextStyle(color: Color(0xFFC6FF00))),
-      ),
-    );
-  }
-
-  void _showWidgetsPopup() {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => const WidgetsPopup()));
-  }
-
   @override
   Widget build(BuildContext context) {
-    double usedStorageSize = 0;
-    double totalStorageSize = 0;
-    double storageUsagePercent = 0;
-
-    if (_storage != null) {
-      try {
-        usedStorageSize = double.tryParse(_storage!.usedSize.toString()) ?? 0;
-        totalStorageSize = double.tryParse(_storage!.totalSize.toString()) ?? 0;
-        storageUsagePercent = totalStorageSize > 0 ? usedStorageSize / totalStorageSize : 0.0;
-      } catch (e) {
-        debugPrint("Error parsing storage values: $e");
-      }
-    }
-
     return ListView(
       padding: const EdgeInsets.all(12),
       children: [
@@ -266,15 +131,7 @@ if (Platform.isAndroid) {
               sub: '${_batteryLevel > 30 ? "33°C" : "28°C"}\n${_batteryState.name.toUpperCase()}',
               icon: Icons.battery_charging_full,
               color: Colors.orangeAccent,
-              onTap: () => _showInfoPopup('Battery', [
-                {'label': 'Battery level', 'value': '$_batteryLevel%'},
-                {'label': 'Temperature', 'value': '33°C'},
-                {'label': 'Status', 'value': _batteryState.name.toUpperCase()},
-                {'label': 'Technology', 'value': 'Li-ion'},
-                {'label': 'Health', 'value': 'Good'},
-                {'label': 'Voltage', 'value': '3.717 V'},
-                {'label': 'Design capacity', 'value': '4529 mAh'},
-              ], onSettings: () => AppSettings.openAppSettings(type: AppSettingsType.batteryOptimization)),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const BatteryPage())),
             ),
             _buildInteractiveCard(
               title: 'Network',
@@ -282,12 +139,7 @@ if (Platform.isAndroid) {
               sub: '351 Mbps\n78% -61 dBm',
               icon: Icons.signal_cellular_alt,
               color: Colors.greenAccent,
-              onTap: () => _showInfoPopup('Network', [
-                {'label': 'Status', 'value': 'Connected'},
-                {'label': 'Type', 'value': 'WiFi'},
-                {'label': 'SSID', 'value': 'Cyber_Home'},
-                {'label': 'IP Address', 'value': '192.168.1.10'},
-              ], onSettings: () => AppSettings.openAppSettings(type: AppSettingsType.wifi)),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const NetworkPage())),
             ),
             _buildInteractiveCard(
               title: 'Apps',
@@ -295,52 +147,35 @@ if (Platform.isAndroid) {
               sub: '$_userAppsCount User\n$_systemAppsCount System',
               icon: Icons.apps,
               color: Colors.greenAccent,
-              onTap: () => _showInfoPopup('Apps', [
-                {'label': 'Total Apps', 'value': '${_userAppsCount + _systemAppsCount}'},
-                {'label': 'User Apps', 'value': '$_userAppsCount'},
-                {'label': 'System Apps', 'value': '$_systemAppsCount'},
-              ], onSettings: () => AppSettings.openAppSettings(type: AppSettingsType.settings)),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AppsPage())),
             ),
             _buildInteractiveCard(
-              title: 'Display',
-              value: 'Adreno (TM) 710',
-              sub: '${MediaQuery.of(context).size.width.toInt()} x ${MediaQuery.of(context).size.height.toInt()} 120Hz',
-              icon: Icons.smartphone,
+              title: 'Camera',
+              value: '50 MP',
+              sub: '$_cameraCount Cameras\nf/1.8 • OIS • Flash',
+              icon: Icons.camera_alt_outlined,
               color: Colors.greenAccent,
-              onTap: () => _showInfoPopup('Display', [
-                {'label': 'Resolution', 'value': '${MediaQuery.of(context).size.width.toInt()} x ${MediaQuery.of(context).size.height.toInt()}'},
-                {'label': 'Density', 'value': '${MediaQuery.of(context).devicePixelRatio.toStringAsFixed(1)}x'},
-                {'label': 'Refresh Rate', 'value': '120Hz'},
-              ], onSettings: () => AppSettings.openAppSettings(type: AppSettingsType.display)),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const CameraPage())), 
             ),
             _buildProgressCard(
-              title: 'RAM',
+              title: 'Hardware',
               used: '${(_usedMemory/1024).toStringAsFixed(2)} GB used',
               total: '${(_totalMemory/1024).toStringAsFixed(2)} GB total',
               percent: _memPercent,
               color: Colors.greenAccent,
-              onTap: () => _showInfoPopup('RAM', [
-                {'label': 'Used', 'value': '${(_usedMemory/1024).toStringAsFixed(2)} GB'},
-                {'label': 'Total', 'value': '${(_totalMemory/1024).toStringAsFixed(2)} GB'},
-                {'label': 'Free', 'value': '${((_totalMemory - _usedMemory)/1024).toStringAsFixed(2)} GB'},
-              ]),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const HardwarePage())),
             ),
-            _buildProgressCard(
-              title: 'Storage',
-              used: '${(usedStorageSize / (1024*1024*1024)).toStringAsFixed(2)} GB used',
-              total: '${(totalStorageSize / (1024*1024*1024)).toStringAsFixed(0)} GB total',
-              percent: storageUsagePercent,
+            _buildInteractiveCard(
+              title: 'Sensors',
+              value: 'Active',
+              sub: 'Accelerometer\nGyro • Magnetometer',
+              icon: Icons.sensors,
               color: Colors.greenAccent,
-              onTap: () => _showInfoPopup('Storage', [
-                {'label': 'Used', 'value': '${(usedStorageSize / (1024*1024*1024)).toStringAsFixed(1)} GB'},
-                {'label': 'Total', 'value': '${(totalStorageSize / (1024*1024*1024)).toStringAsFixed(0)} GB total'},
-                {'label': 'Percent', 'value': '${(storageUsagePercent * 100).toInt()}%'},
-              ], onSettings: () => AppSettings.openAppSettings(type: AppSettingsType.internalStorage)),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SensorsPage())),
             ),
           ],
         ),
         const SizedBox(height: 12),
-        // Quick tools buttons
         _buildToolsRow(),
         const SizedBox(height: 12),
         _buildBottomInfoCard(),
@@ -447,11 +282,11 @@ if (Platform.isAndroid) {
   Widget _buildToolsRow() {
     return Row(
       children: [
-        _buildToolIcon(Icons.check_box_outlined, 'Tests', onTap: _showTestsPopup),
+        _buildToolIcon(Icons.check_box_outlined, 'Tests', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const TestsPage()))),
         const SizedBox(width: 8),
-        _buildToolIcon(Icons.handyman_outlined, 'Tools', onTap: _showToolsPopup),
+        _buildToolIcon(Icons.handyman_outlined, 'Tools', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ToolsPage()))),
         const SizedBox(width: 8),
-        _buildToolIcon(Icons.widgets_outlined, 'Widgets', onTap: _showWidgetsPopup),
+        _buildToolIcon(Icons.widgets_outlined, 'Widgets', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const WidgetsPopup()))),
       ],
     );
   }
@@ -480,7 +315,7 @@ if (Platform.isAndroid) {
   Widget _buildBottomInfoCard() {
     return Card(
       child: InkWell(
-        onTap: _showOsPopup,
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const DeviceInfoPage())),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16.0),

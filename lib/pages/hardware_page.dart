@@ -4,7 +4,9 @@ import 'package:system_info2/system_info2.dart';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:storage_space/storage_space.dart';
 import 'dart:io';
-import '../widgets/info_tile.dart';
+import 'cpu_analysis_page.dart';
+import 'graphics_analysis_page.dart';
+import 'disk_partitions_page.dart';
 
 class HardwarePage extends StatefulWidget {
   const HardwarePage({super.key});
@@ -38,7 +40,6 @@ class _HardwarePageState extends State<HardwarePage> {
   @override
   Widget build(BuildContext context) {
     const neon = Color(0xFFC6FF00);
-    const surface = Color(0xFF1E1E1E);
 
     return FutureBuilder<Map<String, dynamic>>(
       future: _getHardwareData(),
@@ -59,203 +60,222 @@ class _HardwarePageState extends State<HardwarePage> {
         double totalStorage = double.tryParse(storage?.totalSize.toString() ?? '0') ?? 0;
         double storagePercent = totalStorage > 0 ? usedStorage / totalStorage : 0;
 
-        return ListView(
-          padding: const EdgeInsets.all(12),
-          physics: const BouncingScrollPhysics(),
-          children: [
-            // Processor Section
-            _buildDetailedCard(
-              title: 'Processor',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(color: surface, borderRadius: BorderRadius.circular(8)),
-                        child: const Icon(Icons.memory, color: Colors.redAccent, size: 32),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
+        return Scaffold(
+          backgroundColor: const Color(0xFF0A0A0A),
+          appBar: AppBar(
+            title: const Text('HARDWARE', style: TextStyle(letterSpacing: 1.5)),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+          body: ListView(
+            padding: const EdgeInsets.all(12),
+            physics: const BouncingScrollPhysics(),
+            children: [
+              // Processor Section
+              _buildDetailedCard(
+                title: 'Processor',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1E1E1E),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Icons.memory, color: Colors.redAccent, size: 32),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(android?.hardware.toUpperCase() ?? 'SM7435', 
+                                  style: const TextStyle(color: neon, fontWeight: FontWeight.bold, fontSize: 18)),
+                              Text(android?.board ?? 'SM7435', style: const TextStyle(color: Colors.white70)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    _buildTags(['4 nm', '${SysInfo.cores.length} cores', 'ARM64']),
+                    const SizedBox(height: 16),
+                    const Text('CPU Configuration', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                    const SizedBox(height: 8),
+                    _buildCpuConfigRow('4× Cortex-A55', '691-1958 MHz', Colors.green),
+                    _buildCpuConfigRow('4× Cortex-A78', '691-2400 MHz', Colors.blue),
+                    const SizedBox(height: 16),
+                    _buildSimpleRow('Vendor', android?.manufacturer ?? 'Unknown'),
+                    _buildSimpleRow('Hardware', android?.hardware ?? 'Unknown'),
+                    _buildSimpleRow('Architecture', SysInfo.kernelArchitecture.name),
+                    _buildSimpleRow('ABI', android?.supportedAbis.first ?? 'Unknown'),
+                    _buildSimpleRow('Supported ABIs', android?.supportedAbis.join(', ') ?? 'Unknown'),
+                    _buildSimpleRow('Governor', 'walt'),
+                    const SizedBox(height: 16),
+                    _buildAnalysisButton('CPU Analysis', () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const CpuAnalysisPage()));
+                    }),
+                  ],
+                ),
+              ),
+
+              // GPU Section
+              _buildDetailedCard(
+                title: 'GPU',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.grid_view, color: neon, size: 40),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                android?.display ?? 'Adreno (TM) 710',
+                                style: const TextStyle(
+                                  color: neon,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const Text(
+                                'Graphics Processor',
+                                style: TextStyle(color: Colors.white70, fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    _buildSimpleRow('Vendor', android?.brand ?? 'Unknown'),
+                    _buildSimpleRow('Renderer', android?.model ?? 'Unknown'),
+                  ],
+                ),
+              ),
+
+              // Graphics APIs
+              _buildDetailedCard(
+                title: 'Graphics APIs',
+                child: Column(
+                  children: [
+                    _buildSimpleRow('Vulkan API version', '1.1.128'),
+                    _buildAnalysisButton('Vulkan Capabilities', () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const GraphicsAnalysisPage(type: 'Vulkan')));
+                    }),
+                    const SizedBox(height: 16),
+                    _buildSimpleRow('OpenGL', 'OpenGL ES 3.2 V@0615.98...'),
+                    _buildAnalysisButton('OpenGL ES Capabilities', () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const GraphicsAnalysisPage(type: 'OpenGL')));
+                    }),
+                  ],
+                ),
+              ),
+
+              // Memory Section
+              _buildDetailedCard(
+                title: 'Memory',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSimpleRow('RAM size', '${(totalMemMb/1024).toStringAsFixed(0)} GB'),
+                    const SizedBox(height: 12),
+                    _buildProgressRow('RAM', usedMemMb/1024, totalMemMb/1024, memPercent),
+                    const SizedBox(height: 12),
+                    _buildProgressRow('ZRAM', 2.16, 5.87, 0.36),
+                  ],
+                ),
+              ),
+
+              // Storage Section
+              _buildDetailedCard(
+                title: 'Storage',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSimpleRow('Size', '${(totalStorage/(1024*1024*1024)).toStringAsFixed(0)} GB'),
+                    _buildSimpleRow('Type', 'UFS'),
+                    const SizedBox(height: 12),
+                    _buildProgressRow('Storage', usedStorage/(1024*1024*1024), totalStorage/(1024*1024*1024), storagePercent),
+                    const SizedBox(height: 16),
+                    const Text('Internal storage', style: TextStyle(color: neon, fontWeight: FontWeight.bold, fontSize: 14)),
+                    _buildSimpleRow('Filesystem', 'f2fs'),
+                    _buildSimpleRow('Block size', '4 kB'),
+                    const SizedBox(height: 12),
+                    _buildProgressRow('/data', 47.06, 117, 0.40),
+                    const SizedBox(height: 16),
+                    _buildAnalysisButton('Disk partitions', () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const DiskPartitionsPage()));
+                    }),
+                  ],
+                ),
+              ),
+
+              // Display Section
+              _buildDetailedCard(
+                title: 'Display',
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.screenshot_monitor, color: Colors.grey, size: 48),
+                        const SizedBox(width: 16),
+                        Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(android?.hardware.toUpperCase() ?? 'Qualcomm® Snapdragon™', 
-                                style: const TextStyle(color: neon, fontWeight: FontWeight.bold, fontSize: 18)),
-                            Text(android?.board ?? 'SM7435', style: const TextStyle(color: Colors.white70)),
+                            Text('${MediaQuery.of(context).size.width.toInt()} x ${MediaQuery.of(context).size.height.toInt()}',
+                                style: const TextStyle(color: neon, fontSize: 22, fontWeight: FontWeight.bold)),
+                            const Text('144 Hz • 395 ppi', style: TextStyle(color: Colors.white70)),
                           ],
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  _buildTags(['4 nm', '${SysInfo.cores.length} cores', SysInfo.kernelArchitecture.name]),
-                  const SizedBox(height: 16),
-                  const Text('CPU Configuration', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                  const SizedBox(height: 8),
-                  _buildCpuConfigRow('4× Cortex-A55', '691-1958 MHz', Colors.green),
-                  _buildCpuConfigRow('4× Cortex-A78', '691-2400 MHz', Colors.blue),
-                  const SizedBox(height: 16),
-                  _buildSimpleRow('Vendor', android?.manufacturer ?? 'Unknown'),
-                  _buildSimpleRow('Hardware', android?.hardware ?? 'Unknown'),
-                  _buildSimpleRow('Architecture', SysInfo.kernelArchitecture.name),
-                  _buildSimpleRow('ABI', android?.supportedAbis.first ?? 'Unknown'),
-                  _buildSimpleRow('Supported ABIs', android?.supportedAbis.join(', ') ?? 'Unknown'),
-                  _buildSimpleRow('Governor', 'walt'),
-                  const SizedBox(height: 16),
-                  _buildAnalysisButton('CPU Analysis'),
-                ],
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    _buildSimpleRow('Current resolution', '1080 x 2400 @ 120 Hz'),
+                    _buildSimpleRow('Screen size (estimated)', '6.66 in / 169 mm'),
+                    _buildSimpleRow('Supported refresh rates', '60 Hz, 90 Hz, 120 Hz, 144 Hz'),
+                    _buildSimpleRow('Wide color gamut', 'Yes'),
+                    _buildSimpleRow('HDR support', 'No'),
+                  ],
+                ),
               ),
-            ),
 
-            // GPU Section
-            _buildDetailedCard(
-              title: 'GPU',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-  children: [
-    const Icon(Icons.grid_view, color: neon, size: 40),
-    const SizedBox(width: 16),
-    Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            android?.display ?? 'Adreno 710',
-            style: const TextStyle(
-              color: neon,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+              // Bluetooth & Audio
+              _buildDetailedCard(
+                title: 'Bluetooth',
+                child: _buildSimpleRow('Bluetooth support', 'SHOW'),
+              ),
+
+              _buildDetailedCard(
+                title: 'Audio',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildCheckRow('Low latency audio', false),
+                    _buildCheckRow('Pro audio support', false),
+                    _buildCheckRow('MIDI support', true),
+                    _buildCheckRow('Unprocessed audio source', true),
+                    const SizedBox(height: 16),
+                    const Text('Output', style: TextStyle(color: neon, fontSize: 12)),
+                    _buildSimpleRow('Sample rate', '48 kHz'),
+                    _buildSimpleRow('Buffer size', '192 Frames'),
+                    _buildSimpleRow('Bit depth', '16-bit'),
+                    _buildSimpleRow('Output routes', 'Speaker'),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            'Graphics Processor',
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.6),
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
-    ),
-  ],
-),
-                  const SizedBox(height: 16),
-                  _buildSimpleRow('Vendor', android?.brand ?? 'Unknown'),
-                  _buildSimpleRow('Renderer', android?.model ?? 'Unknown'),
-                ],
-              ),
-            ),
-
-            // Graphics APIs
-            _buildDetailedCard(
-              title: 'Graphics APIs',
-              child: Column(
-                children: [
-                  _buildSimpleRow('Vulkan API version', '1.1.128'),
-                  _buildAnalysisButton('Vulkan Capabilities'),
-                  const SizedBox(height: 16),
-                  _buildSimpleRow('OpenGL', 'OpenGL ES 3.2 V@0615.98...'),
-                  _buildAnalysisButton('OpenGL ES Capabilities'),
-                ],
-              ),
-            ),
-
-            // Memory Section
-            _buildDetailedCard(
-              title: 'Memory',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSimpleRow('RAM size', '${(totalMemMb/1024).toStringAsFixed(0)} GB'),
-                  const SizedBox(height: 12),
-                  _buildProgressRow('RAM', usedMemMb/1024, totalMemMb/1024, memPercent),
-                  const SizedBox(height: 12),
-                  _buildProgressRow('ZRAM', 2.16, 5.87, 0.36),
-                ],
-              ),
-            ),
-
-            // Storage Section
-            _buildDetailedCard(
-              title: 'Storage',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSimpleRow('Size', '${(totalStorage/(1024*1024*1024)).toStringAsFixed(0)} GB'),
-                  _buildSimpleRow('Type', 'UFS'),
-                  const SizedBox(height: 12),
-                  _buildProgressRow('Storage', usedStorage/(1024*1024*1024), totalStorage/(1024*1024*1024), storagePercent),
-                  const SizedBox(height: 16),
-                  const Text('Internal storage', style: TextStyle(color: neon, fontWeight: FontWeight.bold, fontSize: 14)),
-                  _buildSimpleRow('Filesystem', 'f2fs'),
-                  _buildSimpleRow('Block size', '4 kB'),
-                  const SizedBox(height: 12),
-                  _buildProgressRow('/data', 47.06, 117, 0.40),
-                  const SizedBox(height: 16),
-                  _buildAnalysisButton('Disk partitions'),
-                ],
-              ),
-            ),
-
-            // Display Section
-            _buildDetailedCard(
-              title: 'Display',
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.screenshot_monitor, color: Colors.grey, size: 48),
-                      const SizedBox(width: 16),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('${MediaQuery.of(context).size.width.toInt()} x ${MediaQuery.of(context).size.height.toInt()}',
-                              style: const TextStyle(color: neon, fontSize: 22, fontWeight: FontWeight.bold)),
-                          const Text('144 Hz • 395 ppi', style: TextStyle(color: Colors.white70)),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  _buildSimpleRow('Current resolution', '1080 x 2400 @ 120 Hz'),
-                  _buildSimpleRow('Screen size (estimated)', '6.66 in / 169 mm'),
-                  _buildSimpleRow('Supported refresh rates', '60 Hz, 90 Hz, 120 Hz, 144 Hz'),
-                  _buildSimpleRow('Wide color gamut', 'Yes'),
-                  _buildSimpleRow('HDR support', 'No'),
-                ],
-              ),
-            ),
-
-            // Bluetooth & Audio
-            _buildDetailedCard(
-              title: 'Bluetooth',
-              child: _buildSimpleRow('Bluetooth support', 'SHOW'),
-            ),
-
-            _buildDetailedCard(
-              title: 'Audio',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildCheckRow('Low latency audio', false),
-                  _buildCheckRow('Pro audio support', false),
-                  _buildCheckRow('MIDI support', true),
-                  _buildCheckRow('Unprocessed audio source', true),
-                  const SizedBox(height: 16),
-                  const Text('Output', style: TextStyle(color: neon, fontSize: 12)),
-                  _buildSimpleRow('Sample rate', '48 kHz'),
-                  _buildSimpleRow('Buffer size', '192 Frames'),
-                  _buildSimpleRow('Bit depth', '16-bit'),
-                  _buildSimpleRow('Output routes', 'Speaker'),
-                ],
-              ),
-            ),
-          ],
         );
       },
     );
@@ -322,7 +342,14 @@ class _HardwarePageState extends State<HardwarePage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)),
-          Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              value, 
+              textAlign: TextAlign.right,
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+          ),
         ],
       ),
     );
@@ -365,12 +392,12 @@ class _HardwarePageState extends State<HardwarePage> {
     );
   }
 
-  Widget _buildAnalysisButton(String label) {
+  Widget _buildAnalysisButton(String label, VoidCallback onTap) {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(top: 8),
       child: OutlinedButton(
-        onPressed: () {},
+        onPressed: onTap,
         style: OutlinedButton.styleFrom(
           side: const BorderSide(color: Colors.white10),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
