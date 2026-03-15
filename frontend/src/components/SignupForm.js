@@ -37,6 +37,8 @@ export default function SignupForm() {
         if (params.get('ref') === 'hiring') {
             setHiringRef(true);
             if (params.get('email')) setEmail(params.get('email'));
+            if (params.get('firstName')) setFirstName(params.get('firstName'));
+            if (params.get('lastName')) setLastName(params.get('lastName'));
         }
     }, []);
 

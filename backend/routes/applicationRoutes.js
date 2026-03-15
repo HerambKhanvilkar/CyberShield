@@ -727,8 +727,33 @@ router.post('/check-status', [
             return res.status(401).json({ message: "Invalid or expired OTP" });
         }
 
+        // Check in applicant collection
         const applicant = await Applicant.findOne({ email }).sort({ submittedAt: -1 });
-        if (!applicant) return res.status(404).json({ message: "No application found for this email." });
+
+        const User = require('../models/User');
+        const user = await User.findOne({ email });
+        // If manually onboarded then it will not show in applicants. so also checking email existence in "fellowshiprofiles" collection
+        if (!applicant) {
+            const fellow = await FellowshipProfile.findOne({ email }, { firstName: 1, lastName: 1, _id: 0 });
+            if(!fellow){
+                return res.status(404).json({ message: "No application found for this email." });
+            }
+            await HiringAuditLog.create({
+            action: "STATUS_CHECK",
+            userId: email,
+            details: `User checked status: ${fellow.status}`,
+            ipAddress: req.ip
+            });
+
+            return res.json({
+                status: 'ACCEPTED',
+                firstName: fellow.firstName,
+                lastName: fellow.lastName || ' ',
+                email: email,
+                hasAccount: !!user
+            })
+        }
+        
 
         await HiringAuditLog.create({
             action: "STATUS_CHECK",
@@ -737,12 +762,10 @@ router.post('/check-status', [
             ipAddress: req.ip
         });
 
-        const User = require('../models/User');
-        const user = await User.findOne({ email });
-
         res.json({
             status: applicant.status,
             firstName: applicant.firstName,
+            lastName: applicant.lastName,
             email: applicant.email,
             interviewDetails: applicant.interviewDetails,
             hasAccount: !!user
