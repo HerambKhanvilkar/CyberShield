@@ -325,7 +325,7 @@ function AdminDashboardContent() {
             setShowManualModal(false);
             fetchData();
         } catch (error) {
-            toast.error(error.response?.data?.message || "Failed to add fellow");
+            toast.error("Failed to add fellow");
         } finally {
             setActionLoading(false);
         }

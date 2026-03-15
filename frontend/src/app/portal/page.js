@@ -63,6 +63,8 @@ export default function ApplicationStatus() {
         // Redirect to signup with pre-filled application email
         const query = new URLSearchParams({
             email: result.email,
+            firstName: result.firstName,
+            lastName: result.lastName,
             ref: 'hiring'
         }).toString();
         router.push(`/signup?${query}`);
