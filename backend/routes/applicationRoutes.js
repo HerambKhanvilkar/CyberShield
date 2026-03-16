@@ -289,7 +289,7 @@ router.get('/admin/export-org-csv/:orgCode', authenticateJWT, isAdmin, async (re
         const { orgCode } = req.params;
 
         // Get all applicants for this organization
-        const apps = await Applicant.find({ orgCode }).sort({ submittedAt: -1 });
+        const apps = await Applicant.find({ orgCode }).sort({ submittedAt: 1 });
         
         // Get all fellows for this organization  
         const fellows = await FellowshipProfile.find().sort({ createdAt: -1 });
@@ -316,7 +316,7 @@ router.get('/admin/export-org-csv/:orgCode', authenticateJWT, isAdmin, async (re
                 firstName: app.firstName,
                 lastName: app.lastName,
                 email: app.email,
-                appliedRole: typeof app.role === 'object' ? app.role?.name : app.role,
+                appliedRole: (app.preferredRoles || []).map(r => typeof r === 'object' ? r?.name : r).filter(Boolean).join('; ') || (typeof app.role === 'object' ? app.role?.name : app.role) || 'N/A',
                 appliedDate: new Date(app.submittedAt).toLocaleDateString() 
             });
         });
