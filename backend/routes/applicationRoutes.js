@@ -289,7 +289,7 @@ router.get('/admin/export-org-csv/:orgCode', authenticateJWT, isAdmin, async (re
         const { orgCode } = req.params;
 
         // Get all applicants for this organization
-        const apps = await Applicant.find({ orgCode }).sort({ submittedAt: -1 });
+        const apps = await Applicant.find({ orgCode }).sort({ submittedAt: 1 });
         
         // Get all fellows for this organization  
         const fellows = await FellowshipProfile.find().sort({ createdAt: -1 });
