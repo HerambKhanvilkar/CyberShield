@@ -169,7 +169,11 @@ export default function LandingPage() {
                   key={program.title}
                   className="flex flex-col items-stretch justify-end mb-100 bg-gradient-to-br from-cyan-900/40 to-cyan-400/10 border border-cyan-400/30 shadow-lg rounded-2xl min-h-[260px] min-w-[220px] max-w-xs w-full sm:w-[260px] p-0 mx-auto transition-transform hover:scale-105 hover:shadow-cyan-400/30 relative overflow-hidden"
                   style={{ margin: '0 auto' }}
-                  onClick={program.href}
+                  onClick={() => {
+                    if (program.href && program.href !== "#") {
+                      window.location.href = program.href;
+                    }
+                  }}
                 >
                   {/* Program image only at top 50% with fade */}
                   <div style={{ position: 'relative', width: '100%', height: '50%' }}>
