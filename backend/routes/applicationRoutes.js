@@ -49,7 +49,7 @@ const upload = multer({
 router.get('/org/:code', async (req, res) => {
     try {
         const org = await Organization.findOne({
-            code: { $regex: new RegExp(`^${req.params.code}$`, 'i') },
+            code: req.params.code,
             isActive: true
         });
 
