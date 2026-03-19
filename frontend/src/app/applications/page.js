@@ -2444,9 +2444,54 @@ function AdminDashboardContent() {
                                                                         </select>
                                                                     </div>
                                                                 </div>
+                                                            ) : selectedItem.status === 'INTERVIEW_SKIPPED' && !(selectedItem.assignedRole && String(selectedItem.assignedRole).trim()) ? (
+                                                                <div className="space-y-2 pt-3 border-t border-white/10">
+                                                                    <label className="text-xs font-mono text-gray-400 uppercase tracking-wider">Assign Role (Required for Accept - Interview Skipped)</label>
+                                                                    <select
+                                                                        value={selectedItem.assignedRole || ''}
+                                                                        onChange={(e) => {
+                                                                            const updatedItem = { ...selectedItem, assignedRole: e.target.value };
+                                                                            setSelectedItem(updatedItem);
+                                                                            toast.success(`Role "${e.target.value}" assigned`);
+                                                                        }}
+                                                                        className="w-full bg-black border border-white/20 h-10 text-xs font-mono text-white px-2"
+                                                                    >
+                                                                        <option value="">SELECT_ROLE</option>
+                                                                        {(() => {
+                                                                            const defaultRole = selectedItem.role ? (typeof selectedItem.role === 'string' ? selectedItem.role : (selectedItem.role.name || '')) : (Array.isArray(selectedItem.preferredRoles) && selectedItem.preferredRoles.length ? (typeof selectedItem.preferredRoles[0] === 'string' ? selectedItem.preferredRoles[0] : (selectedItem.preferredRoles[0]?.name || '')) : '');
+                                                                            const orgObj = (selectedItem.orgCode && Array.isArray(orgs) ? orgs.find(o => o.code === selectedItem.orgCode) : null);
+                                                                            const orgRoles = orgObj ? (orgObj.formVars?.roles ? orgObj.formVars.roles.map(r => r.name) : (Array.isArray(orgObj.formVar1) ? orgObj.formVar1 : [])) : [];
+                                                                            const globalRoles = (availableRoles || []).map(r => (typeof r === 'string' ? r : (r.name || ''))).filter(Boolean);
+
+                                                                            return (
+                                                                                <>
+                                                                                    {defaultRole && (
+                                                                                        <optgroup label="Applied Role">
+                                                                                            <option value={defaultRole}>{defaultRole}</option>
+                                                                                        </optgroup>
+                                                                                    )}
+                                                                                    {orgRoles.length > 0 && (
+                                                                                        <optgroup label="Organization Roles">
+                                                                                            {orgRoles.map((r, i) => <option key={`org-${i}`} value={r}>{r}</option>)}
+                                                                                        </optgroup>
+                                                                                    )}
+                                                                                    {globalRoles.length > 0 && (
+                                                                                        <optgroup label="Global Roles">
+                                                                                            {globalRoles.map((r, i) => <option key={`glob-${i}`} value={r}>{r}</option>)}
+                                                                                        </optgroup>
+                                                                                    )}
+                                                                                </>
+                                                                            );
+                                                                        })()}
+                                                                    </select>
+                                                                    <div className="p-2 bg-yellow-900/10 border border-yellow-500/30 text-[10px] text-yellow-400 font-mono uppercase tracking-wider">
+                                                                        ⚠️ Interview Skipped: Assign role to enable ACCEPT
+                                                                    </div>
+                                                                </div>
                                                             ) : (
-                                                                <div className="p-3 bg-cyan-900/10 border border-cyan-500/30 text-xs font-mono text-cyan-400">
-                                                                    STATUS: {selectedItem.interviewDetails?.status || selectedItem.status}
+                                                                <div className="p-3 bg-cyan-900/10 border border-cyan-500/30 text-xs font-mono text-cyan-400 flex items-center justify-between">
+                                                                    <span>STATUS: {selectedItem.interviewDetails?.status || selectedItem.status}</span>
+                                                                    {selectedItem.assignedRole && <span className="text-green-500 text-[10px] font-bold tracking-wider">✓ ROLE: {selectedItem.assignedRole}</span>}
                                                                 </div>
                                                             )}
 
