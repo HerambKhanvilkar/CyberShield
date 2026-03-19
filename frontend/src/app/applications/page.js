@@ -926,8 +926,7 @@ function AdminDashboardContent() {
         try {
             const token = localStorage.getItem("accessToken");
             await axios.put(`${process.env.SERVER_URL || 'http://localhost:3001/api'}/application/admin/skip-interview`, {
-                applicantId: skipModalTarget._id,
-                assignedRole: assignedRole
+                applicantId: skipModalTarget._id
             }, { headers: { Authorization: `Bearer ${token}` } });
 
             toast.success("Interview Step Skipped");
