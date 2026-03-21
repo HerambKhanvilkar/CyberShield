@@ -1,292 +1,369 @@
- 'use client';
+'use client';
 
- import { notFound, useParams } from 'next/navigation';
- import { useEffect, useState } from 'react';
- import axios from 'axios';
- import { CheckCircle, Shield } from 'lucide-react';
- import Navbar from '@/components/Navbar';
- import Footer from '@/components/Footer';
- import { cn } from '@/lib/utils';
- import { Marquee } from '@/components/magicui/marquee';
+import { notFound, useParams } from 'next/navigation';
+import { useEffect, useState, useRef } from 'react';
+import axios from 'axios';
+import { CheckCircle, Shield, Award, Cpu, Globe, Lock, Unlock, ArrowRight, Activity, Terminal, Layers, Copy, ExternalLink, Calendar, Users } from 'lucide-react';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Renderer, Program, Triangle, Mesh } from 'ogl';
 
- const SharedBadgePage = () => {
-   const { certificateId } = useParams();
-   const [isLoading, setIsLoading] = useState(true);
-   const [badge, setBadge] = useState(null);
+/**
+ * SHARED_CERTIFICATE_V2
+ * Cyber-Tech UI with Framer Motion and OGL Shaders
+ */
 
-   const [verificationStatus, setVerificationStatus] = useState(false);
-   const [user, setUser] = useState('');
-   const [displayCertificateId, setDisplayCertificateId] = useState(null);
-   const [error, setError] = useState('');
-   const [earnersCount, setEarnersCount] = useState(null);
-   const [earnedDate, setEarnedDate] = useState(null);
+const SharedBadgePage = () => {
+  const { certificateId } = useParams();
+  const [isLoading, setIsLoading] = useState(true);
+  const [badge, setBadge] = useState(null);
+  const [verificationStatus, setVerificationStatus] = useState(false);
+  const [user, setUser] = useState('');
+  const [displayCertificateId, setDisplayCertificateId] = useState(null);
+  const [error, setError] = useState('');
+  const [earnersCount, setEarnersCount] = useState(null);
+  const [earnedDate, setEarnedDate] = useState(null);
+  const [copied, setCopied] = useState(false);
 
-
-
-  // Optimized fade transition for background video using a single <video>
-  const [videoSrc, setVideoSrc] = useState("/background.mp4");
-  const [fade, setFade] = useState(false);
-  const [pendingSrc, setPendingSrc] = useState(null);
-
-  // Preload both videos on mount
-  useEffect(() => {
-    const preload = (src) => {
-      const v = document.createElement('video');
-      v.src = src;
-      v.preload = 'auto';
-      v.muted = true;
-      v.load();
-    };
-    preload("/background.mp4");
-  }, []);
-
-  // When pendingSrc is set, wait for it to be ready before fading in
-  const handleCanPlay = () => {
-    setVideoSrc(pendingSrc);
-    setPendingSrc(null);
-    setTimeout(() => setFade(false), 50); // Small delay for fade-in
+  const handleCopy = () => {
+    navigator.clipboard.writeText(displayCertificateId || certificateId);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
+  const accentColor = "#04d9ff";
 
+  // ============================================
+  // ADVANCED SHADER AMBIANCE
+  // ============================================
+  const hexToRgb = hex => {
+    const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return m ? [parseInt(m[1], 16) / 255, parseInt(m[2], 16) / 255, parseInt(m[3], 16) / 255] : [0.5, 0.2, 1];
+  };
 
-   useEffect(() => {
-     const fetchByCertificate = async () => {
-       if (!certificateId) return setIsLoading(false);
-       try {
-         const res = await axios.get(`${process.env.SERVER_URL}/verify-badge/certificate/${certificateId}`);
-         if (!res.data || !res.data.verified) {
-           setVerificationStatus(false);
-           return;
-         }
+  const LightRays = ({ raysColor = "#04d9ff" }) => {
+    const containerRef = useRef(null);
+    const [isVisible, setIsVisible] = useState(false);
 
-         setVerificationStatus(true);
-         setUser(`${res.data.firstName || ''} ${res.data.lastName || ''}`.trim());
-         setBadge(res.data.badge || null);
-         setDisplayCertificateId(res.data.certificateId || certificateId);
-         setEarnedDate(res.data.earnedDate || null);
-       } catch (err) {
-         console.error('Failed to load badge by certificate:', err);
-         setError('Failed to load badge information. Please try again later.');
-       } finally {
-         setIsLoading(false);
-       }
-     };
+    useEffect(() => {
+      const observer = new IntersectionObserver(([e]) => setIsVisible(e.isIntersecting));
+      if (containerRef.current) observer.observe(containerRef.current);
+      return () => observer.disconnect();
+    }, []);
 
-     fetchByCertificate();
-   }, [certificateId]);
+    useEffect(() => {
+      if (!isVisible || !containerRef.current) return;
+      const renderer = new Renderer({ alpha: true, dpr: 2 });
+      const gl = renderer.gl;
+      containerRef.current.appendChild(gl.canvas);
 
-   useEffect(() => {
-     const fetchEarnersCount = async () => {
-       if (!badge || !badge.id) return;
-       try {
-         const response = await axios.get(`${process.env.SERVER_URL}/badge/earners/${badge.id}`);
-         setEarnersCount(response.data.earners);
-       } catch (error) {
-         console.error('Failed to fetch earners count:', error);
-         setEarnersCount('N/A');
-       }
-     };
-     fetchEarnersCount();
-   }, [badge]);
+      const program = new Program(gl, {
+        vertex: `attribute vec2 position; varying vec2 vUv; void main() { vUv = position * 0.5 + 0.5; gl_Position = vec4(position, 0.0, 1.0); }`,
+        fragment: `
+          precision highp float;
+          uniform float iTime;
+          uniform vec3 color;
+          varying vec2 vUv;
+          void main() {
+            vec2 uv = vUv - 0.5;
+            float angle = atan(uv.y, uv.x);
+            float dist = length(uv);
+            float rays = sin(angle * 12.0 + iTime * 2.0) * sin(angle * 7.0 - iTime);
+            float mask = smoothstep(0.5, 0.0, dist);
+            gl_FragColor = vec4(color, mask * (rays * 0.2 + 0.1));
+          }
+        `,
+        uniforms: { iTime: { value: 0 }, color: { value: hexToRgb(raysColor) } },
+        transparent: true
+      });
+      const mesh = new Mesh(gl, { geometry: new Triangle(gl), program });
 
-   if (isLoading) {
-     return (
-       <div className="min-h-screen flex flex-col bg-black text-white">
-         <Navbar />
-         <div className="flex-grow flex flex-col items-center justify-center">
-           <div className="loader border-8 border-t-8 border-[#38C8F8] h-16 w-16 animate-spin rounded-full mb-4" />
-           <p className="text-white text-lg">Loading Badge Gallery...</p>
-         </div>
-       </div>
-     );
-   }
+      let raf;
+      const loop = (t) => {
+        program.uniforms.iTime.value = t * 0.001;
+        renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
+        renderer.render({ scene: mesh });
+        raf = requestAnimationFrame(loop);
+      };
+      raf = requestAnimationFrame(loop);
+      return () => { cancelAnimationFrame(raf); gl.canvas.remove(); };
+    }, [isVisible, raysColor]);
 
-   if (!verificationStatus) return notFound();
+    return <div ref={containerRef} className="absolute inset-0 pointer-events-none opacity-20" />;
+  };
 
-   const ReviewCard = ({ name }) => (
-     <figure
-       className={cn(
-         'relative h-full w-max cursor-pointer overflow-hidden rounded-xl border p-4',
-         'border-gray-950/[.1] bg-gray-950/[.01] hover:bg-gray-950/[.05]',
-         'dark:border-gray-50/[.1] dark:bg-gray-50/[.10] dark:hover:bg-gray-50/[.15]'
-       )}
-     >
-       <div className="flex flex-row items-center gap-2">
-         <div className="flex flex-col">
-           <figcaption className="text-sm font-medium dark:text-white">{name}</figcaption>
-         </div>
-       </div>
-     </figure>
-   );
+  useEffect(() => {
+    const fetchByCertificate = async () => {
+      if (!certificateId) return setIsLoading(false);
+      try {
+        const res = await axios.get(`${process.env.SERVER_URL}/verify-badge/certificate/${certificateId}`);
+        if (!res.data || !res.data.verified) {
+          setVerificationStatus(false);
+          return;
+        }
 
-   function MarqueeDemo({ skills }) {
-     const firstRow = skills.slice(0, Math.ceil(skills.length / 2));
-     const secondRow = skills.slice(Math.ceil(skills.length / 2));
-     return (
-       <div className="relative flex w-full rounded-2xl flex-col items-center justify-center overflow-hidden">
-         <Marquee pauseOnHover className="[--duration:10s]">
-           {firstRow.map((skill, i) => (
-             <ReviewCard key={i} name={skill} />
-           ))}
-         </Marquee>
-         <Marquee reverse pauseOnHover className="[--duration:10s]">
-           {secondRow.map((skill, i) => (
-             <ReviewCard key={i} name={skill} />
-           ))}
-         </Marquee>
-         <div className="pointer-events-none absolute inset-y-0 left-0 w-1/4 bg-gradient-to-r from-background"></div>
-         <div className="pointer-events-none absolute inset-y-0 right-0 w-1/4 bg-gradient-to-l from-background"></div>
-       </div>
-     );
-   }
+        setVerificationStatus(true);
+        setUser(`${res.data.firstName || ''} ${res.data.lastName || ''}`.trim());
+        setBadge(res.data.badge || null);
+        setDisplayCertificateId(res.data.certificateId || certificateId);
+        setEarnedDate(res.data.earnedDate || null);
+      } catch (err) {
+        console.error('Failed to load badge by certificate:', err);
+        setError('Failed to load badge information. Please try again later.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-   const formatDate = (ts) => {
-     if (!ts) return '';
-     const date = new Date(ts);
-     if (isNaN(date.getTime())) return '';
-     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-   };
+    fetchByCertificate();
+  }, [certificateId]);
 
-   const BadgeDescription = ({ badge }) => (
-     <div className="text-white">
-       <div className="text-3xl font-bold text-[#38C8F8] uppercase">{user}</div>
-       <div className="text-xl font-semibold text-gray-400">
-         <i> {badge?.name} </i>
-       </div>
-      {/* Show badge description if available */}
-      {/* {badge?.description && (
-        <div className="mt-3 text-sm text-gray-300 max-w-prose leading-relaxed">
-          {badge.description}
+  useEffect(() => {
+    const fetchEarnersCount = async () => {
+      if (!badge || !badge.id) return;
+      try {
+        const response = await axios.get(`${process.env.SERVER_URL}/badge/earners/${badge.id}`);
+        setEarnersCount(response.data.earners);
+      } catch (error) {
+        console.error('Failed to fetch earners count:', error);
+        setEarnersCount('N/A');
+      }
+    };
+    fetchEarnersCount();
+  }, [badge]);
+
+  const formatDate = (ts) => {
+    if (!ts) return '';
+    const date = new Date(ts);
+    if (isNaN(date.getTime())) return '';
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#020205] text-white">
+        <Navbar />
+        <div className="flex-grow flex flex-col items-center justify-center">
+          <div className="relative size-16">
+            <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} className="absolute inset-0 border-2 border-cyan-500/20 rounded-full" />
+            <motion.div animate={{ rotate: -360 }} transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }} className="absolute inset-2 border-2 border-t-cyan-500 border-r-transparent border-b-cyan-500 border-l-transparent rounded-full" />
+          </div>
+          <p className="mt-6 font-mono text-cyan-500 animate-pulse tracking-widest text-sm uppercase">Verifying_Credentials...</p>
         </div>
-      )} */}
-     </div>
-   );
+      </div>
+    );
+  }
 
-   const BadgeMetrics = ({ badge }) => (
-     <div className="w-full justify-center mt-4 text-center text-green-300 flex flex-col items-center gap-2">
-       <div className="flex flex-row w-full md:items-center gap-8 justify-center rounded-md ">
-         <div className="flex flex-col items-center p-2 shadow-md rounded-md ">
-           <svg width="32px" height="32px" viewBox="-2.4 -2.4 28.80 28.80" fill="#8cdfde" xmlns="http://www.w3.org/2000/svg" stroke="#8cdfde" strokeWidth="0.00024000000000000003"><g id="SVGRepo_bgCarrier" strokeWidth="0" transform="translate(0,0), scale(1)"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" stroke-linejoin="round" stroke="#8cbfde" strokeWidth="0.144"></g><g id="SVGRepo_iconCarrier"><path fill-rule="evenodd" clip-rule="evenodd" d="M11 2a1 1 0 0 1 2 0v2.062A8.004 8.004 0 0 1 19.938 11H22a1 1 0 0 1 0 2h-2.062A8.004 8.004 0 0 1 13 19.938V22a1 1 0 0 1-2 0v-2.062A8.004 8.004 0 0 1 4.062 13H2a1 1 0 0 1 0-2h2.062A8.004 8.004 0 0 1 11 4.062V2zm7 10a6 6 0 1 0-12 0 6 6 0 0 0 12 0zm-3 0a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" fill="#8cbfde"></path></g></svg>
-           <div className="text-lg text-white hover:text-[#38C8F8] font-semibold">{badge?.level || 'N/A'}</div>
-         </div>
+  if (!verificationStatus) return notFound();
 
-         <div className="flex flex-col items-center p-2 shadow-md rounded-md ">
-           <svg width="32px" height="32px" viewBox="0 0 24 24" fill="#8cbfde" stroke="#8cbfde" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path opacity="0.4" d="M17.9981 7.16C17.9381 7.15 17.8681 7.15 17.8081 7.16C16.4281 7.11 15.3281 5.98 15.3281 4.58C15.3281 3.15 16.4781 2 17.9081 2C19.3381 2 20.4881 3.16 20.4881 4.58C20.4781 5.98 19.3781 7.11 17.9981 7.16Z" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" stroke-linejoin="round"></path> <path opacity="0.4" d="M16.9675 14.4402C18.3375 14.6702 19.8475 14.4302 20.9075 13.7202C22.3175 12.7802 22.3175 11.2402 20.9075 10.3002C19.8375 9.59016 18.3075 9.35016 16.9375 9.59016" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" stroke-linejoin="round"></path> <path opacity="0.4" d="M5.96656 7.16C6.02656 7.15 6.09656 7.15 6.15656 7.16C7.53656 7.11 8.63656 5.98 8.63656 4.58C8.63656 3.15 7.48656 2 6.05656 2C4.62656 2 3.47656 3.16 3.47656 4.58C3.48656 5.98 4.58656 7.11 5.96656 7.16Z" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" stroke-linejoin="round"></path> <path opacity="0.4" d="M6.9975 14.4402C5.6275 14.6702 4.1175 14.4302 3.0575 13.7202C1.6475 12.7802 1.6475 11.2402 3.0575 10.3002C4.1275 9.59016 5.6575 9.35016 7.0275 9.59016" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" stroke-linejoin="round"></path> <path d="M12.0001 14.6302C11.9401 14.6202 11.8701 14.6202 11.8101 14.6302C10.4301 14.5802 9.33008 13.4502 9.33008 12.0502C9.33008 10.6202 10.4801 9.47021 11.9101 9.47021C13.3401 9.47021 14.4901 10.6302 14.4901 12.0502C14.4801 13.4502 13.3801 14.5902 12.0001 14.6302Z" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" stroke-linejoin="round"></path> <path d="M9.0907 17.7804C7.6807 18.7204 7.6807 20.2603 9.0907 21.2003C10.6907 22.2703 13.3107 22.2703 14.9107 21.2003C16.3207 20.2603 16.3207 18.7204 14.9107 17.7804C13.3207 16.7204 10.6907 16.7204 9.0907 17.7804Z" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" stroke-linejoin="round"></path> </g></svg>
-           <div className="text-lg text-white hover:text-[#38C8F8] font-semibold">{earnersCount !== null ? earnersCount : '...'}</div>
-         </div>
-       </div>
+  return (
+    <div className="min-h-screen bg-[#020205] text-white selection:bg-cyan-500/30 font-sans">
+      <style jsx global>{`
+        .cyber-grid {
+          background-image: linear-gradient(#04d9ff05 1px, transparent 1px), linear-gradient(90deg, #04d9ff05 1px, transparent 1px);
+          background-size: 50px 50px;
+        }
+        .tech-clip {
+          clip-path: polygon(0 0, 100% 0, 100% calc(100% - 30px), calc(100% - 30px) 100%, 0 100%);
+        }
+        .glow-border {
+          box-shadow: 0 0 30px rgba(4, 217, 255, 0.05), inset 0 0 30px rgba(4, 217, 255, 0.02);
+        }
+        .scanline {
+          position: relative;
+          overflow: hidden;
+        }
+        .scanline::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to bottom, transparent, rgba(4, 217, 255, 0.05), transparent);
+          animation: scan 4s linear infinite;
+          pointer-events: none;
+        }
+        @keyframes scan {
+          0% { transform: translateY(-100%); }
+          100% { transform: translateY(100%); }
+        }
+      `}</style>
 
-       <div className="flex flex-col items-center p-2 shadow-md rounded-md ">
-         <svg width="32px" height="32px" fill="#8cbfde" viewBox="0 0 32 32"xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><defs></defs><title>parent-child</title><path d="M28,12a2,2,0,0,0,2-2V4a2,2,0,0,0-2-2H4A2,2,0,0,0,2,4v6a2,2,0,0,0,2,2H15v4H9a2,2,0,0,0-2,2v4H4a2,2,0,0,0-2,2v4a2,2,0,0,0,2,2h8a2,2,0,0,0,2-2V24a2,2,0,0,0-2-2H9V18H23v4H20a2,2,0,0,0-2,2v4a2,2,0,0,0,2,2h8a2,2,0,0,0,2-2V24a2,2,0,0,0-2-2H25V18a2,2,0,0,0-2-2H17V12ZM12,28H4V24h8Zm16,0H20V24h8ZM4,4H28v6H4Z"></path><rect id="_Transparent_Rectangle_" data-name="&lt;Transparent Rectangle&gt;" fill="none" width="32" height="32"></rect></g></svg>
-         <div className="text-lg text-white hover:text-[#38C8F8] font-semibold">{badge?.vertical || 'General'}</div>
-       </div>
-     </div>
-   );
+      <div className="fixed inset-0 cyber-grid pointer-events-none" />
+      <Navbar />
 
-   return (
-     <div className="min-h-screen flex flex-col glow-container text-white font-sans selection:bg-[#38C8F8] selection:text-black">
-       {/*<div className="ball"></div>
-       <div className="ball" style={{ '--delay': '-12s', '--size': '0.35', '--speed': '25s' }}></div>
-       <div className="ball" style={{ '--delay': '-10s', '--size': '0.3', '--speed': '15s' }}></div>
+      <main className="relative z-10 px-6 pt-8 pb-4 max-w-6xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4 flex flex-col md:flex-row md:items-center justify-between gap-6"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-green-500/10 border border-green-500/30 rounded-lg text-green-400">
+              <CheckCircle className="size-5" />
+            </div>
+            <div>
+              <div className="text-[10px] font-mono text-green-500/70 tracking-widest uppercase">Verification Passed</div>
+              <div className="text-sm font-medium text-gray-300">Issue_Date: <span className="text-white font-bold">{earnedDate ? formatDate(earnedDate) : 'N/A'}</span></div>
+            </div>
+          </div>
 
-       {/* Background video with blur applied and theme switching */}
-        <div className="fixed inset-0 w-full h-full z-0">
-          {/* Main video */}
-          <video
-            key={videoSrc}
-            className={`absolute inset-0 w-full h-full object-cover blur-sm transition-opacity duration-400 ${fade ? 'opacity-0' : 'opacity-100'}`}
-            autoPlay
-            loop
-            muted
-            playsInline
-            style={{ pointerEvents: 'none' }}
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            className="flex items-center gap-4 bg-white/5 border border-white/10 px-4 py-2 rounded-xl backdrop-blur-md group/cert scanline"
           >
-            <source src={videoSrc} type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
-          {/* Preload and wait for new video before fade-in */}
-          {pendingSrc && (
-            <video
-              style={{ display: 'none' }}
-              src={pendingSrc}
-              onCanPlay={handleCanPlay}
-              preload="auto"
-              muted
-            />
-          )}
-        </div>
-       <Navbar />
-       <div className="z-10 mt-4 px-4 mx-auto text-lg text-green-400">
-         {verificationStatus ? (
-           <p>
-             <CheckCircle className="inline-block w-4 h-4 mr-1 align-text-bottom" />
-             This badge was <strong>verified</strong> and awarded to {user} {earnedDate ? `on ${formatDate(earnedDate)}` : ''}.
-           </p>
-         ) : (
-           <p>
-             <Shield className="inline-block w-4 h-4 mr-1 align-text-bottom text-red-500" />
-             <span className="text-red-400">This badge is <strong>not verified</strong>.</span>
-           </p>
-         )}
-       </div>
-       <main className="z-20 container mx-auto md:max-w-[900px] px-4 py-6 flex-grow">
-         {error && (
-           <div className="bg-red-900 text-red-400 p-4 mb-4 rounded-md border border-red-600">{error}</div>
-         )}
+            <div className="flex items-center gap-3">
+              <span className="text-[10px] font-mono text-gray-500 uppercase">ID:</span>
+              <code className="text-xs font-mono text-white tracking-widest bg-black/30 px-2 py-1 rounded border border-white/5 tabular-nums">
+                {displayCertificateId || certificateId}
+              </code>
+              <button
+                onClick={handleCopy}
+                className="p-1.5 hover:bg-cyan-500/10 rounded-lg transition-all text-cyan-400 hover:text-cyan-300"
+                title="Copy Certificate ID"
+              >
+                {copied ? <CheckCircle className="size-3.5 text-green-400" /> : <Copy className="size-3.5" />}
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
 
-         {/*<div className="relative bg-center bg-cover bg-[url('/0.png')] backdrop-blur-lg text-white rounded-[25px] z-0 w-full mb-5">*/}
-         <div className="relative bg-black/15 backdrop-blur-lg text-white rounded-[25px] z-0 w-full mb-5">
-           <div className="flex p-1 flex-col glass backdrop-blur-md border border-white/10 shadow-lg transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)] rounded-lg">
-             <div className="flex flex-col md:flex-row md:space-x-8">
-               <div className="flex-shrink-0 mb-2 md:mb-0 md:w-1/3">
-                 <img
-                   crossOrigin="anonymous"
-                   src={`${process.env.SERVER_URL}/badge/images/${badge?.id}` || badge?.image?.data}
-                   alt={badge?.name}
-                   className="w-48 h-48 object-contain rounded-full border border-[#38C8F8] shadow-md mx-auto"
-                 />
-                 <div className="mt-4">
-                   <BadgeMetrics badge={badge} />
-                 </div>
-               </div>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="relative group"
+        >
+          <div className="absolute -inset-0.5 bg-gradient-to-br from-cyan-500/20 via-transparent to-purple-500/20 rounded-2xl blur opacity-50 group-hover:opacity-75 transition duration-1000" />
 
-               <div className="flex flex-col p-2.5 justify-around flex-grow gap-4 md:w-2/3">
-                 <BadgeDescription badge={badge} />
-                 <div className="grid md:grid-cols-1 md:gap-6">
-                   {badge?.skillsEarned && badge.skillsEarned.length > 0 ? (
-                     <MarqueeDemo skills={badge.skillsEarned} />
-                   ) : (
-                     <p>No skills listed for this badge.</p>
-                   )}
-                 </div>
+          <div className="relative rounded-2xl bg-[#0a0a0f]/80 backdrop-blur-3xl border border-white/5 glow-border overflow-hidden">
 
-                <div className="flex flex-col sm:flex-row space-x-1 ">
-                  {displayCertificateId && (
-                    <div className="mt-auto mb-2 w-full">
-                      <div className="relative w-full z-0 group bg-black/60 border rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
-                        <strong className='block text-gray-500 hover:text-white rounded-lg -mt-7 bg-black w-max px-2.5 mb-2'>Certificate ID</strong>
-                        <div className="mt-1 font-mono font-semibold text-sm">{displayCertificateId}</div>
-                      </div>
+            {/* Dynamic background rays */}
+            <LightRays raysColor={accentColor} />
+
+            <div className="flex flex-col lg:flex-row">
+              {/* Left Panel: Visuals & Metrics */}
+              <div className="lg:w-1/3 p-10 lg:border-r border-white/5 flex flex-col items-center">
+                <div className="relative aspect-square w-full max-w-[240px] mb-12 group-hover:scale-105 transition-transform duration-700">
+                  <div className="absolute inset-0 bg-cyan-500/10 blur-[80px] rounded-full scale-75" />
+                  <img
+                    crossOrigin="anonymous"
+                    src={`${process.env.SERVER_URL}/badge/images/${badge?.id}` || badge?.image?.data}
+                    alt={badge?.name}
+                    className="w-full h-full object-contain relative z-10 drop-shadow-[0_0_20px_rgba(4,217,255,0.4)]"
+                  />
+                </div>
+
+                <div className="w-full space-y-3">
+                  <div className="flex flex-col gap-3">
+                    <div className="p-4 bg-cyan-500/5 border border-cyan-500/10 rounded-xl relative overflow-hidden group/metric">
+                      <div className="absolute top-0 right-0 p-2 opacity-10 group-hover/metric:opacity-30 group-hover/metric:rotate-12 transition-all duration-300"><Award className="size-8" /></div>
+                      <div className="text-[9px] font-mono text-cyan-500/60 mb-1 uppercase tracking-[0.2em]">Competency Level</div>
+                      <div className="text-2xl font-black text-white tracking-tighter">{badge?.level || 'N/A'}</div>
                     </div>
-                  )}
-
-                  <div className="z-0 sm:w-2/5 mb-5 group bg-black/60 border rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
-                    <strong className='block text-gray-500 hover:text-white rounded-lg -mt-7 bg-black w-max px-2.5'>Course</strong> {badge?.course}
+                    <div className="p-4 bg-cyan-500/5 border border-cyan-500/10 rounded-xl relative overflow-hidden group/metric">
+                      <div className="absolute top-0 right-0 p-2 opacity-10 group-hover/metric:opacity-30 group-hover/metric:rotate-12 transition-all duration-300"><Users className="size-8" /></div>
+                      <div className="text-[9px] font-mono text-cyan-500/60 mb-1 uppercase tracking-[0.2em]">Global Earners</div>
+                      <div className="text-2xl font-black text-cyan-400 tracking-tighter tabular-nums">{earnersCount || '0'}</div>
+                    </div>
+                    <div className="p-4 bg-cyan-500/5 border border-cyan-500/10 rounded-xl relative overflow-hidden group/metric">
+                      <div className="absolute top-0 right-0 p-2 opacity-10 group-hover/metric:opacity-30 group-hover/metric:rotate-12 transition-all duration-300"><Layers className="size-8" /></div>
+                      <div className="text-[9px] font-mono text-cyan-500/60 mb-1 uppercase tracking-[0.2em]">Vertical Sector</div>
+                      <div className="text-xl font-black text-white tracking-tighter">{badge?.vertical || 'General'}</div>
+                    </div>
                   </div>
                 </div>
+              </div>
 
-                <div className="relative w-full z-0 mb-5 group bg-black/60 border rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
-                  <strong className='block text-gray-500 hover:text-white rounded-lg -mt-7 bg-black w-max px-2.5'>Passing Criteria</strong>
-                    Scored at least 70% in their assessment and completed all mandatory tasks to earn this badge.
+              {/* Right Panel: Content & Information */}
+              <div className="lg:w-2/3 p-4 space-y-4">
+                <section>
+                  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
+                    <h2 className="text-4xl font-black tracking-[0.1em] text-cyan-400 uppercase mb-2 drop-shadow-[0_0_10px_rgba(4,217,255,0.3)]">
+                      {user}
+                    </h2>
+                    <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white/90 mb-6 italic opacity-80">
+                      {badge?.name}
+                    </h1>
+                    <p className="text-gray-400 text-base font-light leading-relaxed max-w-2xl border-l border-white/10 pl-6 whitespace-pre-line">
+                      {badge?.description || "Advanced certification for technical excellence and operational proficiency in cybersecurity protocols."}
+                    </p>
+                  </motion.div>
+                </section>
+
+                <section className="space-y-4">
+                  <div className="flex items-center gap-3 font-mono text-xs text-cyan-500 uppercase tracking-[0.2em]">
+                    <Terminal className="size-4" />
+                    <span>Skills_Learned</span>
+                    <span className="h-[1px] flex-1 bg-cyan-900/40" />
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-2">
+                      <div className="h-[1px] w-6 bg-cyan-500/30" />
+                      <span className="text-[10px] font-mono text-gray-400 uppercase tracking-widest bg-white/5 px-2 py-0.5 rounded border border-white/5">Foundational_Competencies</span>
+                    </div>
+
+                    {/* 2-Column Skills List */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {badge?.skillsEarned && badge.skillsEarned.length > 0 ? (
+                        badge.skillsEarned.map((skill, i) => (
+                          <motion.div
+                            key={i}
+                            initial={{ opacity: 0, x: 10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.3 + (i * 0.05) }}
+                            className="flex items-center gap-3 p-3 bg-white/5 border border-white/5 rounded-lg group/skill hover:bg-cyan-500/5 hover:border-cyan-500/20 transition-all"
+                          >
+                            <div className="size-2 rounded-full bg-cyan-500/20 group-hover/skill:bg-cyan-500 transition-colors" />
+                            <span className="text-sm font-medium text-gray-300 group-hover/skill:text-white uppercase tracking-tight">{skill}</span>
+                          </motion.div>
+                        ))
+                      ) : (
+                        <div className="col-span-2 text-gray-600 italic text-sm">No specific modules found in database records.</div>
+                      )}
+                    </div>
+                  </div>
+                </section>
+
+                {/* Passing Metrics Block */}
+                <div className="grid grid-cols-1 gap-6 pt-2 border-t border-white/5">
+                  <div className="space-y-4">
+                    <div className="text-[10px] font-mono text-cyan-500/50 uppercase tracking-[0.3em] flex items-center gap-2">
+                      <Award className="size-3" />
+                      CANDIDATE EVALUATION
+                    </div>
+                    <div className="relative p-6 bg-black/40 border border-white/5 rounded-2xl overflow-hidden group/metrics">
+                      <div className="absolute top-0 left-0 w-1 h-full bg-cyan-500/20 group-hover:bg-cyan-500/50 transition-colors" />
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div className="text-xs leading-relaxed text-gray-400 italic max-w-xl">
+                          "Candidate demonstrated mastery of core principles, scoring at least 70% in all technical assessments and completing all mandatory operational tasks within the required timeframe."
+                        </div>
+                        {/* <div className="flex items-center gap-4 self-end md:self-center">
+                          <div className="text-right">
+                            <div className="text-[9px] font-mono text-gray-600 uppercase">Status</div>
+                            <div className="text-xs font-bold text-green-400 font-mono tracking-tighter">QUALIFIED_ID:04-1</div>
+                          </div>
+                          <div className="size-10 rounded-full border border-green-500/30 flex items-center justify-center bg-green-500/5">
+                            <CheckCircle className="size-5 text-green-400" />
+                          </div>
+                        </div> */}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-             </div>
-           </div>
-         </div>
-       </main>
-       <Footer />
-     </div>
-   );
- };
+            </div>
 
- export default SharedBadgePage;
+            {/* Footer Accents */}
+            <div className="absolute bottom-0 right-0 w-32 h-32 bg-cyan-500/5 blur-[60px] pointer-events-none" />
+          </div>
+        </motion.div>
+
+      </main>
+
+      <Footer />
+    </div>
+  );
+};
+
+export default SharedBadgePage;
