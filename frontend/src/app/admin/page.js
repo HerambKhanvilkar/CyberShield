@@ -5,6 +5,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import Navbar from "@/components/Navbar";
+import { useAuthContext } from "@/components/AuthContext";
 import Footer from "@/components/Footer";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ export default function AdminLogin() {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
     const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
+    const { fetchUser } = useAuthContext();
 
     useEffect(() => {
         // If already logged in as admin, redirect (only once)
@@ -50,6 +52,8 @@ export default function AdminLogin() {
 
             localStorage.setItem("accessToken", token);
             localStorage.setItem("user", JSON.stringify(user));
+
+            await fetchUser();
 
             toast.success("Admin Login Successful!");
             router.push("/applications");
