@@ -209,11 +209,11 @@ const SharedBadgePage = () => {
 
           <motion.div
             whileHover={{ scale: 1.02 }}
-            className="flex items-center gap-4 bg-white/5 border border-white/10 px-4 py-2 rounded-xl backdrop-blur-md group/cert scanline"
+            className="flex items-center gap-4 bg-white/20 border border-white/10 px-4 py-2 rounded-xl backdrop-blur-md group/cert scanline"
           >
             <div className="flex items-center gap-3">
               <span className="text-[10px] font-mono text-gray-500 uppercase">ID:</span>
-              <code className="text-xs font-mono text-white tracking-widest bg-black/30 px-2 py-1 rounded border border-white/5 tabular-nums">
+              <code className="text-xs font-mono text-white tracking-widest bg-slate-950/30 px-2 py-1 rounded border border-white/5 tabular-nums">
                 {displayCertificateId || certificateId}
               </code>
               <button
@@ -300,7 +300,7 @@ const SharedBadgePage = () => {
                   <div className="space-y-6">
                     <div className="flex items-center gap-2">
                       <div className="h-[1px] w-6 bg-cyan-500/30" />
-                      <span className="text-[10px] font-mono text-gray-400 uppercase tracking-widest bg-white/5 px-2 py-0.5 rounded border border-white/5">Foundational_Competencies</span>
+                      <span className="text-[10px] font-mono text-gray-400 uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded border border-white/5">Foundational_Competencies</span>
                     </div>
 
                     {/* 2-Column Skills List */}
@@ -312,7 +312,7 @@ const SharedBadgePage = () => {
                             initial={{ opacity: 0, x: 10 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.3 + (i * 0.05) }}
-                            className="flex items-center gap-3 p-3 bg-white/5 border border-white/5 rounded-lg group/skill hover:bg-cyan-500/5 hover:border-cyan-500/20 transition-all"
+                            className="flex items-center gap-3 p-3 bg-white/20 border border-white/5 rounded-lg group/skill hover:bg-cyan-500/5 hover:border-cyan-500/20 transition-all"
                           >
                             <div className="size-2 rounded-full bg-cyan-500/20 group-hover/skill:bg-cyan-500 transition-colors" />
                             <span className="text-sm font-medium text-gray-300 group-hover/skill:text-white uppercase tracking-tight">{skill}</span>
@@ -332,7 +332,7 @@ const SharedBadgePage = () => {
                       <Award className="size-3" />
                       CANDIDATE EVALUATION
                     </div>
-                    <div className="relative p-6 bg-black/40 border border-white/5 rounded-2xl overflow-hidden group/metrics">
+                    <div className="relative p-6 bg-slate-900/60 border border-white/5 rounded-2xl overflow-hidden group/metrics">
                       <div className="absolute top-0 left-0 w-1 h-full bg-cyan-500/20 group-hover:bg-cyan-500/50 transition-colors" />
                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                         <div className="text-xs leading-relaxed text-gray-400 italic max-w-xl">

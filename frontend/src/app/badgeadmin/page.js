@@ -582,7 +582,7 @@ const updateUserDetails = async (email) => {
             {/* Main Content: Left = User List | Right = User Details */}
             <div className="flex flex-col md:flex-row backdrop-blur-md gap-4 h-full md:h-[calc(100vh-200px)]">
               {/* Left: User List */}
-              <div className="w-full md:w-1/3 bg-white/5 backdrop-blur-md rounded-lg p-2 border border-white/10 shadow-md flex flex-col h-full">
+              <div className="w-full md:w-1/3 bg-white/20 backdrop-blur-md rounded-lg p-2 border border-white/10 shadow-md flex flex-col h-full">
                 <h2 className="text-white font-semibold mb-2">User List</h2>
                 <div className="flex-1 overflow-hidden">
                   <ScrollArea className="h-full overflow-y-auto scrollbar pr-2">
@@ -607,7 +607,7 @@ const updateUserDetails = async (email) => {
               </div>
 
               {/* Right: User Details */}
-              <div className="w-full md:w-2/3 bg-white/5 backdrop-blur-md rounded-lg p-2 md:p-4 border border-white/10 shadow-md overflow-y-auto scrollbar">
+              <div className="w-full md:w-2/3 bg-white/20 backdrop-blur-md rounded-lg p-2 md:p-4 border border-white/10 shadow-md overflow-y-auto scrollbar">
                 <UserDetailsView 
                   selectedUser={selectedUser} 
                   updateUserDetails={updateUserDetails} 
@@ -824,3 +824,4 @@ const updateUserDetails = async (email) => {
     </>
   );
 }
+

@@ -107,7 +107,7 @@ export default function SignupForm() {
     };
 
     return (
-        <Card className="mx-auto max-w-sm bg-white/5 backdrop-blur-md border-white/10 text-white shadow-2xl">
+        <Card className="mx-auto max-w-sm bg-white/20 backdrop-blur-md border-white/10 text-white shadow-2xl">
             <CardHeader>
                 <CardTitle className="text-2xl font-bold text-cyan-400 text-center">Sign Up</CardTitle>
                 <CardDescription className="text-gray-400 text-center">
@@ -126,7 +126,7 @@ export default function SignupForm() {
                                     onChange={(e) => setFirstName(e.target.value)}
                                     placeholder="John"
                                     required
-                                    className="bg-black/30 border-white/10 text-white"
+                                    className="bg-slate-950/30 border-white/10 text-white"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -137,7 +137,7 @@ export default function SignupForm() {
                                     onChange={(e) => setLastName(e.target.value)}
                                     placeholder="Doe"
                                     required
-                                    className="bg-black/30 border-white/10 text-white"
+                                    className="bg-slate-950/30 border-white/10 text-white"
                                 />
                             </div>
                         </div>
@@ -150,7 +150,7 @@ export default function SignupForm() {
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="m@example.com"
                                 required
-                                className="bg-black/30 border-white/10 text-white"
+                                className="bg-slate-950/30 border-white/10 text-white"
                             />
                         </div>
                         <div className="space-y-2">
@@ -163,7 +163,7 @@ export default function SignupForm() {
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="••••••••"
                                     required
-                                    className="bg-black/30 border-white/10 text-white pr-10"
+                                    className="bg-slate-950/30 border-white/10 text-white pr-10"
                                 />
                                 <button
                                     type="button"
@@ -181,7 +181,7 @@ export default function SignupForm() {
                                         <span className="text-gray-500">Strength: <span className={strengthColor.replace('bg-', 'text-')}>{strengthLabel}</span></span>
                                         {strength === 5 ? <ShieldCheck className="w-3 h-3 text-green-500" /> : <Shield className="w-3 h-3 text-gray-600" />}
                                     </div>
-                                    <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                                    <div className="h-1 w-full bg-white/20 rounded-full overflow-hidden">
                                         <div
                                             className={`h-full transition-all duration-500 ${strengthColor}`}
                                             style={{ width: `${(strength / 5) * 100}%` }}
@@ -207,7 +207,7 @@ export default function SignupForm() {
                                     onChange={(e) => setConfirmPassword(e.target.value)}
                                     placeholder="••••••••"
                                     required
-                                    className={`bg-black/30 border-white/10 text-white pr-10 ${confirmPassword && password !== confirmPassword ? 'border-red-500/50 ring-1 ring-red-500/20' : ''}`}
+                                    className={`bg-slate-950/30 border-white/10 text-white pr-10 ${confirmPassword && password !== confirmPassword ? 'border-red-500/50 ring-1 ring-red-500/20' : ''}`}
                                 />
                                 <button
                                     type="button"
@@ -271,3 +271,4 @@ export default function SignupForm() {
         </Card>
     );
 }
+

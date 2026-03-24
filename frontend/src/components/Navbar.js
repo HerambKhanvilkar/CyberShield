@@ -303,7 +303,7 @@ function Navbar() {
 
         {/* Mobile SideNav Menu */}
         <div
-          className={`fixed top-0 left-0 h-full bg-black/50 backdrop-blur-sm z-50 overflow-x-hidden transition-all duration-500 ${isSidenavOpen ? "w-[250px]" : "w-0"
+          className={`fixed top-0 left-0 h-full bg-slate-950/50 backdrop-blur-sm z-50 overflow-x-hidden transition-all duration-500 ${isSidenavOpen ? "w-[250px]" : "w-0"
             }`}
         >
           <button
@@ -401,3 +401,4 @@ function Navbar() {
   );
 }
 export default Navbar;
+

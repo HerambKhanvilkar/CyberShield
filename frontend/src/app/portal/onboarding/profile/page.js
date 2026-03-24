@@ -70,7 +70,7 @@ export default function ProfilePage() {
                         value={formData.firstName}
                         readOnly
                         tabIndex={-1}
-                        className="bg-white/5 border-white/10 h-14 rounded-none font-mono focus:border-cyan-500 transition-all text-cyan-100 cursor-not-allowed opacity-70"
+                        className="bg-white/20 border-white/10 h-14 rounded-none font-mono focus:border-cyan-500 transition-all text-cyan-100 cursor-not-allowed opacity-70"
                     />
                 </div>
                 <div className="space-y-3">
@@ -81,7 +81,7 @@ export default function ProfilePage() {
                         value={formData.lastName}
                         readOnly
                         tabIndex={-1}
-                        className="bg-white/5 border-white/10 h-14 rounded-none font-mono focus:border-cyan-500 transition-all text-cyan-100 cursor-not-allowed opacity-70"
+                        className="bg-white/20 border-white/10 h-14 rounded-none font-mono focus:border-cyan-500 transition-all text-cyan-100 cursor-not-allowed opacity-70"
                     />
                 </div>
             </div>
@@ -90,14 +90,14 @@ export default function ProfilePage() {
                 <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em] flex items-center gap-2">
                     <div className="w-1.5 h-1.5 bg-cyan-500" /> LinkedIn Profile <span className="text-red-500">*</span>
                 </label>
-                <Input value={formData.linkedin} onChange={e => setFormData({ ...formData, linkedin: e.target.value })} placeholder="https://linkedin.com/in/yourprofile" className="bg-white/5 border-white/10 h-14 rounded-none font-mono focus:border-cyan-500 transition-all text-cyan-100 placeholder:text-gray-700" />
+                <Input value={formData.linkedin} onChange={e => setFormData({ ...formData, linkedin: e.target.value })} placeholder="https://linkedin.com/in/yourprofile" className="bg-white/20 border-white/10 h-14 rounded-none font-mono focus:border-cyan-500 transition-all text-cyan-100 placeholder:text-gray-700" />
             </div>
 
             <div className="space-y-3">
                 <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em] flex items-center gap-2">
                     <div className="w-1.5 h-1.5 bg-cyan-500" /> GitHub Profile <span className="text-red-500">*</span>
                 </label>
-                <Input value={formData.github} onChange={e => setFormData({ ...formData, github: e.target.value })} placeholder="https://github.com/..." className="bg-white/5 border-white/10 h-14 rounded-none font-mono focus:border-cyan-500 transition-all text-cyan-100 placeholder:text-gray-700" />
+                <Input value={formData.github} onChange={e => setFormData({ ...formData, github: e.target.value })} placeholder="https://github.com/..." className="bg-white/20 border-white/10 h-14 rounded-none font-mono focus:border-cyan-500 transition-all text-cyan-100 placeholder:text-gray-700" />
             </div>
 
             <div className="flex flex-col gap-4 mt-12">
@@ -112,3 +112,4 @@ export default function ProfilePage() {
         </motion.div>
     );
 }
+

@@ -36,7 +36,7 @@ export default function CompletionPage() {
                     <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
-                        className="absolute -top-4 -right-4 w-10 h-10 bg-black border border-cyan-500 flex items-center justify-center text-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.4)]"
+                        className="absolute -top-4 -right-4 w-10 h-10 bg-slate-950 border border-cyan-500 flex items-center justify-center text-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.4)]"
                     >
                         <ShieldCheck className="w-6 h-6" />
                     </motion.div>
@@ -51,7 +51,7 @@ export default function CompletionPage() {
                 </p>
             </div>
 
-            <div className={`p-10 bg-black border w-full max-w-sm relative group transition-all duration-700 ${isGraduated ? 'border-cyan-500/50 shadow-[0_0_30px_rgba(6,182,212,0.1)]' : 'border-white/5 opacity-40 grayscale'}`}>
+            <div className={`p-10 bg-slate-950 border w-full max-w-sm relative group transition-all duration-700 ${isGraduated ? 'border-cyan-500/50 shadow-[0_0_30px_rgba(6,182,212,0.1)]' : 'border-white/5 opacity-40 grayscale'}`}>
                 <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-cyan-500" />
                 <Award className="w-12 h-12 mx-auto mb-6 text-cyan-400 group-hover:scale-110 transition-transform" />
                 <p className="text-[9px] font-mono text-gray-700 mb-6 uppercase tracking-[0.4em]">A_DC_CERT_{user?.globalPid || 'PENDING'}.pdf</p>
@@ -89,3 +89,4 @@ export default function CompletionPage() {
         </motion.div>
     );
 }
+

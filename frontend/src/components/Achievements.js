@@ -117,12 +117,12 @@ const Achievements = ({ achievements = [], user }) => {
     <div className="w-full bg-gray backdrop-blur-md border border-white/10 rounded-lg p-2 md:p-4 text-white">
       <h2 className="text-xl font-bold mb-2 border-b border-blue-500">Achievements</h2>
 
-      <div className="max-h-[200px] overflow-y-auto bg-white/5 border border-white/10 rounded-md p-3 space-y-2">
+      <div className="max-h-[200px] overflow-y-auto bg-white/20 border border-white/10 rounded-md p-3 space-y-2">
         {achievementList.length > 0 ? (
           achievementList.map((achievement, index) => (
             <div
               key={index}
-              className="flex justify-between items-center bg-white/10 hover:bg-white/20 transition-colors px-4 py-2 rounded-lg"
+              className="flex justify-between items-center bg-white/20 hover:bg-white/20 transition-colors px-4 py-2 rounded-lg"
             >
               {editMode ? (
                 <input
@@ -211,7 +211,7 @@ const Achievements = ({ achievements = [], user }) => {
       <AnimatePresence>
         {modalOpen && (
           <motion.div
-            className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center"
+            className="fixed inset-0 bg-slate-950/70 z-50 flex items-center justify-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -235,7 +235,7 @@ const Achievements = ({ achievements = [], user }) => {
                 type="text"
                 value={newAchievement}
                 onChange={(e) => setNewAchievement(e.target.value)}
-                className="w-full p-2 mb-4 rounded bg-white/10 text-white border border-white/20 focus:outline-none focus:ring focus:ring-blue-500"
+                className="w-full p-2 mb-4 rounded bg-white/20 text-white border border-white/20 focus:outline-none focus:ring focus:ring-blue-500"
                 placeholder="Enter achievement..."
               />
               <button
@@ -258,3 +258,4 @@ const Achievements = ({ achievements = [], user }) => {
 };
 
 export default Achievements;
+

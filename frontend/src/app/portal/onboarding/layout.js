@@ -59,7 +59,7 @@ export default function OnboardingLayout({ children }) {
     }, []);
 
     if (loading) return (
-        <div className="min-h-screen bg-black flex flex-col items-center justify-center font-mono">
+        <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center font-mono">
             <div className="w-16 h-16 border border-cyan-500/30 border-t-cyan-500 animate-spin mb-4"></div>
             <p className="text-cyan-500 text-[10px] tracking-[0.3em] animate-pulse uppercase font-black">Connecting_to_Neural_Net...</p>
         </div>
@@ -82,7 +82,7 @@ export default function OnboardingLayout({ children }) {
 
     return (
         <OnboardingContext.Provider value={{ user, fetchUser, selectedTenureIndex, setSelectedTenureIndex, userInitialStep }}>
-            <div className="min-h-screen bg-black text-white flex flex-col font-mono selection:bg-cyan-500 selection:text-black">
+            <div className="min-h-screen bg-slate-950 text-white flex flex-col font-mono selection:bg-cyan-500 selection:text-black">
                 <Navbar />
 
                 <main className="flex-1 py-16 px-4 sm:px-6 lg:px-8 relative">
@@ -103,12 +103,12 @@ export default function OnboardingLayout({ children }) {
 
                         {user?.tenures?.length > 1 && userInitialStep >= 2 && (
                             <div className="mb-12 flex justify-center">
-                                <div className="bg-white/5 border border-white/10 p-2 flex items-center gap-4">
+                                <div className="bg-white/20 border border-white/10 p-2 flex items-center gap-4">
                                     <span className="text-[10px] font-black uppercase text-gray-500 ml-4 tracking-widest">Select_Directive:</span>
                                     <select
                                         value={selectedTenureIndex}
                                         onChange={(e) => setSelectedTenureIndex(parseInt(e.target.value))}
-                                        className="bg-black border border-white/10 px-6 py-2 text-[10px] font-black uppercase text-cyan-400 focus:outline-none hover:border-cyan-500 transition-colors cursor-pointer"
+                                        className="bg-slate-950 border border-white/10 px-6 py-2 text-[10px] font-black uppercase text-cyan-400 focus:outline-none hover:border-cyan-500 transition-colors cursor-pointer"
                                     >
                                         {user.tenures.map((t, i) => (
                                             <option key={i} value={i}>{t.role} [{t.status}]</option>
@@ -139,8 +139,8 @@ export default function OnboardingLayout({ children }) {
                                             className={`p-5 border transition-all duration-300 relative group cursor-pointer ${isActive
                                                 ? 'bg-cyan-500/10 border-cyan-500 shadow-[0_0_20px_rgba(6,182,212,0.1)]'
                                                 : isCompleted || idx === userInitialStep
-                                                    ? 'bg-black border-white/10 hover:border-cyan-500/50'
-                                                    : 'bg-black border-white/5 opacity-50 cursor-not-allowed'
+                                                    ? 'bg-slate-950 border-white/10 hover:border-cyan-500/50'
+                                                    : 'bg-slate-950 border-white/5 opacity-50 cursor-not-allowed'
                                                 }`}
                                         >
                                             {isActive && (
@@ -164,7 +164,7 @@ export default function OnboardingLayout({ children }) {
                             </div>
 
                             {/* Main Inspector Panel */}
-                            <div className="bg-black border border-white/10 p-10 sm:p-16 relative overflow-hidden min-h-[600px] shadow-[0_0_50px_rgba(0,0,0,1)]">
+                            <div className="bg-slate-950 border border-white/10 p-10 sm:p-16 relative overflow-hidden min-h-[600px] shadow-[0_0_50px_rgba(0,0,0,1)]">
                                 <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-white/20" />
                                 <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-white/20" />
                                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent opacity-20" />
@@ -179,3 +179,4 @@ export default function OnboardingLayout({ children }) {
         </OnboardingContext.Provider>
     );
 }
+

@@ -78,7 +78,7 @@ export default function ApplyLanding() {
                     className="z-10 w-full max-w-xl"
                 >
                     <div className="text-center mb-4">
-                        <div className="inline-flex p-4 rounded-3xl bg-white/5 border border-white/10 mb-6 group">
+                        <div className="inline-flex p-4 rounded-3xl bg-white/20 border border-white/10 mb-6 group">
                             <KeyRound className="w-10 h-10 text-cyan-400 group-hover:rotate-12 transition-transform" />
                         </div>
                         <h1 className="text-5xl md:text-7xl font-black italic tracking-tighter mb-4 bg-gradient-to-r from-white via-white to-gray-500 bg-clip-text text-transparent">
@@ -90,7 +90,7 @@ export default function ApplyLanding() {
                     </div>
 
                     {/* Tab Switcher */}
-                    <div className="flex mb-6 bg-black/50 border border-white/10 rounded-2xl p-1">
+                    <div className="flex mb-6 bg-slate-950/50 border border-white/10 rounded-2xl p-1">
                         <button
                             onClick={() => setActiveTab("apply")}
                             className={`flex-1 py-3 text-sm font-bold uppercase tracking-widest rounded-xl transition-all ${activeTab === "apply" ? "bg-white text-black" : "text-gray-500 hover:text-white"}`}
@@ -122,7 +122,7 @@ export default function ApplyLanding() {
                                         <label className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-500/70 ml-1">Access Credential</label>
                                         <Input
                                             placeholder="ORG-CODE"
-                                            className="bg-black/50 border-white/10 text-center text-2xl h-20 tracking-[0.1em] font-black text-white placeholder:text-gray-800 rounded-2xl focus:border-cyan-500/50 focus:ring-cyan-500/20"
+                                            className="bg-slate-950/50 border-white/10 text-center text-2xl h-20 tracking-[0.1em] font-black text-white placeholder:text-gray-800 rounded-2xl focus:border-cyan-500/50 focus:ring-cyan-500/20"
                                             value={code}
                                             onChange={(e) => setCode(e.target.value)}
                                             autoFocus
@@ -152,7 +152,7 @@ export default function ApplyLanding() {
                                             <Input
                                                 type="email"
                                                 placeholder="your.email@institution.edu"
-                                                className="bg-black/50 border-white/10 text-center text-2xl h-20 tracking-[0.1em] font-black text-white placeholder:text-gray-800 rounded-2xl focus:border-cyan-500/50 focus:ring-cyan-500/20"
+                                                className="bg-slate-950/50 border-white/10 text-center text-2xl h-20 tracking-[0.1em] font-black text-white placeholder:text-gray-800 rounded-2xl focus:border-cyan-500/50 focus:ring-cyan-500/20"
                                                 value={statusEmail}
                                                 onChange={(e) => setStatusEmail(e.target.value)}
                                             />
@@ -162,7 +162,7 @@ export default function ApplyLanding() {
                                             <label className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-500/70 ml-1">Enter OTP</label>
                                             <Input
                                                 placeholder="000000"
-                                                className="bg-black/50 border-white/10 text-center text-2xl h-20 tracking-[0.1em] font-black text-white placeholder:text-gray-800 rounded-2xl focus:border-cyan-500/50 focus:ring-cyan-500/20"
+                                                className="bg-slate-950/50 border-white/10 text-center text-2xl h-20 tracking-[0.1em] font-black text-white placeholder:text-gray-800 rounded-2xl focus:border-cyan-500/50 focus:ring-cyan-500/20"
                                                 value={statusOtp}
                                                 onChange={(e) => setStatusOtp(e.target.value)}
                                                 maxLength={6}
@@ -222,3 +222,4 @@ export default function ApplyLanding() {
         </div>
     );
 }
+

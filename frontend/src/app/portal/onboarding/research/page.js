@@ -26,7 +26,7 @@ export default function ResearchGatewayPage() {
             <div className="w-28 h-28 bg-gray-800/50 border border-gray-700 flex items-center justify-center text-gray-500 relative group">
                 <div className="absolute inset-0 border border-gray-700/50 -m-2" />
                 <FlaskConical className="w-14 h-14" />
-                <div className="absolute inset-0 flex items-center justify-center bg-black/80">
+                <div className="absolute inset-0 flex items-center justify-center bg-slate-950/80">
                     <Lock className="w-8 h-8 text-gray-600" />
                 </div>
             </div>
@@ -52,3 +52,4 @@ export default function ResearchGatewayPage() {
         </motion.div>
     );
 }
+

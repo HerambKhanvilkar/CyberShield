@@ -528,7 +528,7 @@ function AdminDashboardContent() {
                 <div className="flex items:center justify-between gap-4">
                     <span>Role "{role.name}" deactivated</span>
                     <button
-                        className="text-[10px] px-2 py-1 bg-white/5 rounded text-cyan-300 hover:bg-white/10"
+                        className="text-[10px] px-2 py-1 bg-white/20 rounded text-cyan-300 hover:bg-white/20"
                         onClick={async () => {
                             toast.dismiss(toastId);
                             await handleRestoreRole(role);
@@ -664,7 +664,7 @@ function AdminDashboardContent() {
                 <div className="flex items-center justify-between gap-4">
                     <span>Removed "{roleName}" from {orgData.code}</span>
                     <button
-                        className="text-[10px] px-2 py-1 bg-white/5 rounded text-cyan-300 hover:bg-white/10"
+                        className="text-[10px] px-2 py-1 bg-white/20 rounded text-cyan-300 hover:bg-white/20"
                         onClick={async () => {
                             toast.dismiss(toastId);
                             await handleRestoreOrgRole(backupRole);
@@ -1193,15 +1193,15 @@ function AdminDashboardContent() {
             {tenures.map((t, i) => (
                 <div key={i} className="relative">
                     <div className={`absolute -left-[30px] top-0 w-3 h-3 border border-black ${t.status === 'ACTIVE' ? 'bg-cyan-500 shadow-[0_0_10px_#06b6d4]' : 'bg-gray-800'}`} />
-                    <div className="bg-black border border-white/10 p-4 relative group hover:border-cyan-500/50 transition-colors">
+                    <div className="bg-slate-950 border border-white/10 p-4 relative group hover:border-cyan-500/50 transition-colors">
                         <div className="absolute -top-1 -right-1 w-2 h-2 border-t border-r border-white/20" />
                         <div className="absolute -bottom-1 -left-1 w-2 h-2 border-b border-l border-white/20" />
 
                         <div className="flex justify-between items-start mb-2">
-                            <span className="font-mono text-xs text-cyan-400 font-bold uppercase tracking-wider">{t.role}</span>
-                            <span className={`text-[9px] font-mono uppercase px-2 py-0.5 border ${t.status === 'ACTIVE' ? 'border-cyan-500 text-cyan-500 bg-cyan-500/10' : 'border-gray-700 text-gray-500'}`}>{t.status}</span>
+                            <span className="font-sans text-xs text-cyan-400 font-bold uppercase tracking-wider">{t.role}</span>
+                            <span className={`text-[9px] font-sans uppercase px-2 py-0.5 border ${t.status === 'ACTIVE' ? 'border-cyan-500 text-cyan-500 bg-cyan-500/10' : 'border-gray-700 text-gray-500'}`}>{t.status}</span>
                         </div>
-                        <div className="text-[10px] text-gray-500 font-mono flex justify-between">
+                        <div className="text-[10px] text-gray-500 font-sans flex justify-between">
                             <span>{t.startDate || 'N/A'} — {t.endDate || 'PRESENT'}</span>
                             <span className="text-white/40">{t.cohort}</span>
                         </div>
@@ -1226,10 +1226,10 @@ function AdminDashboardContent() {
                                 <ArrowLeft className="w-4 h-4" />
                             </button>
                             <div className="flex-1 flex items-center gap-4">
-                                <div className="w-16 h-16 border border-white/10 flex items-center justify-center text-3xl font-bold bg-white/5 text-purple-500">{orgInspectorMember.firstName?.[0] || 'U'}</div>
+                                <div className="w-16 h-16 border border-white/10 flex items-center justify-center text-3xl font-bold bg-white/20 text-purple-500">{orgInspectorMember.firstName?.[0] || 'U'}</div>
                                 <div className="flex-1">
                                     <div className="text-lg font-bold uppercase tracking-tight">{orgInspectorMember.firstName} {orgInspectorMember.lastName}</div>
-                                    <div className="text-xs font-mono text-gray-400">{orgInspectorMember.email}</div>
+                                    <div className="text-xs font-sans text-gray-400">{orgInspectorMember.email}</div>
                                     <div className="mt-2 flex items-center gap-2">
                                         <div className="px-2 py-0.5 border border-purple-500/30 text-[9px] text-purple-400 uppercase">{orgInspectorMember.onboardingState || orgInspectorMember.status}</div>
                                         <button onClick={() => {
@@ -1266,13 +1266,13 @@ function AdminDashboardContent() {
                                 <TenureTimeline tenures={orgInspectorMember.tenures} />
                             ) : (
                                 <div className="space-y-3">
-                                    <div className="text-[10px] text-gray-500 uppercase font-mono tracking-widest flex justify-between">
+                                    <div className="text-[10px] text-gray-500 uppercase font-sans tracking-widest flex justify-between">
                                         <span>What Makes You Stand Apart?</span>
                                         <span className={((orgInspectorMember?.whyJoinDeepCytes ?? orgInspectorMember?.data?.whyJoin ?? '').length < 100) ? "text-red-500" : "text-green-500"}>
                                             LEN_{(orgInspectorMember?.whyJoinDeepCytes ?? orgInspectorMember?.data?.whyJoin ?? '').length}
                                         </span>
                                     </div>
-                                    <div className="p-3 bg-black/40 border border-white/5 text-xs text-gray-400 font-mono leading-relaxed max-h-28 overflow-y-auto custom-scrollbar">
+                                    <div className="p-3 bg-slate-900/60 border border-white/5 text-xs text-gray-400 font-sans leading-relaxed max-h-28 overflow-y-auto custom-scrollbar">
                                         {orgInspectorMember.whyJoinDeepCytes || orgInspectorMember.data?.whyJoin || "NO_DATA_FOUND"}
                                     </div>
 
@@ -1287,13 +1287,13 @@ function AdminDashboardContent() {
                                             ) : orgInspectorMember.status === 'INTERVIEW_SCHEDULED' ? (
                                                 <div className="space-y-3">
                                                     <div className="p-3 bg-orange-900/10 border border-orange-500/30 space-y-2">
-                                                        <div className="flex items-center justify-between text-xs text-gray-400 font-mono uppercase">
+                                                        <div className="flex items-center justify-between text-xs text-gray-400 font-sans uppercase">
                                                             <span>Scheduled_Time:</span>
                                                             <span className="text-xs">{orgInspectorMember.interviewDetails?.scheduledAt ? new Date(orgInspectorMember.interviewDetails.scheduledAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A'}</span>
                                                         </div>
-                                                        <div className="flex items-center justify-between text-xs text-gray-400 font-mono uppercase">
+                                                        <div className="flex items-center justify-between text-xs text-gray-400 font-sans uppercase">
                                                             <span>Meet_Link:</span>
-                                                            <a href={orgInspectorMember.interviewDetails?.meetLink?.startsWith('http') ? orgInspectorMember.interviewDetails.meetLink : `https://${orgInspectorMember.interviewDetails?.meetLink}`} target="_blank" rel="noopener noreferrer" className="text-xs font-mono text-cyan-400 hover:underline truncate max-w-[200px]">{orgInspectorMember.interviewDetails?.meetLink || 'N/A'}</a>
+                                                            <a href={orgInspectorMember.interviewDetails?.meetLink?.startsWith('http') ? orgInspectorMember.interviewDetails.meetLink : `https://${orgInspectorMember.interviewDetails?.meetLink}`} target="_blank" rel="noopener noreferrer" className="text-xs font-sans text-cyan-400 hover:underline truncate max-w-[200px]">{orgInspectorMember.interviewDetails?.meetLink || 'N/A'}</a>
                                                         </div>
                                                     </div>
                                                     <div className="grid grid-cols-2 gap-2">
@@ -1303,7 +1303,7 @@ function AdminDashboardContent() {
 
                                                     {/* Role Assignment UI */}
                                                     <div className="space-y-2 pt-2 border-t border-white/10">
-                                                        <label className="text-xs font-mono text-gray-400 uppercase tracking-wider">Assign Role (Required)</label>
+                                                        <label className="text-xs font-sans text-gray-400 uppercase tracking-wider">Assign Role (Required)</label>
                                                         <select
                                                             value={orgInspectorMember.assignedRole || ''}
                                                             onChange={(e) => {
@@ -1311,7 +1311,7 @@ function AdminDashboardContent() {
                                                                 setOrgInspectorMember(updatedItem);
                                                                 toast.success(`Role "${e.target.value}" assigned`);
                                                             }}
-                                                            className="w-full bg-black border border-white/20 h-10 text-xs font-mono text-white px-2"
+                                                            className="w-full bg-slate-950 border border-white/20 h-10 text-xs font-sans text-white px-2"
                                                         >
                                                             <option value="">SELECT_ROLE</option>
                                                             {(() => {
@@ -1353,12 +1353,12 @@ function AdminDashboardContent() {
                 )}
 
                 <div className="flex items-start gap-6 border-b border-white/10 pb-8">
-                    <div className="w-20 h-20 border border-white/20 flex items-center justify-center text-4xl font-bold bg-white/5 text-green-500">
+                    <div className="w-20 h-20 border border-white/20 flex items-center justify-center text-4xl font-bold bg-white/20 text-green-500">
                         {selectedItem.name[0]}
                     </div>
                     <div className="flex-1 space-y-2">
                         <h2 className="text-3xl font-bold uppercase tracking-tight text-white">{selectedItem.name}</h2>
-                        <div className="text-xs font-mono text-gray-400 grid grid-cols-3 gap-2">
+                        <div className="text-xs font-sans text-gray-400 grid grid-cols-3 gap-2">
                             <span className="block p-2 border border-white/10">CODE: {selectedItem.code}</span>
                             <span className={`block p-2 border border-white/10 ${selectedItem.isActive ? 'text-green-500' : 'text-red-500'}`}>{selectedItem.isActive ? 'ACTIVE' : 'INACTIVE'}</span>
                             <button
@@ -1387,17 +1387,17 @@ function AdminDashboardContent() {
                                         <div
                                             key={f._id}
                                             onClick={() => { setOrgInspectorMember(f); router.replace(`${window.location.pathname}?orgCode=${selectedItem?.code}&memberEmail=${encodeURIComponent(f.email)}`); }}
-                                            className="p-3 bg-white/5 border border-white/10 flex justify-between items-center group cursor-pointer hover:border-purple-500/50 transition-colors"
+                                            className="p-3 bg-white/20 border border-white/10 flex justify-between items-center group cursor-pointer hover:border-purple-500/50 transition-colors"
                                         >
                                             <div className="flex-1">
                                                 <div className="text-sm font-bold text-white group-hover:text-purple-400">{f.firstName} {f.lastName}</div>
-                                                <div className="text-[10px] text-gray-500 font-mono">{f.email}</div>
+                                                <div className="text-[10px] text-gray-500 font-sans">{f.email}</div>
                                             </div>
                                             <div className="flex items-center gap-3">
                                                 <div className="px-2 py-0.5 border border-purple-500/30 text-[9px] text-purple-400 uppercase">{f.onboardingState}</div>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); window.open(`/applications?type=fellows&email=${f.email}`, '_blank'); }}
-                                                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10"
+                                                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/20"
                                                 >
                                                     <ExternalLink className="w-3 h-3 text-purple-400" />
                                                 </button>
@@ -1405,7 +1405,7 @@ function AdminDashboardContent() {
                                         </div>
                                     ))}
                                 </div>
-                            ) : <div className="text-xs text-gray-600 font-mono italic">NO ACTIVE UNITS</div>}
+                            ) : <div className="text-xs text-gray-600 font-sans italic">NO ACTIVE UNITS</div>}
                         </div>
 
                         {/* Org Interviewees */}
@@ -1420,27 +1420,27 @@ function AdminDashboardContent() {
                                 return (
                                     <div className="grid gap-2">
                                         {upcoming.map(a => (
-                                            <div key={a._id} onClick={() => { setOrgInspectorMember(a); router.replace(`${window.location.pathname}?orgCode=${selectedItem?.code}&memberEmail=${encodeURIComponent(a.email)}`); }} className="p-3 bg-white/5 border border-white/10 flex justify-between items-center group cursor-pointer hover:border-orange-500/50 transition-colors">
+                                            <div key={a._id} onClick={() => { setOrgInspectorMember(a); router.replace(`${window.location.pathname}?orgCode=${selectedItem?.code}&memberEmail=${encodeURIComponent(a.email)}`); }} className="p-3 bg-white/20 border border-white/10 flex justify-between items-center group cursor-pointer hover:border-orange-500/50 transition-colors">
                                                 <div className="flex-1">
                                                     <div className="text-sm font-bold text-white group-hover:text-orange-400">{a.firstName} {a.lastName}</div>
-                                                    <div className="text-[10px] text-gray-500 font-mono">{a.email}</div>
+                                                    <div className="text-[10px] text-gray-500 font-sans">{a.email}</div>
                                                 </div>
                                                 <div className="flex items-center gap-3">
                                                     <div className="px-2 py-0.5 border border-orange-500/30 text-[9px] text-orange-400 uppercase">{a.status}</div>
-                                                    {a.interviewDetails?.scheduledAt && (<div className="text-[10px] text-gray-400 font-mono">{new Date(a.interviewDetails.scheduledAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</div>)}
+                                                    {a.interviewDetails?.scheduledAt && (<div className="text-[10px] text-gray-400 font-sans">{new Date(a.interviewDetails.scheduledAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</div>)}
                                                 </div>
                                             </div>
                                         ))}
 
                                         {unscheduled.map(a => (
-                                            <div key={a._id} onClick={() => { setOrgInspectorMember(a); router.replace(`${window.location.pathname}?orgCode=${selectedItem?.code}&memberEmail=${encodeURIComponent(a.email)}`); }} className="p-3 bg-white/5 border border-white/10 flex justify-between items-center group cursor-pointer hover:border-orange-500/50 transition-colors">
+                                            <div key={a._id} onClick={() => { setOrgInspectorMember(a); router.replace(`${window.location.pathname}?orgCode=${selectedItem?.code}&memberEmail=${encodeURIComponent(a.email)}`); }} className="p-3 bg-white/20 border border-white/10 flex justify-between items-center group cursor-pointer hover:border-orange-500/50 transition-colors">
                                                 <div className="flex-1">
                                                     <div className="text-sm font-bold text-white group-hover:text-orange-400">{a.firstName} {a.lastName}</div>
-                                                    <div className="text-[10px] text-gray-500 font-mono">{a.email}</div>
+                                                    <div className="text-[10px] text-gray-500 font-sans">{a.email}</div>
                                                 </div>
                                                 <div className="flex items-center gap-3">
                                                     <div className="px-2 py-0.5 border border-orange-500/30 text-[9px] text-orange-400 uppercase">{a.status}</div>
-                                                    <div className="text-[10px] text-gray-400 font-mono">UNSCHEDULED</div>
+                                                    <div className="text-[10px] text-gray-400 font-sans">UNSCHEDULED</div>
                                                 </div>
                                             </div>
                                         ))}
@@ -1448,20 +1448,20 @@ function AdminDashboardContent() {
                                         {past.length > 0 && <div className="border-t border-white/10 my-2" />}
 
                                         {past.map(a => (
-                                            <div key={a._id} onClick={() => { setOrgInspectorMember(a); router.replace(`${window.location.pathname}?orgCode=${selectedItem?.code}&memberEmail=${encodeURIComponent(a.email)}`); }} className="p-3 bg-white/5 border border-white/10 flex justify-between items-center group cursor-pointer hover:border-orange-500/50 transition-colors">
+                                            <div key={a._id} onClick={() => { setOrgInspectorMember(a); router.replace(`${window.location.pathname}?orgCode=${selectedItem?.code}&memberEmail=${encodeURIComponent(a.email)}`); }} className="p-3 bg-white/20 border border-white/10 flex justify-between items-center group cursor-pointer hover:border-orange-500/50 transition-colors">
                                                 <div className="flex-1">
                                                     <div className="text-sm font-bold text-white group-hover:text-orange-400">{a.firstName} {a.lastName}</div>
-                                                    <div className="text-[10px] text-gray-500 font-mono">{a.email}</div>
+                                                    <div className="text-[10px] text-gray-500 font-sans">{a.email}</div>
                                                 </div>
                                                 <div className="flex items-center gap-3">
                                                     <div className="px-2 py-0.5 border border-orange-500/30 text-[9px] text-orange-400 uppercase">{a.status}</div>
-                                                    {a.interviewDetails?.scheduledAt && (<div className="text-[10px] text-gray-400 font-mono">{new Date(a.interviewDetails.scheduledAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</div>)}
+                                                    {a.interviewDetails?.scheduledAt && (<div className="text-[10px] text-gray-400 font-sans">{new Date(a.interviewDetails.scheduledAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</div>)}
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
                                 );
-                            })() : <div className="text-xs text-gray-600 font-mono italic">NO ACTIVE INTERVIEWS</div>}
+                            })() : <div className="text-xs text-gray-600 font-sans italic">NO ACTIVE INTERVIEWS</div>}
                         </div>
 
                         {/* Org Applicants */}
@@ -1473,17 +1473,17 @@ function AdminDashboardContent() {
                                         <div
                                             key={a._id}
                                             onClick={() => { setOrgInspectorMember(a); router.replace(`${window.location.pathname}?orgCode=${selectedItem?.code}&memberEmail=${encodeURIComponent(a.email)}`); }}
-                                            className="p-3 bg-white/5 border border-white/10 flex justify-between items-center group cursor-pointer hover:border-cyan-500/50 transition-colors"
+                                            className="p-3 bg-white/20 border border-white/10 flex justify-between items-center group cursor-pointer hover:border-cyan-500/50 transition-colors"
                                         >
                                             <div className="flex-1">
                                                 <div className="text-sm font-bold text-white group-hover:text-cyan-400">{a.firstName} {a.lastName}</div>
-                                                <div className="text-[10px] text-gray-500 font-mono">{a.email}</div>
+                                                <div className="text-[10px] text-gray-500 font-sans">{a.email}</div>
                                             </div>
                                             <div className="flex items-center gap-3">
                                                 <div className={`px-2 py-0.5 border text-[9px] uppercase ${a.status === 'ACCEPTED' ? 'text-green-500 border-green-500/30' : 'text-yellow-500 border-yellow-500/30'}`}>{a.status}</div>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); window.open(`/applications?type=apps&email=${a.email}`, '_blank'); }}
-                                                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10"
+                                                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/20"
                                                 >
                                                     <ExternalLink className="w-3 h-3 text-cyan-400" />
                                                 </button>
@@ -1491,7 +1491,7 @@ function AdminDashboardContent() {
                                         </div>
                                     ))}
                                 </div>
-                            ) : <div className="text-xs text-gray-600 font-mono italic">NO INCOMING SIGNALS</div>}
+                            ) : <div className="text-xs text-gray-600 font-sans italic">NO INCOMING SIGNALS</div>}
                         </div>
 
                         {/* Waiting Applicants */}
@@ -1503,17 +1503,17 @@ function AdminDashboardContent() {
                                         <div
                                             key={a._id}
                                             onClick={() => { setOrgInspectorMember(a); router.replace(`${window.location.pathname}?orgCode=${selectedItem?.code}&memberEmail=${encodeURIComponent(a.email)}`); }}
-                                            className="p-3 bg-white/5 border border-white/10 flex justify-between items-center group cursor-pointer hover:border-yellow-500/50 transition-colors"
+                                            className="p-3 bg-white/20 border border-white/10 flex justify-between items-center group cursor-pointer hover:border-yellow-500/50 transition-colors"
                                         >
                                             <div className="flex-1">
                                                 <div className="text-sm font-bold text-white group-hover:text-yellow-400">{a.firstName} {a.lastName}</div>
-                                                <div className="text-[10px] text-gray-500 font-mono">{a.email}</div>
+                                                <div className="text-[10px] text-gray-500 font-sans">{a.email}</div>
                                             </div>
                                             <div className="flex items-center gap-3">
                                                 <div className="px-2 py-0.5 border text-[9px] text-yellow-400 border-yellow-500/30 uppercase">{a.status}</div>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); window.open(`/applications?type=apps&email=${a.email}`, '_blank'); }}
-                                                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10"
+                                                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/20"
                                                 >
                                                     <ExternalLink className="w-3 h-3 text-yellow-400" />
                                                 </button>
@@ -1521,7 +1521,7 @@ function AdminDashboardContent() {
                                         </div>
                                     ))}
                                 </div>
-                            ) : <div className="text-xs text-gray-600 font-mono italic">NO WAITING APPLICANTS</div>}
+                            ) : <div className="text-xs text-gray-600 font-sans italic">NO WAITING APPLICANTS</div>}
                         </div>
 
                         {/* Rejected Applicants */}
@@ -1533,11 +1533,11 @@ function AdminDashboardContent() {
                                         <div
                                             key={a._id}
                                             onClick={() => { setOrgInspectorMember(a); router.replace(`${window.location.pathname}?orgCode=${selectedItem?.code}&memberEmail=${encodeURIComponent(a.email)}`); }}
-                                            className="p-3 bg-white/5 border border-white/10 flex justify-between items-center group cursor-pointer hover:border-red-500/50 transition-colors"
+                                            className="p-3 bg-white/20 border border-white/10 flex justify-between items-center group cursor-pointer hover:border-red-500/50 transition-colors"
                                         >
                                             <div className="flex-1">
                                                 <div className="text-sm font-bold text-white group-hover:text-red-400">{a.firstName} {a.lastName}</div>
-                                                <div className="text-[10px] text-gray-500 font-mono">{a.email}</div>
+                                                <div className="text-[10px] text-gray-500 font-sans">{a.email}</div>
                                             </div>
                                             <div className="flex items-center gap-3">
                                                 <div className="px-2 py-0.5 border text-[9px] text-red-400 border-red-500/30 uppercase">{a.status}</div>
@@ -1546,7 +1546,7 @@ function AdminDashboardContent() {
                                                 )}
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); window.open(`/applications?type=apps&email=${a.email}`, '_blank'); }}
-                                                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10"
+                                                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/20"
                                                 >
                                                     <ExternalLink className="w-3 h-3 text-red-400" />
                                                 </button>
@@ -1554,7 +1554,7 @@ function AdminDashboardContent() {
                                         </div>
                                     ))}
                                 </div>
-                            ) : <div className="text-xs text-gray-600 font-mono italic">NO REJECTED APPLICANTS</div>}
+                            ) : <div className="text-xs text-gray-600 font-sans italic">NO REJECTED APPLICANTS</div>}
                         </div>
                     </div>
                 </div>
@@ -1562,19 +1562,19 @@ function AdminDashboardContent() {
                 <div className="pt-8 border-t border-white/10">
                     <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4">Fellowship_Config</h3>
                     <div className="grid grid-cols-2 gap-4">
-                        <div className="p-4 bg-white/5 border border-white/10">
+                        <div className="p-4 bg-white/20 border border-white/10">
                             <span className="text-[10px] text-gray-500 uppercase block mb-1">Termination_Date</span>
-                            <span className="text-sm font-mono text-white">{selectedItem.endDate ? new Date(selectedItem.endDate).toLocaleDateString('en-GB') : 'INDEFINITE'}</span>
+                            <span className="text-sm font-sans text-white">{selectedItem.endDate ? new Date(selectedItem.endDate).toLocaleDateString('en-GB') : 'INDEFINITE'}</span>
 
                             <div className="mt-3">
                                 <span className="text-[10px] text-gray-500 uppercase block mb-1">Tenure End Date</span>
-                                <span className="text-sm font-mono text-gray-400">{selectedItem.defaultTenureEndDate ? new Date(selectedItem.defaultTenureEndDate).toLocaleDateString('en-GB') : 'N/A'}</span>
+                                <span className="text-sm font-sans text-gray-400">{selectedItem.defaultTenureEndDate ? new Date(selectedItem.defaultTenureEndDate).toLocaleDateString('en-GB') : 'N/A'}</span>
                             </div>
                         </div>
-                        <div className="p-4 bg-white/5 border border-white/10">
+                        <div className="p-4 bg-white/20 border border-white/10">
                             <span className="text-[10px] text-gray-500 uppercase block mb-1">Allowed_Domains</span>
                             <div className="flex flex-wrap gap-1">
-                                {selectedItem.emailDomainWhitelist.map(d => <span key={d} className="text-[9px] px-1 bg-white/10 rounded">{d}</span>)}
+                                {selectedItem.emailDomainWhitelist.map(d => <span key={d} className="text-[9px] px-1 bg-white/20 rounded">{d}</span>)}
                             </div>
                         </div>
                     </div>
@@ -1584,12 +1584,12 @@ function AdminDashboardContent() {
     };
 
     return (
-        <div className="h-screen overflow-auto bg-black text-white flex flex-col font-mono selection:bg-cyan-500/50 selection:text-black">
+        <div className="h-screen overflow-auto bg-slate-950 text-white flex flex-col font-sans selection:bg-cyan-500/50 selection:text-black">
             <Navbar />
 
             <div className="flex-1 flex flex-col md:flex-row overflow-auto min-h-screen">
                 {/* Cyber Sidebar */}
-                <div className="w-full md:w-16 h-full bg-black border-r border-white/10 flex md:flex-col flex-row items-center md:py-6 py-2 gap-2 md:gap-6 shrink-0 relative z-30">
+                <div className="w-full md:w-16 h-full bg-slate-950 border-r border-white/10 flex md:flex-col flex-row items-center md:py-6 py-2 gap-2 md:gap-6 shrink-0 relative z-30">
                     <div className="w-10 h-10 md:w-12 md:h-12 border border-cyan-500 flex items-center justify-center text-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
                         <Terminal className="w-6 h-6" />
                     </div>
@@ -1604,10 +1604,10 @@ function AdminDashboardContent() {
                             <button
                                 key={t.id}
                                 onClick={() => { setActiveTab(t.id); setSelectedItem(null); }}
-                                className={`w-10 h-10 md:w-12 md:h-12 flex items-center justify-center transition-all relative group border ${activeTab === t.id ? 'bg-white/10 border-white text-white' : 'border-transparent text-gray-600 hover:text-cyan-400 hover:border-cyan-900/50'}`}
+                                className={`w-10 h-10 md:w-12 md:h-12 flex items-center justify-center transition-all relative group border ${activeTab === t.id ? 'bg-white/20 border-white text-white' : 'border-transparent text-gray-600 hover:text-cyan-400 hover:border-cyan-900/50'}`}
                             >
                                 {t.icon}
-                                <span className="hidden md:block absolute left-full ml-4 bg-black border border-white/20 px-3 py-1.5 text-xs text-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-xl">
+                                <span className="hidden md:block absolute left-full ml-4 bg-slate-950 border border-white/20 px-3 py-1.5 text-xs text-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-xl">
                                     {t.label}
                                 </span>
                             </button>
@@ -1622,12 +1622,12 @@ function AdminDashboardContent() {
                 </div>
 
                 {/* Main Viewport */}
-                <main className="flex-1 flex flex-col min-w-0 min-h-0 bg-black relative">
+                <main className="flex-1 flex flex-col min-w-0 min-h-0 bg-slate-950 relative">
                     {/* Grid Background */}
                     <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none opacity-20" />
 
                     {/* Header */}
-                    <header className="h-16 md:h-20 border-b border-white/10 flex flex-col md:flex-row items-center justify-between px-2 md:px-8 bg-black z-20 gap-2 md:gap-0">
+                    <header className="h-16 md:h-20 border-b border-white/10 flex flex-col md:flex-row items-center justify-between px-2 md:px-8 bg-slate-950 z-20 gap-2 md:gap-0">
                         <div className="flex items-center gap-4 md:gap-6 w-full md:w-auto">
                             <h2 className="text-lg md:text-2xl font-bold tracking-tighter text-white uppercase flex items-center gap-2">
                                 <span className="text-cyan-500">/</span> {activeTab}_CONSOLE
@@ -1642,7 +1642,7 @@ function AdminDashboardContent() {
                                     placeholder="SEARCH_QUERY..."
                                     value={searchTerm}
                                     onChange={e => setSearchTerm(e.target.value)}
-                                    className="w-full h-10 bg-black border border-white/20 pl-9 md:pl-11 pr-4 text-sm focus:border-cyan-500 focus:outline-none transition-all placeholder:text-gray-700 font-mono text-cyan-100 uppercase"
+                                    className="w-full h-10 bg-slate-950 border border-white/20 pl-9 md:pl-11 pr-4 text-sm focus:border-cyan-500 focus:outline-none transition-all placeholder:text-gray-700 font-sans text-cyan-100 uppercase"
                                 />
                             </div>
 
@@ -1651,7 +1651,7 @@ function AdminDashboardContent() {
                                 <select
                                     value={orgFilter}
                                     onChange={e => setOrgFilter(e.target.value)}
-                                    className="ml-2 bg-black border border-white/20 h-10 text-xs font-mono text-cyan-100 focus:border-cyan-500 outline-none px-2"
+                                    className="ml-2 bg-slate-950 border border-white/20 h-10 text-xs font-sans text-cyan-100 focus:border-cyan-500 outline-none px-2"
                                 >
                                     <option value="">ALL_ORGS</option>
                                     {orgs.map(o => (
@@ -1698,7 +1698,7 @@ function AdminDashboardContent() {
 
                     {/* Sub-tabs for Applications */}
                     {activeTab === 'applications' && (
-                        <div className="flex bg-black border-b border-white/10 px-2 md:px-8 h-10 md:h-12 items-center gap-4 md:gap-8 relative z-20 overflow-x-auto">
+                        <div className="flex bg-slate-950 border-b border-white/10 px-2 md:px-8 h-10 md:h-12 items-center gap-4 md:gap-8 relative z-20 overflow-x-auto">
                             {['PENDING', 'INTERVIEW', 'ACCEPTED', 'REJECTED', 'WAITING', 'ALL'].map(st => (
                                 <button
                                     key={st}
@@ -1708,7 +1708,7 @@ function AdminDashboardContent() {
                                     {st}
                                     {statusCounts[st] > 0 && (
                                         <span
-                                            className="ml-2 inline-flex items-center justify-center text-[8px] font-bold font-mono text-cyan-400"
+                                            className="ml-2 inline-flex items-center justify-center text-[8px] font-bold font-sans text-cyan-400"
                                             style={{
                                                 border: '1px solid #06b6d4',
                                                 padding: '0.15rem 0.35rem',
@@ -1727,7 +1727,7 @@ function AdminDashboardContent() {
                     )}
 
                     {activeTab === 'orgs' && (
-                        <div className="flex bg-black border-b border-white/10 px-2 md:px-8 h-10 md:h-12 items-center gap-4 md:gap-8 relative z-20 overflow-x-auto">
+                        <div className="flex bg-slate-950 border-b border-white/10 px-2 md:px-8 h-10 md:h-12 items-center gap-4 md:gap-8 relative z-20 overflow-x-auto">
                             {['ACTIVE', 'ARCHIVED'].map(st => (
                                 <button
                                     key={st}
@@ -1742,7 +1742,7 @@ function AdminDashboardContent() {
                     )}
 
                     {activeTab === 'projects' && (
-                        <div className="flex bg-black border-b border-white/10 px-2 md:px-8 h-10 md:h-12 items-center gap-4 md:gap-8 relative z-20 overflow-x-auto">
+                        <div className="flex bg-slate-950 border-b border-white/10 px-2 md:px-8 h-10 md:h-12 items-center gap-4 md:gap-8 relative z-20 overflow-x-auto">
                             {['ONGOING', 'ONHOLD', 'COMPLETED', 'ALL'].map(st => (
                                 <button
                                     key={st}
@@ -1761,7 +1761,7 @@ function AdminDashboardContent() {
                         {loading ? (
                             <div className="h-full flex flex-col items-center justify-center opacity-50 space-y-6">
                                 <div className="w-16 h-16 border-2 border-cyan-500 border-t-white animate-spin rounded-full" />
-                                <p className="text-sm font-mono text-cyan-500 animate-pulse uppercase tracking-widest">ESTABLISHING_UPLINK...</p>
+                                <p className="text-sm font-sans text-cyan-500 animate-pulse uppercase tracking-widest">ESTABLISHING_UPLINK...</p>
                             </div>
                         ) : (
                             <div className="grid grid-cols-1">
@@ -1778,9 +1778,9 @@ function AdminDashboardContent() {
                                         return (
                                             <>
                                                 {upcoming.map((app, i) => { counter++; const orgName = getOrgName(app.orgCode); return (
-                                                    <div key={app._id} onClick={() => setSelectedItem(app)} className={`group px-8 py-5 border-b border-white/10 hover:bg-white/5 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === app._id ? 'bg-cyan-900/10 border-l-[6px] border-l-cyan-500' : 'border-l-[6px] border-l-transparent'}`}>
+                                                    <div key={app._id} onClick={() => setSelectedItem(app)} className={`group px-8 py-5 border-b border-white/10 hover:bg-white/20 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === app._id ? 'bg-cyan-900/10 border-l-[6px] border-l-cyan-500' : 'border-l-[6px] border-l-transparent'}`}>
                                                         <div className="flex items-center gap-8">
-                                                            <span className="text-sm font-mono text-gray-600 w-10">{String(counter).padStart(2, '0')}</span>
+                                                            <span className="text-sm font-sans text-gray-600 w-10">{String(counter).padStart(2, '0')}</span>
                                                             <div>
                                                                 <h3 className="font-bold text-xl text-white group-hover:text-cyan-400 transition-colors uppercase tracking-widest mb-1.5">
                                                                     {app.firstName} {app.lastName}{orgName && (
@@ -1789,7 +1789,7 @@ function AdminDashboardContent() {
                                                                         </span>
                                                                     )}
                                                                 </h3>
-                                                                <div className="flex gap-6 text-xs font-mono text-gray-500 items-center flex-wrap">
+                                                                <div className="flex gap-6 text-xs font-sans text-gray-500 items-center flex-wrap">
                                                                     <span className="text-white/60">{app.email}</span>
                                                                     <span className="inline-flex gap-2 items-center">
                                                                         {(() => {
@@ -1809,7 +1809,7 @@ function AdminDashboardContent() {
                                                                             );
                                                                         })()}
                                                                     </span>
-                                                                    {app.processedBy && (<span className="text-gray-400 border border-white/10 px-2 py-0.5 text-[10px] bg-white/5">AUTH: {app.processedBy}</span>)}
+                                                                    {app.processedBy && (<span className="text-gray-400 border border-white/10 px-2 py-0.5 text-[10px] bg-white/20">AUTH: {app.processedBy}</span>)}
                                                                     {app.interviewDetails?.status === 'NO_SHOW' && (
                                                                         <span className="text-[9px] px-2 py-0.5 bg-red-900/10 border border-red-500/30 text-red-400 uppercase">NO-SHOW</span>
                                                                     )}
@@ -1822,12 +1822,12 @@ function AdminDashboardContent() {
                                                 ); })}
 
                                                 {unscheduled.length > 0 && (
-                                                    <div className="px-8 py-3 text-xs font-mono text-gray-500">Unscheduled / Pending interviews</div>
+                                                    <div className="px-8 py-3 text-xs font-sans text-gray-500">Unscheduled / Pending interviews</div>
                                                 )}
                                                 {unscheduled.map((app) => { counter++; const orgName = getOrgName(app.orgCode); return (
-                                                    <div key={app._id} onClick={() => setSelectedItem(app)} className={`group px-8 py-5 border-b border-white/10 hover:bg-white/5 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === app._id ? 'bg-cyan-900/10 border-l-[6px] border-l-cyan-500' : 'border-l-[6px] border-l-transparent'}`}>
+                                                    <div key={app._id} onClick={() => setSelectedItem(app)} className={`group px-8 py-5 border-b border-white/10 hover:bg-white/20 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === app._id ? 'bg-cyan-900/10 border-l-[6px] border-l-cyan-500' : 'border-l-[6px] border-l-transparent'}`}>
                                                         <div className="flex items-center gap-8">
-                                                            <span className="text-sm font-mono text-gray-600 w-10">{String(counter).padStart(2, '0')}</span>
+                                                            <span className="text-sm font-sans text-gray-600 w-10">{String(counter).padStart(2, '0')}</span>
                                                             <div>
                                                                 <h3 className="font-bold text-xl text-white group-hover:text-cyan-400 transition-colors uppercase tracking-widest mb-1.5">
                                                                     {app.firstName} {app.lastName}{orgName && (
@@ -1836,7 +1836,7 @@ function AdminDashboardContent() {
                                                                         </span>
                                                                     )}
                                                                 </h3>
-                                                                <div className="flex gap-6 text-xs font-mono text-gray-500 items-center flex-wrap">
+                                                                <div className="flex gap-6 text-xs font-sans text-gray-500 items-center flex-wrap">
                                                                     <span className="text-white/60">{app.email}</span>
                                                                     {app.interviewDetails?.status === 'NO_SHOW' && (
                                                                         <span className="text-[9px] px-2 py-0.5 bg-red-900/10 border border-red-500/30 text-red-400 uppercase">NO-SHOW</span>
@@ -1856,9 +1856,9 @@ function AdminDashboardContent() {
                                                 {past.length > 0 && <div className="border-t border-white/10 my-4" />}
 
                                                 {past.map((app, i) => { counter++; const orgName = getOrgName(app.orgCode); return (
-                                                    <div key={app._id} onClick={() => setSelectedItem(app)} className={`group px-8 py-5 border-b border-white/10 hover:bg-white/5 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === app._id ? 'bg-cyan-900/10 border-l-[6px] border-l-cyan-500' : 'border-l-[6px] border-l-transparent'}`}>
+                                                    <div key={app._id} onClick={() => setSelectedItem(app)} className={`group px-8 py-5 border-b border-white/10 hover:bg-white/20 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === app._id ? 'bg-cyan-900/10 border-l-[6px] border-l-cyan-500' : 'border-l-[6px] border-l-transparent'}`}>
                                                         <div className="flex items-center gap-8">
-                                                            <span className="text-sm font-mono text-gray-600 w-10">{String(counter).padStart(2, '0')}</span>
+                                                            <span className="text-sm font-sans text-gray-600 w-10">{String(counter).padStart(2, '0')}</span>
                                                             <div>
                                                                 <h3 className="font-bold text-xl text-white group-hover:text-cyan-400 transition-colors uppercase tracking-widest mb-1.5">
                                                                     {app.firstName} {app.lastName}{orgName && (
@@ -1867,7 +1867,7 @@ function AdminDashboardContent() {
                                                                         </span>
                                                                     )}
                                                                 </h3>
-                                                                <div className="flex gap-6 text-xs font-mono text-gray-500 items-center flex-wrap">
+                                                                <div className="flex gap-6 text-xs font-sans text-gray-500 items-center flex-wrap">
                                                                     <span className="text-white/60">{app.email}</span>
                                                                     {app.interviewDetails?.status === 'NO_SHOW' && (
                                                                         <span className="text-[9px] px-2 py-0.5 bg-red-900/10 border border-red-500/30 text-red-400 uppercase">NO-SHOW</span>
@@ -1893,10 +1893,10 @@ function AdminDashboardContent() {
                                                 <div
                                                     key={app._id}
                                                     onClick={() => setSelectedItem(app)}
-                                                    className={`group px-8 py-5 border-b border-white/10 hover:bg-white/5 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === app._id ? 'bg-cyan-900/10 border-l-[6px] border-l-cyan-500' : 'border-l-[6px] border-l-transparent'}`}
+                                                    className={`group px-8 py-5 border-b border-white/10 hover:bg-white/20 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === app._id ? 'bg-cyan-900/10 border-l-[6px] border-l-cyan-500' : 'border-l-[6px] border-l-transparent'}`}
                                                 >
                                                     <div className="flex items-center gap-8">
-                                                        <span className="text-sm font-mono text-gray-600 w-10">{String(idx + 1).padStart(2, '0')}</span>
+                                                        <span className="text-sm font-sans text-gray-600 w-10">{String(idx + 1).padStart(2, '0')}</span>
                                                         <div>
                                                             <h3 className="font-bold text-xl text-white group-hover:text-cyan-400 transition-colors uppercase tracking-widest mb-1.5">
                                                                 {app.firstName} {app.lastName}{orgName && (
@@ -1905,7 +1905,7 @@ function AdminDashboardContent() {
                                                                     </span>
                                                                 )}
                                                             </h3>
-                                                            <div className="flex gap-6 text-xs font-mono text-gray-500 items-center flex-wrap">
+                                                            <div className="flex gap-6 text-xs font-sans text-gray-500 items-center flex-wrap">
                                                                 <span className="text-white/60">{app.email}</span>
                                                                 {(() => {
                                                                     const displayRoles = (app.preferredRoles && app.preferredRoles.length)
@@ -1924,7 +1924,7 @@ function AdminDashboardContent() {
                                                                     );
                                                                 })()}
                                                                 {app.processedBy && (
-                                                                    <span className="text-gray-400 border border-white/10 px-2 py-0.5 text-[10px] bg-white/5">AUTH: {app.processedBy}</span>
+                                                                    <span className="text-gray-400 border border-white/10 px-2 py-0.5 text-[10px] bg-white/20">AUTH: {app.processedBy}</span>
                                                                 )}
                                                                 {app.interviewDetails?.status === 'NO_SHOW' && (
                                                                     <span className="text-[9px] px-2 py-0.5 bg-red-900/10 border border-red-500/30 text-red-400 uppercase">NO-SHOW</span>
@@ -1952,14 +1952,14 @@ function AdminDashboardContent() {
                                     <div
                                         key={fellow._id}
                                         onClick={() => setSelectedItem(fellow)}
-                                        className={`group px-8 py-5 border-b border-white/10 hover:bg-white/5 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === fellow._id ? 'bg-purple-900/10 border-l-[6px] border-l-purple-500' : 'border-l-[6px] border-l-transparent'}`}
+                                        className={`group px-8 py-5 border-b border-white/10 hover:bg-white/20 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === fellow._id ? 'bg-purple-900/10 border-l-[6px] border-l-purple-500' : 'border-l-[6px] border-l-transparent'}`}
                                     >
                                         <div className="flex items-center gap-8">
-                                            <span className="text-sm font-mono text-gray-600 w-10">{String(idx + 1).padStart(2, '0')}</span>
+                                            <span className="text-sm font-sans text-gray-600 w-10">{String(idx + 1).padStart(2, '0')}</span>
                                             <div>
                                                 <h3 className="font-bold text-xl text-white group-hover:text-purple-400 transition-colors uppercase tracking-widest mb-1.5">{fellow.firstName} {fellow.lastName}</h3>
-                                                <div className="flex gap-6 text-xs font-mono text-gray-500 items-center">
-                                                    <span className="bg-white/10 px-2 py-0.5 text-white">{fellow.globalPid || 'NO_ID'}</span>
+                                                <div className="flex gap-6 text-xs font-sans text-gray-500 items-center">
+                                                    <span className="bg-white/20 px-2 py-0.5 text-white">{fellow.globalPid || 'NO_ID'}</span>
                                                     <span className="text-purple-400/80 uppercase">
                                                         {(() => {
                                                             const r = fellow.tenures[fellow.tenures.length - 1]?.role;
@@ -1994,13 +1994,13 @@ function AdminDashboardContent() {
                                     <div
                                         key={org._id}
                                         onClick={() => { setSelectedItem(org); setOrgInspectorMember(null); router.replace(`${window.location.pathname}?orgCode=${org.code}`); }}
-                                        className={`group px-8 py-6 border-b border-white/10 hover:bg-white/5 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === org._id ? 'bg-green-900/10 border-l-[6px] border-l-green-500' : 'border-l-[6px] border-l-transparent'}`} 
+                                        className={`group px-8 py-6 border-b border-white/10 hover:bg-white/20 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === org._id ? 'bg-green-900/10 border-l-[6px] border-l-green-500' : 'border-l-[6px] border-l-transparent'}`} 
                                     >
                                         <div className="flex items-center gap-8">
-                                            <span className="text-sm font-mono text-gray-600 w-10">{String(idx + 1).padStart(2, '0')}</span>
+                                            <span className="text-sm font-sans text-gray-600 w-10">{String(idx + 1).padStart(2, '0')}</span>
                                             <div>
                                                 <h3 className="font-bold text-2xl text-white group-hover:text-green-400 transition-colors uppercase tracking-tighter mb-2">{org.name}</h3>
-                                                <div className="flex gap-4 text-xs font-mono text-gray-500 items-center">
+                                                <div className="flex gap-4 text-xs font-sans text-gray-500 items-center">
                                                     <span className="text-green-500 border border-green-500/20 bg-green-500/5 px-2 py-0.5 rounded-none">{org.code}</span>
                                                     <span className="text-xs">{org.emailDomainWhitelist.length} DOMAINS</span>
                                                     <span className="text-xs">{(org.availableRoles || org.formVar1 || []).length} ROLES</span>
@@ -2073,13 +2073,13 @@ function AdminDashboardContent() {
                                     <div
                                         key={project._id}
                                         onClick={() => setSelectedItem(project)}
-                                        className={`group px-8 py-6 border-b border-white/10 hover:bg-white/5 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === project._id ? 'bg-orange-900/10 border-l-[6px] border-l-orange-500' : 'border-l-[6px] border-l-transparent'}`}
+                                        className={`group px-8 py-6 border-b border-white/10 hover:bg-white/20 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === project._id ? 'bg-orange-900/10 border-l-[6px] border-l-orange-500' : 'border-l-[6px] border-l-transparent'}`}
                                     >
                                         <div className="flex items-center gap-8">
-                                            <span className="text-sm font-mono text-gray-600 w-10">{String(idx + 1).padStart(2, '0')}</span>
+                                            <span className="text-sm font-sans text-gray-600 w-10">{String(idx + 1).padStart(2, '0')}</span>
                                             <div>
                                                 <h3 className="font-bold text-2xl text-white group-hover:text-orange-400 transition-colors uppercase tracking-tighter mb-2">{project.title}</h3>
-                                                <div className="flex gap-4 text-xs font-mono text-gray-500 items-center">
+                                                <div className="flex gap-4 text-xs font-sans text-gray-500 items-center">
                                                     <span className="text-orange-500 border border-orange-500/20 bg-orange-500/5 px-2 py-0.5 rounded-none flex items-center gap-1">
                                                         <Users className="w-3 h-3" /> {project.contributors?.length || 0}
                                                     </span>
@@ -2122,10 +2122,10 @@ function AdminDashboardContent() {
                             animate={{ x: 0 }}
                             exit={{ x: '100%' }}
                             transition={{ type: 'tween', ease: 'circOut', duration: 0.3 }}
-                            className="w-[600px] bg-black border-l border-white/10 z-40 flex flex-col shrink-0 h-full min-h-0 shadow-[-50px_0_100px_rgba(0,0,0,0.8)]"
+                            className="w-[600px] bg-slate-950 border-l border-white/10 z-40 flex flex-col shrink-0 h-full min-h-0 shadow-[-50px_0_100px_rgba(0,0,0,0.8)]"
                         >
-                            <div className="h-20 flex items-center justify-between px-10 border-b border-white/10 bg-black/50 backdrop-blur-md">
-                                <h3 className="font-mono text-sm text-white uppercase tracking-[0.2em] flex items-center gap-3">
+                            <div className="h-20 flex items-center justify-between px-10 border-b border-white/10 bg-slate-950/50 backdrop-blur-md">
+                                <h3 className="font-sans text-sm text-white uppercase tracking-[0.2em] flex items-center gap-3">
                                     <div className={`w-2 h-2 ${activeTab === 'fellows' ? 'bg-purple-500' : activeTab === 'orgs' ? 'bg-green-500' : activeTab === 'projects' ? 'bg-orange-500' : 'bg-cyan-500'} animate-pulse`} />
                                     DATA_INSPECTOR
                                 </h3>
@@ -2180,7 +2180,7 @@ function AdminDashboardContent() {
                                                 
                                                 <div className="space-y-4">
                                                         <div className="space-y-2">
-                                                        <div className="text-[10px] text-gray-500 uppercase font-mono tracking-widest">Contributors ({selectedItem.contributors?.length || 0})</div>
+                                                        <div className="text-[10px] text-gray-500 uppercase font-sans tracking-widest">Contributors ({selectedItem.contributors?.length || 0})</div>
                                                         <div className="flex flex-wrap gap-2">
                                                             {(selectedItem.contributors || []).map((contributor, idx) => (
                                                                 <span key={idx} className="px-3 py-1.5 bg-orange-900/20 border border-orange-500/30 text-orange-400 text-[10px] font-bold uppercase tracking-wider flex items-center gap-2">
@@ -2195,7 +2195,7 @@ function AdminDashboardContent() {
                                                     </div>
 
                                                     <div className="space-y-2">
-                                                        <div className="text-[10px] text-gray-500 uppercase font-mono tracking-widest">Links ({selectedItem.supportedLinks?.length || 0})</div>
+                                                        <div className="text-[10px] text-gray-500 uppercase font-sans tracking-widest">Links ({selectedItem.supportedLinks?.length || 0})</div>
                                                         <div className="space-y-2">
                                                             {(selectedItem.supportedLinks || []).map((link, idx) => (
                                                                 <a
@@ -2204,9 +2204,9 @@ function AdminDashboardContent() {
                                                                     title={link.url}
                                                                     target="_blank"
                                                                     rel="noopener noreferrer"
-                                                                    className="flex items-center justify-between p-3 bg-black/40 border border-white/5 hover:border-orange-500/30 transition-all group"
+                                                                    className="flex items-center justify-between p-3 bg-slate-900/60 border border-white/5 hover:border-orange-500/30 transition-all group"
                                                                 >
-                                                                    <span className="text-sm font-mono text-gray-300 uppercase">{link.linkName || 'LINK'}</span>
+                                                                    <span className="text-sm font-sans text-gray-300 uppercase">{link.linkName || 'LINK'}</span>
                                                                     <div className="flex items-center gap-2">
                                                                         {((link.url || '').toLowerCase().includes('github.com')) ? (
                                                                             <Github className="w-4 h-4 text-orange-500" />
@@ -2228,12 +2228,12 @@ function AdminDashboardContent() {
                                 ) : (
                                     <>
                                         <div className="flex items-start gap-8 border-b border-white/10 pb-4">
-                                            <div className={`w-24 h-24 border border-white/20 flex items-center justify-center text-4xl font-bold bg-white/5 ${activeTab === 'fellows' ? 'text-purple-500' : 'text-cyan-500'}`}>
+                                            <div className={`w-24 h-24 border border-white/20 flex items-center justify-center text-4xl font-bold bg-white/20 ${activeTab === 'fellows' ? 'text-purple-500' : 'text-cyan-500'}`}>
                                                 {selectedItem.firstName[0]}
                                             </div>
                                             <div className="flex-1 space-y-3">
                                                 <h2 className="text-3xl font-bold uppercase tracking-tight text-white">{selectedItem.firstName} {selectedItem.lastName}</h2>
-                                                <div className="text-xs font-mono text-gray-500 grid grid-cols-2 gap-3">
+                                                <div className="text-xs font-sans text-gray-500 grid grid-cols-2 gap-3">
                                                     <span className="block p-2 border border-white/10">ID: {selectedItem.globalPid || 'NULL'}</span>
                                                     <span className="block p-2 border border-white/10">ORG: {selectedItem.orgCode}</span>
                                                     <span className="block p-2 border border-white/10 col-span-2 flex items-center justify-between">
@@ -2246,7 +2246,7 @@ function AdminDashboardContent() {
                                                                 toast.error("Copy failed");
                                                             });
                                                         }}
-                                                        className="ml-2 p-1 hover:bg-white/10 rounded"
+                                                        className="ml-2 p-1 hover:bg-white/20 rounded"
                                                         title="Copy email"
                                                     >
                                                         <ClipboardCopy className="w-4 h-4 text-gray-400 hover:text-cyan-400" />
@@ -2261,17 +2261,17 @@ function AdminDashboardContent() {
                                             <div className="grid grid-cols-2 gap-6">
                                                 <button
                                                     onClick={() => selectedItem.socials?.github ? window.open(ensureExternalLink(selectedItem.socials.github), '_blank') : toast.info("No GitHub link")}
-                                                    className={`p-6 border border-white/10 hover:border-white hover:bg-white/5 transition-all flex flex-col items-center gap-3 ${!selectedItem.socials?.github && 'opacity-40 grayscale'}`}
+                                                    className={`p-6 border border-white/10 hover:border-white hover:bg-white/20 transition-all flex flex-col items-center gap-3 ${!selectedItem.socials?.github && 'opacity-40 grayscale'}`}
                                                 >
                                                     <Github className="w-6 h-6 text-gray-400" />
-                                                    <span className="text-xs font-mono uppercase tracking-widest text-gray-500">GitHub_Uplink</span>
+                                                    <span className="text-xs font-sans uppercase tracking-widest text-gray-500">GitHub_Uplink</span>
                                                 </button>
                                                 <button
                                                     onClick={() => selectedItem.socials?.linkedin ? window.open(ensureExternalLink(selectedItem.socials.linkedin), '_blank') : toast.info("No LinkedIn link")}
-                                                    className={`p-6 border border-white/10 hover:border-white hover:bg-white/5 transition-all flex flex-col items-center gap-3 ${!selectedItem.socials?.linkedin && 'opacity-40 grayscale'}`}
+                                                    className={`p-6 border border-white/10 hover:border-white hover:bg-white/20 transition-all flex flex-col items-center gap-3 ${!selectedItem.socials?.linkedin && 'opacity-40 grayscale'}`}
                                                 >
                                                     <Linkedin className="w-6 h-6 text-gray-400" />
-                                                    <span className="text-xs font-mono uppercase tracking-widest text-gray-500">LinkedIn_Feed</span>
+                                                    <span className="text-xs font-sans uppercase tracking-widest text-gray-500">LinkedIn_Feed</span>
                                                 </button>
                                             </div>
                                         )}
@@ -2283,27 +2283,27 @@ function AdminDashboardContent() {
 
                                                     <div className="space-y-4">
                                                         <div className="space-y-2">
-                                                            <div className="text-[10px] text-gray-500 uppercase font-mono tracking-widest flex justify-between">
+                                                            <div className="text-[10px] text-gray-500 uppercase font-sans tracking-widest flex justify-between">
                                                                 <span>What Makes You Stand Apart?</span>
                                                                 <span className={( (selectedItem?.whyJoinDeepCytes ?? selectedItem?.data?.whyJoin ?? '').length < 100) ? "text-red-500" : "text-green-500"}>
                                                                     LEN_{(selectedItem?.whyJoinDeepCytes ?? selectedItem?.data?.whyJoin ?? '').length}
                                                                 </span>
                                                             </div>
-                                                            <div className="p-4 bg-black/40 border border-white/5 text-xs text-gray-400 font-mono leading-relaxed max-h-40 overflow-y-auto custom-scrollbar">
+                                                            <div className="p-4 bg-slate-900/60 border border-white/5 text-xs text-gray-400 font-sans leading-relaxed max-h-40 overflow-y-auto custom-scrollbar">
                                                                 {selectedItem.whyJoinDeepCytes || selectedItem.data?.whyJoin || "NO_DATA_FOUND"}
                                                             </div>
                                                         </div>
 
                                                         <div className="space-y-2">
-                                                            <div className="text-[10px] text-gray-500 uppercase font-mono tracking-widest">Any innovative ideas/projects you would like to pursue at DC?</div>
-                                                            <div className="p-4 bg-black/40 border border-white/5 text-xs text-gray-400 font-mono leading-relaxed max-h-40 overflow-y-auto custom-scrollbar">
+                                                            <div className="text-[10px] text-gray-500 uppercase font-sans tracking-widest">Any innovative ideas/projects you would like to pursue at DC?</div>
+                                                            <div className="p-4 bg-slate-900/60 border border-white/5 text-xs text-gray-400 font-sans leading-relaxed max-h-40 overflow-y-auto custom-scrollbar">
                                                                 {selectedItem.data?.ideas || "NO_PROPOSAL_SUBMITTED"}
                                                             </div>
                                                         </div>
 
                                                         <div className="space-y-2 grid grid-cols-2 gap-4">
                                                             <div>
-                                                                <div className="text-[10px] text-gray-500 uppercase font-mono tracking-widest">Preferred_Specializations</div>
+                                                                <div className="text-[10px] text-gray-500 uppercase font-sans tracking-widest">Preferred_Specializations</div>
                                                                     <div className="flex flex-wrap gap-2">
                                                                         {(selectedItem.preferredRoles || []).length > 0 ? (
                                                                             selectedItem.preferredRoles.map((role, idx) => (
@@ -2351,10 +2351,10 @@ function AdminDashboardContent() {
                                                                                     toast.error('Failed to open resume');
                                                                                 }
                                                                             }}
-                                                                            className="py-4 px-6 border border-white/10 hover:bg-white/5 transition-all inline-flex items-center justify-center gap-3 group rounded-lg"
+                                                                            className="py-4 px-6 border border-white/10 hover:bg-white/20 transition-all inline-flex items-center justify-center gap-3 group rounded-lg"
                                                                         >
                                                                             <FileText className="w-5 h-5" />
-                                                                            <span className="text-sm font-mono font-bold uppercase tracking-[0.08em]">Open uploaded CV</span>
+                                                                            <span className="text-sm font-sans font-bold uppercase tracking-[0.08em]">Open uploaded CV</span>
                                                                             <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                                                                         </button>
                                                                     )}
@@ -2363,10 +2363,10 @@ function AdminDashboardContent() {
                                                                         <button
                                                                             type="button"
                                                                             onClick={(e) => { e.stopPropagation(); window.open(ensureExternalLink(selectedItem.data.resumeLink), '_blank'); }}
-                                                                            className="w-full py-4 border border-white/10 hover:bg-white/5 transition-all flex items-center justify-center gap-3 group rounded-lg"
+                                                                            className="w-full py-4 border border-white/10 hover:bg-white/20 transition-all flex items-center justify-center gap-3 group rounded-lg"
                                                                         >
                                                                             <ExternalLink className="w-5 h-5" />
-                                                                            <span className="text-sm font-mono font-bold uppercase tracking-[0.08em]">Open resume link</span>
+                                                                            <span className="text-sm font-sans font-bold uppercase tracking-[0.08em]">Open resume link</span>
                                                                             <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                                                                         </button>
                                                                     )} */}
@@ -2376,7 +2376,7 @@ function AdminDashboardContent() {
                                                     </div>
 
                                                     {selectedItem.processedBy && (
-                                                        <div className="flex justify-between items-center text-[10px] text-gray-500 font-mono mt-2">
+                                                        <div className="flex justify-between items-center text-[10px] text-gray-500 font-sans mt-2">
                                                             <span className="uppercase">Authenticated_By:</span>
                                                             <span className="text-cyan-500">{selectedItem.processedBy}</span>
                                                         </div>
@@ -2384,7 +2384,7 @@ function AdminDashboardContent() {
 
                                                     {(selectedItem.status === 'PENDING' || selectedItem.status === 'INTERVIEW_SCHEDULED' || selectedItem.status === 'INTERVIEW_SKIPPED' || selectedItem.status === 'WAITING') && (
                                                         <div className="space-y-3">
-                                                            <label className="text-xs font-mono text-gray-500 uppercase tracking-wider">Interview Protocol</label>
+                                                            <label className="text-xs font-sans text-gray-500 uppercase tracking-wider">Interview Protocol</label>
 
                                                             {/* Show Schedule Button for PENDING */}
                                                             {selectedItem.status === 'PENDING' && (!selectedItem.interviewDetails || selectedItem.interviewDetails.status === 'PENDING') ? (
@@ -2407,20 +2407,20 @@ function AdminDashboardContent() {
                                                                     {/* Current Interview Details */}
                                                                     <div className="p-4 bg-orange-900/10 border border-orange-500/30 space-y-2">
                                                                         <div className="flex items-center justify-between">
-                                                                            <span className="text-[10px] font-mono text-orange-400 uppercase">Scheduled_Time:</span>
-                                                                            <span className="text-xs font-mono text-white">
+                                                                            <span className="text-[10px] font-sans text-orange-400 uppercase">Scheduled_Time:</span>
+                                                                            <span className="text-xs font-sans text-white">
                                                                                 {selectedItem.interviewDetails?.scheduledAt
                                                                                     ? new Date(selectedItem.interviewDetails.scheduledAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
                                                                                     : 'N/A'}
                                                                             </span>
                                                                         </div>
                                                                         <div className="flex items-center justify-between">
-                                                                            <span className="text-[10px] font-mono text-orange-400 uppercase">Meet_Link:</span>
+                                                                            <span className="text-[10px] font-sans text-orange-400 uppercase">Meet_Link:</span>
                                                                             <a
                                                                                 href={selectedItem.interviewDetails?.meetLink?.startsWith('http') ? selectedItem.interviewDetails.meetLink : `https://${selectedItem.interviewDetails?.meetLink}`}
                                                                                 target="_blank"
                                                                                 rel="noopener noreferrer"
-                                                                                className="text-xs font-mono text-cyan-400 hover:underline truncate max-w-[200px]"
+                                                                                className="text-xs font-sans text-cyan-400 hover:underline truncate max-w-[200px]"
                                                                             >
                                                                                 {selectedItem.interviewDetails?.meetLink || 'N/A'}
                                                                             </a>
@@ -2447,7 +2447,7 @@ function AdminDashboardContent() {
 
                                                                     {/* Role Assignment UI for INTERVIEW_SCHEDULED */}
                                                                     <div className="space-y-2 pt-3 border-t border-white/10">
-                                                                        <label className="text-xs font-mono text-gray-400 uppercase tracking-wider">Assign Role (Required for Accept)</label>
+                                                                        <label className="text-xs font-sans text-gray-400 uppercase tracking-wider">Assign Role (Required for Accept)</label>
                                                                         <select
                                                                             value={selectedItem.assignedRole || ''}
                                                                             onChange={(e) => {
@@ -2455,7 +2455,7 @@ function AdminDashboardContent() {
                                                                                 setSelectedItem(updatedItem);
                                                                                 toast.success(`Role "${e.target.value}" assigned`);
                                                                             }}
-                                                                            className="w-full bg-black border border-white/20 h-10 text-xs font-mono text-white px-2"
+                                                                            className="w-full bg-slate-950 border border-white/20 h-10 text-xs font-sans text-white px-2"
                                                                         >
                                                                             <option value="">SELECT_ROLE</option>
                                                                             {(() => {
@@ -2489,7 +2489,7 @@ function AdminDashboardContent() {
                                                                 </div>
                                                             ) : selectedItem.status === 'INTERVIEW_SKIPPED' && !(selectedItem.assignedRole && String(selectedItem.assignedRole).trim()) ? (
                                                                 <div className="space-y-2 pt-3 border-t border-white/10">
-                                                                    <label className="text-xs font-mono text-gray-400 uppercase tracking-wider">Assign Role (Required for Accept - Interview Skipped)</label>
+                                                                    <label className="text-xs font-sans text-gray-400 uppercase tracking-wider">Assign Role (Required for Accept - Interview Skipped)</label>
                                                                     <select
                                                                         value={selectedItem.assignedRole || ''}
                                                                         onChange={(e) => {
@@ -2497,7 +2497,7 @@ function AdminDashboardContent() {
                                                                             setSelectedItem(updatedItem);
                                                                             toast.success(`Role "${e.target.value}" assigned`);
                                                                         }}
-                                                                        className="w-full bg-black border border-white/20 h-10 text-xs font-mono text-white px-2"
+                                                                        className="w-full bg-slate-950 border border-white/20 h-10 text-xs font-sans text-white px-2"
                                                                     >
                                                                         <option value="">SELECT_ROLE</option>
                                                                         {(() => {
@@ -2527,12 +2527,12 @@ function AdminDashboardContent() {
                                                                             );
                                                                         })()}
                                                                     </select>
-                                                                    <div className="p-2 bg-yellow-900/10 border border-yellow-500/30 text-[10px] text-yellow-400 font-mono uppercase tracking-wider">
+                                                                    <div className="p-2 bg-yellow-900/10 border border-yellow-500/30 text-[10px] text-yellow-400 font-sans uppercase tracking-wider">
                                                                         ⚠️ Interview Skipped: Assign role to enable ACCEPT
                                                                     </div>
                                                                 </div>
                                                             ) : (
-                                                                <div className="p-3 bg-cyan-900/10 border border-cyan-500/30 text-xs font-mono text-cyan-400 flex items-center justify-between">
+                                                                <div className="p-3 bg-cyan-900/10 border border-cyan-500/30 text-xs font-sans text-cyan-400 flex items-center justify-between">
                                                                     <span>STATUS: {selectedItem.interviewDetails?.status || selectedItem.status}</span>
                                                                     {selectedItem.assignedRole && <span className="text-green-500 text-[10px] font-bold tracking-wider">✓ ROLE: {selectedItem.assignedRole}</span>}
                                                                 </div>
@@ -2540,20 +2540,20 @@ function AdminDashboardContent() {
 
                                                             {/* Schedule Modal */}
                                                             {showScheduleModal && (selectedItem.status === 'PENDING' || selectedItem.status === 'INTERVIEW_SCHEDULED') && (
-                                                                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="border border-cyan-500/30 bg-black p-4 space-y-4">
+                                                                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="border border-cyan-500/30 bg-slate-950 p-4 space-y-4">
                                                                     <h5 className="text-xs font-bold text-cyan-500 uppercase">Input_Coordinates</h5>
                                                                     <Input
                                                                         type="datetime-local"
                                                                         lang="en-GB"
                                                                         value={scheduleData.scheduledAt}
                                                                         onChange={e => setScheduleData({ ...scheduleData, scheduledAt: e.target.value })}
-                                                                        className="bg-black border-white/20 h-10 text-xs font-mono text-white white-icon"
+                                                                        className="bg-slate-950 border-white/20 h-10 text-xs font-sans text-white white-icon"
                                                                     />
                                                                     <Input
                                                                         placeholder="GMEET_UPLINK_URL"
                                                                         value={scheduleData.meetLink}
                                                                         onChange={e => setScheduleData({ ...scheduleData, meetLink: e.target.value })}
-                                                                        className="bg-black border-white/20 h-10 text-xs font-mono text-white"
+                                                                        className="bg-slate-950 border-white/20 h-10 text-xs font-sans text-white"
                                                                     />
                                                                     <div className="flex gap-2">
                                                                         <button onClick={() => setShowScheduleModal(false)} className="flex-1 py-2 border border-red-500/50 text-red-500 hover:bg-red-500/10 text-[10px] font-bold uppercase">ABORT</button>
@@ -2563,11 +2563,11 @@ function AdminDashboardContent() {
                                                             )}
 
                                                             {showAssignRoleModal && !showScheduleModal && (
-                                                                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="border border-yellow-500/30 bg-black p-4 space-y-4">
+                                                                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="border border-yellow-500/30 bg-slate-950 p-4 space-y-4">
                                                                     <h5 className="text-xs font-bold text-yellow-400 uppercase">Assign Role (required before Accept)</h5>
                                                                     <div className="text-xs text-gray-400">Choose one of: Applied role, Organization roles, or Global roles</div>
                                                                     <div>
-                                                                        <select value={skipAssignedRole} onChange={e => setSkipAssignedRole(e.target.value)} className="w-full bg-black border border-white/20 h-10 text-xs font-mono text-white px-2">
+                                                                        <select value={skipAssignedRole} onChange={e => setSkipAssignedRole(e.target.value)} className="w-full bg-slate-950 border border-white/20 h-10 text-xs font-sans text-white px-2">
                                                                             {(() => {
                                                                                 const t = skipModalTarget || {};
                                                                                 const defaultRole = t.role ? (typeof t.role === 'string' ? t.role : (t.role.name || '')) : (Array.isArray(t.preferredRoles) && t.preferredRoles.length ? (typeof t.preferredRoles[0] === 'string' ? t.preferredRoles[0] : (t.preferredRoles[0]?.name || '')) : '');
@@ -2598,14 +2598,14 @@ function AdminDashboardContent() {
                                                                 </motion.div>
                                                             )}
 
-                                                            <div className="h-px bg-white/10 my-4" />
+                                                            <div className="h-px bg-white/20 my-4" />
 
-                                                            {/* <label className="text-xs font-mono text-gray-500 uppercase tracking-wider">Tenure Termination Code</label>
+                                                            {/* <label className="text-xs font-sans text-gray-500 uppercase tracking-wider">Tenure Termination Code</label>
                                                             <Input
                                                                 placeholder="DDMMYYYY"
                                                                 value={tenureEndDate}
                                                                 onChange={e => setTenureEndDate(e.target.value)}
-                                                                className="bg-black border-white/20 h-12 font-mono text-center text-lg tracking-[0.3em] text-cyan-400 focus:border-cyan-500"
+                                                                className="bg-slate-950 border-white/20 h-12 font-sans text-center text-lg tracking-[0.3em] text-cyan-400 focus:border-cyan-500"
                                                             /> */}
                                                         </div>
                                                     )}
@@ -2655,7 +2655,7 @@ function AdminDashboardContent() {
                                                                 placeholder="Reason for Termination"
                                                                 value={terminationData.reason}
                                                                 onChange={e => setTerminationData({ ...terminationData, reason: e.target.value })}
-                                                                className="bg-black border-red-500/20 h-10 text-xs font-mono"
+                                                                className="bg-slate-950 border-red-500/20 h-10 text-xs font-sans"
                                                             />
                                                             <Input
                                                                 type="date"
@@ -2663,7 +2663,7 @@ function AdminDashboardContent() {
                                                                 placeholder="End Date"
                                                                 value={terminationData.endDate}
                                                                 onChange={e => setTerminationData({ ...terminationData, endDate: e.target.value })}
-                                                                className="bg-black border-red-500/20 h-10 text-xs font-mono uppercase"
+                                                                className="bg-slate-950 border-red-500/20 h-10 text-xs font-sans uppercase"
                                                             />
                                                             <button onClick={handleTerminateFellow} className="w-full py-3 bg-red-600 text-white text-xs font-bold uppercase tracking-[0.2em] hover:bg-red-500 border border-red-400">
                                                                 EXECUTE TERMINATION
@@ -2673,10 +2673,10 @@ function AdminDashboardContent() {
 
                                                     {showPromoteModal && (
                                                         <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="mb-8 border border-purple-500/30 bg-purple-900/10 p-6 space-y-4 overflow-hidden">
-                                                            <Input placeholder="NEW_ROLE_TITLE" value={promotionData.newRole} onChange={e => setPromotionData({ ...promotionData, newRole: e.target.value })} className="bg-black border-purple-500/20 h-10 text-xs font-mono uppercase" />
+                                                            <Input placeholder="NEW_ROLE_TITLE" value={promotionData.newRole} onChange={e => setPromotionData({ ...promotionData, newRole: e.target.value })} className="bg-slate-950 border-purple-500/20 h-10 text-xs font-sans uppercase" />
                                                             <div className="grid grid-cols-2 gap-4">
-                                                                <Input placeholder="COHORT_ID" value={promotionData.newCohort} onChange={e => setPromotionData({ ...promotionData, newCohort: e.target.value })} className="bg-black border-purple-500/20 h-10 text-xs font-mono uppercase" />
-                                                                <Input placeholder="STATUS_MARKER" value={promotionData.newStatus} onChange={e => setPromotionData({ ...promotionData, newStatus: e.target.value })} className="bg-black border-purple-500/20 h-10 text-xs font-mono uppercase" />
+                                                                <Input placeholder="COHORT_ID" value={promotionData.newCohort} onChange={e => setPromotionData({ ...promotionData, newCohort: e.target.value })} className="bg-slate-950 border-purple-500/20 h-10 text-xs font-sans uppercase" />
+                                                                <Input placeholder="STATUS_MARKER" value={promotionData.newStatus} onChange={e => setPromotionData({ ...promotionData, newStatus: e.target.value })} className="bg-slate-950 border-purple-500/20 h-10 text-xs font-sans uppercase" />
                                                             </div>
                                                             <button onClick={handlePromoteFellow} className="w-full py-3 bg-purple-600 text-white text-xs font-bold uppercase tracking-[0.2em] hover:bg-purple-500 border border-purple-400">EXECUTE PROMOTION</button>
                                                         </motion.div>
@@ -2690,7 +2690,7 @@ function AdminDashboardContent() {
                                                         <div className="space-y-4">
                                                             {(selectedItem.tenures || []).map((tenure, idx) => (
                                                                 <div key={idx} className="space-y-2">
-                                                                    <div className="flex justify-between items-center text-[10px] text-gray-400 font-mono">
+                                                                    <div className="flex justify-between items-center text-[10px] text-gray-400 font-sans">
                                                                         <span>TENURE_{idx + 1}: {typeof tenure.role === 'object' ? tenure.role?.name : tenure.role}</span>
                                                                         <span>{tenure.status}</span>
                                                                     </div>
@@ -2702,13 +2702,13 @@ function AdminDashboardContent() {
                                                                                 <button
                                                                                     key={docType}
                                                                                     onClick={() => handleAdminDownload(selectedItem._id, idx, docType, `${docType}_${selectedItem.lastName}.pdf`)}
-                                                                                    className="w-full flex items-center justify-between p-3 border border-white/5 bg-white/[0.02] hover:bg-white/5 hover:border-cyan-500/30 transition-all group text-left"
+                                                                                    className="w-full flex items-center justify-between p-3 border border-white/5 bg-white/[0.02] hover:bg-white/20 hover:border-cyan-500/30 transition-all group text-left"
                                                                                 >
                                                                                     <div className="flex items-center gap-3">
                                                                                         <FileText className="w-4 h-4 text-cyan-500" />
                                                                                         <div className="flex flex-col">
-                                                                                            <span className="text-xs text-white font-mono uppercase">{docType}</span>
-                                                                                            <span className="text-[9px] text-gray-500 font-mono">{new Date(doc.signedAt).toLocaleDateString('en-GB')}</span>
+                                                                                            <span className="text-xs text-white font-sans uppercase">{docType}</span>
+                                                                                            <span className="text-[9px] text-gray-500 font-sans">{new Date(doc.signedAt).toLocaleDateString('en-GB')}</span>
                                                                                         </div>
                                                                                     </div>
                                                                                     <Download className="w-3 h-3 text-gray-500 group-hover:text-cyan-400" />
@@ -2732,7 +2732,7 @@ function AdminDashboardContent() {
                                                             <button
                                                                 key={s}
                                                                 onClick={() => handleUpdateState(s)}
-                                                                className={`py-2.5 px-4 border text-[10px] font-mono text-left transition-all hover:bg-white hover:text-black ${selectedItem.onboardingState === s ? 'border-purple-500 text-purple-400 bg-purple-900/10' : 'border-white/10 text-gray-500'}`}
+                                                                className={`py-2.5 px-4 border text-[10px] font-sans text-left transition-all hover:bg-white hover:text-black ${selectedItem.onboardingState === s ? 'border-purple-500 text-purple-400 bg-purple-900/10' : 'border-white/10 text-gray-500'}`}
                                                             >
                                                                 {s}
                                                             </button>
@@ -2750,15 +2750,15 @@ function AdminDashboardContent() {
                 {/* Add/Edit Organization Modal */}
                 <AnimatePresence>
                     {isEditingOrg && (
-                        <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/80 backdrop-blur-sm overflow-y-auto py-6 sm:py-0">
+                        <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-slate-950/80 backdrop-blur-sm overflow-y-auto py-6 sm:py-0">
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
-                                className="w-full max-w-[98vw] sm:max-w-[720px] md:max-w-[980px] lg:max-w-[1100px] bg-black border border-white/20 shadow-[0_0_50px_rgba(4,120,87,0.2)] p-0 max-h-[95vh] sm:max-h-[90vh] md:max-h-[80vh] flex flex-col overflow-y-auto rounded-none sm:rounded-2xl"
+                                className="w-full max-w-[98vw] sm:max-w-[720px] md:max-w-[980px] lg:max-w-[1100px] bg-slate-950 border border-white/20 shadow-[0_0_50px_rgba(4,120,87,0.2)] p-0 max-h-[95vh] sm:max-h-[90vh] md:max-h-[80vh] flex flex-col overflow-y-auto rounded-none sm:rounded-2xl"
                                 style={{ margin: 'env(safe-area-inset-top, 0) auto env(safe-area-inset-bottom, 0) auto' }}
                             >
-                                <div className="h-12 sm:h-14 flex items-center justify-between px-4 sm:px-6 border-b border-white/10 bg-white/5 shrink-0 sticky top-0 z-20">
+                                <div className="h-12 sm:h-14 flex items-center justify-between px-4 sm:px-6 border-b border-white/10 bg-white/20 shrink-0 sticky top-0 z-20">
                                     <h3 className="text-sm font-bold text-green-500 uppercase tracking-widest flex items-center gap-2">
                                         <Database className="w-4 h-4" /> FELLOWSHIP_NODE_CONFIGURATION
                                     </h3>
@@ -2768,38 +2768,38 @@ function AdminDashboardContent() {
                                     <div className="space-y-4">
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div className="space-y-2">
-                                                <label className="text-[10px] uppercase font-mono text-gray-500">Node_Name</label>
-                                                <Input value={orgData.name} onChange={e => setOrgData({ ...orgData, name: e.target.value })} className="bg-black border-white/20 h-10 text-xs font-mono text-white focus:border-green-500" placeholder="ENTER_NAME" />
+                                                <label className="text-[10px] uppercase font-sans text-gray-500">Node_Name</label>
+                                                <Input value={orgData.name} onChange={e => setOrgData({ ...orgData, name: e.target.value })} className="bg-slate-950 border-white/20 h-10 text-xs font-sans text-white focus:border-green-500" placeholder="ENTER_NAME" />
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-[10px] uppercase font-mono text-gray-500">Access_Code</label>
-                                                <Input value={orgData.code} onChange={e => setOrgData({ ...orgData, code: e.target.value.toUpperCase() })} className="bg-black border-white/20 h-10 text-xs font-mono text-green-500 focus:border-green-500" placeholder="UNIQUE_CODE" />
+                                                <label className="text-[10px] uppercase font-sans text-gray-500">Access_Code</label>
+                                                <Input value={orgData.code} onChange={e => setOrgData({ ...orgData, code: e.target.value.toUpperCase() })} className="bg-slate-950 border-white/20 h-10 text-xs font-sans text-green-500 focus:border-green-500" placeholder="UNIQUE_CODE" />
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-[10px] uppercase font-mono text-gray-500">Node_Login_Pass</label>
-                                                <Input value={orgData.adminPassword} onChange={e => setOrgData({ ...orgData, adminPassword: e.target.value })} className="bg-black border-white/20 h-10 text-xs font-mono text-green-500 focus:border-green-500" placeholder="LOGIN_PASS" />
+                                                <label className="text-[10px] uppercase font-sans text-gray-500">Node_Login_Pass</label>
+                                                <Input value={orgData.adminPassword} onChange={e => setOrgData({ ...orgData, adminPassword: e.target.value })} className="bg-slate-950 border-white/20 h-10 text-xs font-sans text-green-500 focus:border-green-500" placeholder="LOGIN_PASS" />
                                             </div>
                                         </div>
 
                                         <div className="space-y-2">
-                                            <label className="text-[10px] uppercase font-mono text-gray-500">Domain_Whitelist (Comma Separated)</label>
+                                            <label className="text-[10px] uppercase font-sans text-gray-500">Domain_Whitelist (Comma Separated)</label>
                                             <Input
                                                 value={orgData.emailDomainWhitelist?.join(', ')}
                                                 onChange={e => setOrgData({ ...orgData, emailDomainWhitelist: e.target.value.split(',').map(s => s.trim()) })}
-                                                className="bg-black border-white/20 h-10 text-xs font-mono text-gray-300 focus:border-green-500"
+                                                className="bg-slate-950 border-white/20 h-10 text-xs font-sans text-gray-300 focus:border-green-500"
                                                 placeholder="example.com, org.io"
                                             />
                                         </div>
 
                                         <div className="space-y-2">
-                                            <label className="text-[10px] uppercase font-mono text-gray-500">Available_Roles (Select Multiple)</label>
+                                            <label className="text-[10px] uppercase font-sans text-gray-500">Available_Roles (Select Multiple)</label>
                                             <div className="text-[10px] text-gray-500 mt-1">Global roles are available across the app — use <span className="font-bold uppercase">ADD (GLOBAL)</span> to add a role globally or <span className="font-bold uppercase">ADD TO ORG (LOCAL)</span> to attach it only to this organization.</div>
-                                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-3 p-3 bg-white/5 border border-white/10 max-h-36 sm:max-h-32 overflow-y-auto">
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-3 p-3 bg-white/20 border border-white/10 max-h-36 sm:max-h-32 overflow-y-auto">
                                                 {([...(availableRoles || []).map(r => (typeof r === 'string' ? r : r.name)), ...(orgData.availableRoles || []).map(r => r.name)]).filter((v,i,a) => a.indexOf(v) === i).map(role => {
                                                     const roleObj = (orgData.availableRoles || []).find(r => r.name === role);
                                                     const isEditing = editingRoleDesc === role;
                                                     return (
-                                                        <label key={role} className={`group cursor-pointer p-2 transition-colors rounded ${isEditing ? 'bg-white/3' : 'hover:bg-white/5'}`}>
+                                                        <label key={role} className={`group cursor-pointer p-2 transition-colors rounded ${isEditing ? 'bg-white/3' : 'hover:bg-white/20'}`}>
                                                             <div className="flex items-center gap-2 w-full">
                                                                 <input
                                                                     type="checkbox"
@@ -2825,14 +2825,14 @@ function AdminDashboardContent() {
 
                                                                 {/* compact split-menu: trash icon opens menu with Local/Global remove */}
                                                                 <div className="relative ml-2">
-                                                                    <button type="button" onClick={(e) => { e.stopPropagation(); setRoleMenuOpenFor(roleMenuOpenFor === role ? null : role); }} className="p-1 rounded bg-white/5 hover:bg-white/10">
+                                                                    <button type="button" onClick={(e) => { e.stopPropagation(); setRoleMenuOpenFor(roleMenuOpenFor === role ? null : role); }} className="p-1 rounded bg-white/20 hover:bg-white/20">
                                                                         <Trash className="w-3 h-3 text-red-400" />
                                                                     </button>
 
                                                                     {roleMenuOpenFor === role && (
-                                                                        <div className="absolute right-0 mt-2 w-44 bg-black border border-white/10 rounded shadow-lg z-50 py-1">
-                                                                            {roleObj && <button type="button" onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ mode: 'LOCAL', roleName: role, roleObj }); setRoleMenuOpenFor(null); }} className="w-full text-left px-3 py-2 text-xs hover:bg-white/5">Remove (local)</button>}
-                                                                            {(availableRoles || []).find(ar => (typeof ar === 'string' ? ar : ar.name) === role) && (() => { const g = (availableRoles || []).find(ar => (typeof ar === 'string' ? ar : ar.name) === role); return (<button type="button" onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ mode: 'GLOBAL', roleName: role, roleObj: g }); setRoleMenuOpenFor(null); }} className="w-full text-left px-3 py-2 text-xs hover:bg-white/5">Remove (global)</button>); })()}
+                                                                        <div className="absolute right-0 mt-2 w-44 bg-slate-950 border border-white/10 rounded shadow-lg z-50 py-1">
+                                                                            {roleObj && <button type="button" onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ mode: 'LOCAL', roleName: role, roleObj }); setRoleMenuOpenFor(null); }} className="w-full text-left px-3 py-2 text-xs hover:bg-white/20">Remove (local)</button>}
+                                                                            {(availableRoles || []).find(ar => (typeof ar === 'string' ? ar : ar.name) === role) && (() => { const g = (availableRoles || []).find(ar => (typeof ar === 'string' ? ar : ar.name) === role); return (<button type="button" onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ mode: 'GLOBAL', roleName: role, roleObj: g }); setRoleMenuOpenFor(null); }} className="w-full text-left px-3 py-2 text-xs hover:bg-white/20">Remove (global)</button>); })()}
                                                                         </div>
                                                                     )}
                                                                 </div>
@@ -2847,7 +2847,7 @@ function AdminDashboardContent() {
                                                             {/* inline edit controls (stacked under the role) */}
                                                             {isEditing && (
                                                                 <div className="w-full ml-3 flex gap-2 mt-2">
-                                                                    <input value={editingRoleTempDesc} onChange={e => setEditingRoleTempDesc(e.target.value)} placeholder="description (optional)" className="flex-1 bg-black border border-white/10 text-xs px-2 py-1 h-8" />
+                                                                    <input value={editingRoleTempDesc} onChange={e => setEditingRoleTempDesc(e.target.value)} placeholder="description (optional)" className="flex-1 bg-slate-950 border border-white/10 text-xs px-2 py-1 h-8" />
                                                                     <button onClick={(e) => { e.stopPropagation(); saveRoleDescEdit(); }} className="text-xs bg-green-700/20 px-2 py-1 rounded">Save</button>
                                                                     <button onClick={(e) => { e.stopPropagation(); cancelRoleDescEdit(); }} className="text-xs bg-red-700/10 px-2 py-1 rounded">Cancel</button>
                                                                 </div>
@@ -2863,13 +2863,13 @@ function AdminDashboardContent() {
                                                     onChange={(e) => setNewRole(e.target.value)}
                                                     onKeyPress={(e) => { if (e.key === 'Enter') handleAddRole(); }}
                                                     placeholder="Add new role (global)"
-                                                    className="bg-black border-white/20 h-8 text-xs font-mono text-white focus:border-green-500 w-24"
+                                                    className="bg-slate-950 border-white/20 h-8 text-xs font-sans text-white focus:border-green-500 w-24"
                                                 />
                                                 <Input
                                                     value={newRoleDescription}
                                                     onChange={(e) => setNewRoleDescription(e.target.value)}
                                                     placeholder="description (optional)"
-                                                    className="bg-black border-white/20 h-8 text-xs font-mono text-white focus:border-green-500 flex-1"
+                                                    className="bg-slate-950 border-white/20 h-8 text-xs font-sans text-white focus:border-green-500 flex-1"
                                                 />
                                                 <button
                                                     onClick={handleAddRole}
@@ -2887,13 +2887,13 @@ function AdminDashboardContent() {
                                                     onChange={(e) => setNewOrgRole(e.target.value)}
                                                     onKeyPress={(e) => { if (e.key === 'Enter') handleAddOrgRole(); }}
                                                     placeholder="Add role to this org (local)"
-                                                    className="bg-black border-white/20 h-8 text-xs font-mono text-white focus:border-green-500 w-24"
+                                                    className="bg-slate-950 border-white/20 h-8 text-xs font-sans text-white focus:border-green-500 w-24"
                                                 />
                                                 <Input
                                                     value={newOrgRoleDescription}
                                                     onChange={(e) => setNewOrgRoleDescription(e.target.value)}
                                                     placeholder="description (org-local, optional)"
-                                                    className="bg-black border-white/20 h-8 text-xs font-mono text-white focus:border-green-500 flex-1"
+                                                    className="bg-slate-950 border-white/20 h-8 text-xs font-sans text-white focus:border-green-500 flex-1"
                                                 />
                                                 <button
                                                     onClick={handleAddOrgRole}
@@ -2907,22 +2907,22 @@ function AdminDashboardContent() {
 
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div className="space-y-2">
-                                                <label className="text-[10px] uppercase font-mono text-gray-500">End Of Application Date</label>
+                                                <label className="text-[10px] uppercase font-sans text-gray-500">End Of Application Date</label>
                                                 <Input
                                                     type="date"
                                                     lang="en-GB"
                                                     value={orgData.endDate || ''}
                                                     onChange={e => setOrgData({ ...orgData, endDate: e.target.value })}
-                                                    className="bg-black border-white/20 h-10 text-xs font-mono text-gray-300 focus:border-green-500"
+                                                    className="bg-slate-950 border-white/20 h-10 text-xs font-sans text-gray-300 focus:border-green-500"
                                                 />
 
-                                                <label className="text-[10px] uppercase font-mono text-gray-500 mt-3">Tenure End Date</label>
+                                                <label className="text-[10px] uppercase font-sans text-gray-500 mt-3">Tenure End Date</label>
                                                 <Input
                                                     type="date"
                                                     lang="en-GB"
                                                     value={orgData.defaultTenureEndDate || ''}
                                                     onChange={e => setOrgData({ ...orgData, defaultTenureEndDate: e.target.value })}
-                                                    className="bg-black border-white/20 h-10 text-xs font-mono text-gray-300 focus:border-green-500"
+                                                    className="bg-slate-950 border-white/20 h-10 text-xs font-sans text-gray-300 focus:border-green-500"
                                                 />
                                             </div>
                                             <div className="flex items-end pb-3">
@@ -2965,8 +2965,8 @@ function AdminDashboardContent() {
                 {/* Confirm Delete Modal (global / local) */}
                 <AnimatePresence>
                     {deleteConfirm && (
-                        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/70">
-                            <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98 }} className="w-full max-w-md bg-black border border-white/10 p-6 rounded-2xl shadow-lg">
+                        <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-950/70">
+                            <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98 }} className="w-full max-w-md bg-slate-950 border border-white/10 p-6 rounded-2xl shadow-lg">
                                 <h4 className="text-sm font-bold text-white mb-2">Confirm removal</h4>
                                 <p className="text-xs text-gray-400">Are you sure you want to remove <span className="font-bold">{deleteConfirm.roleName}</span> {deleteConfirm.mode === 'GLOBAL' ? 'globally (it will be hidden across the app)' : `from ${orgData.code || 'this org'}`}?</p>
                                 <div className="flex gap-2 mt-4">
@@ -2996,12 +2996,12 @@ function AdminDashboardContent() {
                 {/* Manual Onboarding Modal */}
                 <AnimatePresence>
                     {showManualModal && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
-                                className="w-full max-w-[600px] bg-black border border-purple-500/30 shadow-[0_0_50px_rgba(168,85,247,0.1)] rounded-2xl overflow-hidden"
+                                className="w-full max-w-[600px] bg-slate-950 border border-purple-500/30 shadow-[0_0_50px_rgba(168,85,247,0.1)] rounded-2xl overflow-hidden"
                             >
                                 <div className="h-14 flex items-center justify-between px-6 border-b border-white/10 bg-purple-500/5">
                                     <h3 className="text-sm font-bold text-purple-400 uppercase tracking-widest flex items-center gap-2">
@@ -3016,15 +3016,15 @@ function AdminDashboardContent() {
                                     <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                                         <div className="space-y-1.5 col-span-2">
                                             <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Personnel Email</label>
-                                            <Input value={manualFellowData.email} onChange={e => setManualFellowData({ ...manualFellowData, email: e.target.value.toLowerCase() })} className="bg-black border-white/10 h-10 text-xs font-mono text-white focus:border-purple-500" placeholder="IDENTIFIER@DEEPCYTES.IO" />
+                                            <Input value={manualFellowData.email} onChange={e => setManualFellowData({ ...manualFellowData, email: e.target.value.toLowerCase() })} className="bg-slate-950 border-white/10 h-10 text-xs font-sans text-white focus:border-purple-500" placeholder="IDENTIFIER@DEEPCYTES.IO" />
                                         </div>
                                         <div className="space-y-1.5">
                                             <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">First Name</label>
-                                            <Input value={manualFellowData.firstName} onChange={e => setManualFellowData({ ...manualFellowData, firstName: e.target.value })} className="bg-black border-white/10 h-10 text-xs font-mono text-white focus:border-purple-500" placeholder="NAME_ENTRY" />
+                                            <Input value={manualFellowData.firstName} onChange={e => setManualFellowData({ ...manualFellowData, firstName: e.target.value })} className="bg-slate-950 border-white/10 h-10 text-xs font-sans text-white focus:border-purple-500" placeholder="NAME_ENTRY" />
                                         </div>
                                         <div className="space-y-1.5">
                                             <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Last Name</label>
-                                            <Input value={manualFellowData.lastName} onChange={e => setManualFellowData({ ...manualFellowData, lastName: e.target.value })} className="bg-black border-white/10 h-10 text-xs font-mono text-white focus:border-purple-500" placeholder="SURNAME_ENTRY" />
+                                            <Input value={manualFellowData.lastName} onChange={e => setManualFellowData({ ...manualFellowData, lastName: e.target.value })} className="bg-slate-950 border-white/10 h-10 text-xs font-sans text-white focus:border-purple-500" placeholder="SURNAME_ENTRY" />
                                         </div>
 
                                         <div className="space-y-1.5 pt-2 border-t border-white/5 col-span-2">
@@ -3034,7 +3034,7 @@ function AdminDashboardContent() {
                                                     <input
                                                         type="text"
                                                         placeholder="NEW_ROLE (global)..."
-                                                        className="bg-black border-b border-white/20 text-[10px] w-24 outline-none focus:border-purple-500 px-1 text-white"
+                                                        className="bg-slate-950 border-b border-white/20 text-[10px] w-24 outline-none focus:border-purple-500 px-1 text-white"
                                                         value={newRole}
                                                         onChange={e => setNewRole(e.target.value)}
                                                         onKeyPress={e => e.key === 'Enter' && handleAddRole()}
@@ -3042,7 +3042,7 @@ function AdminDashboardContent() {
                                                     <input
                                                         type="text"
                                                         placeholder="desc (global, optional)"
-                                                        className="bg-black border-b border-white/20 text-[10px] w-56 outline-none focus:border-purple-500 px-1 text-white"
+                                                        className="bg-slate-950 border-b border-white/20 text-[10px] w-56 outline-none focus:border-purple-500 px-1 text-white"
                                                         value={newRoleDescription}
                                                         onChange={e => setNewRoleDescription(e.target.value)}
                                                     />
@@ -3052,7 +3052,7 @@ function AdminDashboardContent() {
                                             <select
                                                 value={manualFellowData.role}
                                                 onChange={e => setManualFellowData({ ...manualFellowData, role: e.target.value })}
-                                                className="w-full bg-black border border-white/10 h-10 text-xs font-mono text-white focus:border-purple-500 outline-none px-3"
+                                                className="w-full bg-slate-950 border border-white/10 h-10 text-xs font-sans text-white focus:border-purple-500 outline-none px-3"
                                             >
                                                 <option value="">SELECT_ROLE</option>
                                                 {availableRoles.map(r => {
@@ -3080,7 +3080,7 @@ function AdminDashboardContent() {
                                             <select
                                                 value={manualFellowData.orgCode}
                                                 onChange={e => setManualFellowData({ ...manualFellowData, orgCode: e.target.value })}
-                                                className="w-full bg-black border border-white/10 h-10 text-xs font-mono text-white focus:border-green-500 outline-none px-3"
+                                                className="w-full bg-slate-950 border border-white/10 h-10 text-xs font-sans text-white focus:border-green-500 outline-none px-3"
                                             >
                                                 <option value="">NO_NODE_ASSIGNED (OPTIONAL)</option>
                                                 {orgs.map(o => <option key={o.code} value={o.code}>{o.name}</option>)}
@@ -3092,13 +3092,13 @@ function AdminDashboardContent() {
                                             <Input
                                                 value={manualFellowData.cohort}
                                                 onChange={e => setManualFellowData({ ...manualFellowData, cohort: e.target.value })}
-                                                className="bg-black border-white/10 h-10 text-xs font-mono text-white focus:border-purple-500"
+                                                className="bg-slate-950 border-white/10 h-10 text-xs font-sans text-white focus:border-purple-500"
                                                 placeholder="B1, B2 (OR #)"
                                             />
                                         </div>
                                         <div className="space-y-1.5 pt-2 border-t border-white/5">
                                             <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Onboarding Date</label>
-                                            <Input type="date" lang="en-GB" value={manualFellowData.startDate} onChange={e => setManualFellowData({ ...manualFellowData, startDate: e.target.value })} className="bg-black border-white/10 h-10 text-xs font-mono text-white focus:border-purple-500" />
+                                            <Input type="date" lang="en-GB" value={manualFellowData.startDate} onChange={e => setManualFellowData({ ...manualFellowData, startDate: e.target.value })} className="bg-slate-950 border-white/10 h-10 text-xs font-sans text-white focus:border-purple-500" />
                                         </div>
                                     </div>
 
@@ -3118,12 +3118,12 @@ function AdminDashboardContent() {
                 {/* Create Project Modal */}
                 <AnimatePresence>
                     {showCreateProjectModal && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
-                                className="w-full max-w-[700px] bg-black border border-orange-500/30 shadow-[0_0_50px_rgba(249,115,22,0.1)] rounded-2xl overflow-hidden"
+                                className="w-full max-w-[700px] bg-slate-950 border border-orange-500/30 shadow-[0_0_50px_rgba(249,115,22,0.1)] rounded-2xl overflow-hidden"
                             >
                                 <div className="h-14 flex items-center justify-between px-6 border-b border-white/10 bg-orange-500/5">
                                     <h3 className="text-lg font-bold text-orange-400 uppercase tracking-widest flex items-center gap-2">
@@ -3142,7 +3142,7 @@ function AdminDashboardContent() {
                                             <Input 
                                                 value={newProjectData.title} 
                                                 onChange={e => setNewProjectData({ ...newProjectData, title: e.target.value })} 
-                                                className="bg-black border-white/10 h-10 text-base font-mono text-white focus:border-orange-500" 
+                                                className="bg-slate-950 border-white/10 h-10 text-base font-sans text-white focus:border-orange-500" 
                                                 placeholder="PROJECT_NAME"
                                             />
                                         </div>
@@ -3152,7 +3152,7 @@ function AdminDashboardContent() {
                                             <textarea 
                                                 value={newProjectData.description} 
                                                 onChange={e => setNewProjectData({ ...newProjectData, description: e.target.value })} 
-                                                className="w-full bg-black border border-white/10 p-3 text-base font-mono text-white focus:border-orange-500 outline-none min-h-[100px] custom-scrollbar"
+                                                className="w-full bg-slate-950 border border-white/10 p-3 text-base font-sans text-white focus:border-orange-500 outline-none min-h-[100px] custom-scrollbar"
                                                 placeholder="PROJECT_DESCRIPTION..."
                                             />
                                         </div>
@@ -3164,7 +3164,7 @@ function AdminDashboardContent() {
                                                 <select
                                                     value={newProjectData.status}
                                                     onChange={e => setNewProjectData({ ...newProjectData, status: e.target.value })}
-                                                    className="bg-black border border-white/10 h-10 text-base font-mono text-white px-3"
+                                                    className="bg-slate-950 border border-white/10 h-10 text-base font-sans text-white px-3"
                                                 >
                                                     <option value="ongoing">Ongoing</option>
                                                     <option value="completed">Completed</option>
@@ -3186,7 +3186,7 @@ function AdminDashboardContent() {
                                                 {newProjectData.supportedLinks.map((link, idx) => (
                                                     <div key={idx} className="flex items-center gap-2 p-2 bg-orange-900/10 border border-orange-500/20">
                                                         <ExternalLink className="w-3 h-3 text-orange-500" />
-                                                        <div className="flex-1 text-base font-mono">
+                                                        <div className="flex-1 text-base font-sans">
                                                             <div className="text-orange-400">{link.linkName}</div>
                                                             <div className="text-gray-500 truncate">{link.url}</div>
                                                         </div>
@@ -3206,13 +3206,13 @@ function AdminDashboardContent() {
                                             <Input 
                                                 value={newLink.linkName} 
                                                 onChange={e => setNewLink({ ...newLink, linkName: e.target.value })} 
-                                                className="bg-black border-white/10 h-9 text-sm font-mono text-white focus:border-orange-500 flex-1"
+                                                className="bg-slate-950 border-white/10 h-9 text-sm font-sans text-white focus:border-orange-500 flex-1"
                                                 placeholder="Link Name"
                                             />
                                             <Input 
                                                 value={newLink.url} 
                                                 onChange={e => setNewLink({ ...newLink, url: e.target.value })} 
-                                                className="bg-black border-white/10 h-9 text-sm font-mono text-white focus:border-orange-500 flex-1"
+                                                className="bg-slate-950 border-white/10 h-9 text-sm font-sans text-white focus:border-orange-500 flex-1"
                                                 placeholder="https://..."
                                             />
                                             <button 
@@ -3234,7 +3234,7 @@ function AdminDashboardContent() {
                                                 {newProjectData.contributors.map((contributor, idx) => (
                                                     <div key={idx} className="flex items-center gap-2 p-2 bg-orange-900/10 border border-orange-500/20">
                                                         <Users className="w-3 h-3 text-orange-500" />
-                                                        <div className="flex-1 text-base font-mono">
+                                                        <div className="flex-1 text-base font-sans">
                                                             <span className="text-orange-400">{contributor.firstName}</span>
                                                             <span className="text-gray-500 ml-2">({contributor.emailId})</span>
                                                             {contributor.role && <span className="text-base text-cyan-400 ml-2">[{contributor.role}]</span>}
@@ -3256,14 +3256,14 @@ function AdminDashboardContent() {
                                                 <button
                                                     type="button"
                                                     onClick={() => setContributorMode('name')}
-                                                    className={`px-2 py-1 text-base font-bold uppercase ${contributorMode === 'name' ? 'bg-orange-500 text-black' : 'bg-black border border-white/10 text-orange-500'}`}
+                                                    className={`px-2 py-1 text-base font-bold uppercase ${contributorMode === 'name' ? 'bg-orange-500 text-black' : 'bg-slate-950 border border-white/10 text-orange-500'}`}
                                                 >
                                                     Search by name
                                                 </button>
                                                 <button
                                                     type="button"
                                                     onClick={() => setContributorMode('role')}
-                                                    className={`px-2 py-1 text-base font-bold uppercase ${contributorMode === 'role' ? 'bg-orange-500 text-black' : 'bg-black border border-white/10 text-orange-500'}`}
+                                                    className={`px-2 py-1 text-base font-bold uppercase ${contributorMode === 'role' ? 'bg-orange-500 text-black' : 'bg-slate-950 border border-white/10 text-orange-500'}`}
                                                 >
                                                     Search by role
                                                 </button>
@@ -3273,14 +3273,14 @@ function AdminDashboardContent() {
                                                 <Input
                                                     value={contributorQuery}
                                                     onChange={e => setContributorQuery(e.target.value)}
-                                                    className="bg-black border-white/10 h-9 text-base font-mono text-white focus:border-orange-500 flex-1"
+                                                    className="bg-slate-950 border-white/10 h-9 text-base font-sans text-white focus:border-orange-500 flex-1"
                                                     placeholder={contributorMode === 'name' ? 'Type name to search and select' : 'Type role to search and select'}
                                                 />
                                             </div>
 
                                             {/* Suggestions dropdown */}
                                             { (contributorSuggestions.length > 0 || suggestionsLoading) && (
-                                                <div className="absolute left-0 right-0 mt-2 z-50 bg-black border border-white/10 shadow-lg max-h-56 overflow-auto">
+                                                <div className="absolute left-0 right-0 mt-2 z-50 bg-slate-950 border border-white/10 shadow-lg max-h-56 overflow-auto">
                                                     {suggestionsLoading && (
                                                         <div className="p-2 text-xs text-gray-400">Searching...</div>
                                                     )}
@@ -3288,10 +3288,10 @@ function AdminDashboardContent() {
                                                         <div
                                                             key={i}
                                                             onClick={() => handleSelectContributor(s)}
-                                                            className="p-3 hover:bg-white/5 cursor-pointer"
+                                                            className="p-3 hover:bg-white/20 cursor-pointer"
                                                         >
                                                             <div className="flex justify-between items-center">
-                                                                <div className="text-lg font-mono text-orange-400">{s.firstName} <span className="text-base text-gray-500 ml-2">({s.assigned_role})</span></div>
+                                                                <div className="text-lg font-sans text-orange-400">{s.firstName} <span className="text-base text-gray-500 ml-2">({s.assigned_role})</span></div>
                                                                 <div className="text-base text-gray-500">{s.email}</div>
                                                             </div>
                                                         </div>
@@ -3323,7 +3323,7 @@ function AdminDashboardContent() {
 export default function AdminDashboard() {
     return (
         <Suspense fallback={
-            <div className="h-screen w-screen bg-black flex items-center justify-center font-mono">
+            <div className="h-screen w-screen bg-slate-950 flex items-center justify-center font-sans">
                 <div className="text-cyan-500 animate-pulse tracking-widest text-xl">Loading Dashboard</div>
             </div>
         }>
@@ -3331,3 +3331,4 @@ export default function AdminDashboard() {
         </Suspense>
     );
 }
+

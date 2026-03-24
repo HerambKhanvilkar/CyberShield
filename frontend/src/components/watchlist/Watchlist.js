@@ -218,31 +218,31 @@ export default function WatchlistList() {
             <tr>
               <th className="p-2 flex justify-center items-center font-semibold text-sm uppercase tracking-wider cursor-pointer group">
                 <Contact className="text-black"/>
-                <span className="absolute hidden group-hover:block text-xs bg-black text-white p-1 rounded-md" style={{ top: '70px' }}>
+                <span className="absolute hidden group-hover:block text-xs bg-slate-950 text-white p-1 rounded-md" style={{ top: '70px' }}>
                   Name
                 </span>
               </th>
               <th className="p-2 text-center font-semibold text-sm uppercase tracking-wider cursor-pointer group">
                 <Tag className="text-black"/>
-                <span className="absolute hidden group-hover:block text-xs bg-black text-white p-1 rounded-md" style={{ top: '70px' }}>
+                <span className="absolute hidden group-hover:block text-xs bg-slate-950 text-white p-1 rounded-md" style={{ top: '70px' }}>
                   Type
                 </span>
               </th>
               <th className="p-2 text-center font-semibold text-sm uppercase tracking-wider cursor-pointer group">
                 <CalendarPlus className="text-black" />
-                <span className="absolute hidden group-hover:block text-xs bg-black text-white p-1 rounded-md" style={{ top: '70px' }}>
+                <span className="absolute hidden group-hover:block text-xs bg-slate-950 text-white p-1 rounded-md" style={{ top: '70px' }}>
                   CVE added this week
                 </span>
               </th>
               <th className="p-2 text-center font-semibold text-sm uppercase tracking-wider cursor-pointer group">
                 <Sigma className="text-black" />
-                <span className="absolute hidden group-hover:block text-xs bg-black text-white p-1 rounded-md" style={{ top: '70px' }}>
+                <span className="absolute hidden group-hover:block text-xs bg-slate-950 text-white p-1 rounded-md" style={{ top: '70px' }}>
                   Total CVE
                 </span>
               </th>
               <th className="p-2 text-center font-semibold text-sm uppercase tracking-wider cursor-pointer group">
                 <BriefcaseMedical className="text-black" />
-                <span className="absolute hidden group-hover:block text-xs bg-black text-white p-1 rounded-md" style={{ top: '70px' }}>
+                <span className="absolute hidden group-hover:block text-xs bg-slate-950 text-white p-1 rounded-md" style={{ top: '70px' }}>
                   Patches available
                 </span>
               </th>

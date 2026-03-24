@@ -55,7 +55,7 @@ export default function PortalLogin() {
         <>
             <Navbar />
             <div className="min-h-screen bg-[#00040A] text-white flex items-center justify-center p-4">
-                <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-2xl shadow-xl w-full max-w-md">
+                <div className="bg-white/20 backdrop-blur-xl border border-white/10 p-8 rounded-2xl shadow-xl w-full max-w-md">
                     <h1 className="text-3xl font-bold text-center mb-6 text-cyan-400">Portal Login</h1>
 
                     {step === 1 ? (
@@ -68,7 +68,7 @@ export default function PortalLogin() {
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
                                     placeholder="enter@deepcytes.io"
-                                    className="bg-black/20 border-white/10 text-white"
+                                    className="bg-slate-950/20 border-white/10 text-white"
                                 />
                             </div>
                             <Button type="submit" disabled={loading} className="w-full bg-cyan-600 hover:bg-cyan-700">
@@ -88,7 +88,7 @@ export default function PortalLogin() {
                                     onChange={(e) => setOtp(e.target.value)}
                                     required
                                     placeholder="123456"
-                                    className="bg-black/20 border-white/10 text-white text-center tracking-widest text-lg"
+                                    className="bg-slate-950/20 border-white/10 text-white text-center tracking-widest text-lg"
                                 />
                             </div>
                             <Button type="submit" disabled={loading} className="w-full bg-green-600 hover:bg-green-700">
@@ -109,3 +109,4 @@ export default function PortalLogin() {
         </>
     );
 }
+

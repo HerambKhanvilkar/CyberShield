@@ -148,7 +148,7 @@ const SearchResult = ({ result }) => {
           <span className="text-lg text-black font-bold">{result.rate}</span>
           <p className="text-gray-500 text-sm mt-1">{result.location}</p>
         </div>
-        <button className="bg-black text-white text-sm font-bold py-2 px-2 rounded-full">Details</button>
+        <button className="bg-slate-950 text-white text-sm font-bold py-2 px-2 rounded-full">Details</button>
       </div>
     </Card>
   );

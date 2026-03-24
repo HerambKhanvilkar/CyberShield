@@ -207,7 +207,7 @@ const CVSSVectorBreakdown = ({ cvssMetrics }) => {
             <div className="relative group">
               <Info className={`text-lg text-white cursor-pointer`} />
               <div
-                className="absolute left-0 top-full mt-2 w-80 p-3 text-white bg-black border border-gray-700 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-9999"
+                className="absolute left-0 top-full mt-2 w-80 p-3 text-white bg-slate-950 border border-gray-700 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-9999"
                 style={{
                   position: 'absolute',
                   top: '80%',

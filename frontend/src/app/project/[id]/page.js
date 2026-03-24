@@ -322,7 +322,7 @@ export default function ProjectDetailPage() {
 
     if (loading) {
         return (
-            <div className="h-screen bg-black text-white flex flex-col font-mono">
+            <div className="h-screen bg-slate-950 text-white flex flex-col font-mono">
                 <Navbar />
                 <div className="flex-1 flex flex-col items-center justify-center opacity-50 space-y-6">
                     <div className="w-16 h-16 border-2 border-orange-500 border-t-white animate-spin rounded-full" />
@@ -334,7 +334,7 @@ export default function ProjectDetailPage() {
 
     if (error || !project) {
         return (
-            <div className="h-screen bg-black text-white flex flex-col font-mono">
+            <div className="h-screen bg-slate-950 text-white flex flex-col font-mono">
                 <Navbar />
                 <div className="flex-1 flex flex-col items-center justify-center space-y-6">
                     <div className="text-red-500 text-6xl font-bold">404</div>
@@ -351,14 +351,14 @@ export default function ProjectDetailPage() {
     }
 
     return (
-        <div className="min-h-screen bg-black text-white flex flex-col font-mono selection:bg-orange-500/50 selection:text-black">
+        <div className="min-h-screen bg-slate-950 text-white flex flex-col font-mono selection:bg-orange-500/50 selection:text-black">
             <Navbar />
 
             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none opacity-20" />
 
             <main className="flex-1 relative z-10">
                 {/* Header Bar */}
-                <div className="border-b border-white/10 bg-black/50 backdrop-blur-md">
+                <div className="border-b border-white/10 bg-slate-950/50 backdrop-blur-md">
                     <div className="max-w-7xl mx-auto px-6 md:px-10 py-4 flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <button
@@ -459,7 +459,7 @@ export default function ProjectDetailPage() {
                                             {project.contributors.map((contributor, idx) => (
                                                 <div
                                                     key={idx}
-                                                    className="flex items-center justify-between p-4 bg-black/40 border border-white/5 hover:border-orange-500/30 transition-all group"
+                                                    className="flex items-center justify-between p-4 bg-slate-900/60 border border-white/5 hover:border-orange-500/30 transition-all group"
                                                 >
                                                     <div className="flex items-center gap-4">
                                                         <div className="w-10 h-10 border border-orange-500/30 flex items-center justify-center text-lg font-bold bg-orange-500/5 text-orange-400">
@@ -514,7 +514,7 @@ export default function ProjectDetailPage() {
                                                 return (
                                                     <div
                                                         key={log._id || idx}
-                                                        className="p-4 bg-black/40 border border-white/5 hover:border-green-500/30 transition-all space-y-3"
+                                                        className="p-4 bg-slate-900/60 border border-white/5 hover:border-green-500/30 transition-all space-y-3"
                                                     >
                                                         <div className="flex items-center justify-between">
                                                             <div className="flex items-center gap-3">
@@ -591,7 +591,7 @@ export default function ProjectDetailPage() {
                                                                                         className={`p-2.5 border text-[10px] font-mono flex items-center justify-between ${
                                                                                             entry.projectId === id
                                                                                                 ? 'border-orange-500/30 bg-orange-500/5'
-                                                                                                : 'border-white/5 bg-black/30'
+                                                                                                : 'border-white/5 bg-slate-950/30'
                                                                                         }`}
                                                                                     >
                                                                                         <div className="flex items-center gap-3">
@@ -682,7 +682,7 @@ export default function ProjectDetailPage() {
                                                         className={`grid grid-cols-[1fr_1fr_1fr_1fr_80px] gap-3 px-4 py-3 border transition-all ${
                                                             log.isActive
                                                                 ? 'border-green-500/10 bg-green-500/[0.02] hover:border-green-500/30'
-                                                                : 'border-white/5 bg-black/30 hover:border-white/10'
+                                                                : 'border-white/5 bg-slate-950/30 hover:border-white/10'
                                                         }`}
                                                     >
                                                         <div className="flex items-center gap-2 min-w-0">
@@ -746,7 +746,7 @@ export default function ProjectDetailPage() {
                                                 href={link.url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="flex items-center justify-between p-3 bg-black/40 border border-white/5 hover:border-orange-500/30 transition-all group"
+                                                className="flex items-center justify-between p-3 bg-slate-900/60 border border-white/5 hover:border-orange-500/30 transition-all group"
                                             >
                                                 <div className="flex items-center gap-3">
                                                     <span className="text-orange-400">{getLinkIcon(link.url)}</span>
@@ -772,29 +772,29 @@ export default function ProjectDetailPage() {
                                     <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">Quick_Stats</h3>
                                 </div>
                                 <div className="p-4 space-y-3">
-                                    <div className="flex justify-between items-center p-3 bg-black/40 border border-white/5">
+                                    <div className="flex justify-between items-center p-3 bg-slate-900/60 border border-white/5">
                                         <span className="text-[10px] text-gray-500 uppercase font-mono">Status</span>
                                         <span className={`text-xs font-bold uppercase ${getStatusStyle(project.status).split(' ').find(c => c.startsWith('text-'))}`}>
                                             {(project.status || 'UNKNOWN').toUpperCase()}
                                         </span>
                                     </div>
-                                    <div className="flex justify-between items-center p-3 bg-black/40 border border-white/5">
+                                    <div className="flex justify-between items-center p-3 bg-slate-900/60 border border-white/5">
                                         <span className="text-[10px] text-gray-500 uppercase font-mono">Contributors</span>
                                         <span className="text-xs font-bold text-orange-400">{project.contributors?.length || 0}</span>
                                     </div>
-                                    <div className="flex justify-between items-center p-3 bg-black/40 border border-white/5">
+                                    <div className="flex justify-between items-center p-3 bg-slate-900/60 border border-white/5">
                                         <span className="text-[10px] text-gray-500 uppercase font-mono">Active Log Entries</span>
                                         <span className="text-xs font-bold text-green-400">{activeContributors.length}</span>
                                     </div>
-                                    <div className="flex justify-between items-center p-3 bg-black/40 border border-white/5">
+                                    <div className="flex justify-between items-center p-3 bg-slate-900/60 border border-white/5">
                                         <span className="text-[10px] text-gray-500 uppercase font-mono">Links</span>
                                         <span className="text-xs font-bold text-cyan-400">{project.supportedLinks?.length || 0}</span>
                                     </div>
-                                    <div className="flex justify-between items-center p-3 bg-black/40 border border-white/5">
+                                    <div className="flex justify-between items-center p-3 bg-slate-900/60 border border-white/5">
                                         <span className="text-[10px] text-gray-500 uppercase font-mono">Created</span>
                                         <span className="text-xs font-mono text-gray-400">{formatDate(project.createdAt)}</span>
                                     </div>
-                                    <div className="flex justify-between items-center p-3 bg-black/40 border border-white/5">
+                                    <div className="flex justify-between items-center p-3 bg-slate-900/60 border border-white/5">
                                         <span className="text-[10px] text-gray-500 uppercase font-mono">Last Updated</span>
                                         <span className="text-xs font-mono text-gray-400">{formatDate(project.updatedAt)}</span>
                                     </div>
@@ -820,7 +820,7 @@ export default function ProjectDetailPage() {
                                                 return acc;
                                             }, {})
                                         ).map(([role, count]) => (
-                                            <div key={role} className="flex justify-between items-center p-3 bg-black/40 border border-white/5">
+                                            <div key={role} className="flex justify-between items-center p-3 bg-slate-900/60 border border-white/5">
                                                 <span className="text-[10px] text-cyan-400 uppercase font-mono font-bold">{role}</span>
                                                 <span className="text-xs font-bold text-white">{count}</span>
                                             </div>
@@ -846,7 +846,7 @@ export default function ProjectDetailPage() {
                                         {Object.entries(contributorTime).map(([pId, timeData]) => {
                                             const contributor = activeContributors.find(c => (c.profileId?._id || c.profileId) === pId);
                                             return (
-                                                <div key={pId} className="flex justify-between items-center p-3 bg-black/40 border border-white/5">
+                                                <div key={pId} className="flex justify-between items-center p-3 bg-slate-900/60 border border-white/5">
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-[10px] text-gray-400 uppercase font-mono">
                                                             {contributor?.role || pId?.slice(-6)}
@@ -871,12 +871,12 @@ export default function ProjectDetailPage() {
             {/* Edit Project Modal */}
             <AnimatePresence>
                 {showEditModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
-                            className="w-full max-w-[700px] bg-black border border-orange-500/30 shadow-[0_0_50px_rgba(249,115,22,0.1)] overflow-hidden"
+                            className="w-full max-w-[700px] bg-slate-950 border border-orange-500/30 shadow-[0_0_50px_rgba(249,115,22,0.1)] overflow-hidden"
                         >
                             <div className="h-14 flex items-center justify-between px-6 border-b border-white/10 bg-orange-500/5">
                                 <h3 className="text-sm font-bold text-orange-400 uppercase tracking-widest flex items-center gap-2">
@@ -893,7 +893,7 @@ export default function ProjectDetailPage() {
                                     <input
                                         value={editData.title}
                                         onChange={e => setEditData({ ...editData, title: e.target.value })}
-                                        className="w-full bg-black border border-white/10 h-10 text-sm font-mono text-white focus:border-orange-500 outline-none px-3"
+                                        className="w-full bg-slate-950 border border-white/10 h-10 text-sm font-mono text-white focus:border-orange-500 outline-none px-3"
                                         placeholder="PROJECT_TITLE"
                                     />
                                 </div>
@@ -903,7 +903,7 @@ export default function ProjectDetailPage() {
                                     <textarea
                                         value={editData.description}
                                         onChange={e => setEditData({ ...editData, description: e.target.value })}
-                                        className="w-full bg-black border border-white/10 p-3 text-sm font-mono text-white focus:border-orange-500 outline-none min-h-[80px]"
+                                        className="w-full bg-slate-950 border border-white/10 p-3 text-sm font-mono text-white focus:border-orange-500 outline-none min-h-[80px]"
                                         placeholder="PROJECT_DESCRIPTION..."
                                     />
                                 </div>
@@ -913,7 +913,7 @@ export default function ProjectDetailPage() {
                                     <select
                                         value={editData.status}
                                         onChange={e => setEditData({ ...editData, status: e.target.value })}
-                                        className="w-full bg-black border border-white/10 h-10 text-sm font-mono text-white px-3 outline-none focus:border-orange-500"
+                                        className="w-full bg-slate-950 border border-white/10 h-10 text-sm font-mono text-white px-3 outline-none focus:border-orange-500"
                                     >
                                         <option value="ongoing">Ongoing</option>
                                         <option value="completed">Completed</option>
@@ -944,13 +944,13 @@ export default function ProjectDetailPage() {
                                         <input
                                             value={newLink.linkName}
                                             onChange={e => setNewLink({ ...newLink, linkName: e.target.value })}
-                                            className="bg-black border border-white/10 h-9 text-xs font-mono text-white focus:border-orange-500 outline-none px-2 flex-1"
+                                            className="bg-slate-950 border border-white/10 h-9 text-xs font-mono text-white focus:border-orange-500 outline-none px-2 flex-1"
                                             placeholder="Link Name"
                                         />
                                         <input
                                             value={newLink.url}
                                             onChange={e => setNewLink({ ...newLink, url: e.target.value })}
-                                            className="bg-black border border-white/10 h-9 text-xs font-mono text-white focus:border-orange-500 outline-none px-2 flex-1"
+                                            className="bg-slate-950 border border-white/10 h-9 text-xs font-mono text-white focus:border-orange-500 outline-none px-2 flex-1"
                                             placeholder="https://..."
                                         />
                                         <button onClick={handleAddEditLink} className="px-3 h-9 bg-orange-900/20 border border-orange-500/50 text-orange-500 hover:bg-orange-500/10 text-xs font-bold uppercase">
@@ -988,7 +988,7 @@ export default function ProjectDetailPage() {
                                             className={`px-3 py-1.5 text-[10px] font-bold uppercase transition-all ${
                                                 contributorMode === 'name' 
                                                     ? 'bg-orange-500 text-black' 
-                                                    : 'bg-black border border-white/10 text-orange-500 hover:bg-white/5'
+                                                    : 'bg-slate-950 border border-white/10 text-orange-500 hover:bg-white/20'
                                             }`}
                                         >
                                             Search by Name
@@ -999,7 +999,7 @@ export default function ProjectDetailPage() {
                                             className={`px-3 py-1.5 text-[10px] font-bold uppercase transition-all ${
                                                 contributorMode === 'role' 
                                                     ? 'bg-orange-500 text-black' 
-                                                    : 'bg-black border border-white/10 text-orange-500 hover:bg-white/5'
+                                                    : 'bg-slate-950 border border-white/10 text-orange-500 hover:bg-white/20'
                                             }`}
                                         >
                                             Search by Role
@@ -1011,13 +1011,13 @@ export default function ProjectDetailPage() {
                                         <input
                                             value={contributorQuery}
                                             onChange={e => setContributorQuery(e.target.value)}
-                                            className="w-full bg-black border border-white/10 h-9 text-xs font-mono text-white focus:border-orange-500 outline-none px-3"
+                                            className="w-full bg-slate-950 border border-white/10 h-9 text-xs font-mono text-white focus:border-orange-500 outline-none px-3"
                                             placeholder={contributorMode === 'name' ? 'Type name to search and select' : 'Type role to search and select'}
                                         />
 
                                         {/* Suggestions dropdown */}
                                         {(contributorSuggestions.length > 0 || suggestionsLoading) && (
-                                            <div className="absolute left-0 right-0 mt-1 z-50 bg-black border border-white/10 shadow-lg max-h-48 overflow-auto">
+                                            <div className="absolute left-0 right-0 mt-1 z-50 bg-slate-950 border border-white/10 shadow-lg max-h-48 overflow-auto">
                                                 {suggestionsLoading && (
                                                     <div className="p-2 text-xs text-gray-400">Searching...</div>
                                                 )}
@@ -1025,7 +1025,7 @@ export default function ProjectDetailPage() {
                                                     <div
                                                         key={i}
                                                         onClick={() => handleSelectContributor(s)}
-                                                        className="p-3 hover:bg-white/5 cursor-pointer border-b border-white/5 last:border-b-0"
+                                                        className="p-3 hover:bg-white/20 cursor-pointer border-b border-white/5 last:border-b-0"
                                                     >
                                                         <div className="flex justify-between items-center">
                                                             <div>
@@ -1059,12 +1059,12 @@ export default function ProjectDetailPage() {
             {/* Join Contributor Modal */}
             <AnimatePresence>
                 {showJoinModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
-                            className="w-full max-w-[450px] bg-black border border-green-500/30 shadow-[0_0_50px_rgba(34,197,94,0.1)] overflow-hidden"
+                            className="w-full max-w-[450px] bg-slate-950 border border-green-500/30 shadow-[0_0_50px_rgba(34,197,94,0.1)] overflow-hidden"
                         >
                             <div className="h-14 flex items-center justify-between px-6 border-b border-white/10 bg-green-500/5">
                                 <h3 className="text-sm font-bold text-green-400 uppercase tracking-widest flex items-center gap-2">
@@ -1081,7 +1081,7 @@ export default function ProjectDetailPage() {
                                     <input
                                         value={joinData.profileId}
                                         onChange={e => setJoinData({ ...joinData, profileId: e.target.value })}
-                                        className="w-full bg-black border border-white/10 h-10 text-sm font-mono text-white focus:border-green-500 outline-none px-3"
+                                        className="w-full bg-slate-950 border border-white/10 h-10 text-sm font-mono text-white focus:border-green-500 outline-none px-3"
                                         placeholder="FellowProjectProfile _id"
                                     />
                                 </div>
@@ -1091,7 +1091,7 @@ export default function ProjectDetailPage() {
                                     <input
                                         value={joinData.role}
                                         onChange={e => setJoinData({ ...joinData, role: e.target.value })}
-                                        className="w-full bg-black border border-white/10 h-10 text-sm font-mono text-white focus:border-green-500 outline-none px-3"
+                                        className="w-full bg-slate-950 border border-white/10 h-10 text-sm font-mono text-white focus:border-green-500 outline-none px-3"
                                         placeholder="e.g. Front Dev, Security Researcher"
                                     />
                                 </div>
@@ -1119,3 +1119,4 @@ export default function ProjectDetailPage() {
         </div>
     );
 }
+

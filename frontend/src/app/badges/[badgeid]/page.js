@@ -980,7 +980,7 @@ const RelatedBadges = () => (
             className="mx-2 relative flex-shrink-0 min-w-[6rem] md:min-w-[6.5rem]"
           >
             <div
-              className="cursor-pointer flex flex-col items-center space-y-2 rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg p-2
+              className="cursor-pointer flex flex-col items-center space-y-2 rounded-2xl bg-white/20 backdrop-blur-lg border border-white/10 shadow-lg p-2
               transition-shadow duration-300 ease-in-out
               hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)]"
               onClick={() => {
@@ -1567,3 +1567,4 @@ const RelatedBadges = () => (
 };
 
 export default BadgeId;
+

@@ -135,11 +135,11 @@ export default function FeedbackPage() {
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="text-xs uppercase text-gray-500 font-bold block mb-2">Email</label>
-                                <Input disabled value={user.email} className="bg-white/5 border-white/10" />
+                                <Input disabled value={user.email} className="bg-white/20 border-white/10" />
                             </div>
                             <div>
                                 <label className="text-xs uppercase text-gray-500 font-bold block mb-2">Name</label>
-                                <Input disabled value={`${user.firstName} ${user.lastName}`} className="bg-white/5 border-white/10" />
+                                <Input disabled value={`${user.firstName} ${user.lastName}`} className="bg-white/20 border-white/10" />
                             </div>
                         </div>
                     </div>
@@ -154,7 +154,7 @@ export default function FeedbackPage() {
                                 <div
                                     key={opt}
                                     onClick={() => setFormData({ ...formData, plansToContinue: opt })}
-                                    className={`p-4 border rounded-xl cursor-pointer transition-all flex items-center justify-between ${formData.plansToContinue === opt ? 'bg-cyan-500/10 border-cyan-500 text-cyan-400' : 'bg-white/5 border-white/10 hover:border-white/30'}`}
+                                    className={`p-4 border rounded-xl cursor-pointer transition-all flex items-center justify-between ${formData.plansToContinue === opt ? 'bg-cyan-500/10 border-cyan-500 text-cyan-400' : 'bg-white/20 border-white/10 hover:border-white/30'}`}
                                 >
                                     <span className="font-bold">{opt}</span>
                                     {formData.plansToContinue === opt && <CheckCircle className="w-5 h-5" />}
@@ -173,7 +173,7 @@ export default function FeedbackPage() {
                                     <div
                                         key={role}
                                         onClick={() => setFormData({ ...formData, nextRole: role })}
-                                        className={`p-3 border rounded-xl cursor-pointer transition-all text-sm ${formData.nextRole === role ? 'bg-purple-500/10 border-purple-500 text-purple-400' : 'bg-white/5 border-white/10 hover:border-white/30'}`}
+                                        className={`p-3 border rounded-xl cursor-pointer transition-all text-sm ${formData.nextRole === role ? 'bg-purple-500/10 border-purple-500 text-purple-400' : 'bg-white/20 border-white/10 hover:border-white/30'}`}
                                     >
                                         {role}
                                     </div>
@@ -189,7 +189,7 @@ export default function FeedbackPage() {
                             <textarea
                                 value={formData.reasonForDiscontinuing}
                                 onChange={e => setFormData({ ...formData, reasonForDiscontinuing: e.target.value })}
-                                className="w-full h-32 bg-black/40 border border-white/10 rounded-xl p-4 text-sm focus:border-red-500/50 outline-none"
+                                className="w-full h-32 bg-slate-900/60 border border-white/10 rounded-xl p-4 text-sm focus:border-red-500/50 outline-none"
                                 placeholder="Your feedback helps us improve..."
                             />
                         </div>
@@ -228,20 +228,20 @@ export default function FeedbackPage() {
                             </div>
                         </div>
 
-                        <Input placeholder="Most exciting project?" value={formData.excitingProject} onChange={e => setFormData({ ...formData, excitingProject: e.target.value })} className="bg-white/5 border-white/10" />
-                        <Input placeholder="How can we enhance the program?" value={formData.programEnhancement} onChange={e => setFormData({ ...formData, programEnhancement: e.target.value })} className="bg-white/5 border-white/10" />
-                        <Input placeholder="Performance reflection..." value={formData.performanceReflection} onChange={e => setFormData({ ...formData, performanceReflection: e.target.value })} className="bg-white/5 border-white/10" />
+                        <Input placeholder="Most exciting project?" value={formData.excitingProject} onChange={e => setFormData({ ...formData, excitingProject: e.target.value })} className="bg-white/20 border-white/10" />
+                        <Input placeholder="How can we enhance the program?" value={formData.programEnhancement} onChange={e => setFormData({ ...formData, programEnhancement: e.target.value })} className="bg-white/20 border-white/10" />
+                        <Input placeholder="Performance reflection..." value={formData.performanceReflection} onChange={e => setFormData({ ...formData, performanceReflection: e.target.value })} className="bg-white/20 border-white/10" />
                         <textarea
                             placeholder="Feedback on Team Lead/Support..."
                             value={formData.teamLeadSupport}
                             onChange={e => setFormData({ ...formData, teamLeadSupport: e.target.value })}
-                            className="w-full h-20 bg-white/5 border border-white/10 rounded-md p-3 text-sm outline-none"
+                            className="w-full h-20 bg-white/20 border border-white/10 rounded-md p-3 text-sm outline-none"
                         />
                         <textarea
                             placeholder="Would you recommend DeepCytes? Why/Why not?"
                             value={formData.recommendation}
                             onChange={e => setFormData({ ...formData, recommendation: e.target.value })}
-                            className="w-full h-20 bg-white/5 border border-white/10 rounded-md p-3 text-sm outline-none"
+                            className="w-full h-20 bg-white/20 border border-white/10 rounded-md p-3 text-sm outline-none"
                         />
                     </div>
                 );
@@ -249,8 +249,8 @@ export default function FeedbackPage() {
                 return (
                     <div className="space-y-6">
                         <h3 className="text-lg font-bold text-white">Vision for the Future</h3>
-                        <Input placeholder="What inspires you about tackling cybercrime?" value={formData.inspiration} onChange={e => setFormData({ ...formData, inspiration: e.target.value })} className="bg-white/5 border-white/10" />
-                        <Input placeholder="Ideas for innovative projects?" value={formData.innovativeIdeas} onChange={e => setFormData({ ...formData, innovativeIdeas: e.target.value })} className="bg-white/5 border-white/10" />
+                        <Input placeholder="What inspires you about tackling cybercrime?" value={formData.inspiration} onChange={e => setFormData({ ...formData, inspiration: e.target.value })} className="bg-white/20 border-white/10" />
+                        <Input placeholder="Ideas for innovative projects?" value={formData.innovativeIdeas} onChange={e => setFormData({ ...formData, innovativeIdeas: e.target.value })} className="bg-white/20 border-white/10" />
 
                         <div className="pt-4 border-t border-white/10">
                             <label className="text-sm font-bold text-white block mb-3">Consent for promotional use?</label>
@@ -259,7 +259,7 @@ export default function FeedbackPage() {
                                     <div
                                         key={opt}
                                         onClick={() => setFormData({ ...formData, promotionalConsent: opt })}
-                                        className={`p-3 border rounded-xl cursor-pointer flex items-center gap-3 text-sm ${formData.promotionalConsent === opt ? 'bg-indigo-500/10 border-indigo-500 text-indigo-400' : 'bg-white/5 border-white/10'}`}
+                                        className={`p-3 border rounded-xl cursor-pointer flex items-center gap-3 text-sm ${formData.promotionalConsent === opt ? 'bg-indigo-500/10 border-indigo-500 text-indigo-400' : 'bg-white/20 border-white/10'}`}
                                     >
                                         <div className={`w-4 h-4 rounded-full border ${formData.promotionalConsent === opt ? 'bg-indigo-500 border-indigo-500' : 'border-gray-500'}`} />
                                         {opt}
@@ -280,7 +280,7 @@ export default function FeedbackPage() {
                                 <div
                                     key={opt}
                                     onClick={() => setFormData({ ...formData, careerNotifications: opt })}
-                                    className={`p-4 border rounded-xl cursor-pointer flex items-center justify-between ${formData.careerNotifications === opt ? 'bg-green-500/10 border-green-500 text-green-400' : 'bg-white/5 border-white/10 hover:border-white/30'}`}
+                                    className={`p-4 border rounded-xl cursor-pointer flex items-center justify-between ${formData.careerNotifications === opt ? 'bg-green-500/10 border-green-500 text-green-400' : 'bg-white/20 border-white/10 hover:border-white/30'}`}
                                 >
                                     <span className="font-bold text-sm">{opt}</span>
                                     {formData.careerNotifications === opt && <CheckCircle className="w-5 h-5" />}
@@ -306,7 +306,7 @@ export default function FeedbackPage() {
                 {/* Timer Display */}
                 <div className="grid grid-cols-4 gap-3 max-w-sm mx-auto mt-8">
                     {Object.entries(timeLeft).map(([label, value]) => (
-                        <div key={label} className="bg-black border border-white/10 p-5 relative overflow-hidden group">
+                        <div key={label} className="bg-slate-950 border border-white/10 p-5 relative overflow-hidden group">
                             <div className="absolute top-0 right-0 w-1 h-1 bg-cyan-500/30" />
                             <div className="text-3xl font-black text-cyan-400 font-mono tracking-tighter">{String(value).padStart(2, '0')}</div>
                             <div className="text-[7px] font-black uppercase text-gray-700 mt-2 tracking-[0.2em]">{label}</div>
@@ -317,11 +317,11 @@ export default function FeedbackPage() {
 
             {/* Form Container */}
             <div className={`p-1 border transition-all duration-700 relative overflow-hidden ${isTenureEnded ? 'border-white/10' : 'border-white/5 opacity-40 grayscale select-none pointer-events-none'}`}>
-                <div className="bg-black p-10 sm:p-14 relative">
+                <div className="bg-slate-950 p-10 sm:p-14 relative">
                     {/* Lock Overlay */}
                     {!isTenureEnded && (
-                        <div className="absolute inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center flex-col gap-6 p-8 text-center pointer-events-auto">
-                            <div className="w-20 h-20 bg-white/5 flex items-center justify-center border border-white/10 rotate-45">
+                        <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center flex-col gap-6 p-8 text-center pointer-events-auto">
+                            <div className="w-20 h-20 bg-white/20 flex items-center justify-center border border-white/10 rotate-45">
                                 <Clock className="w-8 h-8 text-gray-600 -rotate-45" />
                             </div>
                             <div className="space-y-2">
@@ -352,7 +352,7 @@ export default function FeedbackPage() {
 
                     <div className="flex justify-between mt-12 pt-10 border-t border-white/5">
                         {step > 1 ? (
-                            <Button onClick={handleBack} variant="outline" className="border-white/10 hover:bg-white/5 rounded-none font-black text-[10px] uppercase tracking-widest h-12 px-8 transition-all">
+                            <Button onClick={handleBack} variant="outline" className="border-white/10 hover:bg-white/20 rounded-none font-black text-[10px] uppercase tracking-widest h-12 px-8 transition-all">
                                 [PREV_SEQ]
                             </Button>
                         ) : <div />}

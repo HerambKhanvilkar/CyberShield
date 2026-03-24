@@ -71,15 +71,15 @@ export default function OrgDashboard() {
     );
 
     if (loading) return (
-        <div className="min-h-screen bg-black text-green-500 font-mono flex items-center justify-center">
+        <div className="min-h-screen bg-slate-950 text-green-500 font-mono flex items-center justify-center">
             <div className="animate-pulse">INITIALIZING_NODE_LINK...</div>
         </div>
     );
 
     return (
-        <div className="min-h-screen bg-black text-gray-300 font-mono selection:bg-green-500/30 selection:text-green-200">
+        <div className="min-h-screen bg-slate-950 text-gray-300 font-mono selection:bg-green-500/30 selection:text-green-200">
             {/* Sidebar */}
-            <aside className="fixed left-0 top-0 bottom-0 w-64 border-r border-white/10 bg-black/50 backdrop-blur-sm z-20 flex flex-col">
+            <aside className="fixed left-0 top-0 bottom-0 w-64 border-r border-white/10 bg-slate-950/50 backdrop-blur-sm z-20 flex flex-col">
                 <div className="p-6 border-b border-white/10">
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-green-500/10 border border-green-500/30 flex items-center justify-center">
@@ -95,13 +95,13 @@ export default function OrgDashboard() {
                 <nav className="flex-1 p-4 space-y-1">
                     <button
                         onClick={() => setActiveTab('overview')}
-                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-sm text-xs uppercase tracking-wider transition-all ${activeTab === 'overview' ? 'bg-green-900/20 text-green-400 border-l-2 border-green-500' : 'hover:bg-white/5 hover:text-white border-l-2 border-transparent'}`}
+                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-sm text-xs uppercase tracking-wider transition-all ${activeTab === 'overview' ? 'bg-green-900/20 text-green-400 border-l-2 border-green-500' : 'hover:bg-white/20 hover:text-white border-l-2 border-transparent'}`}
                     >
                         <LayoutDashboard className="w-4 h-4" /> Overview
                     </button>
                     <button
                         onClick={() => setActiveTab('applicants')}
-                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-sm text-xs uppercase tracking-wider transition-all ${activeTab === 'applicants' ? 'bg-green-900/20 text-green-400 border-l-2 border-green-500' : 'hover:bg-white/5 hover:text-white border-l-2 border-transparent'}`}
+                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-sm text-xs uppercase tracking-wider transition-all ${activeTab === 'applicants' ? 'bg-green-900/20 text-green-400 border-l-2 border-green-500' : 'hover:bg-white/20 hover:text-white border-l-2 border-transparent'}`}
                     >
                         <Users className="w-4 h-4" /> Applicants
                     </button>
@@ -142,7 +142,7 @@ export default function OrgDashboard() {
 
                         {/* Recent Activity / Visualizations Placeholder */}
                         <div className="grid grid-cols-3 gap-6">
-                            <div className="col-span-2 h-64 bg-white/5 border border-white/10 rounded-sm p-4 flex flex-col items-center justify-center text-gray-500 text-xs">
+                            <div className="col-span-2 h-64 bg-white/20 border border-white/10 rounded-sm p-4 flex flex-col items-center justify-center text-gray-500 text-xs">
                                 <span className="mb-2 uppercase tracking-widest">Application Velocity</span>
                                 <div className="w-full h-32 flex items-end justify-center gap-2 opacity-50">
                                     {[40, 60, 45, 70, 85, 60, 75, 50, 65, 80].map((h, i) => (
@@ -150,14 +150,14 @@ export default function OrgDashboard() {
                                     ))}
                                 </div>
                             </div>
-                            <div className="col-span-1 h-64 bg-white/5 border border-white/10 rounded-sm p-6">
+                            <div className="col-span-1 h-64 bg-white/20 border border-white/10 rounded-sm p-6">
                                 <h3 className="text-xs uppercase text-gray-400 mb-4">Quick Actions</h3>
                                 <div className="space-y-2">
-                                    <button className="w-full text-left px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 text-xs transition-colors rounded-sm flex items-center justify-between group">
+                                    <button className="w-full text-left px-3 py-2 bg-white/20 hover:bg-white/20 border border-white/5 hover:border-white/20 text-xs transition-colors rounded-sm flex items-center justify-between group">
                                         Download Report
                                         <ChevronRight className="w-3 h-3 text-gray-500 group-hover:text-white" />
                                     </button>
-                                    <button className="w-full text-left px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 text-xs transition-colors rounded-sm flex items-center justify-between group">
+                                    <button className="w-full text-left px-3 py-2 bg-white/20 hover:bg-white/20 border border-white/5 hover:border-white/20 text-xs transition-colors rounded-sm flex items-center justify-between group">
                                         Update Node Config
                                         <ChevronRight className="w-3 h-3 text-gray-500 group-hover:text-white" />
                                     </button>
@@ -182,19 +182,19 @@ export default function OrgDashboard() {
                                         placeholder="SEARCH_DB..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="bg-white/5 border border-white/10 pl-8 pr-4 py-2 text-xs text-white focus:outline-none focus:border-green-500/50 w-64"
+                                        className="bg-white/20 border border-white/10 pl-8 pr-4 py-2 text-xs text-white focus:outline-none focus:border-green-500/50 w-64"
                                     />
                                 </div>
-                                <button className="px-3 py-2 bg-white/5 border border-white/10 text-xs text-gray-400 hover:text-white hover:bg-white/10">
+                                <button className="px-3 py-2 bg-white/20 border border-white/10 text-xs text-gray-400 hover:text-white hover:bg-white/20">
                                     <Filter className="w-3 h-3" />
                                 </button>
                             </div>
                         </div>
 
-                        <div className="border border-white/10 bg-white/5 rounded-sm overflow-hidden">
+                        <div className="border border-white/10 bg-white/20 rounded-sm overflow-hidden">
                             <table className="w-full text-left text-xs">
                                 <thead>
-                                    <tr className="bg-white/5 text-gray-400 uppercase tracking-wider border-b border-white/10">
+                                    <tr className="bg-white/20 text-gray-400 uppercase tracking-wider border-b border-white/10">
                                         <th className="p-4 font-normal">Candidate</th>
                                         <th className="p-4 font-normal">Preferred Role</th>
                                         <th className="p-4 font-normal">Status</th>
@@ -203,13 +203,13 @@ export default function OrgDashboard() {
                                 </thead>
                                 <tbody className="divide-y divide-white/5">
                                     {filteredApplicants.map((app) => (
-                                        <tr key={app._id} className="hover:bg-white/5 transition-colors group">
+                                        <tr key={app._id} className="hover:bg-white/20 transition-colors group">
                                             <td className="p-4">
                                                 <div className="font-bold text-white group-hover:text-green-400 transition-colors">{app.firstName} {app.lastName}</div>
                                                 <div className="text-gray-500 text-[10px]">{app.email}</div>
                                             </td>
                                             <td className="p-4 text-gray-300">
-                                                <span className="px-2 py-1 bg-white/5 rounded-full text-[10px] border border-white/10">
+                                                <span className="px-2 py-1 bg-white/20 rounded-full text-[10px] border border-white/10">
                                                     {(() => {
                                                         const r = app.role;
                                                         return typeof r === 'object' ? r?.name : r || 'N/A';
@@ -250,13 +250,13 @@ function ApplicantDetailsModal({ applicant, onClose }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4" onClick={onClose}
+            className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4" onClick={onClose}
         >
             <motion.div
                 initial={{ scale: 0.95, y: 20 }}
                 animate={{ scale: 1, y: 0 }}
                 exit={{ scale: 0.95, y: 20 }}
-                className="bg-black border border-green-500/30 w-full max-w-2xl rounded-sm p-8 space-y-6 relative shadow-[0_0_50px_rgba(34,197,94,0.1)]"
+                className="bg-slate-950 border border-green-500/30 w-full max-w-2xl rounded-sm p-8 space-y-6 relative shadow-[0_0_50px_rgba(34,197,94,0.1)]"
                 onClick={e => e.stopPropagation()}
             >
                 <div className="absolute top-0 right-0 p-4">
@@ -300,13 +300,13 @@ function ApplicantDetailsModal({ applicant, onClose }) {
                     <div className="space-y-6">
                         <div className="space-y-2">
                             <span className="text-[10px] uppercase text-gray-500 block font-black tracking-widest">Motivation Matrix (Why DeepCytes?)</span>
-                            <div className="text-xs text-gray-300 font-mono leading-relaxed bg-white/5 p-4 border border-white/5 h-32 overflow-y-auto custom-scrollbar">
+                            <div className="text-xs text-gray-300 font-mono leading-relaxed bg-white/20 p-4 border border-white/5 h-32 overflow-y-auto custom-scrollbar">
                                 {applicant.whyJoinDeepCytes || applicant.data?.whyJoin || <span className="text-gray-600 italic">No entry found.</span>}
                             </div>
                         </div>
                         <div className="space-y-2">
                             <span className="text-[10px] uppercase text-gray-500 block font-black tracking-widest">Project Concept</span>
-                            <div className="text-xs text-gray-300 font-mono leading-relaxed bg-white/5 p-4 border border-white/5 h-32 overflow-y-auto custom-scrollbar">
+                            <div className="text-xs text-gray-300 font-mono leading-relaxed bg-white/20 p-4 border border-white/5 h-32 overflow-y-auto custom-scrollbar">
                                 {applicant.data?.ideas || <span className="text-gray-600 italic">No entry found.</span>}
                             </div>
                         </div>
@@ -336,12 +336,12 @@ function ApplicantDetailsModal({ applicant, onClose }) {
 
 function StatCard({ label, value, icon, color = "text-green-500" }) {
     return (
-        <div className="bg-white/5 border border-white/10 p-4 rounded-sm flex items-center justify-between hover:border-white/20 transition-all cursor-default group">
+        <div className="bg-white/20 border border-white/10 p-4 rounded-sm flex items-center justify-between hover:border-white/20 transition-all cursor-default group">
             <div>
                 <p className="text-[10px] uppercase text-gray-500 tracking-wider mb-1 group-hover:text-gray-400">{label}</p>
                 <p className={`text-2xl font-bold ${color} font-mono`}>{value}</p>
             </div>
-            <div className={`p-2 rounded-full bg-white/5 ${color} opacity-80 group-hover:opacity-100 transition-opacity`}>
+            <div className={`p-2 rounded-full bg-white/20 ${color} opacity-80 group-hover:opacity-100 transition-opacity`}>
                 {icon}
             </div>
         </div>
@@ -363,3 +363,4 @@ function StatusBadge({ status }) {
         </span>
     );
 }
+

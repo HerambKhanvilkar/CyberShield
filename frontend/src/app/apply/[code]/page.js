@@ -299,7 +299,7 @@ export default function ApplicationForm() {
                     >
                         <div className="absolute top-0 right-0 w-64 h-64 bg-red-600/10 blur-[100px] rounded-full" />
                         <header className="mb-8 border-b border-white/5 pb-8 relative z-10">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-red-500 mb-4">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 border border-white/10 text-[10px] font-black uppercase tracking-widest text-red-500 mb-4">
                                 <Clock className="w-3 h-3" /> Deadline Exceeded
                             </div>
                             <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight italic mb-2 text-white">Application Window Closed</h1>
@@ -307,7 +307,7 @@ export default function ApplicationForm() {
                         </header>
 
                         <div className="relative z-10 space-y-6">
-                            <div className="p-6 bg-white/5 border border-white/10 rounded-2xl">
+                            <div className="p-6 bg-white/20 border border-white/10 rounded-2xl">
                                 <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
                                     <ShieldCheck className="w-5 h-5 text-cyan-500" /> Already Applied?
                                 </h3>
@@ -320,7 +320,7 @@ export default function ApplicationForm() {
                                         placeholder="institutional-email@domain.com"
                                         value={statusEmail}
                                         onChange={e => setStatusEmail(e.target.value)}
-                                        className="bg-black/40 border-white/10 h-12 rounded-xl"
+                                        className="bg-slate-900/60 border-white/10 h-12 rounded-xl"
                                     />
                                     {statusStep === 'start' ? (
                                         <Button onClick={handleStatusSendOtp} disabled={statusLoading} className="h-12 bg-cyan-600 hover:bg-cyan-500 rounded-xl px-6 font-bold">
@@ -332,7 +332,7 @@ export default function ApplicationForm() {
                                                 placeholder="OTP"
                                                 value={statusOtp}
                                                 onChange={e => setStatusOtp(e.target.value)}
-                                                className="bg-black/40 border-white/10 h-12 rounded-xl text-center tracking-widest w-24"
+                                                className="bg-slate-900/60 border-white/10 h-12 rounded-xl text-center tracking-widest w-24"
                                             />
                                             <Button onClick={handleStatusLogin} disabled={statusLoading} className="h-12 bg-green-600 hover:bg-green-500 rounded-xl px-6 font-bold flex-1">
                                                 {statusLoading ? "Accessing..." : "Verify & Login"}
@@ -361,7 +361,7 @@ export default function ApplicationForm() {
                     >
                         <div className="absolute top-0 right-0 w-64 h-64 bg-red-600/10 blur-[100px] rounded-full" />
                         <header className="mb-8 sm:mb-12 border-b border-white/5 pb-6 sm:pb-8 relative z-10">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-red-400 mb-4">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 border border-white/10 text-[10px] font-black uppercase tracking-widest text-red-400 mb-4">
                                 <Lock className="w-3 h-3 text-red-400" /> INVALID ACCESS CODE
                             </div>
                             <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight italic mb-2 text-red-500 drop-shadow">ACCESS DENIED</h1>
@@ -389,7 +389,7 @@ export default function ApplicationForm() {
                     >
                         <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-600/10 blur-[100px] rounded-full" />
                         <header className="mb-7 sm:mb-10 border-b border-white/5 pb-5 sm:pb-7 relative z-10">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-black uppercase tracking-widest text-cyan-400 mb-4">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 border border-white/10 text-xs font-black uppercase tracking-widest text-cyan-400 mb-4">
                                 <ShieldCheck className="w-3 h-3" /> Secure Application
                             </div>
                             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight italic mb-2 leading-tight">Fellowship | DeepCytes Cyber Labs UK</h1>
@@ -411,7 +411,7 @@ export default function ApplicationForm() {
                                         <span className="text-red-500 font-bold ml-1">*</span>
                                         {/* <span className="text-xs text-red-500 ml-1">Mandatory</span> */}
                                     </Label>
-                                    <Input value={formData.firstName} onChange={e => setFormData({ ...formData, firstName: e.target.value })} required className="bg-black/50 border-white/10 h-10 sm:h-12 rounded-xl focus:border-cyan-500/50 text-sm sm:text-base" />
+                                    <Input value={formData.firstName} onChange={e => setFormData({ ...formData, firstName: e.target.value })} required className="bg-slate-950/50 border-white/10 h-10 sm:h-12 rounded-xl focus:border-cyan-500/50 text-sm sm:text-base" />
                                 </div>
                                 <div className="space-y-2">
                                     <Label className="text-gray-400 flex items-center gap-2 text-sm sm:text-base">
@@ -419,11 +419,11 @@ export default function ApplicationForm() {
                                         <span className="text-red-500 font-bold ml-1">*</span>
                                         {/* <span className="text-xs text-red-500 ml-1">Mandatory</span> */}
                                     </Label>
-                                    <Input value={formData.lastName} onChange={e => setFormData({ ...formData, lastName: e.target.value })} required className="bg-black/50 border-white/10 h-10 sm:h-12 rounded-xl focus:border-cyan-500/50 text-sm sm:text-base" />
+                                    <Input value={formData.lastName} onChange={e => setFormData({ ...formData, lastName: e.target.value })} required className="bg-slate-950/50 border-white/10 h-10 sm:h-12 rounded-xl focus:border-cyan-500/50 text-sm sm:text-base" />
                                 </div>
                             </div>
                             {/* Email Verification */}
-                            <div className="p-4 sm:p-6 bg-white/5 rounded-2xl sm:rounded-3xl border border-white/10 space-y-4">
+                            <div className="p-4 sm:p-6 bg-white/20 rounded-2xl sm:rounded-3xl border border-white/10 space-y-4">
                                 <Label className="text-gray-400 flex items-center gap-2 text-sm sm:text-base">
                                     <Mail className="w-4 h-4" /> Email Verification
                                     <span className="text-red-500 font-bold ml-1">*</span>
@@ -437,7 +437,7 @@ export default function ApplicationForm() {
                                         disabled={emailStep !== "start"}
                                         required
                                         placeholder="institutional-email@domain.com"
-                                        className="bg-black/40 border-white/10 h-10 sm:h-12 rounded-xl min-w-[160px] text-sm sm:text-base"
+                                        className="bg-slate-900/60 border-white/10 h-10 sm:h-12 rounded-xl min-w-[160px] text-sm sm:text-base"
                                     />
                                     {emailStep === "start" && (
                                         <Button type="button" onClick={handleSendOtp} disabled={otpLoading} className="h-10 sm:h-12 bg-cyan-600 hover:bg-cyan-500 px-5 rounded-xl text-sm sm:text-base">
@@ -473,7 +473,7 @@ export default function ApplicationForm() {
                                 <AnimatePresence>
                                     {emailStep === "otp_sent" && (
                                         <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="flex gap-2 flex-wrap">
-                                            <Input placeholder="Enter 6-digit OTP" value={formData.otp} onChange={e => setFormData({ ...formData, otp: e.target.value })} className="bg-black/40 border-white/10 h-10 sm:h-12 text-center tracking-[0.2em] rounded-xl min-w-[100px] text-sm sm:text-base" />
+                                            <Input placeholder="Enter 6-digit OTP" value={formData.otp} onChange={e => setFormData({ ...formData, otp: e.target.value })} className="bg-slate-900/60 border-white/10 h-10 sm:h-12 text-center tracking-[0.2em] rounded-xl min-w-[100px] text-sm sm:text-base" />
                                             <Button type="button" onClick={handleVerifyOtp} disabled={otpLoading} className="h-10 sm:h-12 bg-green-600 hover:bg-green-500 px-5 rounded-xl text-sm sm:text-base">
                                                 Confirm
                                             </Button>
@@ -505,7 +505,7 @@ export default function ApplicationForm() {
                                                 type="button"
                                                 className={`mb-3 break-inside-avoid p-4 rounded-xl border text-sm transition-all duration-200 transform text-left flex items-center justify-between group ${isSelected
                                                     ? "bg-cyan-500/10 border-cyan-500 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.1)]"
-                                                    : "bg-white/5 border-white/10 text-gray-400 hover:border-white/30 hover:bg-white/[0.08] hover:scale-[1.02] hover:shadow-[0_0_10px_rgba(6,182,212,0.2)]"
+                                                    : "bg-white/20 border-white/10 text-gray-400 hover:border-white/30 hover:bg-white/[0.08] hover:scale-[1.02] hover:shadow-[0_0_10px_rgba(6,182,212,0.2)]"
                                                     } ${!roleDesc ? 'h-20 overflow-hidden' : ''}`}
                                                 onClick={() => {
                                                     let newRoles = [...formData.roles];
@@ -586,7 +586,7 @@ export default function ApplicationForm() {
                                     </div>
 
                                     {/* Portfolio Link */}
-                                    {/* <div className="h-20 bg-white/5 rounded-2xl p-3 border border-white/5">
+                                    {/* <div className="h-20 bg-white/20 rounded-2xl p-3 border border-white/5">
                                         <span className="text-xs font-black uppercase text-gray-600 mb-1 block">Portfolio or Supporting Materials (Link)</span>
                                         <Input
                                             value={formData.resume}
@@ -608,7 +608,7 @@ export default function ApplicationForm() {
                                         {/* <span className="text-xs text-red-500 ml-1">Mandatory</span> */}
                                     </Label>
                                     <textarea
-                                        className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white min-h-[120px] focus:border-cyan-500/50 focus:ring-0 resize-none text-sm sm:text-base"
+                                        className="w-full bg-slate-900/60 border border-white/10 rounded-xl p-3 text-white min-h-[120px] focus:border-cyan-500/50 focus:ring-0 resize-none text-sm sm:text-base"
                                         placeholder="In 100-200 words, tell us about your skills, research abilities, and why you’re passionate about the field of cybersecurity."
                                         maxLength={1000}
                                         value={formData.whyFellowship || ''}
@@ -627,7 +627,7 @@ export default function ApplicationForm() {
                                 <div>
                                     <Label className="text-gray-400 font-bold mb-2 block text-base sm:text-lg">Any innovative ideas/projects you would like to pursue at DC?</Label>
                                     <textarea
-                                        className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white min-h-[120px] focus:border-cyan-500/50 focus:ring-0 resize-none text-sm sm:text-base"
+                                        className="w-full bg-slate-900/60 border border-white/10 rounded-xl p-3 text-white min-h-[120px] focus:border-cyan-500/50 focus:ring-0 resize-none text-sm sm:text-base"
                                         placeholder="Share any innovative ideas or projects you would like to pursue as part of the Fellowship."
                                         maxLength={500}
                                         value={formData.innovativeIdeas || ''}
@@ -662,7 +662,7 @@ export default function ApplicationForm() {
                                         required
                                         checked={formData.consent || false}
                                         onChange={e => setFormData({ ...formData, consent: e.target.checked })}
-                                        className="accent-cyan-500 w-5 h-5 rounded border border-cyan-400 bg-black/40 focus:ring-2 focus:ring-cyan-500 transition-all"
+                                        className="accent-cyan-500 w-5 h-5 rounded border border-cyan-400 bg-slate-900/60 focus:ring-2 focus:ring-cyan-500 transition-all"
                                     />
                                     <span className="text-white">I consent to the use of my data for these purposes.</span>
                                     <span className="text-red-500 font-bold ml-1">*</span>
@@ -689,7 +689,7 @@ export default function ApplicationForm() {
                     >
                         <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-600/10 blur-[100px] rounded-full" />
                         <header className="mb-4 border-b border-white/5 pb-4 relative z-10">
-                            {/* <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-black uppercase tracking-widest text-cyan-400 mb-2">
+                            {/* <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 border border-white/10 text-xs font-black uppercase tracking-widest text-cyan-400 mb-2">
                                 <ShieldCheck className="w-3 h-3" /> Application Status
                             </div> */}
                             <h2 className="text-lg sm:text-xl font-bold tracking-tight italic mb-2 leading-tight text-cyan-500">Applied already?</h2>
@@ -712,3 +712,4 @@ export default function ApplicationForm() {
         </div>
     );
 }
+

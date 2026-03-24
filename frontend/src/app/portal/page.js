@@ -82,7 +82,7 @@ export default function ApplicationStatus() {
                     <div className="absolute bottom-0 left-0 w-64 h-64 bg-pink-400/10 blur-[100px] rounded-full" />
                 </div>
 
-                <div className="w-full max-w-lg bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 shadow-2xl relative overflow-hidden">
+                <div className="w-full max-w-lg bg-white/20 backdrop-blur-xl border border-white/10 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 shadow-2xl relative overflow-hidden">
                     {/* Header */}
                     {step !== 3 && (
                         <div className="text-center mb-10">
@@ -104,7 +104,7 @@ export default function ApplicationStatus() {
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
                                     placeholder="Enter the email used for your application"
-                                    className="bg-black/40 border-white/10 text-white h-12 rounded-xl text-base"
+                                    className="bg-slate-900/60 border-white/10 text-white h-12 rounded-xl text-base"
                                 />
                             </div>
                             <Button type="submit" disabled={loading} className="w-full h-12 bg-gradient-to-r from-cyan-600 to-cyan-400 hover:from-cyan-500 hover:to-cyan-300 rounded-xl font-bold transition-all shadow-lg">
@@ -125,7 +125,7 @@ export default function ApplicationStatus() {
                                     onChange={(e) => setOtp(e.target.value)}
                                     required
                                     placeholder="Enter 6-digit code"
-                                    className="bg-black/40 border-white/10 text-white h-12 text-center text-2xl tracking-[0.5em] font-mono rounded-xl"
+                                    className="bg-slate-900/60 border-white/10 text-white h-12 text-center text-2xl tracking-[0.5em] font-mono rounded-xl"
                                 />
                             </div>
                             <div className="flex flex-col gap-2">
@@ -178,7 +178,7 @@ export default function ApplicationStatus() {
                                         </p>
                                     </div>
 
-                                    <div className="bg-black/40 border border-white/10 rounded-2xl p-6 text-left space-y-4 relative overflow-hidden group">
+                                    <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-6 text-left space-y-4 relative overflow-hidden group">
                                         <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-white/20" />
                                         <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-white/20" />
 
@@ -241,7 +241,7 @@ export default function ApplicationStatus() {
                                         <h2 className="text-2xl font-bold text-red-500">Application Unsuccessful</h2>
                                         <p className="text-gray-400">We appreciate your interest in DeepCytes, {result.firstName}. At this time, we are unable to offer you a position in the Fellowship. Your application will remain on file for future consideration.</p>
                                     </div>
-                                    <Button onClick={() => router.push("/")} variant="outline" className="border-white/10 hover:bg-white/5">Return to Homepage</Button>
+                                    <Button onClick={() => router.push("/")} variant="outline" className="border-white/10 hover:bg-white/20">Return to Homepage</Button>
                                 </div>
                             )}
 
@@ -256,11 +256,11 @@ export default function ApplicationStatus() {
                                         <p className="text-gray-300">Congratulations, {result.firstName}. You have been selected to join the DeepCytes Fellowship.</p>
                                     </div>
 
-                                    <div className="bg-black/40 border border-white/10 rounded-2xl p-6 text-left space-y-4 shadow-lg">
+                                    <div className="bg-slate-900/60 border border-white/10 rounded-2xl p-6 text-left space-y-4 shadow-lg">
                                         <h3 className="text-xs font-bold uppercase tracking-widest text-cyan-400">Next Steps: Account Activation</h3>
                                         <p className="text-sm text-gray-400">To proceed, please activate your account using the email address provided in your application:</p>
                                         <div className="space-y-3">
-                                            <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
+                                            <div className="flex items-center gap-3 bg-white/20 p-3 rounded-xl border border-white/5">
                                                 <Mail className="w-4 h-4 text-cyan-400" />
                                                 <span className="text-sm font-mono truncate">{result.email}</span>
                                             </div>
@@ -284,3 +284,4 @@ export default function ApplicationStatus() {
         </>
     );
 }
+

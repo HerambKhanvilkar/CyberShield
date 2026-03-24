@@ -26,7 +26,7 @@ const Loader = ({ text = "INITIALIZING..." }) => {
                     </p>
                 </div>
 
-                <div className="w-48 h-1 bg-white/5 mx-auto overflow-hidden relative">
+                <div className="w-48 h-1 bg-white/20 mx-auto overflow-hidden relative">
                     <div className="absolute inset-0 bg-cyan-500/30 -translate-x-full animate-[loading-bar_2s_infinite]" />
                 </div>
 
@@ -47,3 +47,4 @@ const Loader = ({ text = "INITIALIZING..." }) => {
 };
 
 export default Loader;
+
