@@ -51,7 +51,7 @@ const ApplicantSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['PENDING', 'INTERVIEW_SCHEDULED', 'INTERVIEW_SKIPPED', 'ACCEPTED', 'REJECTED'],
+        enum: ['PENDING', 'INTERVIEW_SCHEDULED', 'INTERVIEW_SKIPPED', 'WAITING', 'ACCEPTED', 'REJECTED'],
         default: 'PENDING'
     },
     interviewDetails: {

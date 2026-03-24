@@ -53,12 +53,13 @@ function AdminDashboardContent() {
 
     // counts for unread‑style badges on sub-tabs
     const statusCounts = useMemo(() => {
-        const c = { PENDING: 0, INTERVIEW: 0, ACCEPTED: 0, REJECTED: 0, ALL: 0 };
+        const c = { PENDING: 0, INTERVIEW: 0, ACCEPTED: 0, REJECTED: 0, WAITING: 0, ALL: 0 };
         c.ALL = apps.length;
         apps.forEach(a => {
             if (a.status === 'PENDING') c.PENDING++;
             if (a.status === 'ACCEPTED') c.ACCEPTED++;
             if (a.status === 'REJECTED') c.REJECTED++;
+            if (a.status === 'WAITING') c.WAITING++;
             if (a.status === 'INTERVIEW_SCHEDULED' || a.status === 'INTERVIEW_SKIPPED') c.INTERVIEW++;
         });
         return c;
@@ -904,6 +905,9 @@ function AdminDashboardContent() {
         const target = (orgInspectorMember && (orgInspectorMember.status || orgInspectorMember.interviewDetails)) ? orgInspectorMember : selectedItem;
         if (!target || !target._id) { toast.error('No applicant selected'); return; }
 
+        // Prevent schedule and skip-role modals from appearing together.
+        setShowScheduleModal(false);
+
         // prepare default selection
         const defaultRole = (() => {
             if (target.role) return typeof target.role === 'string' ? target.role : (target.role.name || '');
@@ -936,6 +940,7 @@ function AdminDashboardContent() {
             // Persist assignedRole locally so Accept requires it and includes it in status update
             updated.assignedRole = assignedRole;
             if (skipModalTarget === orgInspectorMember) setOrgInspectorMember(updated); else setSelectedItem(updated);
+            setShowScheduleModal(false);
             setShowAssignRoleModal(false);
             setSkipModalTarget(null);
         } catch (error) {
@@ -1111,6 +1116,7 @@ function AdminDashboardContent() {
         if (activeSubTab === 'INTERVIEW') return matchesSearch && (a.status === 'INTERVIEW_SCHEDULED' || a.status === 'INTERVIEW_SKIPPED');
         if (activeSubTab === 'ACCEPTED') return matchesSearch && a.status === 'ACCEPTED';
         if (activeSubTab === 'REJECTED') return matchesSearch && a.status === 'REJECTED';
+        if (activeSubTab === 'WAITING') return matchesSearch && a.status === 'WAITING';
         return matchesSearch; // ALL
     });
 
@@ -1208,8 +1214,8 @@ function AdminDashboardContent() {
     const renderOrgInspector = () => {
         const orgApps = apps.filter(a => a.orgCode === selectedItem.code && a.status === 'PENDING');
         const orgInterviewees = apps.filter(a => a.orgCode === selectedItem.code && (a.status === 'INTERVIEW_SCHEDULED' || a.status === 'INTERVIEW_SKIPPED'));
+        const orgWaiting = apps.filter(a => a.orgCode === selectedItem.code && a.status === 'WAITING');
         const orgRejected = apps.filter(a => a.orgCode === selectedItem.code && a.status === 'REJECTED');
-        const orgFellows = fellows.filter(f => f.tenures?.some(t => t.orgCode === selectedItem.code)); // Robust filtering
 
         return (
             <div className="space-y-8">
@@ -1228,11 +1234,16 @@ function AdminDashboardContent() {
                                         <div className="px-2 py-0.5 border border-purple-500/30 text-[9px] text-purple-400 uppercase">{orgInspectorMember.onboardingState || orgInspectorMember.status}</div>
                                         <button onClick={() => {
                                             const isApplicant = orgInspectorMember && (typeof orgInspectorMember.status === 'string' || orgInspectorMember.interviewDetails);
-                                            const applicantStatuses = ['PENDING','INTERVIEW_SCHEDULED','INTERVIEW_SKIPPED','REJECTED'];
-                                            if (isApplicant && applicantStatuses.includes((orgInspectorMember.status || '').toUpperCase())) {
-                                                // Open in Applications (Interview tab) for applicants who are not yet fellows
+                                            const applicantStatuses = ['PENDING','INTERVIEW_SCHEDULED','INTERVIEW_SKIPPED', 'WAITING', 'REJECTED'];
+                                            const currentStatus = (orgInspectorMember.status || '').toUpperCase();
+                                            if (isApplicant && applicantStatuses.includes(currentStatus)) {
+                                                // Open in Applications and jump to the matching status tab
                                                 setActiveTab('applications');
-                                                setActiveSubTab('INTERVIEW');
+
+                                                if (currentStatus === 'WAITING') setActiveSubTab('WAITING');
+                                                else if (currentStatus === 'INTERVIEW_SCHEDULED' || currentStatus === 'INTERVIEW_SKIPPED')setActiveSubTab('INTERVIEW');
+                                                else if (currentStatus === 'REJECTED') setActiveSubTab('REJECTED');
+                                                else setActiveSubTab('PENDING');
                                                 setSelectedItem(orgInspectorMember);
                                                 setOrgInspectorMember(null);
                                                 router.replace(`${window.location.pathname}?type=apps&email=${encodeURIComponent(orgInspectorMember.email)}`);
@@ -1270,7 +1281,7 @@ function AdminDashboardContent() {
                                         <div className="space-y-3 pt-3">
                                             {orgInspectorMember.status === 'PENDING' && (!orgInspectorMember.interviewDetails || orgInspectorMember.interviewDetails.status === 'PENDING') ? (
                                                 <div className="grid grid-cols-2 gap-4">
-                                                    <button onClick={() => setShowScheduleModal(true)} className="h-10 border border-cyan-500/50 text-cyan-400 bg-cyan-900/10 hover:bg-cyan-500/20 text-xs font-bold uppercase tracking-wider">Schedule Interview</button>
+                                                    <button onClick={() => { setShowAssignRoleModal(false); setSkipModalTarget(null); setShowScheduleModal(true); }} className="h-10 border border-cyan-500/50 text-cyan-400 bg-cyan-900/10 hover:bg-cyan-500/20 text-xs font-bold uppercase tracking-wider">Schedule Interview</button>
                                                     <button onClick={handleSkipInterview} className="h-10 border border-gray-600/50 text-gray-500 hover:text-white hover:border-white/50 text-xs font-bold uppercase tracking-wider">Skip Protocol</button>
                                                 </div>
                                             ) : orgInspectorMember.status === 'INTERVIEW_SCHEDULED' ? (
@@ -1286,7 +1297,7 @@ function AdminDashboardContent() {
                                                         </div>
                                                     </div>
                                                     <div className="grid grid-cols-2 gap-2">
-                                                        <button onClick={() => { setScheduleData({ scheduledAt: orgInspectorMember.interviewDetails?.scheduledAt ? new Date(orgInspectorMember.interviewDetails.scheduledAt).toISOString().slice(0,16) : '', meetLink: orgInspectorMember.interviewDetails?.meetLink || '' }); setShowScheduleModal(true); }} className="w-full h-10 border border-orange-500/50 text-orange-400 bg-orange-900/10 hover:bg-orange-500/20 text-xs font-bold uppercase tracking-wider">Reschedule</button>
+                                                        <button onClick={() => { setShowAssignRoleModal(false); setSkipModalTarget(null); setScheduleData({ scheduledAt: orgInspectorMember.interviewDetails?.scheduledAt ? new Date(orgInspectorMember.interviewDetails.scheduledAt).toISOString().slice(0,16) : '', meetLink: orgInspectorMember.interviewDetails?.meetLink || '' }); setShowScheduleModal(true); }} className="w-full h-10 border border-orange-500/50 text-orange-400 bg-orange-900/10 hover:bg-orange-500/20 text-xs font-bold uppercase tracking-wider">Reschedule</button>
                                                         <button onClick={handleMarkNoShow} className="w-full h-10 border border-red-500/20 text-red-500 hover:bg-red-500/10 text-xs font-bold uppercase tracking-wider">No-show</button>
                                                     </div>
 
@@ -1483,6 +1494,36 @@ function AdminDashboardContent() {
                             ) : <div className="text-xs text-gray-600 font-mono italic">NO INCOMING SIGNALS</div>}
                         </div>
 
+                        {/* Waiting Applicants */}
+                        <div>
+                            <h4 className="text-xs font-bold text-yellow-400 uppercase tracking-widest mb-2 border-b border-yellow-500/20 pb-1">waiting_applicants ({orgWaiting.length})</h4>
+                            {orgWaiting.length > 0 ? (
+                                <div className="grid gap-2">
+                                    {orgWaiting.map(a => (
+                                        <div
+                                            key={a._id}
+                                            onClick={() => { setOrgInspectorMember(a); router.replace(`${window.location.pathname}?orgCode=${selectedItem?.code}&memberEmail=${encodeURIComponent(a.email)}`); }}
+                                            className="p-3 bg-white/5 border border-white/10 flex justify-between items-center group cursor-pointer hover:border-yellow-500/50 transition-colors"
+                                        >
+                                            <div className="flex-1">
+                                                <div className="text-sm font-bold text-white group-hover:text-yellow-400">{a.firstName} {a.lastName}</div>
+                                                <div className="text-[10px] text-gray-500 font-mono">{a.email}</div>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <div className="px-2 py-0.5 border text-[9px] text-yellow-400 border-yellow-500/30 uppercase">{a.status}</div>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); window.open(`/applications?type=apps&email=${a.email}`, '_blank'); }}
+                                                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10"
+                                                >
+                                                    <ExternalLink className="w-3 h-3 text-yellow-400" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : <div className="text-xs text-gray-600 font-mono italic">NO WAITING APPLICANTS</div>}
+                        </div>
+
                         {/* Rejected Applicants */}
                         <div>
                             <h4 className="text-xs font-bold text-red-400 uppercase tracking-widest mb-2 border-b border-red-500/20 pb-1">rejected_applicants ({orgRejected.length})</h4>
@@ -1658,7 +1699,7 @@ function AdminDashboardContent() {
                     {/* Sub-tabs for Applications */}
                     {activeTab === 'applications' && (
                         <div className="flex bg-black border-b border-white/10 px-2 md:px-8 h-10 md:h-12 items-center gap-4 md:gap-8 relative z-20 overflow-x-auto">
-                            {['PENDING', 'INTERVIEW', 'ACCEPTED', 'REJECTED', 'ALL'].map(st => (
+                            {['PENDING', 'INTERVIEW', 'ACCEPTED', 'REJECTED', 'WAITING', 'ALL'].map(st => (
                                 <button
                                     key={st}
                                     onClick={() => setActiveSubTab(st)}
@@ -2341,7 +2382,7 @@ function AdminDashboardContent() {
                                                         </div>
                                                     )}
 
-                                                    {(selectedItem.status === 'PENDING' || selectedItem.status === 'INTERVIEW_SCHEDULED' || selectedItem.status === 'INTERVIEW_SKIPPED') && (
+                                                    {(selectedItem.status === 'PENDING' || selectedItem.status === 'INTERVIEW_SCHEDULED' || selectedItem.status === 'INTERVIEW_SKIPPED' || selectedItem.status === 'WAITING') && (
                                                         <div className="space-y-3">
                                                             <label className="text-xs font-mono text-gray-500 uppercase tracking-wider">Interview Protocol</label>
 
@@ -2349,7 +2390,7 @@ function AdminDashboardContent() {
                                                             {selectedItem.status === 'PENDING' && (!selectedItem.interviewDetails || selectedItem.interviewDetails.status === 'PENDING') ? (
                                                                 <div className="grid grid-cols-2 gap-4">
                                                                     <button
-                                                                        onClick={() => setShowScheduleModal(true)}
+                                                                        onClick={() => { setShowAssignRoleModal(false); setSkipModalTarget(null); setShowScheduleModal(true); }}
                                                                         className="h-10 border border-cyan-500/50 text-cyan-400 bg-cyan-900/10 hover:bg-cyan-500/20 text-xs font-bold uppercase tracking-wider"
                                                                     >
                                                                         Schedule Interview
@@ -2389,6 +2430,8 @@ function AdminDashboardContent() {
                                                                     <div className="grid grid-cols-2 gap-2">
                                                                         <button
                                                                             onClick={() => {
+                                                                                setShowAssignRoleModal(false);
+                                                                                setSkipModalTarget(null);
                                                                                 setScheduleData({
                                                                                     scheduledAt: selectedItem.interviewDetails?.scheduledAt ? new Date(selectedItem.interviewDetails.scheduledAt).toISOString().slice(0, 16) : '',
                                                                                     meetLink: selectedItem.interviewDetails?.meetLink || ''
@@ -2496,7 +2539,7 @@ function AdminDashboardContent() {
                                                             )}
 
                                                             {/* Schedule Modal */}
-                                                            {showScheduleModal && (
+                                                            {showScheduleModal && (selectedItem.status === 'PENDING' || selectedItem.status === 'INTERVIEW_SCHEDULED') && (
                                                                 <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="border border-cyan-500/30 bg-black p-4 space-y-4">
                                                                     <h5 className="text-xs font-bold text-cyan-500 uppercase">Input_Coordinates</h5>
                                                                     <Input
@@ -2519,7 +2562,7 @@ function AdminDashboardContent() {
                                                                 </motion.div>
                                                             )}
 
-                                                            {showAssignRoleModal && (
+                                                            {showAssignRoleModal && !showScheduleModal && (
                                                                 <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="border border-yellow-500/30 bg-black p-4 space-y-4">
                                                                     <h5 className="text-xs font-bold text-yellow-400 uppercase">Assign Role (required before Accept)</h5>
                                                                     <div className="text-xs text-gray-400">Choose one of: Applied role, Organization roles, or Global roles</div>
@@ -2567,9 +2610,13 @@ function AdminDashboardContent() {
                                                         </div>
                                                     )}
 
-                                                    <div className="grid grid-cols-2 gap-6 pt-4">
+                                                    <div className="grid grid-cols-3 gap-6 pt-4">
                                                         <button onClick={() => handleUpdateAppStatus('REJECTED')} className="h-14 border border-red-500/20 text-red-500 hover:bg-red-500/10 hover:border-red-500 transition-all text-sm font-bold uppercase tracking-[0.2em]">
                                                             REJECT
+                                                        </button>
+
+                                                        <button onClick={() => handleUpdateAppStatus('WAITING')} className="h-14 border border-yellow-500/20 text-yellow-400 hover:bg-yellow-500/10 hover:border-yellow-500 transition-all text-sm font-bold uppercase tracking-[0.2em]">
+                                                            WAITING
                                                         </button>
                                                     {selectedItem.status !== 'REJECTED' && (
                                                         <button

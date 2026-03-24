@@ -189,7 +189,7 @@ router.post('/apply', (req, res, next) => {
         }
 
         // Duplicate Check (Pending Application)
-        const existingApplicant = await Applicant.findOne({ email, status: { $in: ['PENDING', 'INTERVIEW_SCHEDULED'] } });
+        const existingApplicant = await Applicant.findOne({ email, status: { $in: ['PENDING', 'INTERVIEW_SCHEDULED', 'WAITING'] } });
         if (existingApplicant) {
             return res.status(400).json({ message: "You already have a pending application. Please check your status in the portal." });
         }
@@ -392,7 +392,7 @@ router.get('/admin/export-org-csv/:orgCode', authenticateJWT, isAdmin, async (re
 // 4. Update Status (Admin)
 router.patch('/admin/status', authenticateJWT, isAdmin, [
     check('applicantId').notEmpty(),
-    check('status').isIn(['ACCEPTED', 'REJECTED']),
+    check('status').isIn(['ACCEPTED', 'REJECTED', 'WAITING']),
     // assignedRole may be provided by admin when accepting; optional string
     check('assignedRole').optional().trim().escape()
 ], async (req, res) => {
