@@ -997,12 +997,12 @@ function AdminDashboardContent() {
         }
     };
 
-    const handleExportOrgCSV = async (orgCode) => {
+    const handleExportOrgData = async (orgCode) => {
         try {
             const token = localStorage.getItem("accessToken");
             const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
             
-            const response = await axios.get(`${serverUrl}/application/admin/export-org-csv/${orgCode}`, {
+            const response = await axios.get(`${serverUrl}/application/admin/export-org-data/${orgCode}`, {
                 headers: { Authorization: `Bearer ${token}` },
                 responseType: 'blob'
             });
@@ -1010,7 +1010,7 @@ function AdminDashboardContent() {
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement('a');
             link.href = url;
-            const filename = `${orgCode}_data_${new Date().toISOString().split('T')[0]}.csv`;
+            const filename = `${orgCode}_data_${new Date().toISOString().split('T')[0]}.xlsx`;
             link.setAttribute('download', filename);
             document.body.appendChild(link);
             link.click();
@@ -1351,11 +1351,11 @@ function AdminDashboardContent() {
                             <span className="block p-2 border border-white/10">CODE: {selectedItem.code}</span>
                             <span className={`block p-2 border border-white/10 ${selectedItem.isActive ? 'text-green-500' : 'text-red-500'}`}>{selectedItem.isActive ? 'ACTIVE' : 'INACTIVE'}</span>
                             <button
-                                onClick={() => handleExportOrgCSV(selectedItem.code)}
+                                onClick={() => handleExportOrgData(selectedItem.code)}
                                 className="p-2 border border-cyan-500/50 text-cyan-500 hover:bg-cyan-500 hover:text-black flex items-center justify-center gap-2 transition-all text-[10px] font-bold uppercase tracking-widest"
-                                title="Download organization data as CSV"
+                                title="Download organization data as Excel"
                             >
-                                <Download className="w-3.5 h-3.5" /> CSV
+                                <Download className="w-3.5 h-3.5" /> Excel
                             </button>
                         </div>
                     </div>
