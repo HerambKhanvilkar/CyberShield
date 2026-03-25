@@ -3,16 +3,18 @@
 import { useEffect, useState, useRef, useMemo, Suspense } from "react";
 import axios from "axios";
 import { useRouter, useSearchParams } from "next/navigation";
-import Navbar from "@/components/Navbar";
+import Link from "next/link";
+import { useAuthContext } from "@/components/AuthContext";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "react-toastify";
-import { Users,Briefcase,Shield,Database,Search,Plus,ChevronRight,CheckCircle,XCircle,Clock,FileText,Award,History,Settings,ArrowLeft,ExternalLink,Mail,Calendar,Globe,Terminal,Code,Cpu,Zap,Linkedin,Github,Trophy,ArrowUpCircle,Download,Trash,MoreVertical,ClipboardCopy } from "lucide-react";
+import { Users,Briefcase,Shield,Database,Search,Plus,ChevronRight,CheckCircle,XCircle,Clock,FileText,Award,History,Settings,ArrowLeft,ExternalLink,Mail,Calendar,Globe,Terminal,Code,Cpu,Zap,Linkedin,Github,Trophy,ArrowUpCircle,Download,Trash,MoreVertical,ClipboardCopy,Home,LogOut,User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { headers } from "../../../next.config";
 
 function AdminDashboardContent() {
+    const { user, logout } = useAuthContext();
     const sixMonthsFromNow = () => {
         const d = new Date();
         d.setMonth(d.getMonth() + 6);
@@ -1584,41 +1586,121 @@ function AdminDashboardContent() {
     };
 
     return (
-        <div className="h-screen overflow-auto bg-slate-950 text-white flex flex-col font-sans selection:bg-cyan-500/50 selection:text-black">
-            <Navbar />
+        <div className="h-screen overflow-hidden bg-slate-950 text-white flex flex-col font-sans selection:bg-cyan-500/50 selection:text-black">
+            {/* Removed Top Navbar to maximize space */}
 
             <div className="flex-1 flex flex-col md:flex-row overflow-auto min-h-screen">
                 {/* Cyber Sidebar */}
-                <div className="w-full md:w-16 h-full bg-slate-950 border-r border-white/10 flex md:flex-col flex-row items-center md:py-6 py-2 gap-2 md:gap-6 shrink-0 relative z-30">
-                    <div className="w-10 h-10 md:w-12 md:h-12 border border-cyan-500 flex items-center justify-center text-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
-                        <Terminal className="w-6 h-6" />
-                    </div>
+                <div className="w-full md:w-20 h-full bg-slate-950 border-r border-white/10 flex md:flex-col flex-row items-center md:py-6 py-2 gap-4 shrink-0 relative z-30">
+                    {/* Brand / Logo */}
+                    <Link href="/" className="group relative">
+                        <div className="w-10 h-10 md:w-12 md:h-12 border border-cyan-500/60 flex items-center justify-center text-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.15)] bg-cyan-500/5 group-hover:bg-cyan-500/10 transition-all">
+                            <Terminal className="w-5 h-5" />
+                        </div>
+                        <div className="absolute left-full ml-3 px-2 py-1 bg-slate-900 border border-white/10 text-[10px] font-bold text-cyan-400 whitespace-nowrap opacity-0 group-hover:opacity-100 translate-x-[-10px] group-hover:translate-x-0 transition-all pointer-events-none z-50">
+                            GO_HOME
+                        </div>
+                    </Link>
 
-                    <nav className="flex md:flex-col flex-row gap-2 md:gap-4 w-full px-2 md:mt-4 mt-0">
+                    <div className="w-8 h-[1px] bg-white/10 hidden md:block" />
+
+                    {/* Dashboard Primary Tabs */}
+                    <nav className="flex md:flex-col flex-row gap-2 w-full px-2">
                         {[
-                            { id: 'applications', icon: <FileText className="w-6 h-6" />, label: 'REQ' },
-                            { id: 'fellows', icon: <Users className="w-6 h-6" />, label: 'OPS' },
-                            { id: 'orgs', icon: <Globe className="w-6 h-6" />, label: 'NET' },
-                            { id: 'projects', icon: <Code className="w-6 h-6" />, label: 'PRJ' }
-                        ].map(t => (
-                            <button
-                                key={t.id}
-                                onClick={() => { setActiveTab(t.id); setSelectedItem(null); }}
-                                className={`w-10 h-10 md:w-12 md:h-12 flex items-center justify-center transition-all relative group border ${activeTab === t.id ? 'bg-white/20 border-white text-white' : 'border-transparent text-gray-600 hover:text-cyan-400 hover:border-cyan-900/50'}`}
-                            >
-                                {t.icon}
-                                <span className="hidden md:block absolute left-full ml-4 bg-slate-950 border border-white/20 px-3 py-1.5 text-xs text-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-xl">
-                                    {t.label}
-                                </span>
-                            </button>
-                        ))}
+                            { id: 'applications', icon: <FileText className="w-5 h-5" />, label: 'APPLIC', color: 'cyan' },
+                            { id: 'fellows', icon: <Users className="w-5 h-5" />, label: 'FELLOWS', color: 'purple' },
+                            { id: 'orgs', icon: <Globe className="w-5 h-5" />, label: 'ORGS', color: 'green' },
+                            { id: 'projects', icon: <Code className="w-5 h-5" />, label: 'PROJECTS', color: 'orange' }
+                        ].map(t => {
+                            const colorMap = { cyan: 'border-l-cyan-500 text-cyan-400 bg-cyan-500/10', purple: 'border-l-purple-500 text-purple-400 bg-purple-500/10', green: 'border-l-green-500 text-green-400 bg-green-500/10', orange: 'border-l-orange-500 text-orange-400 bg-orange-500/10' };
+                            const hoverMap = { cyan: 'hover:text-cyan-400 hover:bg-cyan-500/5', purple: 'hover:text-purple-400 hover:bg-purple-500/5', green: 'hover:text-green-400 hover:bg-green-500/5', orange: 'hover:text-orange-400 hover:bg-orange-500/5' };
+                            const isActive = activeTab === t.id;
+                            return (
+                                <button
+                                    key={t.id}
+                                    onClick={() => { setActiveTab(t.id); setSelectedItem(null); }}
+                                    title={t.label}
+                                    className={`w-full py-2.5 flex flex-col items-center justify-center gap-1 transition-all border-l-2 relative group/item ${isActive ? `${colorMap[t.color]} border-l-2` : `border-l-transparent text-gray-500 ${hoverMap[t.color]}`}`}
+                                >
+                                    {t.icon}
+                                    <span className="hidden md:block text-[8px] font-bold uppercase tracking-wider leading-none">{t.label}</span>
+                                    {!isActive && (
+                                        <div className="absolute left-full ml-3 px-2 py-1 bg-slate-900 border border-white/10 text-[10px] font-bold text-white whitespace-nowrap opacity-0 group-hover/item:opacity-100 translate-x-[-10px] group-hover/item:translate-x-0 transition-all pointer-events-none z-50 uppercase">
+                                            {t.id}
+                                        </div>
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </nav>
+
+                    <div className="w-8 h-[1px] bg-white/10 hidden md:block" />
+
+                    {/* Admin Navigation */}
+                    <nav className="flex md:flex-col flex-row gap-2 w-full px-2">
+                        <Link href="/badgeadmin" className="w-full py-2.5 flex flex-col items-center justify-center gap-1 text-gray-500 hover:text-white hover:bg-white/5 transition-all relative group/link" title="Badge Admin">
+                            <Award className="w-5 h-5" />
+                            <span className="hidden md:block text-[8px] font-bold uppercase tracking-wider leading-none">BADGE_ADM</span>
+                            <div className="absolute left-full ml-3 px-2 py-1 bg-slate-900 border border-white/10 text-[10px] font-bold text-white whitespace-nowrap opacity-0 group-hover/link:opacity-100 translate-x-[-10px] group-hover/link:translate-x-0 transition-all pointer-events-none z-50 uppercase">
+                                BADGE_ADMIN
+                            </div>
+                        </Link>
                     </nav>
 
                     <div className="flex-1" />
-                    <button onClick={() => { fetchData(); fetchProjects(); }} className="w-10 h-10 md:w-12 md:h-12 border border-white/10 hover:border-cyan-500 hover:text-cyan-500 transition-colors flex items-center justify-center">
-                        <History className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-                    </button>
-                    <div className="h-2 md:h-4" />
+
+                    {/* User Profile / Logout */}
+                    <div className="w-full px-2 flex flex-col items-center gap-2 mb-4">
+                        <button
+                            onClick={() => { fetchData(); fetchProjects(); }}
+                            title="Refresh data"
+                            className={`w-10 h-10 border flex items-center justify-center transition-all ${loading ? 'border-cyan-500 text-cyan-500 shadow-[0_0_12px_rgba(6,182,212,0.3)]' : 'border-white/10 text-gray-500 hover:border-cyan-500 hover:text-cyan-400'}`}
+                        >
+                            <History className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                        </button>
+
+                        <div className="w-8 h-[1px] bg-white/10 my-2" />
+
+                        {user ? (
+                            <div className="flex flex-col items-center gap-3">
+                                <Link href="/profile" className="group relative">
+                                    {user.profilePicture || user.image ? (
+                                        <img
+                                            src={user.profilePicture ? user.profilePicture : process.env.SERVER_URL + user.image}
+                                            alt="Profile"
+                                            className="w-10 h-10 rounded border border-white/20 object-cover group-hover:border-cyan-500 transition-all"
+                                        />
+                                    ) : (
+                                        <div className="w-10 h-10 border border-white/20 flex items-center justify-center bg-white/5 text-gray-400 group-hover:border-cyan-500 group-hover:text-cyan-400 transition-all">
+                                            <User className="w-5 h-5" />
+                                        </div>
+                                    )}
+                                    <div className="absolute left-full ml-3 px-2 py-1 bg-slate-900 border border-white/10 text-[10px] font-bold text-white whitespace-nowrap opacity-0 group-hover:opacity-100 translate-x-[-10px] group-hover:opacity-100 transition-all pointer-events-none z-50">
+                                        VIEW_PROFILE
+                                    </div>
+                                </Link>
+                                <button
+                                    onClick={logout}
+                                    className="w-10 h-10 border border-white/10 flex items-center justify-center text-gray-500 hover:border-red-500 hover:text-red-500 transition-all group relative"
+                                    title="Sign Out"
+                                >
+                                    <LogOut className="w-4 h-4" />
+                                    <div className="absolute left-full ml-3 px-2 py-1 bg-slate-900 border border-white/10 text-[10px] font-bold text-red-500 whitespace-nowrap opacity-0 group-hover:opacity-100 translate-x-[-10px] group-hover:opacity-100 transition-all pointer-events-none z-50">
+                                        LOGOUT_SESSION
+                                    </div>
+                                </button>
+                            </div>
+                        ) : (
+                            <Link href="/admin" className="w-10 h-10 border border-white/10 flex items-center justify-center text-gray-500 hover:border-cyan-500 hover:text-cyan-400 transition-all">
+                                <Shield className="w-5 h-5" />
+                            </Link>
+                        )}
+                    </div>
+                    
+                    {/* Version Footer */}
+                    <div className="w-full pb-4 flex justify-center opacity-20 hover:opacity-100 transition-opacity cursor-default">
+                        <span className="text-[10px] font-mono tracking-tighter text-gray-500 whitespace-nowrap">v0.1.1-ALPHA</span>
+                    </div>
                 </div>
 
                 {/* Main Viewport */}
@@ -1627,33 +1709,36 @@ function AdminDashboardContent() {
                     <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none opacity-20" />
 
                     {/* Header */}
-                    <header className="h-16 md:h-20 border-b border-white/10 flex flex-col md:flex-row items-center justify-between px-2 md:px-8 bg-slate-950 z-20 gap-2 md:gap-0">
-                        <div className="flex items-center gap-4 md:gap-6 w-full md:w-auto">
-                            <h2 className="text-lg md:text-2xl font-bold tracking-tighter text-white uppercase flex items-center gap-2">
-                                <span className="text-cyan-500">/</span> {activeTab}_CONSOLE
+                    <header className="h-16 md:h-18 border-b border-white/10 flex flex-col md:flex-row items-center justify-between px-3 md:px-8 z-20 gap-2 md:gap-0 bg-gradient-to-r from-slate-950 via-slate-950 to-slate-900">
+                        <div className="flex items-center gap-3 md:gap-5 w-full md:w-auto">
+                            <div className={`hidden md:block w-1 h-8 rounded-full ${ activeTab === 'fellows' ? 'bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.6)]' : activeTab === 'orgs' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.6)]' : activeTab === 'projects' ? 'bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.6)]' : 'bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.6)]'}`} />
+                            <h2 className={`text-base md:text-xl font-bold tracking-tighter uppercase flex items-center gap-2 ${ activeTab === 'fellows' ? 'text-purple-400' : activeTab === 'orgs' ? 'text-green-400' : activeTab === 'projects' ? 'text-orange-400' : 'text-cyan-400'}`}>
+                                {activeTab.toUpperCase()} <span className="text-white/30 font-light">CONSOLE</span>
                             </h2>
+                            {activeTab === 'applications' && (
+                                <span className="hidden md:inline text-[10px] text-gray-600 border border-white/10 px-2 py-0.5 font-mono">{apps.length} TOTAL</span>
+                            )}
                         </div>
 
-                        <div className="flex items-center gap-2 md:gap-4 w-full md:w-auto">
-                            <div className="relative flex-1 md:w-96 group">
-                                <Search className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-cyan-500" />
+                        <div className="flex items-center gap-2 md:gap-3 w-full md:w-auto">
+                            <div className="relative flex-1 md:w-80 group">
+                                <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-600 group-focus-within:${ activeTab === 'fellows' ? 'text-purple-400' : activeTab === 'orgs' ? 'text-green-400' : activeTab === 'projects' ? 'text-orange-400' : 'text-cyan-400'} transition-colors`} />
                                 <input
                                     type="text"
-                                    placeholder="SEARCH_QUERY..."
+                                    placeholder="Search..."
                                     value={searchTerm}
                                     onChange={e => setSearchTerm(e.target.value)}
-                                    className="w-full h-10 bg-slate-950 border border-white/20 pl-9 md:pl-11 pr-4 text-sm focus:border-cyan-500 focus:outline-none transition-all placeholder:text-gray-700 font-sans text-cyan-100 uppercase"
+                                    className={`w-full h-9 bg-white/5 border border-white/10 pl-9 pr-4 text-sm focus:outline-none transition-all placeholder:text-gray-700 font-sans text-gray-200 rounded group-focus-within:border-white/30 focus:bg-white/[0.07] ${ activeTab === 'fellows' ? 'focus:ring-1 focus:ring-purple-500/20' : activeTab === 'orgs' ? 'focus:ring-1 focus:ring-green-500/20' : activeTab === 'projects' ? 'focus:ring-1 focus:ring-orange-500/20' : 'focus:ring-1 focus:ring-cyan-500/20'}`}
                                 />
                             </div>
 
-                            {/* org filter dropdown for applications */}
                             {activeTab === 'applications' && (
                                 <select
                                     value={orgFilter}
                                     onChange={e => setOrgFilter(e.target.value)}
-                                    className="ml-2 bg-slate-950 border border-white/20 h-10 text-xs font-sans text-cyan-100 focus:border-cyan-500 outline-none px-2"
+                                    className="bg-white/5 border border-white/10 h-9 text-xs font-sans text-gray-300 focus:border-cyan-500/50 outline-none px-2 rounded"
                                 >
-                                    <option value="">ALL_ORGS</option>
+                                    <option value="">All Orgs</option>
                                     {orgs.map(o => (
                                         <option key={o.code} value={o.code}>{o.name}</option>
                                     ))}
@@ -1661,8 +1746,8 @@ function AdminDashboardContent() {
                             )}
 
                             {activeTab === 'orgs' && (
-                                <button onClick={() => { setOrgData({ name: '', code: '', emailDomainWhitelist: [], endDate: oneWeekFromNow(), defaultTenureEndDate: sixMonthsFromNow(), formVar1: [], availableRoles: [], isActive: true, adminPassword: '' }); setIsEditingOrg(true); }} className="h-10 w-10 border border-white/20 hover:border-cyan-500 hover:text-cyan-500 flex items-center justify-center transition-colors">
-                                    <Plus className="w-5 h-5" />
+                                <button onClick={() => { setOrgData({ name: '', code: '', emailDomainWhitelist: [], endDate: oneWeekFromNow(), defaultTenureEndDate: sixMonthsFromNow(), formVar1: [], availableRoles: [], isActive: true, adminPassword: '' }); setIsEditingOrg(true); }} className="h-9 px-3 bg-green-500/10 border border-green-500/40 text-green-400 hover:bg-green-500 hover:text-black flex items-center gap-1.5 transition-all text-[10px] font-bold uppercase tracking-widest rounded">
+                                    <Plus className="w-3.5 h-3.5" /> New Org
                                 </button>
                             )}
                             {activeTab === 'fellows' && (
@@ -1671,26 +1756,25 @@ function AdminDashboardContent() {
                                         setManualFellowData({ email: '', firstName: '', lastName: '', role: '', orgCode: '', cohort: 'C1', startDate: new Date().toISOString().split('T')[0] });
                                         setShowManualModal(true);
                                     }}
-                                    className="h-10 px-4 border border-purple-500/50 text-purple-500 hover:bg-purple-500 hover:text-white flex items-center gap-2 transition-all text-[10px] font-bold uppercase tracking-widest whitespace-nowrap"
+                                    className="h-9 px-3 bg-purple-500/10 border border-purple-500/40 text-purple-400 hover:bg-purple-500 hover:text-black flex items-center gap-1.5 transition-all text-[10px] font-bold uppercase tracking-widest whitespace-nowrap rounded"
                                 >
-                                    <Plus className="w-4 h-4" /> MANUAL_ONBOARD
+                                    <Plus className="w-3.5 h-3.5" /> Onboard
                                 </button>
                             )}
                             {activeTab === 'projects' && (
                                 <button
                                     onClick={() => {
-                                        setNewProjectData({
-                                            title: '',
-                                            description: '',
-                                            supportedLinks: [],
-                                            contributors: [],
-                                            status: 'ongoing'
-                                        });
+                                        setNewProjectData({ title: '', description: '', supportedLinks: [], contributors: [], status: 'ongoing' });
                                         setShowCreateProjectModal(true);
                                     }}
-                                    className="h-10 px-4 border border-orange-500/50 text-orange-500 hover:bg-orange-500 hover:text-white flex items-center gap-2 transition-all text-[10px] font-bold uppercase tracking-widest whitespace-nowrap"
+                                    className="h-9 px-3 bg-orange-500/10 border border-orange-500/40 text-orange-400 hover:bg-orange-500 hover:text-black flex items-center gap-1.5 transition-all text-[10px] font-bold uppercase tracking-widest whitespace-nowrap rounded"
                                 >
-                                    <Plus className="w-4 h-4" /> NEW_PROJECT
+                                    <Plus className="w-3.5 h-3.5" /> New Project
+                                </button>
+                            )}
+                            {activeTab === 'applications' && (
+                                <button onClick={handleExportCSV} className="h-9 px-3 bg-white/5 border border-white/10 text-gray-400 hover:text-cyan-400 hover:border-cyan-500/40 flex items-center gap-1.5 transition-all text-[10px] font-bold uppercase tracking-widest rounded" title="Export CSV">
+                                    <Download className="w-3.5 h-3.5" />
                                 </button>
                             )}
                         </div>
@@ -1698,59 +1782,62 @@ function AdminDashboardContent() {
 
                     {/* Sub-tabs for Applications */}
                     {activeTab === 'applications' && (
-                        <div className="flex bg-slate-950 border-b border-white/10 px-2 md:px-8 h-10 md:h-12 items-center gap-4 md:gap-8 relative z-20 overflow-x-auto">
-                            {['PENDING', 'INTERVIEW', 'ACCEPTED', 'REJECTED', 'WAITING', 'ALL'].map(st => (
-                                <button
-                                    key={st}
-                                    onClick={() => setActiveSubTab(st)}
-                                    className={`relative h-full text-[10px] font-bold tracking-[0.2em] transition-all flex items-center ${activeSubTab === st ? 'text-cyan-400' : 'text-gray-500 hover:text-white'}`}
-                                >
-                                    {st}
-                                    {statusCounts[st] > 0 && (
-                                        <span
-                                            className="ml-2 inline-flex items-center justify-center text-[8px] font-bold font-sans text-cyan-400"
-                                            style={{
-                                                border: '1px solid #06b6d4',
-                                                padding: '0.15rem 0.35rem',
-                                                position: 'relative',
-                                                clipPath: 'polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 5px 100%, 0 calc(100% - 5px))',
-                                                backgroundColor: 'transparent'
-                                            }}
-                                        >
-                                            {statusCounts[st]}
-                                        </span>
-                                    )}
-                                    {activeSubTab === st && <motion.div layoutId="app-sub-tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500 shadow-[0_0_10px_#06b6d4]" />}
-                                </button>
-                            ))}
+                        <div className="flex bg-slate-950/80 border-b border-white/10 px-3 md:px-8 h-11 items-center gap-1 md:gap-2 relative z-20 overflow-x-auto">
+                            {[
+                                { key: 'PENDING', color: 'yellow' },
+                                { key: 'INTERVIEW', color: 'orange' },
+                                { key: 'ACCEPTED', color: 'green' },
+                                { key: 'REJECTED', color: 'red' },
+                                { key: 'WAITING', color: 'blue' },
+                                { key: 'ALL', color: 'cyan' }
+                            ].map(({ key: st, color }) => {
+                                const pillColors = { yellow: 'bg-yellow-500 text-black', orange: 'bg-orange-500 text-black', green: 'bg-green-500 text-black', red: 'bg-red-500 text-white', blue: 'bg-blue-500 text-white', cyan: 'bg-cyan-500 text-black' };
+                                const activeColors = { yellow: 'text-yellow-400', orange: 'text-orange-400', green: 'text-green-400', red: 'text-red-400', blue: 'text-blue-400', cyan: 'text-cyan-400' };
+                                const underlineColors = { yellow: 'bg-yellow-500', orange: 'bg-orange-500', green: 'bg-green-500', red: 'bg-red-500', blue: 'bg-blue-500', cyan: 'bg-cyan-500' };
+                                return (
+                                    <button
+                                        key={st}
+                                        onClick={() => setActiveSubTab(st)}
+                                        className={`relative h-full px-3 text-[10px] font-bold tracking-widest transition-all flex items-center gap-1.5 whitespace-nowrap ${activeSubTab === st ? activeColors[color] : 'text-gray-500 hover:text-gray-300'}`}
+                                    >
+                                        {st}
+                                        {statusCounts[st] > 0 && (
+                                            <span className={`inline-flex items-center justify-center text-[9px] font-bold rounded-full px-1.5 py-0.5 min-w-[18px] leading-none ${activeSubTab === st ? pillColors[color] : 'bg-white/10 text-gray-400'}`}>
+                                                {statusCounts[st]}
+                                            </span>
+                                        )}
+                                        {activeSubTab === st && <motion.div layoutId="app-sub-tab" className={`absolute bottom-0 left-0 right-0 h-0.5 ${underlineColors[color]}`} />}
+                                    </button>
+                                );
+                            })}
                         </div>
                     )}
 
                     {activeTab === 'orgs' && (
-                        <div className="flex bg-slate-950 border-b border-white/10 px-2 md:px-8 h-10 md:h-12 items-center gap-4 md:gap-8 relative z-20 overflow-x-auto">
-                            {['ACTIVE', 'ARCHIVED'].map(st => (
+                        <div className="flex bg-slate-950/80 border-b border-white/10 px-3 md:px-8 h-11 items-center gap-1 md:gap-2 relative z-20 overflow-x-auto">
+                            {[{ key: 'ACTIVE', color: 'text-green-400', bar: 'bg-green-500' }, { key: 'ARCHIVED', color: 'text-red-400', bar: 'bg-red-500' }].map(({ key: st, color, bar }) => (
                                 <button
                                     key={st}
                                     onClick={() => setOrgSubTab(st)}
-                                    className={`relative h-full text-[10px] font-bold tracking-[0.2em] transition-all flex items-center ${orgSubTab === st ? 'text-cyan-400' : 'text-gray-500 hover:text-white'}`}
+                                    className={`relative h-full px-3 text-[10px] font-bold tracking-widest transition-all flex items-center ${orgSubTab === st ? color : 'text-gray-500 hover:text-gray-300'}`}
                                 >
                                     {st}
-                                    {orgSubTab === st && <motion.div layoutId="org-sub-tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500 shadow-[0_0_10px_#06b6d4]" />}
+                                    {orgSubTab === st && <motion.div layoutId="org-sub-tab" className={`absolute bottom-0 left-0 right-0 h-0.5 ${bar}`} />}
                                 </button>
                             ))}
                         </div>
                     )}
 
                     {activeTab === 'projects' && (
-                        <div className="flex bg-slate-950 border-b border-white/10 px-2 md:px-8 h-10 md:h-12 items-center gap-4 md:gap-8 relative z-20 overflow-x-auto">
-                            {['ONGOING', 'ONHOLD', 'COMPLETED', 'ALL'].map(st => (
+                        <div className="flex bg-slate-950/80 border-b border-white/10 px-3 md:px-8 h-11 items-center gap-1 md:gap-2 relative z-20 overflow-x-auto">
+                            {[{ key: 'ONGOING', color: 'text-blue-400', bar: 'bg-blue-500' }, { key: 'ONHOLD', color: 'text-red-400', bar: 'bg-red-500' }, { key: 'COMPLETED', color: 'text-green-400', bar: 'bg-green-500' }, { key: 'ALL', color: 'text-orange-400', bar: 'bg-orange-500' }].map(({ key: st, color, bar }) => (
                                 <button
                                     key={st}
                                     onClick={() => setProjectSubTab(st)}
-                                    className={`relative h-full text-[10px] font-bold tracking-[0.2em] transition-all flex items-center ${projectSubTab === st ? 'text-cyan-400' : 'text-gray-500 hover:text-white'}`}
+                                    className={`relative h-full px-3 text-[10px] font-bold tracking-widest transition-all flex items-center ${projectSubTab === st ? color : 'text-gray-500 hover:text-gray-300'}`}
                                 >
                                     {st}
-                                    {projectSubTab === st && <motion.div layoutId="project-sub-tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500 shadow-[0_0_10px_#06b6d4]" />}
+                                    {projectSubTab === st && <motion.div layoutId="project-sub-tab" className={`absolute bottom-0 left-0 right-0 h-0.5 ${bar}`} />}
                                 </button>
                             ))}
                         </div>
@@ -1822,66 +1909,48 @@ function AdminDashboardContent() {
                                                 ); })}
 
                                                 {unscheduled.length > 0 && (
-                                                    <div className="px-8 py-3 text-xs font-sans text-gray-500">Unscheduled / Pending interviews</div>
+                                                    <div className="px-6 py-2 text-[10px] font-sans text-gray-600 border-b border-white/5 bg-white/[0.01] flex items-center gap-2"><Clock className="w-3 h-3" /> Unscheduled / Pending interviews</div>
                                                 )}
                                                 {unscheduled.map((app) => { counter++; const orgName = getOrgName(app.orgCode); return (
-                                                    <div key={app._id} onClick={() => setSelectedItem(app)} className={`group px-8 py-5 border-b border-white/10 hover:bg-white/20 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === app._id ? 'bg-cyan-900/10 border-l-[6px] border-l-cyan-500' : 'border-l-[6px] border-l-transparent'}`}>
-                                                        <div className="flex items-center gap-8">
-                                                            <span className="text-sm font-sans text-gray-600 w-10">{String(counter).padStart(2, '0')}</span>
+                                                    <div key={app._id} onClick={() => setSelectedItem(app)} className={`group px-6 py-4 border-b border-white/[0.06] hover:bg-cyan-500/[0.04] cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === app._id ? 'bg-cyan-500/[0.07] border-l-2 border-l-cyan-500' : 'border-l-2 border-l-transparent'}`}>
+                                                        <div className="flex items-center gap-5">
+                                                            <span className="text-[11px] font-mono text-gray-700 w-8 text-right">{String(counter).padStart(2, '0')}</span>
                                                             <div>
-                                                                <h3 className="font-bold text-xl text-white group-hover:text-cyan-400 transition-colors uppercase tracking-widest mb-1.5">
+                                                                <h3 className="font-semibold text-sm text-white group-hover:text-cyan-300 transition-all tracking-wide mb-1">
                                                                     {app.firstName} {app.lastName}{orgName && (
-                                                                        <span className="ml-2 text-[10px] px-2 py-0.5 bg-blue-900/10 border border-blue-500/30 text-blue-400 uppercase">
-                                                                            {orgName}
-                                                                        </span>
+                                                                        <span className="ml-2 text-[9px] px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 uppercase font-bold">{orgName}</span>
                                                                     )}
                                                                 </h3>
-                                                                <div className="flex gap-6 text-xs font-sans text-gray-500 items-center flex-wrap">
-                                                                    <span className="text-white/60">{app.email}</span>
-                                                                    {app.interviewDetails?.status === 'NO_SHOW' && (
-                                                                        <span className="text-[9px] px-2 py-0.5 bg-red-900/10 border border-red-500/30 text-red-400 uppercase">NO-SHOW</span>
-                                                                    )}
-                                                                    {getOrgName(app.orgCode) && (
-                                                                        <span className="text-[10px] px-2 py-0.5 bg-blue-900/10 border border-blue-500/30 text-blue-400 uppercase">
-                                                                            {getOrgName(app.orgCode)}
-                                                                        </span>
-                                                                    )}
+                                                                <div className="flex gap-3 text-[11px] font-sans text-gray-500 items-center flex-wrap">
+                                                                    <span>{app.email}</span>
+                                                                    {app.interviewDetails?.status === 'NO_SHOW' && (<span className="text-[9px] px-1.5 py-0.5 rounded bg-red-500/10 border border-red-500/20 text-red-400 uppercase font-bold">NO-SHOW</span>)}
+                                                                    {getOrgName(app.orgCode) && (<span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 uppercase font-bold">{getOrgName(app.orgCode)}</span>)}
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <div className={`px-4 py-1.5 border text-xs font-bold uppercase tracking-widest ${app.status === 'ACCEPTED' ? 'border-green-500/50 text-green-500 bg-green-500/5' : app.status === 'REJECTED' ? 'border-red-500/50 text-red-500 bg-red-500/5' : app.status === 'INTERVIEW_SCHEDULED' ? 'border-orange-500/50 text-orange-500 bg-orange-500/5' : 'border-yellow-500/50 text-yellow-500 bg-yellow-500/5'}`}>{app.status}</div>
+                                                        <div className={`px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider border ${app.status === 'ACCEPTED' ? 'border-green-500/40 text-green-400 bg-green-500/10' : app.status === 'REJECTED' ? 'border-red-500/40 text-red-400 bg-red-500/10' : app.status === 'INTERVIEW_SCHEDULED' ? 'border-orange-500/40 text-orange-400 bg-orange-500/10' : 'border-yellow-500/40 text-yellow-400 bg-yellow-500/10'}`}>{app.status.replace('INTERVIEW_SCHEDULED','SCHEDULED').replace('INTERVIEW_SKIPPED','SKIPPED')}</div>
                                                     </div>
                                                 ); })}
 
-                                                {past.length > 0 && <div className="border-t border-white/10 my-4" />}
+                                                {past.length > 0 && <div className="border-t border-white/[0.06] my-2" />}
 
                                                 {past.map((app, i) => { counter++; const orgName = getOrgName(app.orgCode); return (
-                                                    <div key={app._id} onClick={() => setSelectedItem(app)} className={`group px-8 py-5 border-b border-white/10 hover:bg-white/20 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === app._id ? 'bg-cyan-900/10 border-l-[6px] border-l-cyan-500' : 'border-l-[6px] border-l-transparent'}`}>
-                                                        <div className="flex items-center gap-8">
-                                                            <span className="text-sm font-sans text-gray-600 w-10">{String(counter).padStart(2, '0')}</span>
+                                                    <div key={app._id} onClick={() => setSelectedItem(app)} className={`group px-6 py-4 border-b border-white/[0.06] hover:bg-cyan-500/[0.04] cursor-pointer flex items-center justify-between transition-all opacity-60 hover:opacity-100 ${selectedItem?._id === app._id ? 'bg-cyan-500/[0.07] border-l-2 border-l-cyan-500 opacity-100' : 'border-l-2 border-l-transparent'}`}>
+                                                        <div className="flex items-center gap-5">
+                                                            <span className="text-[11px] font-mono text-gray-700 w-8 text-right">{String(counter).padStart(2, '0')}</span>
                                                             <div>
-                                                                <h3 className="font-bold text-xl text-white group-hover:text-cyan-400 transition-colors uppercase tracking-widest mb-1.5">
-                                                                    {app.firstName} {app.lastName}{orgName && (
-                                                                        <span className="ml-2 text-[10px] px-2 py-0.5 bg-blue-900/10 border border-blue-500/30 text-blue-400 uppercase">
-                                                                            {orgName}
-                                                                        </span>
-                                                                    )}
+                                                                <h3 className="font-semibold text-sm text-white group-hover:text-cyan-300 transition-all tracking-wide mb-1">
+                                                                    {app.firstName} {app.lastName}{orgName && (<span className="ml-2 text-[9px] px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 uppercase font-bold">{orgName}</span>)}
                                                                 </h3>
-                                                                <div className="flex gap-6 text-xs font-sans text-gray-500 items-center flex-wrap">
-                                                                    <span className="text-white/60">{app.email}</span>
-                                                                    {app.interviewDetails?.status === 'NO_SHOW' && (
-                                                                        <span className="text-[9px] px-2 py-0.5 bg-red-900/10 border border-red-500/30 text-red-400 uppercase">NO-SHOW</span>
-                                                                    )}
-                                                                    {getOrgName(app.orgCode) && (
-                                                                        <span className="text-[10px] px-2 py-0.5 bg-blue-900/10 border border-blue-500/30 text-blue-400 uppercase">
-                                                                            {getOrgName(app.orgCode)}
-                                                                        </span>
-                                                                    )}
-                                                                    {app.interviewDetails?.scheduledAt && (<span className="text-orange-400 border border-orange-500/30 px-2 py-0.5 text-[10px] bg-orange-500/5 flex items-center gap-1"><Clock className="w-3 h-3" />{new Date(app.interviewDetails.scheduledAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</span>)}
+                                                                <div className="flex gap-3 text-[11px] font-sans text-gray-500 items-center flex-wrap">
+                                                                    <span>{app.email}</span>
+                                                                    {app.interviewDetails?.status === 'NO_SHOW' && (<span className="text-[9px] px-1.5 py-0.5 rounded bg-red-500/10 border border-red-500/20 text-red-400 uppercase font-bold">NO-SHOW</span>)}
+                                                                    {getOrgName(app.orgCode) && (<span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 uppercase font-bold">{getOrgName(app.orgCode)}</span>)}
+                                                                    {app.interviewDetails?.scheduledAt && (<span className="text-orange-400 border border-orange-500/20 rounded px-1.5 py-0.5 text-[9px] bg-orange-500/5 flex items-center gap-1"><Clock className="w-2.5 h-2.5" />{new Date(app.interviewDetails.scheduledAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</span>)}
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <div className={`px-4 py-1.5 border text-xs font-bold uppercase tracking-widest ${app.status === 'ACCEPTED' ? 'border-green-500/50 text-green-500 bg-green-500/5' : app.status === 'REJECTED' ? 'border-red-500/50 text-red-500 bg-red-500/5' : app.status === 'INTERVIEW_SCHEDULED' ? 'border-orange-500/50 text-orange-500 bg-orange-500/5' : 'border-yellow-500/50 text-yellow-500 bg-yellow-500/5'}`}>{app.status}</div>
+                                                        <div className={`px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider border ${app.status === 'ACCEPTED' ? 'border-green-500/40 text-green-400 bg-green-500/10' : app.status === 'REJECTED' ? 'border-red-500/40 text-red-400 bg-red-500/10' : app.status === 'INTERVIEW_SCHEDULED' ? 'border-orange-500/40 text-orange-400 bg-orange-500/10' : 'border-yellow-500/40 text-yellow-400 bg-yellow-500/10'}`}>{app.status.replace('INTERVIEW_SCHEDULED','SCHEDULED').replace('INTERVIEW_SKIPPED','SKIPPED')}</div>
                                                     </div>
                                                 ); })}
                                             </>
@@ -1893,20 +1962,20 @@ function AdminDashboardContent() {
                                                 <div
                                                     key={app._id}
                                                     onClick={() => setSelectedItem(app)}
-                                                    className={`group px-8 py-5 border-b border-white/10 hover:bg-white/20 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === app._id ? 'bg-cyan-900/10 border-l-[6px] border-l-cyan-500' : 'border-l-[6px] border-l-transparent'}`}
+                                                    className={`group px-6 py-4 border-b border-white/[0.06] hover:bg-cyan-500/[0.04] cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === app._id ? 'bg-cyan-500/[0.07] border-l-2 border-l-cyan-500 shadow-[inset_2px_0_8px_rgba(6,182,212,0.08)]' : 'border-l-2 border-l-transparent'}`}
                                                 >
-                                                    <div className="flex items-center gap-8">
-                                                        <span className="text-sm font-sans text-gray-600 w-10">{String(idx + 1).padStart(2, '0')}</span>
+                                                    <div className="flex items-center gap-5">
+                                                        <span className="text-[11px] font-mono text-gray-700 w-8 text-right">{String(idx + 1).padStart(2, '0')}</span>
                                                         <div>
-                                                            <h3 className="font-bold text-xl text-white group-hover:text-cyan-400 transition-colors uppercase tracking-widest mb-1.5">
+                                                            <h3 className="font-semibold text-sm text-white group-hover:text-cyan-300 transition-colors tracking-wide mb-1">
                                                                 {app.firstName} {app.lastName}{orgName && (
-                                                                    <span className="ml-2 text-[10px] px-2 py-0.5 bg-blue-900/10 border border-blue-500/30 text-blue-400 uppercase">
+                                                                    <span className="ml-2 text-[9px] px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 uppercase font-bold">
                                                                         {orgName}
                                                                     </span>
                                                                 )}
                                                             </h3>
-                                                            <div className="flex gap-6 text-xs font-sans text-gray-500 items-center flex-wrap">
-                                                                <span className="text-white/60">{app.email}</span>
+                                                            <div className="flex gap-3 text-[11px] font-sans text-gray-500 items-center flex-wrap">
+                                                                <span>{app.email}</span>
                                                                 {(() => {
                                                                     const displayRoles = (app.preferredRoles && app.preferredRoles.length)
                                                                         ? app.preferredRoles.slice(0, 2)
@@ -1916,7 +1985,7 @@ function AdminDashboardContent() {
                                                                     return (
                                                                         <>
                                                                             {displayRoles.map((r, idx) => (
-                                                                                <span key={idx} className={`text-[10px] px-2 py-0.5 bg-cyan-900/10 border border-cyan-500/30 text-cyan-400 uppercase ${idx > 0 ? 'ml-2' : ''}`}>
+                                                                                <span key={idx} className="text-[9px] px-1.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 uppercase font-bold">
                                                                                     {r}
                                                                                 </span>
                                                                             ))}
@@ -1924,23 +1993,22 @@ function AdminDashboardContent() {
                                                                     );
                                                                 })()}
                                                                 {app.processedBy && (
-                                                                    <span className="text-gray-400 border border-white/10 px-2 py-0.5 text-[10px] bg-white/20">AUTH: {app.processedBy}</span>
+                                                                    <span className="text-gray-600 border border-white/[0.08] px-1.5 py-0.5 text-[9px] rounded">AUTH: {app.processedBy}</span>
                                                                 )}
                                                                 {app.interviewDetails?.status === 'NO_SHOW' && (
-                                                                    <span className="text-[9px] px-2 py-0.5 bg-red-900/10 border border-red-500/30 text-red-400 uppercase">NO-SHOW</span>
+                                                                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-500/10 border border-red-500/20 text-red-400 uppercase font-bold">NO-SHOW</span>
                                                                 )}
-
                                                                 {app.interviewDetails?.scheduledAt && (
-                                                                    <span className="text-orange-400 border border-orange-500/30 px-2 py-0.5 text-[10px] bg-orange-500/5 flex items-center gap-1">
-                                                                        <Clock className="w-3 h-3" />
+                                                                    <span className="text-orange-400 border border-orange-500/20 px-1.5 py-0.5 text-[9px] bg-orange-500/5 flex items-center gap-1 rounded">
+                                                                        <Clock className="w-2.5 h-2.5" />
                                                                         {new Date(app.interviewDetails.scheduledAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}
                                                                     </span>
                                                                 )}
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div className={`px-4 py-1.5 border text-xs font-bold uppercase tracking-widest ${app.status === 'ACCEPTED' ? 'border-green-500/50 text-green-500 bg-green-500/5' : app.status === 'REJECTED' ? 'border-red-500/50 text-red-500 bg-red-500/5' : app.status === 'INTERVIEW_SCHEDULED' ? 'border-orange-500/50 text-orange-500 bg-orange-500/5' : 'border-yellow-500/50 text-yellow-500 bg-yellow-500/5'}`}>
-                                                        {app.status}
+                                                    <div className={`px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider border ${app.status === 'ACCEPTED' ? 'border-green-500/40 text-green-400 bg-green-500/10' : app.status === 'REJECTED' ? 'border-red-500/40 text-red-400 bg-red-500/10' : app.status === 'INTERVIEW_SCHEDULED' || app.status === 'INTERVIEW_SKIPPED' ? 'border-orange-500/40 text-orange-400 bg-orange-500/10' : app.status === 'WAITING' ? 'border-blue-500/40 text-blue-400 bg-blue-500/10' : 'border-yellow-500/40 text-yellow-400 bg-yellow-500/10'}`}>
+                                                        {app.status.replace('INTERVIEW_SCHEDULED','SCHEDULED').replace('INTERVIEW_SKIPPED','SKIPPED')}
                                                     </div>
                                                 </div>
                                             );
@@ -1952,15 +2020,15 @@ function AdminDashboardContent() {
                                     <div
                                         key={fellow._id}
                                         onClick={() => setSelectedItem(fellow)}
-                                        className={`group px-8 py-5 border-b border-white/10 hover:bg-white/20 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === fellow._id ? 'bg-purple-900/10 border-l-[6px] border-l-purple-500' : 'border-l-[6px] border-l-transparent'}`}
+                                        className={`group px-6 py-4 border-b border-white/[0.06] hover:bg-purple-500/[0.04] cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === fellow._id ? 'bg-purple-500/[0.07] border-l-2 border-l-purple-500' : 'border-l-2 border-l-transparent'}`}
                                     >
-                                        <div className="flex items-center gap-8">
-                                            <span className="text-sm font-sans text-gray-600 w-10">{String(idx + 1).padStart(2, '0')}</span>
+                                        <div className="flex items-center gap-5">
+                                            <span className="text-[11px] font-mono text-gray-700 w-8 text-right">{String(idx + 1).padStart(2, '0')}</span>
                                             <div>
-                                                <h3 className="font-bold text-xl text-white group-hover:text-purple-400 transition-colors uppercase tracking-widest mb-1.5">{fellow.firstName} {fellow.lastName}</h3>
-                                                <div className="flex gap-6 text-xs font-sans text-gray-500 items-center">
-                                                    <span className="bg-white/20 px-2 py-0.5 text-white">{fellow.globalPid || 'NO_ID'}</span>
-                                                    <span className="text-purple-400/80 uppercase">
+                                                <h3 className="font-semibold text-sm text-white group-hover:text-purple-300 transition-colors tracking-wide mb-1">{fellow.firstName} {fellow.lastName}</h3>
+                                                <div className="flex gap-3 text-[11px] font-sans text-gray-500 items-center">
+                                                    <span className="bg-white/[0.06] px-1.5 py-0.5 rounded text-gray-400 font-mono text-[10px]">{fellow.globalPid || 'NO_ID'}</span>
+                                                    <span className="text-purple-400/80 uppercase text-[10px] font-semibold">
                                                         {(() => {
                                                             const r = fellow.tenures[fellow.tenures.length - 1]?.role;
                                                             return typeof r === 'object' ? r?.name : r || 'UNASSIGNED';
@@ -1969,21 +2037,21 @@ function AdminDashboardContent() {
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-6">
+                                        <div className="flex items-center gap-4">
                                             {/* Social Indicators */}
-                                            <div className="flex gap-4 opacity-70">
+                                            <div className="flex gap-3 opacity-60 hover:opacity-100 transition-opacity">
                                                 {fellow.socials?.github && (
                                                     <a href={ensureExternalLink(fellow.socials.github)} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
-                                                        <Github className="w-4 h-4 text-white hover:text-purple-400 transition-colors" />
+                                                        <Github className="w-3.5 h-3.5 text-white hover:text-purple-400 transition-colors" />
                                                     </a>
                                                 )}
                                                 {fellow.socials?.linkedin && (
                                                     <a href={ensureExternalLink(fellow.socials.linkedin)} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
-                                                        <Linkedin className="w-4 h-4 text-white hover:text-purple-400 transition-colors" />
+                                                        <Linkedin className="w-3.5 h-3.5 text-white hover:text-purple-400 transition-colors" />
                                                     </a>
                                                 )}
                                             </div>
-                                            <div className="px-4 py-1.5 border border-purple-500/30 text-purple-400 bg-purple-500/5 text-xs font-bold uppercase tracking-widest">
+                                            <div className="px-2.5 py-1 rounded-full border border-purple-500/30 text-purple-400 bg-purple-500/10 text-[9px] font-bold uppercase tracking-wider">
                                                 {fellow.onboardingState}
                                             </div>
                                         </div>
@@ -1994,16 +2062,16 @@ function AdminDashboardContent() {
                                     <div
                                         key={org._id}
                                         onClick={() => { setSelectedItem(org); setOrgInspectorMember(null); router.replace(`${window.location.pathname}?orgCode=${org.code}`); }}
-                                        className={`group px-8 py-6 border-b border-white/10 hover:bg-white/20 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === org._id ? 'bg-green-900/10 border-l-[6px] border-l-green-500' : 'border-l-[6px] border-l-transparent'}`} 
+                                        className={`group px-6 py-4 border-b border-white/[0.06] hover:bg-green-500/[0.04] cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === org._id ? 'bg-green-500/[0.07] border-l-2 border-l-green-500' : 'border-l-2 border-l-transparent'}`} 
                                     >
-                                        <div className="flex items-center gap-8">
-                                            <span className="text-sm font-sans text-gray-600 w-10">{String(idx + 1).padStart(2, '0')}</span>
+                                        <div className="flex items-center gap-5">
+                                            <span className="text-[11px] font-mono text-gray-700 w-8 text-right">{String(idx + 1).padStart(2, '0')}</span>
                                             <div>
-                                                <h3 className="font-bold text-2xl text-white group-hover:text-green-400 transition-colors uppercase tracking-tighter mb-2">{org.name}</h3>
-                                                <div className="flex gap-4 text-xs font-sans text-gray-500 items-center">
-                                                    <span className="text-green-500 border border-green-500/20 bg-green-500/5 px-2 py-0.5 rounded-none">{org.code}</span>
-                                                    <span className="text-xs">{org.emailDomainWhitelist.length} DOMAINS</span>
-                                                    <span className="text-xs">{(org.availableRoles || org.formVar1 || []).length} ROLES</span>
+                                                <h3 className="font-semibold text-sm text-white group-hover:text-green-300 transition-colors tracking-wide mb-1">{org.name}</h3>
+                                                <div className="flex gap-3 text-[11px] font-sans text-gray-500 items-center">
+                                                    <span className="text-green-500 border border-green-500/20 bg-green-500/5 px-1.5 py-0.5 rounded text-[10px] font-bold">{org.code}</span>
+                                                    <span>{org.emailDomainWhitelist.length} DOMAINS</span>
+                                                    <span>{(org.availableRoles || org.formVar1 || []).length} ROLES</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -2048,12 +2116,12 @@ function AdminDashboardContent() {
                                                     });
                                                     setIsEditingOrg(true);
                                                 }}
-                                                className="opacity-0 group-hover:opacity-100 p-2 hover:bg-green-500/10 border border-transparent hover:border-green-500/30 transition-all"
+                                                className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-green-500/10 border border-transparent hover:border-green-500/30 transition-all rounded"
                                                 title="Edit Organization"
                                             >
-                                                <Settings className="w-4 h-4 text-green-500" />
+                                                <Settings className="w-3.5 h-3.5 text-green-500" />
                                             </button>
-                                            <div className={`px-4 py-1.5 border text-xs font-bold uppercase tracking-widest ${org.isActive ? 'border-green-500/50 text-green-500' : 'border-red-500/50 text-red-500'}`}>
+                                            <div className={`px-2.5 py-1 rounded-full border text-[9px] font-bold uppercase tracking-wider ${org.isActive ? 'border-green-500/40 text-green-400 bg-green-500/10' : 'border-red-500/40 text-red-400 bg-red-500/10'}`}>
                                                 {org.isActive ? 'ONLINE' : 'OFFLINE'}
                                             </div>
                                         </div>
@@ -2073,36 +2141,36 @@ function AdminDashboardContent() {
                                     <div
                                         key={project._id}
                                         onClick={() => setSelectedItem(project)}
-                                        className={`group px-8 py-6 border-b border-white/10 hover:bg-white/20 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === project._id ? 'bg-orange-900/10 border-l-[6px] border-l-orange-500' : 'border-l-[6px] border-l-transparent'}`}
+                                        className={`group px-6 py-4 border-b border-white/[0.06] hover:bg-orange-500/[0.04] cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === project._id ? 'bg-orange-500/[0.07] border-l-2 border-l-orange-500' : 'border-l-2 border-l-transparent'}`}
                                     >
-                                        <div className="flex items-center gap-8">
-                                            <span className="text-sm font-sans text-gray-600 w-10">{String(idx + 1).padStart(2, '0')}</span>
+                                        <div className="flex items-center gap-5">
+                                            <span className="text-[11px] font-mono text-gray-700 w-8 text-right">{String(idx + 1).padStart(2, '0')}</span>
                                             <div>
-                                                <h3 className="font-bold text-2xl text-white group-hover:text-orange-400 transition-colors uppercase tracking-tighter mb-2">{project.title}</h3>
-                                                <div className="flex gap-4 text-xs font-sans text-gray-500 items-center">
-                                                    <span className="text-orange-500 border border-orange-500/20 bg-orange-500/5 px-2 py-0.5 rounded-none flex items-center gap-1">
-                                                        <Users className="w-3 h-3" /> {project.contributors?.length || 0}
+                                                <h3 className="font-semibold text-sm text-white group-hover:text-orange-300 transition-colors tracking-wide mb-1">{project.title}</h3>
+                                                <div className="flex gap-3 text-[11px] font-sans text-gray-500 items-center">
+                                                    <span className="text-orange-500 border border-orange-500/20 bg-orange-500/5 px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-1">
+                                                        <Users className="w-2.5 h-2.5" /> {project.contributors?.length || 0}
                                                     </span>
-                                                    <span className="text-xs flex items-center gap-1">
-                                                        <ExternalLink className="w-3 h-3" /> {project.supportedLinks?.length || 0} LINKS
+                                                    <span className="flex items-center gap-1">
+                                                        <ExternalLink className="w-2.5 h-2.5" /> {project.supportedLinks?.length || 0} LINKS
                                                     </span>
-                                                    <span className="text-xs truncate max-w-[300px]">{project.description}</span>
+                                                    <span className="truncate max-w-[280px] text-gray-600">{project.description}</span>
                                                 </div>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); window.open(`/project/${project._id}`, '_blank'); }}
-                                                className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-orange-500/10 border border-transparent hover:border-orange-500/30"
+                                                className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 hover:bg-orange-500/10 border border-transparent hover:border-orange-500/30 rounded"
                                                 title="Open project in new window"
                                             >
-                                                <ExternalLink className="w-4 h-4 text-orange-400" />
+                                                <ExternalLink className="w-3.5 h-3.5 text-orange-400" />
                                             </button>
-                                            <div className={`px-4 py-1.5 border text-xs font-bold uppercase tracking-widest ${
-                                                (project.status || '').toLowerCase() === 'ongoing' ? 'border-blue-500/50 text-blue-500' :
-                                                (project.status || '').toLowerCase() === 'completed' ? 'border-green-500/50 text-green-500' :
-                                                (project.status || '').toLowerCase() === 'onhold' || (project.status || '').toLowerCase() === 'on-hold' ? 'border-red-500/50 text-red-500' :
-                                                project.isActive ? 'border-orange-500/50 text-orange-500' : 'border-red-500/50 text-red-500'
+                                            <div className={`px-2.5 py-1 rounded-full border text-[9px] font-bold uppercase tracking-wider ${
+                                                (project.status || '').toLowerCase() === 'ongoing' ? 'border-blue-500/40 text-blue-400 bg-blue-500/10' :
+                                                (project.status || '').toLowerCase() === 'completed' ? 'border-green-500/40 text-green-400 bg-green-500/10' :
+                                                (project.status || '').toLowerCase() === 'onhold' || (project.status || '').toLowerCase() === 'on-hold' ? 'border-red-500/40 text-red-400 bg-red-500/10' :
+                                                project.isActive ? 'border-orange-500/40 text-orange-400 bg-orange-500/10' : 'border-red-500/40 text-red-400 bg-red-500/10'
                                             }`}>
                                                 {((project.status || project.isActive) ? (project.status || (project.isActive ? 'ACTIVE' : 'INACTIVE')) : 'UNKNOWN').toString().toUpperCase()}
                                             </div>
@@ -2114,7 +2182,7 @@ function AdminDashboardContent() {
                     </div>
                 </main>
 
-                {/* Cyber Inspector Panel */}
+            {/* Cyber Inspector Panel */}
                 <AnimatePresence>
                     {selectedItem && (
                         <motion.aside
@@ -2122,14 +2190,19 @@ function AdminDashboardContent() {
                             animate={{ x: 0 }}
                             exit={{ x: '100%' }}
                             transition={{ type: 'tween', ease: 'circOut', duration: 0.3 }}
-                            className="w-[600px] bg-slate-950 border-l border-white/10 z-40 flex flex-col shrink-0 h-full min-h-0 shadow-[-50px_0_100px_rgba(0,0,0,0.8)]"
+                            className="w-[580px] bg-slate-950 border-l border-white/10 z-40 flex flex-col shrink-0 h-full min-h-0 shadow-[-50px_0_100px_rgba(0,0,0,0.8)]"
                         >
-                            <div className="h-20 flex items-center justify-between px-10 border-b border-white/10 bg-slate-950/50 backdrop-blur-md">
-                                <h3 className="font-sans text-sm text-white uppercase tracking-[0.2em] flex items-center gap-3">
-                                    <div className={`w-2 h-2 ${activeTab === 'fellows' ? 'bg-purple-500' : activeTab === 'orgs' ? 'bg-green-500' : activeTab === 'projects' ? 'bg-orange-500' : 'bg-cyan-500'} animate-pulse`} />
-                                    DATA_INSPECTOR
-                                </h3>
-                                <button onClick={() => { setSelectedItem(null); setOrgInspectorMember(null); }} className="hover:text-white text-gray-600 transition-colors"><XCircle className="w-6 h-6" /></button>
+                            {/* Color-coded top strip */}
+                            <div className={`h-0.5 w-full ${ activeTab === 'fellows' ? 'bg-gradient-to-r from-purple-600 via-purple-400 to-purple-600' : activeTab === 'orgs' ? 'bg-gradient-to-r from-green-600 via-green-400 to-green-600' : activeTab === 'projects' ? 'bg-gradient-to-r from-orange-600 via-orange-400 to-orange-600' : 'bg-gradient-to-r from-cyan-600 via-cyan-400 to-cyan-600'}`} />
+                            <div className="h-16 flex items-center justify-between px-8 border-b border-white/[0.07] bg-black/20">
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-1.5 h-6 rounded-full ${ activeTab === 'fellows' ? 'bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.6)]' : activeTab === 'orgs' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : activeTab === 'projects' ? 'bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.6)]' : 'bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.6)]'}`} />
+                                    <h3 className="font-sans text-xs text-gray-300 uppercase tracking-[0.2em] font-bold">INSPECTOR</h3>
+                                    <span className={`text-[10px] font-mono ${ activeTab === 'fellows' ? 'text-purple-500' : activeTab === 'orgs' ? 'text-green-500' : activeTab === 'projects' ? 'text-orange-500' : 'text-cyan-500'}`}>{activeTab.toUpperCase()}</span>
+                                </div>
+                                <button onClick={() => { setSelectedItem(null); setOrgInspectorMember(null); }} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 text-gray-600 hover:text-white transition-all">
+                                    <XCircle className="w-5 h-5" />
+                                </button>
                             </div>
 
                             <div ref={inspectorRef} onScroll={saveInspectorScroll} className="flex-1 min-h-0 overflow-y-auto p-10 custom-scrollbar space-y-10">
@@ -2610,12 +2683,12 @@ function AdminDashboardContent() {
                                                         </div>
                                                     )}
 
-                                                    <div className="grid grid-cols-3 gap-6 pt-4">
-                                                        <button onClick={() => handleUpdateAppStatus('REJECTED')} className="h-14 border border-red-500/20 text-red-500 hover:bg-red-500/10 hover:border-red-500 transition-all text-sm font-bold uppercase tracking-[0.2em]">
+                                                    <div className="grid grid-cols-3 gap-3 pt-4">
+                                                        <button onClick={() => handleUpdateAppStatus('REJECTED')} className="h-12 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500 hover:text-white hover:border-red-500 transition-all text-xs font-bold uppercase tracking-widest">
                                                             REJECT
                                                         </button>
 
-                                                        <button onClick={() => handleUpdateAppStatus('WAITING')} className="h-14 border border-yellow-500/20 text-yellow-400 hover:bg-yellow-500/10 hover:border-yellow-500 transition-all text-sm font-bold uppercase tracking-[0.2em]">
+                                                        <button onClick={() => handleUpdateAppStatus('WAITING')} className="h-12 rounded-lg border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500 hover:text-black hover:border-yellow-500 transition-all text-xs font-bold uppercase tracking-widest">
                                                             WAITING
                                                         </button>
                                                     {selectedItem.status !== 'REJECTED' && (
@@ -2625,7 +2698,7 @@ function AdminDashboardContent() {
                                                                 (selectedItem.status === 'PENDING')
                                                                 || !(selectedItem.assignedRole && String(selectedItem.assignedRole).trim())
                                                             }
-                                                            className={`h-14 border transition-all text-sm font-bold uppercase tracking-[0.2em] ${(selectedItem.status === 'PENDING' || !(selectedItem.assignedRole && String(selectedItem.assignedRole).trim())) ? 'border-gray-800 text-gray-700 cursor-not-allowed bg-transparent' : 'bg-cyan-700/20 border-cyan-500/50 text-cyan-400 hover:bg-cyan-500 hover:text-black'}`}
+                                                            className={`h-12 rounded-lg border transition-all text-xs font-bold uppercase tracking-widest ${ (selectedItem.status === 'PENDING' || !(selectedItem.assignedRole && String(selectedItem.assignedRole).trim())) ? 'border-gray-800 text-gray-700 cursor-not-allowed bg-transparent' : 'bg-cyan-600 border-cyan-500 text-black hover:bg-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.25)]'}`}
                                                         >
                                                             ACCEPT
                                                         </button>
