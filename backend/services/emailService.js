@@ -3,8 +3,21 @@ const logger = require('../logger');
 const Badge = require('../models/Badge');
 const { getPremiumTemplate } = require('../emailTemplates/premium');
 const { DateTime } = require('luxon');
+const { enqueueEmailTask } = require('../servicebus/emailQueue');
 
 let azureClient = null;
+
+const isQueueEnabled = () => {
+  return String(process.env.EMAIL_QUEUE_ENABLED || '').toLowerCase() === 'true';
+};
+
+const enqueueEmail = async (type, payload) => {
+  return enqueueEmailTask({
+    type,
+    payload,
+    createdAt: new Date().toISOString()
+  });
+};
 
 // Initialize Azure Communication Email client
 const initializeAzure = () => {
@@ -89,7 +102,10 @@ const sendEmail = async ({ to, subject, html, from = null, attachments = [] }) =
  * @param {string} email - Recipient email
  * @param {string} otpCode - OTP code
  */
-const sendRegistrationOTP = async (email, otpCode) => {
+const sendRegistrationOTP = async (email, otpCode, options = {}) => {
+  if (!options.bypassQueue && isQueueEnabled()) {
+    return enqueueEmail('REGISTRATION_OTP', { email, otpCode });
+  }
   const { getOTPEmail } = require('../emailTemplates/otp');
   const html = getOTPEmail(otpCode);
 
@@ -105,7 +121,10 @@ const sendRegistrationOTP = async (email, otpCode) => {
  * @param {string} email - Recipient email
  * @param {string} otpCode - OTP code
  */
-const sendPasswordResetOTP = async (email, otpCode) => {
+const sendPasswordResetOTP = async (email, otpCode, options = {}) => {
+  if (!options.bypassQueue && isQueueEnabled()) {
+    return enqueueEmail('PASSWORD_RESET_OTP', { email, otpCode });
+  }
   const { getResetPasswordEmail } = require('../emailTemplates/resetpass');
   const html = getResetPasswordEmail(otpCode);
 
@@ -122,7 +141,10 @@ const sendPasswordResetOTP = async (email, otpCode) => {
  * @param {string} password - Temporary password
  * @param {string} loginUrl - Login URL
  */
-const sendBulkUserWelcomeEmail = async (email, password, loginUrl = null) => {
+const sendBulkUserWelcomeEmail = async (email, password, loginUrl = null, options = {}) => {
+  if (!options.bypassQueue && isQueueEnabled()) {
+    return enqueueEmail('BULK_USER_WELCOME', { email, password, loginUrl });
+  }
   const { getBulkUserEmail } = require('../emailTemplates/bulkuser');
   const defaultLoginUrl = loginUrl || process.env.FRONTEND || 'http://localhost:3000/login';
   const html = getBulkUserEmail(email, password, defaultLoginUrl);
@@ -144,7 +166,25 @@ const sendBulkUserWelcomeEmail = async (email, password, loginUrl = null) => {
  * @param {string|null} certificateId - Optional certificate ID to display
  * @param {string|null} badgeImageUrl - Optional absolute URL to badge image
  */
-const sendBadgeReceivedEmail = async (email, badgeName, badgeDescription, profileLink = null, certificateId = null, badgeImageUrl = null) => {
+const sendBadgeReceivedEmail = async (
+  email,
+  badgeName,
+  badgeDescription,
+  profileLink = null,
+  certificateId = null,
+  badgeImageUrl = null,
+  options = {}
+) => {
+  if (!options.bypassQueue && isQueueEnabled()) {
+    return enqueueEmail('BADGE_RECEIVED', {
+      email,
+      badgeName,
+      badgeDescription,
+      profileLink,
+      certificateId,
+      badgeImageUrl
+    });
+  }
   const { getBadgeReceivedEmail } = require('../emailTemplates/badgerecieve');
   const frontendBase = process.env.FRONTEND || process.env.BACKEND_URL || `http://localhost:${process.env.PORT || '3001'}`;
   const defaultProfileLink = profileLink || `${frontendBase}/profile`;
@@ -211,7 +251,23 @@ const sendBadgeReceivedEmail = async (email, badgeName, badgeDescription, profil
  * @param {string} additionalInfo - Additional information
  * @param {string} profileLink - Link to user's profile
  */
-const sendProfileUpdateEmail = async (email, reasonType, badgeName = '', additionalInfo = '', profileLink = null) => {
+const sendProfileUpdateEmail = async (
+  email,
+  reasonType,
+  badgeName = '',
+  additionalInfo = '',
+  profileLink = null,
+  options = {}
+) => {
+  if (!options.bypassQueue && isQueueEnabled()) {
+    return enqueueEmail('PROFILE_UPDATE', {
+      email,
+      reasonType,
+      badgeName,
+      additionalInfo,
+      profileLink
+    });
+  }
   const { getRevokeUpdateEmail } = require('../emailTemplates/revokeUpdate');
   const defaultProfileLink = profileLink || `${process.env.FRONTEND || 'http://localhost:3000'}/profile`;
   const html = getRevokeUpdateEmail(reasonType, badgeName, additionalInfo, defaultProfileLink);
@@ -232,7 +288,10 @@ const sendProfileUpdateEmail = async (email, reasonType, badgeName = '', additio
  * @param {Date} scheduledAt - Interview date and time
  * @param {string} meetLink - Google Meet link
  */
-const sendInterviewScheduledEmail = async (email, scheduledAt, meetLink) => {
+const sendInterviewScheduledEmail = async (email, scheduledAt, meetLink, options = {}) => {
+  if (!options.bypassQueue && isQueueEnabled()) {
+    return enqueueEmail('INTERVIEW_SCHEDULED', { email, scheduledAt, meetLink });
+  }
 
   // Always interpret scheduledAt as IST (Asia/Kolkata), regardless of offset or server timezone
   // scheduledAt is expected to be a string like '2026-02-10T10:00'
@@ -331,7 +390,10 @@ const sendInterviewScheduledEmail = async (email, scheduledAt, meetLink) => {
  * @param {string} email - Recipient email
  * @param {string} status - 'ACCEPTED' or 'REJECTED'
  */
-const sendApplicationStatusEmail = async (email, status) => {
+const sendApplicationStatusEmail = async (email, status, options = {}) => {
+  if (!options.bypassQueue && isQueueEnabled()) {
+    return enqueueEmail('APPLICATION_STATUS', { email, status });
+  }
   const isAccepted = status === 'ACCEPTED';
   const subject = isAccepted ? 'DeepCytes Fellowship Application Approved' : 'DeepCytes Fellowship Application Status';
   const portalLink = `${process.env.FRONTEND || 'http://localhost:3000'}/portal`;
@@ -369,7 +431,13 @@ const sendApplicationStatusEmail = async (email, status) => {
  * @param {string} reason - Reason for termination (optional)
  * @param {Array} attachments - Array of file paths to attach
  */
-const sendTerminationEmail = async (email, reason = 'Performance Review', attachments = []) => {
+const sendTerminationEmail = async (email, reason = 'Performance Review', attachments = [], options = {}) => {
+  if (!options.bypassQueue && isQueueEnabled()) {
+    if (!attachments || attachments.length === 0) {
+      return enqueueEmail('TERMINATION', { email, reason });
+    }
+    logger.warn('Termination email has attachments; sending directly to avoid missing files.');
+  }
   const html = getPremiumTemplate({
     title: 'Fellowship Status Update',
     message: 'We regret to inform you that your tenure with the DeepCytes Fellowship has been terminated, effective immediately. Please review the details below.',
@@ -396,7 +464,10 @@ const sendTerminationEmail = async (email, reason = 'Performance Review', attach
  * @param {string} email - Recipient email
  * @param {string} newRole - New Role Title
  */
-const sendPromotionEmail = async (email, newRole) => {
+const sendPromotionEmail = async (email, newRole, options = {}) => {
+  if (!options.bypassQueue && isQueueEnabled()) {
+    return enqueueEmail('PROMOTION', { email, newRole });
+  }
   const dashboardLink = `${process.env.FRONTEND || 'http://localhost:3000'}/FellowshipProfile`;
 
   const html = getPremiumTemplate({
@@ -420,6 +491,52 @@ const sendPromotionEmail = async (email, newRole) => {
   });
 };
 
+const processEmailQueueMessage = async (task) => {
+  if (!task || !task.type) {
+    throw new Error('Invalid email task payload');
+  }
+
+  const payload = task.payload || {};
+
+  switch (task.type) {
+    case 'REGISTRATION_OTP':
+      return sendRegistrationOTP(payload.email, payload.otpCode, { bypassQueue: true });
+    case 'PASSWORD_RESET_OTP':
+      return sendPasswordResetOTP(payload.email, payload.otpCode, { bypassQueue: true });
+    case 'BULK_USER_WELCOME':
+      return sendBulkUserWelcomeEmail(payload.email, payload.password, payload.loginUrl || null, { bypassQueue: true });
+    case 'BADGE_RECEIVED':
+      return sendBadgeReceivedEmail(
+        payload.email,
+        payload.badgeName,
+        payload.badgeDescription,
+        payload.profileLink || null,
+        payload.certificateId || null,
+        payload.badgeImageUrl || null,
+        { bypassQueue: true }
+      );
+    case 'PROFILE_UPDATE':
+      return sendProfileUpdateEmail(
+        payload.email,
+        payload.reasonType,
+        payload.badgeName || '',
+        payload.additionalInfo || '',
+        payload.profileLink || null,
+        { bypassQueue: true }
+      );
+    case 'INTERVIEW_SCHEDULED':
+      return sendInterviewScheduledEmail(payload.email, payload.scheduledAt, payload.meetLink, { bypassQueue: true });
+    case 'APPLICATION_STATUS':
+      return sendApplicationStatusEmail(payload.email, payload.status, { bypassQueue: true });
+    case 'TERMINATION':
+      return sendTerminationEmail(payload.email, payload.reason, payload.attachments || [], { bypassQueue: true });
+    case 'PROMOTION':
+      return sendPromotionEmail(payload.email, payload.newRole, { bypassQueue: true });
+    default:
+      throw new Error(`Unknown email task type: ${task.type}`);
+  }
+};
+
 module.exports = {
   sendEmail,
   sendRegistrationOTP,
@@ -431,5 +548,6 @@ module.exports = {
   sendInterviewScheduledEmail,
   sendApplicationStatusEmail,
   sendTerminationEmail,
-  sendPromotionEmail
+  sendPromotionEmail,
+  processEmailQueueMessage
 };
