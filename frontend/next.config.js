@@ -1,4 +1,7 @@
 module.exports = {
+  experimental: {
+    allowedDevOrigins: ["localhost:3000", "192.168.1.10:3000"],
+  },
   turbopack: {},
     images: {
       localPatterns: [

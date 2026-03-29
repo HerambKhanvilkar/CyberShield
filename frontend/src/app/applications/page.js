@@ -9,7 +9,7 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "react-toastify";
-import { Users,Briefcase,Shield,Database,Search,Plus,ChevronRight,CheckCircle,XCircle,Clock,FileText,Award,History,Settings,ArrowLeft,ExternalLink,Mail,Calendar,Globe,Terminal,Code,Cpu,Zap,Linkedin,Github,Trophy,ArrowUpCircle,Download,Trash,MoreVertical,ClipboardCopy,Home,LogOut,User } from "lucide-react";
+import { Users, Briefcase, Shield, Database, Search, Plus, ChevronRight, CheckCircle, XCircle, Clock, FileText, Award, History, Settings, ArrowLeft, ExternalLink, Mail, Calendar, Globe, Terminal, Code, Cpu, Zap, Linkedin, Github, Trophy, ArrowUpCircle, Download, Trash, MoreVertical, ClipboardCopy, Home, LogOut, User, Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { headers } from "../../../next.config";
 
@@ -18,16 +18,16 @@ function AdminDashboardContent() {
     const sixMonthsFromNow = () => {
         const d = new Date();
         d.setMonth(d.getMonth() + 6);
-        d.setHours(0,0,0,0);
+        d.setHours(0, 0, 0, 0);
         return d.toISOString().split('T')[0];
     };
     const oneWeekFromNow = () => {
         const d = new Date();
         d.setDate(d.getDate() + 7);
-        d.setHours(0,0,0,0);
+        d.setHours(0, 0, 0, 0);
         return d.toISOString().split('T')[0];
     };
-    
+
     // ensure calendar picker icon is white (only) on datetime inputs
     useEffect(() => {
         const style = document.createElement('style');
@@ -75,11 +75,12 @@ function AdminDashboardContent() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [orgFilter, setOrgFilter] = useState(""); // filter by organization code
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
     const [orgInspectorMember, setOrgInspectorMember] = useState(null); // nested member view inside org inspector
     const [actionLoading, setActionLoading] = useState(false);
     const [isEditingOrg, setIsEditingOrg] = useState(false);
-    const [orgData, setOrgData] = useState({ name: '', code: '', emailDomainWhitelist: [], endDate: oneWeekFromNow(), defaultTenureEndDate: sixMonthsFromNow(), formVar1: [], availableRoles: [], isActive: true, adminPassword: ''});
+    const [orgData, setOrgData] = useState({ name: '', code: '', emailDomainWhitelist: [], endDate: oneWeekFromNow(), defaultTenureEndDate: sixMonthsFromNow(), formVar1: [], availableRoles: [], isActive: true, adminPassword: '' });
     const [tenureEndDate, setTenureEndDate] = useState(sixMonthsFromNow());
     const [availableRoles, setAvailableRoles] = useState([]);
     const [newRole, setNewRole] = useState("");
@@ -150,8 +151,8 @@ function AdminDashboardContent() {
     const [suggestionsLoading, setSuggestionsLoading] = useState(false);
     const suggestionTimerRef = useRef(null);
 
-    const fetchContributorSuggestions = async(query) => {
-        if(!query || query.length === 0){
+    const fetchContributorSuggestions = async (query) => {
+        if (!query || query.length === 0) {
             setContributorSuggestions([]);
             return;
         }
@@ -159,13 +160,13 @@ function AdminDashboardContent() {
         const serverUrl = process.env.SERVER_URL || 'http://localhost:3000/api';
         const endpoint = contributorMode === 'name' ? `${serverUrl}/contributor/autocompleteByname?letter=${letter}` : `${serverUrl}/contributor/autocompleteByrole?letter=${letter}`
 
-        try{
+        try {
             setSuggestionsLoading(true);
-            const res = await fetch(endpoint, { headers: { 'Content-Type' : 'application/json' }});
-            if(!res.ok) throw new Error('Network response was not ok');
+            const res = await fetch(endpoint, { headers: { 'Content-Type': 'application/json' } });
+            if (!res.ok) throw new Error('Network response was not ok');
             const data = await res.json();
             setContributorSuggestions(Array.isArray(data) ? data : []);
-        }catch (err){
+        } catch (err) {
             console.error('Autocomplete fetch error');
             setContributorSuggestions([]);
         } finally {
@@ -205,7 +206,7 @@ function AdminDashboardContent() {
         try {
             const pos = sessionStorage.getItem(listScrollKey());
             if (pos && listRef.current) listRef.current.scrollTop = parseInt(pos, 10);
-        } catch (e) {/* ignore */}
+        } catch (e) {/* ignore */ }
     }, [activeTab, activeSubTab, loading]);
 
     useEffect(() => {
@@ -213,7 +214,7 @@ function AdminDashboardContent() {
         try {
             const pos = sessionStorage.getItem(inspectorScrollKey());
             if (pos && inspectorRef.current) inspectorRef.current.scrollTop = parseInt(pos, 10);
-        } catch (e) {/* ignore */}
+        } catch (e) {/* ignore */ }
     }, [selectedItem, orgInspectorMember, activeTab, loading]);
 
     const saveListScroll = () => { if (!listRef.current) return; sessionStorage.setItem(listScrollKey(), String(listRef.current.scrollTop)); };
@@ -223,7 +224,7 @@ function AdminDashboardContent() {
         setLoading(true);
         try {
             const token = localStorage.getItem("accessToken");
-            if (!token) { 
+            if (!token) {
                 setLoading(false);
                 return;
             }
@@ -242,21 +243,21 @@ function AdminDashboardContent() {
             // return fetched data so callers can synchronously act on fresh values
             return { apps: appsRes.data, fellows: fellowsRes.data, orgs: orgsRes.data, roles: rolesRes.data };
         } catch (error) {
-            if (error.response?.status === 401) { 
+            if (error.response?.status === 401) {
                 localStorage.removeItem("accessToken");
                 localStorage.removeItem("user");
-                router.push("/admin"); 
+                router.push("/admin");
             }
             toast.error("Failed to load dashboard data");
             return null;
         } finally { setLoading(false); }
     };
 
-    const fetchProjects = async () =>{
+    const fetchProjects = async () => {
         setLoading(true);
-        try{
+        try {
             const token = localStorage.getItem("accessToken");
-            if(!token){
+            if (!token) {
                 setLoading(false);
                 return;
             }
@@ -266,8 +267,8 @@ function AdminDashboardContent() {
             setProjectData(projects.data);
 
             return projects.data;
-        }catch(error){
-            if(error.response?.status === 401){
+        } catch (error) {
+            if (error.response?.status === 401) {
                 localStorage.removeItem("accessToken");
                 localStorage.removeItem("user");
                 router.push("/admin");
@@ -313,7 +314,7 @@ function AdminDashboardContent() {
                 const d = new Date(val);
                 if (isNaN(d.getTime())) return "";
                 const pad = n => String(n).padStart(2, '0');
-                return `${pad(d.getDate())}${pad(d.getMonth()+1)}${d.getFullYear()}`;
+                return `${pad(d.getDate())}${pad(d.getMonth() + 1)}${d.getFullYear()}`;
             };
 
             const payload = {
@@ -586,7 +587,7 @@ function AdminDashboardContent() {
         } catch (err) {
             const counts = err.response?.data?.counts;
             if (counts) {
-                const details = Object.entries(counts).map(([k,v]) => `${k}: ${v}`).join(', ');
+                const details = Object.entries(counts).map(([k, v]) => `${k}: ${v}`).join(', ');
                 toast.error((err.response?.data?.message || 'Deletion blocked') + ' — ' + details);
             } else {
                 toast.error(err.response?.data?.message || 'Failed to permanently delete role');
@@ -804,12 +805,12 @@ function AdminDashboardContent() {
     useEffect(() => {
         const token = localStorage.getItem("accessToken");
         const user = JSON.parse(localStorage.getItem("user") || "null");
-        
+
         if (!token || !user || !user.isAdmin) {
             router.push("/admin");
             return;
         }
-        
+
         fetchData();
         fetchProjects();
     }, []);
@@ -981,12 +982,12 @@ function AdminDashboardContent() {
         try {
             const token = localStorage.getItem("accessToken");
             const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
-            
+
             const response = await axios.get(`${serverUrl}/application/admin/export-csv`, {
                 headers: { Authorization: `Bearer ${token}` },
                 responseType: 'blob'
             });
-            
+
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement('a');
             link.href = url;
@@ -996,7 +997,7 @@ function AdminDashboardContent() {
             link.click();
             link.remove();
             window.URL.revokeObjectURL(url);
-            
+
             toast.success('CSV exported successfully');
         } catch (error) {
             console.error('Export error:', error);
@@ -1008,12 +1009,12 @@ function AdminDashboardContent() {
         try {
             const token = localStorage.getItem("accessToken");
             const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
-            
+
             const response = await axios.get(`${serverUrl}/application/admin/export-org-csv/${orgCode}`, {
                 headers: { Authorization: `Bearer ${token}` },
                 responseType: 'blob'
             });
-            
+
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement('a');
             link.href = url;
@@ -1023,7 +1024,7 @@ function AdminDashboardContent() {
             link.click();
             link.remove();
             window.URL.revokeObjectURL(url);
-            
+
             toast.success(`${orgCode} data exported successfully`);
         } catch (error) {
             console.error('Org export error:', error);
@@ -1188,7 +1189,7 @@ function AdminDashboardContent() {
             console.error('Archive failed', err);
             toast.error(err.response?.data?.message || 'Archive failed');
         } finally { setActionLoading(false); }
-    }; 
+    };
 
     const TenureTimeline = ({ tenures }) => (
         <div className="relative pl-6 border-l border-cyan-900/50 space-y-8 ml-2">
@@ -1216,6 +1217,7 @@ function AdminDashboardContent() {
     const renderOrgInspector = () => {
         const orgApps = apps.filter(a => a.orgCode === selectedItem.code && a.status === 'PENDING');
         const orgInterviewees = apps.filter(a => a.orgCode === selectedItem.code && (a.status === 'INTERVIEW_SCHEDULED' || a.status === 'INTERVIEW_SKIPPED'));
+        const orgFellows = fellows.filter(f => f.orgCode === selectedItem.code);
         const orgWaiting = apps.filter(a => a.orgCode === selectedItem.code && a.status === 'WAITING');
         const orgRejected = apps.filter(a => a.orgCode === selectedItem.code && a.status === 'REJECTED');
 
@@ -1227,23 +1229,23 @@ function AdminDashboardContent() {
                             <button onClick={() => { setOrgInspectorMember(null); router.replace(`${window.location.pathname}?orgCode=${selectedItem?.code || ''}`); }} className="text-gray-400 hover:text-white p-1">
                                 <ArrowLeft className="w-4 h-4" />
                             </button>
-                            <div className="flex-1 flex items-center gap-4">
-                                <div className="w-16 h-16 border border-white/10 flex items-center justify-center text-3xl font-bold bg-white/20 text-purple-500">{orgInspectorMember.firstName?.[0] || 'U'}</div>
+                            <div className="flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+                                <div className="w-12 h-12 sm:w-16 sm:h-16 border border-white/10 flex items-center justify-center text-xl sm:text-3xl font-bold bg-white/20 text-purple-500 shrink-0">{orgInspectorMember.firstName?.[0] || 'U'}</div>
                                 <div className="flex-1">
-                                    <div className="text-lg font-bold uppercase tracking-tight">{orgInspectorMember.firstName} {orgInspectorMember.lastName}</div>
+                                    <div className="text-base sm:text-lg font-bold uppercase tracking-tight">{orgInspectorMember.firstName} {orgInspectorMember.lastName}</div>
                                     <div className="text-xs font-sans text-gray-400">{orgInspectorMember.email}</div>
                                     <div className="mt-2 flex items-center gap-2">
                                         <div className="px-2 py-0.5 border border-purple-500/30 text-[9px] text-purple-400 uppercase">{orgInspectorMember.onboardingState || orgInspectorMember.status}</div>
                                         <button onClick={() => {
                                             const isApplicant = orgInspectorMember && (typeof orgInspectorMember.status === 'string' || orgInspectorMember.interviewDetails);
-                                            const applicantStatuses = ['PENDING','INTERVIEW_SCHEDULED','INTERVIEW_SKIPPED', 'WAITING', 'REJECTED'];
+                                            const applicantStatuses = ['PENDING', 'INTERVIEW_SCHEDULED', 'INTERVIEW_SKIPPED', 'WAITING', 'REJECTED'];
                                             const currentStatus = (orgInspectorMember.status || '').toUpperCase();
                                             if (isApplicant && applicantStatuses.includes(currentStatus)) {
                                                 // Open in Applications and jump to the matching status tab
                                                 setActiveTab('applications');
 
                                                 if (currentStatus === 'WAITING') setActiveSubTab('WAITING');
-                                                else if (currentStatus === 'INTERVIEW_SCHEDULED' || currentStatus === 'INTERVIEW_SKIPPED')setActiveSubTab('INTERVIEW');
+                                                else if (currentStatus === 'INTERVIEW_SCHEDULED' || currentStatus === 'INTERVIEW_SKIPPED') setActiveSubTab('INTERVIEW');
                                                 else if (currentStatus === 'REJECTED') setActiveSubTab('REJECTED');
                                                 else setActiveSubTab('PENDING');
                                                 setSelectedItem(orgInspectorMember);
@@ -1299,7 +1301,7 @@ function AdminDashboardContent() {
                                                         </div>
                                                     </div>
                                                     <div className="grid grid-cols-2 gap-2">
-                                                        <button onClick={() => { setShowAssignRoleModal(false); setSkipModalTarget(null); setScheduleData({ scheduledAt: orgInspectorMember.interviewDetails?.scheduledAt ? new Date(orgInspectorMember.interviewDetails.scheduledAt).toISOString().slice(0,16) : '', meetLink: orgInspectorMember.interviewDetails?.meetLink || '' }); setShowScheduleModal(true); }} className="w-full h-10 border border-orange-500/50 text-orange-400 bg-orange-900/10 hover:bg-orange-500/20 text-xs font-bold uppercase tracking-wider">Reschedule</button>
+                                                        <button onClick={() => { setShowAssignRoleModal(false); setSkipModalTarget(null); setScheduleData({ scheduledAt: orgInspectorMember.interviewDetails?.scheduledAt ? new Date(orgInspectorMember.interviewDetails.scheduledAt).toISOString().slice(0, 16) : '', meetLink: orgInspectorMember.interviewDetails?.meetLink || '' }); setShowScheduleModal(true); }} className="w-full h-10 border border-orange-500/50 text-orange-400 bg-orange-900/10 hover:bg-orange-500/20 text-xs font-bold uppercase tracking-wider">Reschedule</button>
                                                         <button onClick={handleMarkNoShow} className="w-full h-10 border border-red-500/20 text-red-500 hover:bg-red-500/10 text-xs font-bold uppercase tracking-wider">No-show</button>
                                                     </div>
 
@@ -1354,18 +1356,18 @@ function AdminDashboardContent() {
                     </motion.div>
                 )}
 
-                <div className="flex items-start gap-6 border-b border-white/10 pb-8">
-                    <div className="w-20 h-20 border border-white/20 flex items-center justify-center text-4xl font-bold bg-white/20 text-green-500">
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 border-b border-white/10 pb-6 sm:pb-8">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 border border-white/20 flex items-center justify-center text-3xl sm:text-4xl font-bold bg-white/20 text-green-500 shrink-0">
                         {selectedItem.name[0]}
                     </div>
-                    <div className="flex-1 space-y-2">
-                        <h2 className="text-3xl font-bold uppercase tracking-tight text-white">{selectedItem.name}</h2>
-                        <div className="text-xs font-sans text-gray-400 grid grid-cols-3 gap-2">
-                            <span className="block p-2 border border-white/10">CODE: {selectedItem.code}</span>
-                            <span className={`block p-2 border border-white/10 ${selectedItem.isActive ? 'text-green-500' : 'text-red-500'}`}>{selectedItem.isActive ? 'ACTIVE' : 'INACTIVE'}</span>
+                    <div className="flex-1 space-y-3 w-full text-center sm:text-left">
+                        <h2 className="text-xl sm:text-3xl font-bold uppercase tracking-tight text-white">{selectedItem.name}</h2>
+                        <div className="text-[10px] font-sans text-gray-400 flex flex-wrap justify-center sm:justify-start gap-2">
+                            <span className="px-2 py-1.5 border border-white/10">CODE: {selectedItem.code}</span>
+                            <span className={`px-2 py-1.5 border border-white/10 ${selectedItem.isActive ? 'text-green-500' : 'text-red-500'}`}>{selectedItem.isActive ? 'ACTIVE' : 'INACTIVE'}</span>
                             <button
                                 onClick={() => handleExportOrgCSV(selectedItem.code)}
-                                className="p-2 border border-cyan-500/50 text-cyan-500 hover:bg-cyan-500 hover:text-black flex items-center justify-center gap-2 transition-all text-[10px] font-bold uppercase tracking-widest"
+                                className="px-2 py-1.5 border border-cyan-500/50 text-cyan-500 hover:bg-cyan-500 hover:text-black flex items-center justify-center gap-2 transition-all text-[10px] font-bold uppercase tracking-widest"
                                 title="Download organization data as CSV"
                             >
                                 <Download className="w-3.5 h-3.5" /> CSV
@@ -1384,22 +1386,22 @@ function AdminDashboardContent() {
                         <div>
                             <h4 className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-2 border-b border-purple-500/20 pb-1">deployed_fellows ({orgFellows.length})</h4>
                             {orgFellows.length > 0 ? (
-                                <div className="grid gap-2">
+                                <div className="grid grid-cols-1 gap-2">
                                     {orgFellows.map(f => (
                                         <div
                                             key={f._id}
                                             onClick={() => { setOrgInspectorMember(f); router.replace(`${window.location.pathname}?orgCode=${selectedItem?.code}&memberEmail=${encodeURIComponent(f.email)}`); }}
-                                            className="p-3 bg-white/20 border border-white/10 flex justify-between items-center group cursor-pointer hover:border-purple-500/50 transition-colors"
+                                            className="p-3 bg-white/20 border border-white/10 flex flex-col xs:flex-row gap-3 justify-between items-start xs:items-center group cursor-pointer hover:border-purple-500/50 transition-colors"
                                         >
-                                            <div className="flex-1">
+                                            <div className="flex-1 w-full">
                                                 <div className="text-sm font-bold text-white group-hover:text-purple-400">{f.firstName} {f.lastName}</div>
-                                                <div className="text-[10px] text-gray-500 font-sans">{f.email}</div>
+                                                <div className="text-[10px] text-gray-500 font-sans truncate">{f.email}</div>
                                             </div>
-                                            <div className="flex items-center gap-3">
+                                            <div className="flex items-center gap-3 shrink-0">
                                                 <div className="px-2 py-0.5 border border-purple-500/30 text-[9px] text-purple-400 uppercase">{f.onboardingState}</div>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); window.open(`/applications?type=fellows&email=${f.email}`, '_blank'); }}
-                                                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/20"
+                                                    className="xs:opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/20"
                                                 >
                                                     <ExternalLink className="w-3 h-3 text-purple-400" />
                                                 </button>
@@ -1563,20 +1565,20 @@ function AdminDashboardContent() {
 
                 <div className="pt-8 border-t border-white/10">
                     <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4">Fellowship_Config</h3>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="p-4 bg-white/20 border border-white/10">
-                            <span className="text-[10px] text-gray-500 uppercase block mb-1">Termination_Date</span>
+                            <span className="text-[10px] text-gray-500 uppercase block mb-1 font-sans">Termination_Date</span>
                             <span className="text-sm font-sans text-white">{selectedItem.endDate ? new Date(selectedItem.endDate).toLocaleDateString('en-GB') : 'INDEFINITE'}</span>
-
-                            <div className="mt-3">
-                                <span className="text-[10px] text-gray-500 uppercase block mb-1">Tenure End Date</span>
+                            <div className="mt-4 pt-4 border-t border-white/5">
+                                <span className="text-[10px] text-gray-500 uppercase block mb-1 font-sans">Tenure End Date</span>
                                 <span className="text-sm font-sans text-gray-400">{selectedItem.defaultTenureEndDate ? new Date(selectedItem.defaultTenureEndDate).toLocaleDateString('en-GB') : 'N/A'}</span>
                             </div>
                         </div>
                         <div className="p-4 bg-white/20 border border-white/10">
-                            <span className="text-[10px] text-gray-500 uppercase block mb-1">Allowed_Domains</span>
-                            <div className="flex flex-wrap gap-1">
-                                {selectedItem.emailDomainWhitelist.map(d => <span key={d} className="text-[9px] px-1 bg-white/20 rounded">{d}</span>)}
+                            <span className="text-[10px] text-gray-500 uppercase block mb-1 font-sans">Allowed_Domains</span>
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                                {selectedItem.emailDomainWhitelist.map(d => <span key={d} className="text-[9px] font-mono px-2 py-0.5 bg-white/10 border border-white/10 rounded uppercase">{d}</span>)}
+                                {(!selectedItem.emailDomainWhitelist || selectedItem.emailDomainWhitelist.length === 0) && <span className="text-[9px] text-gray-600 italic">OPEN_ADMISSION</span>}
                             </div>
                         </div>
                     </div>
@@ -1591,9 +1593,17 @@ function AdminDashboardContent() {
 
             <div className="flex-1 flex flex-col md:flex-row overflow-auto min-h-screen">
                 {/* Cyber Sidebar */}
-                <div className="w-full md:w-20 h-full bg-slate-950 border-r border-white/10 flex md:flex-col flex-row items-center md:py-6 py-2 gap-4 shrink-0 relative z-30">
-                    {/* Brand / Logo */}
-                    <Link href="/" className="group relative">
+                <div className="w-full md:w-20 h-auto md:h-full bg-slate-950 border-b md:border-r border-white/10 flex md:flex-col flex-row items-center justify-between md:justify-start md:py-6 py-3 px-4 md:px-0 gap-4 shrink-0 relative z-40">
+                    {/* Mobile Menu Toggle (Now on Left) */}
+                    <button
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        className="flex md:hidden flex-shrink-0 w-10 h-10 items-center justify-center border border-white/10 text-gray-400 hover:text-white"
+                    >
+                        {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                    </button>
+
+                    {/* Brand / Logo (Hidden on Mobile) */}
+                    <Link href="/" className="hidden md:flex group relative shrink-0">
                         <div className="w-10 h-10 md:w-12 md:h-12 border border-cyan-500/60 flex items-center justify-center text-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.15)] bg-cyan-500/5 group-hover:bg-cyan-500/10 transition-all">
                             <Terminal className="w-5 h-5" />
                         </div>
@@ -1602,10 +1612,54 @@ function AdminDashboardContent() {
                         </div>
                     </Link>
 
+                    {/* Mobile Action Buttons (On Right) */}
+                    <div className="flex md:hidden items-center gap-1.5 min-w-0">
+                        {activeTab === 'applications' && (
+                            <button
+                                onClick={handleExportCSV}
+                                className="w-9 h-9 border border-white/10 flex items-center justify-center text-gray-400 hover:text-cyan-400 active:bg-cyan-500/10"
+                                title="Export CSV"
+                            >
+                                <Download className="w-4 h-4" />
+                            </button>
+                        )}
+
+                        {activeTab === 'orgs' && (
+                            <button
+                                onClick={() => { setOrgData({ name: '', code: '', emailDomainWhitelist: [], endDate: oneWeekFromNow(), defaultTenureEndDate: sixMonthsFromNow(), formVar1: [], availableRoles: [], isActive: true, adminPassword: '' }); setIsEditingOrg(true); }}
+                                className="w-9 h-9 bg-green-500/10 border border-green-500/40 text-green-400 flex items-center justify-center active:bg-green-500 active:text-black transition-all"
+                            >
+                                <Plus className="w-4 h-4" />
+                            </button>
+                        )}
+                        {activeTab === 'fellows' && (
+                            <button
+                                onClick={() => {
+                                    setManualFellowData({ email: '', firstName: '', lastName: '', role: '', orgCode: '', cohort: 'C1', startDate: new Date().toISOString().split('T')[0] });
+                                    setShowManualModal(true);
+                                }}
+                                className="w-9 h-9 bg-purple-500/10 border border-purple-500/40 text-purple-400 flex items-center justify-center active:bg-purple-500 active:text-black transition-all"
+                            >
+                                <Plus className="w-4 h-4" />
+                            </button>
+                        )}
+                        {activeTab === 'projects' && (
+                            <button
+                                onClick={() => {
+                                    setNewProjectData({ title: '', description: '', supportedLinks: [], contributors: [], status: 'ongoing' });
+                                    setShowCreateProjectModal(true);
+                                }}
+                                className="w-9 h-9 bg-orange-500/10 border border-orange-500/40 text-orange-400 flex items-center justify-center active:bg-orange-500 active:text-black transition-all"
+                            >
+                                <Plus className="w-4 h-4" />
+                            </button>
+                        )}
+                    </div>
+
                     <div className="w-8 h-[1px] bg-white/10 hidden md:block" />
 
                     {/* Dashboard Primary Tabs */}
-                    <nav className="flex md:flex-col flex-row gap-2 w-full px-2">
+                    <nav className="hidden md:flex md:flex-col gap-2 w-full px-2">
                         {[
                             { id: 'applications', icon: <FileText className="w-5 h-5" />, label: 'APPLIC', color: 'cyan' },
                             { id: 'fellows', icon: <Users className="w-5 h-5" />, label: 'FELLOWS', color: 'purple' },
@@ -1620,7 +1674,7 @@ function AdminDashboardContent() {
                                     key={t.id}
                                     onClick={() => { setActiveTab(t.id); setSelectedItem(null); }}
                                     title={t.label}
-                                    className={`w-full py-2.5 flex flex-col items-center justify-center gap-1 transition-all border-l-2 relative group/item ${isActive ? `${colorMap[t.color]} border-l-2` : `border-l-transparent text-gray-500 ${hoverMap[t.color]}`}`}
+                                    className={`flex-1 md:w-full py-2 flex flex-col items-center justify-center gap-1 transition-all border-l-2 md:border-l-2 border-t-2 md:border-t-0 relative group/item ${isActive ? `${colorMap[t.color]} border-l-2 md:border-l-2` : `border-l-transparent md:border-l-transparent border-t-transparent text-gray-500 ${hoverMap[t.color]}`}`}
                                 >
                                     {t.icon}
                                     <span className="hidden md:block text-[8px] font-bold uppercase tracking-wider leading-none">{t.label}</span>
@@ -1637,7 +1691,7 @@ function AdminDashboardContent() {
                     <div className="w-8 h-[1px] bg-white/10 hidden md:block" />
 
                     {/* Admin Navigation */}
-                    <nav className="flex md:flex-col flex-row gap-2 w-full px-2">
+                    <nav className="hidden md:flex md:flex-col gap-2 w-full px-2">
                         <Link href="/badgeadmin" className="w-full py-2.5 flex flex-col items-center justify-center gap-1 text-gray-500 hover:text-white hover:bg-white/5 transition-all relative group/link" title="Badge Admin">
                             <Award className="w-5 h-5" />
                             <span className="hidden md:block text-[8px] font-bold uppercase tracking-wider leading-none">BADGE_ADM</span>
@@ -1650,7 +1704,7 @@ function AdminDashboardContent() {
                     <div className="flex-1" />
 
                     {/* User Profile / Logout */}
-                    <div className="w-full px-2 flex flex-col items-center gap-2 mb-4">
+                    <div className="hidden md:flex w-full px-2 flex-col items-center gap-2 mb-4">
                         <button
                             onClick={() => { fetchData(); fetchProjects(); }}
                             title="Refresh data"
@@ -1696,12 +1750,151 @@ function AdminDashboardContent() {
                             </Link>
                         )}
                     </div>
-                    
+
                     {/* Version Footer */}
                     <div className="w-full pb-4 flex justify-center opacity-20 hover:opacity-100 transition-opacity cursor-default">
                         <span className="text-[10px] font-mono tracking-tighter text-gray-500 whitespace-nowrap">v0.1.1-ALPHA</span>
                     </div>
                 </div>
+
+                {/* Mobile Menu Drawer Overlay */}
+                <AnimatePresence>
+                    {isMobileMenuOpen && (
+                        <>
+                            {/* Backdrop */}
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[100] md:hidden"
+                            />
+
+                            {/* Menu Panel */}
+                            <motion.div
+                                initial={{ x: '-100%' }}
+                                animate={{ x: 0 }}
+                                exit={{ x: '-100%' }}
+                                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                                className="fixed inset-y-0 left-0 w-[280px] bg-slate-900 border-r border-white/10 z-[101] md:hidden flex flex-col shadow-[10px_0_40px_rgba(0,0,0,0.5)]"
+                            >
+                                <div className="p-6 border-b border-white/10 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 border border-cyan-500/60 flex items-center justify-center text-cyan-400 bg-cyan-500/5">
+                                            <Terminal className="w-4 h-4" />
+                                        </div>
+                                        <span className="text-sm font-bold tracking-widest text-white uppercase">Menu</span>
+                                    </div>
+                                    <button
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-white"
+                                    >
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
+
+                                <div className="flex-1 overflow-y-auto py-6 px-4 space-y-8 text-white">
+                                    {/* Primary Navigation */}
+                                    <div className="space-y-2">
+                                        <p className="text-[10px] font-bold text-gray-600 uppercase tracking-widest px-2 mb-4">Navigation</p>
+                                        {[
+                                            { id: 'applications', icon: <FileText className="w-5 h-5" />, label: 'Applications', color: 'cyan' },
+                                            { id: 'fellows', icon: <Users className="w-5 h-5" />, label: 'Fellows', color: 'purple' },
+                                            { id: 'orgs', icon: <Globe className="w-5 h-5" />, label: 'Organizations', color: 'green' },
+                                            { id: 'projects', icon: <Code className="w-5 h-5" />, label: 'Projects', color: 'orange' }
+                                        ].map(t => {
+                                            const isActive = activeTab === t.id;
+                                            const colors = {
+                                                cyan: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/50',
+                                                purple: 'text-purple-400 bg-purple-500/10 border-purple-500/50',
+                                                green: 'text-green-400 bg-green-500/10 border-green-500/50',
+                                                orange: 'text-orange-400 bg-orange-500/10 border-orange-500/50'
+                                            };
+                                            return (
+                                                <button
+                                                    key={t.id}
+                                                    onClick={() => { setActiveTab(t.id); setSelectedItem(null); setIsMobileMenuOpen(false); }}
+                                                    className={`w-full flex items-center gap-4 px-4 py-3 border transition-all ${isActive ? colors[t.color] : 'border-transparent text-gray-400 hover:text-white hover:bg-white/5'}`}
+                                                >
+                                                    {t.icon}
+                                                    <span className="text-sm font-medium uppercase tracking-wider">{t.label}</span>
+                                                </button>
+                                            )
+                                        })}
+                                    </div>
+
+                                    {/* Admin Tools */}
+                                    <div className="space-y-2">
+                                        <p className="text-[10px] font-bold text-gray-600 uppercase tracking-widest px-2 mb-4">Management</p>
+                                        <Link
+                                            href="/badgeadmin"
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                            className="w-full flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-left"
+                                        >
+                                            <Award className="w-5 h-5" />
+                                            <span className="text-sm font-medium uppercase tracking-wider">Badge Admin</span>
+                                        </Link>
+                                    </div>
+
+                                    {/* User Account */}
+                                    <div className="pt-8 border-t border-white/10 space-y-4">
+                                        {user ? (
+                                            <>
+                                                <div className="px-2 flex items-center gap-4">
+                                                    {user.profilePicture || user.image ? (
+                                                        <img
+                                                            src={user.profilePicture ? user.profilePicture : process.env.SERVER_URL + user.image}
+                                                            alt="Profile"
+                                                            className="w-10 h-10 rounded border border-white/20 object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-10 h-10 border border-white/20 flex items-center justify-center bg-white/5 text-gray-400">
+                                                            <User className="w-5 h-5" />
+                                                        </div>
+                                                    )}
+                                                    <div className="flex flex-col">
+                                                        <span className="text-sm font-bold text-white uppercase truncate max-w-[150px]">{user.name || 'Admin User'}</span>
+                                                        <span className="text-[10px] text-gray-500 font-mono">AUTHORIZED_SESSION</span>
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <Link
+                                                        href="/profile"
+                                                        onClick={() => setIsMobileMenuOpen(false)}
+                                                        className="w-full flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-cyan-400 hover:bg-cyan-500/5 transition-all"
+                                                    >
+                                                        <User className="w-4 h-4" />
+                                                        <span className="text-xs font-bold uppercase tracking-widest">My Profile</span>
+                                                    </Link>
+                                                    <button
+                                                        onClick={logout}
+                                                        className="w-full flex items-center gap-4 px-4 py-3 text-red-500/60 hover:text-red-500 hover:bg-red-500/5 transition-all"
+                                                    >
+                                                        <LogOut className="w-4 h-4" />
+                                                        <span className="text-xs font-bold uppercase tracking-widest">Terminate Session</span>
+                                                    </button>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <Link
+                                                href="/admin"
+                                                onClick={() => setIsMobileMenuOpen(false)}
+                                                className="w-full flex items-center gap-4 px-4 py-3 text-cyan-500 border border-cyan-500/20 bg-cyan-500/5 uppercase font-bold text-xs tracking-widest"
+                                            >
+                                                <Shield className="w-4 h-4" />
+                                                Authenticate Account
+                                            </Link>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="p-6 border-t border-white/10 flex justify-center mt-auto">
+                                    <span className="text-[10px] font-mono text-gray-700 tracking-tighter">v0.1.1-ALPHA / CORE_UI</span>
+                                </div>
+                            </motion.div>
+                        </>
+                    )}
+                </AnimatePresence>
 
                 {/* Main Viewport */}
                 <main className="flex-1 flex flex-col min-w-0 min-h-0 bg-slate-950 relative">
@@ -1709,26 +1902,37 @@ function AdminDashboardContent() {
                     <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none opacity-20" />
 
                     {/* Header */}
-                    <header className="h-16 md:h-18 border-b border-white/10 flex flex-col md:flex-row items-center justify-between px-3 md:px-8 z-20 gap-2 md:gap-0 bg-gradient-to-r from-slate-950 via-slate-950 to-slate-900">
-                        <div className="flex items-center gap-3 md:gap-5 w-full md:w-auto">
-                            <div className={`hidden md:block w-1 h-8 rounded-full ${ activeTab === 'fellows' ? 'bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.6)]' : activeTab === 'orgs' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.6)]' : activeTab === 'projects' ? 'bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.6)]' : 'bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.6)]'}`} />
-                            <h2 className={`text-base md:text-xl font-bold tracking-tighter uppercase flex items-center gap-2 ${ activeTab === 'fellows' ? 'text-purple-400' : activeTab === 'orgs' ? 'text-green-400' : activeTab === 'projects' ? 'text-orange-400' : 'text-cyan-400'}`}>
-                                {activeTab.toUpperCase()} <span className="text-white/30 font-light">CONSOLE</span>
+                    <header className="h-auto md:h-20 border-b border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between px-4 md:px-8 z-20 py-2.5 md:py-0 gap-2 md:gap-0 bg-gradient-to-r from-slate-950 via-slate-950 to-slate-900">
+                        <div className="hidden md:flex items-center gap-3 md:gap-5 w-full md:w-auto overflow-hidden">
+                            <div className={`hidden md:block w-1.5 h-8 rounded-full ${activeTab === 'fellows' ? 'bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.6)]' : activeTab === 'orgs' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.6)]' : activeTab === 'projects' ? 'bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.6)]' : 'bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.6)]'}`} />
+                            <h2 className={`text-lg md:text-xl font-bold tracking-tighter uppercase flex items-center gap-2 whitespace-nowrap ${activeTab === 'fellows' ? 'text-purple-400' : activeTab === 'orgs' ? 'text-green-400' : activeTab === 'projects' ? 'text-orange-400' : 'text-cyan-400'}`}>
+                                {activeTab.toUpperCase()} <span className="text-white/30 font-light hidden sm:inline">CONSOLE</span>
                             </h2>
                             {activeTab === 'applications' && (
-                                <span className="hidden md:inline text-[10px] text-gray-600 border border-white/10 px-2 py-0.5 font-mono">{apps.length} TOTAL</span>
+                                <span className="text-[10px] text-gray-600 border border-white/10 px-2 py-0.5 font-mono whitespace-nowrap">{apps.length} TOTAL</span>
                             )}
                         </div>
 
-                        <div className="flex items-center gap-2 md:gap-3 w-full md:w-auto">
+                        {/* Mobile active tab indicator & toggle (Compact) */}
+                        <div className="flex md:hidden items-center justify-between w-full">
+                            <div className="flex items-center gap-2">
+                                <div className={`w-1 h-4 rounded-full ${activeTab === 'fellows' ? 'bg-purple-500' : activeTab === 'orgs' ? 'bg-green-500' : activeTab === 'projects' ? 'bg-orange-500' : 'bg-cyan-500'}`} />
+                                <span className={`text-xs font-bold tracking-widest uppercase ${activeTab === 'fellows' ? 'text-purple-400' : activeTab === 'orgs' ? 'text-green-400' : activeTab === 'projects' ? 'text-orange-400' : 'text-cyan-400'}`}>{activeTab}</span>
+                            </div>
+                            {activeTab === 'applications' && (
+                                <span className="text-[9px] text-gray-600 border border-white/10 px-1.5 py-0.5 font-mono">{apps.length} TOTAL</span>
+                            )}
+                        </div>
+
+                        <div className="flex-1 md:flex-initial flex items-center gap-2 md:gap-3 w-full md:w-auto">
                             <div className="relative flex-1 md:w-80 group">
-                                <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-600 group-focus-within:${ activeTab === 'fellows' ? 'text-purple-400' : activeTab === 'orgs' ? 'text-green-400' : activeTab === 'projects' ? 'text-orange-400' : 'text-cyan-400'} transition-colors`} />
+                                <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-600 group-focus-within:${activeTab === 'fellows' ? 'text-purple-400' : activeTab === 'orgs' ? 'text-green-400' : activeTab === 'projects' ? 'text-orange-400' : 'text-cyan-400'} transition-colors`} />
                                 <input
                                     type="text"
                                     placeholder="Search..."
                                     value={searchTerm}
                                     onChange={e => setSearchTerm(e.target.value)}
-                                    className={`w-full h-9 bg-white/5 border border-white/10 pl-9 pr-4 text-sm focus:outline-none transition-all placeholder:text-gray-700 font-sans text-gray-200 rounded group-focus-within:border-white/30 focus:bg-white/[0.07] ${ activeTab === 'fellows' ? 'focus:ring-1 focus:ring-purple-500/20' : activeTab === 'orgs' ? 'focus:ring-1 focus:ring-green-500/20' : activeTab === 'projects' ? 'focus:ring-1 focus:ring-orange-500/20' : 'focus:ring-1 focus:ring-cyan-500/20'}`}
+                                    className={`w-full h-9 bg-white/5 border border-white/10 pl-9 pr-4 text-sm focus:outline-none transition-all placeholder:text-gray-700 font-sans text-gray-200 rounded group-focus-within:border-white/30 focus:bg-white/[0.07] ${activeTab === 'fellows' ? 'focus:ring-1 focus:ring-purple-500/20' : activeTab === 'orgs' ? 'focus:ring-1 focus:ring-green-500/20' : activeTab === 'projects' ? 'focus:ring-1 focus:ring-orange-500/20' : 'focus:ring-1 focus:ring-cyan-500/20'}`}
                                 />
                             </div>
 
@@ -1736,7 +1940,7 @@ function AdminDashboardContent() {
                                 <select
                                     value={orgFilter}
                                     onChange={e => setOrgFilter(e.target.value)}
-                                    className="bg-white/5 border border-white/10 h-9 text-xs font-sans text-gray-300 focus:border-cyan-500/50 outline-none px-2 rounded"
+                                    className="bg-white/5 border border-white/10 h-9 text-xs font-sans text-gray-300 focus:border-cyan-500/50 outline-none px-2 rounded min-w-[100px]"
                                 >
                                     <option value="">All Orgs</option>
                                     {orgs.map(o => (
@@ -1745,44 +1949,47 @@ function AdminDashboardContent() {
                                 </select>
                             )}
 
-                            {activeTab === 'orgs' && (
-                                <button onClick={() => { setOrgData({ name: '', code: '', emailDomainWhitelist: [], endDate: oneWeekFromNow(), defaultTenureEndDate: sixMonthsFromNow(), formVar1: [], availableRoles: [], isActive: true, adminPassword: '' }); setIsEditingOrg(true); }} className="h-9 px-3 bg-green-500/10 border border-green-500/40 text-green-400 hover:bg-green-500 hover:text-black flex items-center gap-1.5 transition-all text-[10px] font-bold uppercase tracking-widest rounded">
-                                    <Plus className="w-3.5 h-3.5" /> New Org
-                                </button>
-                            )}
-                            {activeTab === 'fellows' && (
-                                <button
-                                    onClick={() => {
-                                        setManualFellowData({ email: '', firstName: '', lastName: '', role: '', orgCode: '', cohort: 'C1', startDate: new Date().toISOString().split('T')[0] });
-                                        setShowManualModal(true);
-                                    }}
-                                    className="h-9 px-3 bg-purple-500/10 border border-purple-500/40 text-purple-400 hover:bg-purple-500 hover:text-black flex items-center gap-1.5 transition-all text-[10px] font-bold uppercase tracking-widest whitespace-nowrap rounded"
-                                >
-                                    <Plus className="w-3.5 h-3.5" /> Onboard
-                                </button>
-                            )}
-                            {activeTab === 'projects' && (
-                                <button
-                                    onClick={() => {
-                                        setNewProjectData({ title: '', description: '', supportedLinks: [], contributors: [], status: 'ongoing' });
-                                        setShowCreateProjectModal(true);
-                                    }}
-                                    className="h-9 px-3 bg-orange-500/10 border border-orange-500/40 text-orange-400 hover:bg-orange-500 hover:text-black flex items-center gap-1.5 transition-all text-[10px] font-bold uppercase tracking-widest whitespace-nowrap rounded"
-                                >
-                                    <Plus className="w-3.5 h-3.5" /> New Project
-                                </button>
-                            )}
-                            {activeTab === 'applications' && (
-                                <button onClick={handleExportCSV} className="h-9 px-3 bg-white/5 border border-white/10 text-gray-400 hover:text-cyan-400 hover:border-cyan-500/40 flex items-center gap-1.5 transition-all text-[10px] font-bold uppercase tracking-widest rounded" title="Export CSV">
-                                    <Download className="w-3.5 h-3.5" />
-                                </button>
-                            )}
+                            {/* Actions (Hidden on Mobile, Moved to Top Bar) */}
+                            <div className="hidden md:flex items-center gap-2">
+                                {activeTab === 'orgs' && (
+                                    <button onClick={() => { setOrgData({ name: '', code: '', emailDomainWhitelist: [], endDate: oneWeekFromNow(), defaultTenureEndDate: sixMonthsFromNow(), formVar1: [], availableRoles: [], isActive: true, adminPassword: '' }); setIsEditingOrg(true); }} className="h-9 px-3 bg-green-500/10 border border-green-500/40 text-green-400 hover:bg-green-500 hover:text-black flex items-center gap-1.5 transition-all text-[10px] font-bold uppercase tracking-widest rounded">
+                                        <Plus className="w-3.5 h-3.5" /> New Org
+                                    </button>
+                                )}
+                                {activeTab === 'fellows' && (
+                                    <button
+                                        onClick={() => {
+                                            setManualFellowData({ email: '', firstName: '', lastName: '', role: '', orgCode: '', cohort: 'C1', startDate: new Date().toISOString().split('T')[0] });
+                                            setShowManualModal(true);
+                                        }}
+                                        className="h-9 px-3 bg-purple-500/10 border border-purple-500/40 text-purple-400 hover:bg-purple-500 hover:text-black flex items-center gap-1.5 transition-all text-[10px] font-bold uppercase tracking-widest whitespace-nowrap rounded"
+                                    >
+                                        <Plus className="w-3.5 h-3.5" /> Onboard
+                                    </button>
+                                )}
+                                {activeTab === 'projects' && (
+                                    <button
+                                        onClick={() => {
+                                            setNewProjectData({ title: '', description: '', supportedLinks: [], contributors: [], status: 'ongoing' });
+                                            setShowCreateProjectModal(true);
+                                        }}
+                                        className="h-9 px-3 bg-orange-500/10 border border-orange-500/40 text-orange-400 hover:bg-orange-500 hover:text-black flex items-center gap-1.5 transition-all text-[10px] font-bold uppercase tracking-widest whitespace-nowrap rounded"
+                                    >
+                                        <Plus className="w-3.5 h-3.5" /> New Project
+                                    </button>
+                                )}
+                                {activeTab === 'applications' && (
+                                    <button onClick={handleExportCSV} className="h-9 px-3 bg-white/5 border border-white/10 text-gray-400 hover:text-cyan-400 hover:border-cyan-500/40 flex items-center gap-1.5 transition-all text-[10px] font-bold uppercase tracking-widest rounded" title="Export CSV">
+                                        <Download className="w-3.5 h-3.5" />
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </header>
 
                     {/* Sub-tabs for Applications */}
                     {activeTab === 'applications' && (
-                        <div className="flex bg-slate-950/80 border-b border-white/10 px-3 md:px-8 h-11 items-center gap-1 md:gap-2 relative z-20 overflow-x-auto">
+                        <div className="flex bg-slate-950/80 border-b border-white/10 px-4 md:px-8 h-9 md:h-11 items-center gap-1 md:gap-2 relative z-20 overflow-x-auto custom-scrollbar">
                             {[
                                 { key: 'PENDING', color: 'yellow' },
                                 { key: 'INTERVIEW', color: 'orange' },
@@ -1814,7 +2021,7 @@ function AdminDashboardContent() {
                     )}
 
                     {activeTab === 'orgs' && (
-                        <div className="flex bg-slate-950/80 border-b border-white/10 px-3 md:px-8 h-11 items-center gap-1 md:gap-2 relative z-20 overflow-x-auto">
+                        <div className="flex bg-slate-950/80 border-b border-white/10 px-4 md:px-8 h-9 md:h-11 items-center gap-1 md:gap-2 relative z-20 overflow-x-auto custom-scrollbar">
                             {[{ key: 'ACTIVE', color: 'text-green-400', bar: 'bg-green-500' }, { key: 'ARCHIVED', color: 'text-red-400', bar: 'bg-red-500' }].map(({ key: st, color, bar }) => (
                                 <button
                                     key={st}
@@ -1829,7 +2036,7 @@ function AdminDashboardContent() {
                     )}
 
                     {activeTab === 'projects' && (
-                        <div className="flex bg-slate-950/80 border-b border-white/10 px-3 md:px-8 h-11 items-center gap-1 md:gap-2 relative z-20 overflow-x-auto">
+                        <div className="flex bg-slate-950/80 border-b border-white/10 px-4 md:px-8 h-9 md:h-11 items-center gap-1 md:gap-2 relative z-20 overflow-x-auto custom-scrollbar">
                             {[{ key: 'ONGOING', color: 'text-blue-400', bar: 'bg-blue-500' }, { key: 'ONHOLD', color: 'text-red-400', bar: 'bg-red-500' }, { key: 'COMPLETED', color: 'text-green-400', bar: 'bg-green-500' }, { key: 'ALL', color: 'text-orange-400', bar: 'bg-orange-500' }].map(({ key: st, color, bar }) => (
                                 <button
                                     key={st}
@@ -1864,95 +2071,101 @@ function AdminDashboardContent() {
                                         let counter = 0;
                                         return (
                                             <>
-                                                {upcoming.map((app, i) => { counter++; const orgName = getOrgName(app.orgCode); return (
-                                                    <div key={app._id} onClick={() => setSelectedItem(app)} className={`group px-8 py-5 border-b border-white/10 hover:bg-white/20 cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === app._id ? 'bg-cyan-900/10 border-l-[6px] border-l-cyan-500' : 'border-l-[6px] border-l-transparent'}`}>
-                                                        <div className="flex items-center gap-8">
-                                                            <span className="text-sm font-sans text-gray-600 w-10">{String(counter).padStart(2, '0')}</span>
-                                                            <div>
-                                                                <h3 className="font-bold text-xl text-white group-hover:text-cyan-400 transition-colors uppercase tracking-widest mb-1.5">
-                                                                    {app.firstName} {app.lastName}{orgName && (
-                                                                        <span className="ml-2 text-[10px] px-2 py-0.5 bg-blue-900/10 border border-blue-500/30 text-blue-400 uppercase">
-                                                                            {orgName}
+                                                {upcoming.map((app, i) => {
+                                                    counter++; const orgName = getOrgName(app.orgCode); return (
+                                                        <div key={app._id} onClick={() => setSelectedItem(app)} className={`group px-4 md:px-8 py-4 md:py-5 border-b border-white/10 hover:bg-white/20 cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between transition-all gap-4 sm:gap-0 ${selectedItem?._id === app._id ? 'bg-cyan-900/10 border-l-[4px] md:border-l-[6px] border-l-cyan-500' : 'border-l-[4px] md:border-l-[6px] border-l-transparent'}`}>
+                                                            <div className="flex items-center gap-4 md:gap-8 w-full sm:w-auto">
+                                                                <span className="hidden sm:block text-sm font-sans text-gray-600 w-10">{String(counter).padStart(2, '0')}</span>
+                                                                <div>
+                                                                    <h3 className="font-bold text-lg md:text-xl text-white group-hover:text-cyan-400 transition-colors uppercase tracking-widest mb-1.5 flex flex-wrap items-center gap-2">
+                                                                        {app.firstName} {app.lastName}{orgName && (
+                                                                            <span className="text-[10px] px-2 py-0.5 bg-blue-900/10 border border-blue-500/30 text-blue-400 uppercase">
+                                                                                {orgName}
+                                                                            </span>
+                                                                        )}
+                                                                    </h3>
+                                                                    <div className="flex gap-x-6 gap-y-2 text-xs font-sans text-gray-500 items-center flex-wrap">
+                                                                        <span className="text-white/60 break-all">{app.email}</span>
+                                                                        <span className="inline-flex gap-2 items-center">
+                                                                            {(() => {
+                                                                                const displayRoles = (app.preferredRoles && app.preferredRoles.length)
+                                                                                    ? app.preferredRoles.slice(0, 2)
+                                                                                    : (app.data?.preferredRoles && app.data.preferredRoles.length)
+                                                                                        ? app.data.preferredRoles.slice(0, 2)
+                                                                                        : [(typeof app.role === 'object' ? app.role?.name : app.role)].filter(Boolean);
+                                                                                return (
+                                                                                    <>
+                                                                                        {displayRoles.map((r, idx) => (
+                                                                                            <span key={idx} className="text-[10px] px-2 py-0.5 bg-cyan-900/10 border border-cyan-500/30 text-cyan-400 uppercase">
+                                                                                                {r}
+                                                                                            </span>
+                                                                                        ))}
+                                                                                    </>
+                                                                                );
+                                                                            })()}
                                                                         </span>
-                                                                    )}
-                                                                </h3>
-                                                                <div className="flex gap-6 text-xs font-sans text-gray-500 items-center flex-wrap">
-                                                                    <span className="text-white/60">{app.email}</span>
-                                                                    <span className="inline-flex gap-2 items-center">
-                                                                        {(() => {
-                                                                            const displayRoles = (app.preferredRoles && app.preferredRoles.length)
-                                                                                ? app.preferredRoles.slice(0, 2)
-                                                                                : (app.data?.preferredRoles && app.data.preferredRoles.length)
-                                                                                    ? app.data.preferredRoles.slice(0, 2)
-                                                                                    : [(typeof app.role === 'object' ? app.role?.name : app.role)].filter(Boolean);
-                                                                            return (
-                                                                                <>
-                                                                                    {displayRoles.map((r, idx) => (
-                                                                                        <span key={idx} className="text-[10px] px-2 py-0.5 bg-cyan-900/10 border border-cyan-500/30 text-cyan-400 uppercase">
-                                                                                            {r}
-                                                                                        </span>
-                                                                                    ))}
-                                                                                </>
-                                                                            );
-                                                                        })()}
-                                                                    </span>
-                                                                    {app.processedBy && (<span className="text-gray-400 border border-white/10 px-2 py-0.5 text-[10px] bg-white/20">AUTH: {app.processedBy}</span>)}
-                                                                    {app.interviewDetails?.status === 'NO_SHOW' && (
-                                                                        <span className="text-[9px] px-2 py-0.5 bg-red-900/10 border border-red-500/30 text-red-400 uppercase">NO-SHOW</span>
-                                                                    )}
-                                                                    {app.interviewDetails?.scheduledAt && (<span className="text-orange-400 border border-orange-500/30 px-2 py-0.5 text-[10px] bg-orange-500/5 flex items-center gap-1"><Clock className="w-3 h-3" />{new Date(app.interviewDetails.scheduledAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</span>)}
+                                                                        {app.processedBy && (<span className="text-gray-400 border border-white/10 px-2 py-0.5 text-[10px] bg-white/20">AUTH: {app.processedBy}</span>)}
+                                                                        {app.interviewDetails?.status === 'NO_SHOW' && (
+                                                                            <span className="text-[9px] px-2 py-0.5 bg-red-900/10 border border-red-500/30 text-red-400 uppercase">NO-SHOW</span>
+                                                                        )}
+                                                                        {app.interviewDetails?.scheduledAt && (<span className="text-orange-400 border border-orange-500/30 px-2 py-0.5 text-[10px] bg-orange-500/5 flex items-center gap-1"><Clock className="w-3 h-3" />{new Date(app.interviewDetails.scheduledAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</span>)}
+                                                                    </div>
                                                                 </div>
                                                             </div>
+                                                            <div className={`px-4 py-1.5 border text-[10px] sm:text-xs font-bold uppercase tracking-widest self-start sm:self-auto ${app.status === 'ACCEPTED' ? 'border-green-500/50 text-green-500 bg-green-500/5' : app.status === 'REJECTED' ? 'border-red-500/50 text-red-500 bg-red-500/5' : app.status === 'INTERVIEW_SCHEDULED' ? 'border-orange-500/50 text-orange-400 bg-orange-500/5' : 'border-yellow-500/50 text-yellow-500 bg-yellow-500/5'}`}>{app.status}</div>
                                                         </div>
-                                                        <div className={`px-4 py-1.5 border text-xs font-bold uppercase tracking-widest ${app.status === 'ACCEPTED' ? 'border-green-500/50 text-green-500 bg-green-500/5' : app.status === 'REJECTED' ? 'border-red-500/50 text-red-500 bg-red-500/5' : app.status === 'INTERVIEW_SCHEDULED' ? 'border-orange-500/50 text-orange-500 bg-orange-500/5' : 'border-yellow-500/50 text-yellow-500 bg-yellow-500/5'}`}>{app.status}</div>
-                                                    </div>
-                                                ); })}
+                                                    );
+                                                })}
 
                                                 {unscheduled.length > 0 && (
                                                     <div className="px-6 py-2 text-[10px] font-sans text-gray-600 border-b border-white/5 bg-white/[0.01] flex items-center gap-2"><Clock className="w-3 h-3" /> Unscheduled / Pending interviews</div>
                                                 )}
-                                                {unscheduled.map((app) => { counter++; const orgName = getOrgName(app.orgCode); return (
-                                                    <div key={app._id} onClick={() => setSelectedItem(app)} className={`group px-6 py-4 border-b border-white/[0.06] hover:bg-cyan-500/[0.04] cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === app._id ? 'bg-cyan-500/[0.07] border-l-2 border-l-cyan-500' : 'border-l-2 border-l-transparent'}`}>
-                                                        <div className="flex items-center gap-5">
-                                                            <span className="text-[11px] font-mono text-gray-700 w-8 text-right">{String(counter).padStart(2, '0')}</span>
-                                                            <div>
-                                                                <h3 className="font-semibold text-sm text-white group-hover:text-cyan-300 transition-all tracking-wide mb-1">
-                                                                    {app.firstName} {app.lastName}{orgName && (
-                                                                        <span className="ml-2 text-[9px] px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 uppercase font-bold">{orgName}</span>
-                                                                    )}
-                                                                </h3>
-                                                                <div className="flex gap-3 text-[11px] font-sans text-gray-500 items-center flex-wrap">
-                                                                    <span>{app.email}</span>
-                                                                    {app.interviewDetails?.status === 'NO_SHOW' && (<span className="text-[9px] px-1.5 py-0.5 rounded bg-red-500/10 border border-red-500/20 text-red-400 uppercase font-bold">NO-SHOW</span>)}
-                                                                    {getOrgName(app.orgCode) && (<span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 uppercase font-bold">{getOrgName(app.orgCode)}</span>)}
+                                                {unscheduled.map((app) => {
+                                                    counter++; const orgName = getOrgName(app.orgCode); return (
+                                                        <div key={app._id} onClick={() => setSelectedItem(app)} className={`group px-4 md:px-6 py-3 md:py-4 border-b border-white/[0.06] hover:bg-cyan-500/[0.04] cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between transition-all gap-3 sm:gap-4 ${selectedItem?._id === app._id ? 'bg-cyan-500/[0.07] border-l-2 border-l-cyan-500' : 'border-l-2 border-l-transparent'}`}>
+                                                            <div className="flex items-center gap-3 md:gap-5 w-full sm:w-auto">
+                                                                <span className="hidden sm:block text-[11px] font-mono text-gray-700 w-8 text-right">{String(counter).padStart(2, '0')}</span>
+                                                                <div>
+                                                                    <h3 className="font-semibold text-sm text-white group-hover:text-cyan-300 transition-all tracking-wide mb-1 flex flex-wrap items-center gap-2">
+                                                                        {app.firstName} {app.lastName}{orgName && (
+                                                                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 uppercase font-bold">{orgName}</span>
+                                                                        )}
+                                                                    </h3>
+                                                                    <div className="flex gap-3 text-[11px] font-sans text-gray-500 items-center flex-wrap">
+                                                                        <span className="break-all">{app.email}</span>
+                                                                        {app.interviewDetails?.status === 'NO_SHOW' && (<span className="text-[9px] px-1.5 py-0.5 rounded bg-red-500/10 border border-red-500/20 text-red-400 uppercase font-bold">NO-SHOW</span>)}
+                                                                        {getOrgName(app.orgCode) && (<span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 uppercase font-bold">{getOrgName(app.orgCode)}</span>)}
+                                                                    </div>
                                                                 </div>
                                                             </div>
+                                                            <div className={`px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider border self-start sm:self-auto ${app.status === 'ACCEPTED' ? 'border-green-500/40 text-green-400 bg-green-500/10' : app.status === 'REJECTED' ? 'border-red-500/40 text-red-400 bg-red-500/10' : app.status === 'INTERVIEW_SCHEDULED' ? 'border-orange-500/40 text-orange-400 bg-orange-500/10' : 'border-yellow-500/40 text-yellow-400 bg-yellow-500/10'}`}>{app.status.replace('INTERVIEW_SCHEDULED', 'SCHEDULED').replace('INTERVIEW_SKIPPED', 'SKIPPED')}</div>
                                                         </div>
-                                                        <div className={`px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider border ${app.status === 'ACCEPTED' ? 'border-green-500/40 text-green-400 bg-green-500/10' : app.status === 'REJECTED' ? 'border-red-500/40 text-red-400 bg-red-500/10' : app.status === 'INTERVIEW_SCHEDULED' ? 'border-orange-500/40 text-orange-400 bg-orange-500/10' : 'border-yellow-500/40 text-yellow-400 bg-yellow-500/10'}`}>{app.status.replace('INTERVIEW_SCHEDULED','SCHEDULED').replace('INTERVIEW_SKIPPED','SKIPPED')}</div>
-                                                    </div>
-                                                ); })}
+                                                    );
+                                                })}
 
                                                 {past.length > 0 && <div className="border-t border-white/[0.06] my-2" />}
 
-                                                {past.map((app, i) => { counter++; const orgName = getOrgName(app.orgCode); return (
-                                                    <div key={app._id} onClick={() => setSelectedItem(app)} className={`group px-6 py-4 border-b border-white/[0.06] hover:bg-cyan-500/[0.04] cursor-pointer flex items-center justify-between transition-all opacity-60 hover:opacity-100 ${selectedItem?._id === app._id ? 'bg-cyan-500/[0.07] border-l-2 border-l-cyan-500 opacity-100' : 'border-l-2 border-l-transparent'}`}>
-                                                        <div className="flex items-center gap-5">
-                                                            <span className="text-[11px] font-mono text-gray-700 w-8 text-right">{String(counter).padStart(2, '0')}</span>
-                                                            <div>
-                                                                <h3 className="font-semibold text-sm text-white group-hover:text-cyan-300 transition-all tracking-wide mb-1">
-                                                                    {app.firstName} {app.lastName}{orgName && (<span className="ml-2 text-[9px] px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 uppercase font-bold">{orgName}</span>)}
-                                                                </h3>
-                                                                <div className="flex gap-3 text-[11px] font-sans text-gray-500 items-center flex-wrap">
-                                                                    <span>{app.email}</span>
-                                                                    {app.interviewDetails?.status === 'NO_SHOW' && (<span className="text-[9px] px-1.5 py-0.5 rounded bg-red-500/10 border border-red-500/20 text-red-400 uppercase font-bold">NO-SHOW</span>)}
-                                                                    {getOrgName(app.orgCode) && (<span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 uppercase font-bold">{getOrgName(app.orgCode)}</span>)}
-                                                                    {app.interviewDetails?.scheduledAt && (<span className="text-orange-400 border border-orange-500/20 rounded px-1.5 py-0.5 text-[9px] bg-orange-500/5 flex items-center gap-1"><Clock className="w-2.5 h-2.5" />{new Date(app.interviewDetails.scheduledAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</span>)}
+                                                {past.map((app, i) => {
+                                                    counter++; const orgName = getOrgName(app.orgCode); return (
+                                                        <div key={app._id} onClick={() => setSelectedItem(app)} className={`group px-4 md:px-6 py-3 md:py-4 border-b border-white/[0.06] hover:bg-cyan-500/[0.04] cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between transition-all gap-3 sm:gap-4 opacity-60 hover:opacity-100 ${selectedItem?._id === app._id ? 'bg-cyan-500/[0.07] border-l-2 border-l-cyan-500 opacity-100' : 'border-l-2 border-l-transparent'}`}>
+                                                            <div className="flex items-center gap-3 md:gap-5 w-full sm:w-auto">
+                                                                <span className="hidden sm:block text-[11px] font-mono text-gray-700 w-8 text-right">{String(counter).padStart(2, '0')}</span>
+                                                                <div>
+                                                                    <h3 className="font-semibold text-sm text-white group-hover:text-cyan-300 transition-all tracking-wide mb-1 flex flex-wrap items-center gap-2">
+                                                                        {app.firstName} {app.lastName}{orgName && (<span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 uppercase font-bold">{orgName}</span>)}
+                                                                    </h3>
+                                                                    <div className="flex gap-3 text-[11px] font-sans text-gray-500 items-center flex-wrap">
+                                                                        <span className="break-all">{app.email}</span>
+                                                                        {app.interviewDetails?.status === 'NO_SHOW' && (<span className="text-[9px] px-1.5 py-0.5 rounded bg-red-500/10 border border-red-500/20 text-red-400 uppercase font-bold">NO-SHOW</span>)}
+                                                                        {getOrgName(app.orgCode) && (<span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 uppercase font-bold">{getOrgName(app.orgCode)}</span>)}
+                                                                        {app.interviewDetails?.scheduledAt && (<span className="text-orange-400 border border-orange-500/20 rounded px-1.5 py-0.5 text-[9px] bg-orange-500/5 flex items-center gap-1"><Clock className="w-2.5 h-2.5" />{new Date(app.interviewDetails.scheduledAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</span>)}
+                                                                    </div>
                                                                 </div>
                                                             </div>
+                                                            <div className={`px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider border self-start sm:self-auto ${app.status === 'ACCEPTED' ? 'border-green-500/40 text-green-400 bg-green-500/10' : app.status === 'REJECTED' ? 'border-red-500/40 text-red-400 bg-red-500/10' : app.status === 'INTERVIEW_SCHEDULED' ? 'border-orange-500/40 text-orange-400 bg-orange-500/10' : 'border-yellow-500/40 text-yellow-400 bg-yellow-500/10'}`}>{app.status.replace('INTERVIEW_SCHEDULED', 'SCHEDULED').replace('INTERVIEW_SKIPPED', 'SKIPPED')}</div>
                                                         </div>
-                                                        <div className={`px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider border ${app.status === 'ACCEPTED' ? 'border-green-500/40 text-green-400 bg-green-500/10' : app.status === 'REJECTED' ? 'border-red-500/40 text-red-400 bg-red-500/10' : app.status === 'INTERVIEW_SCHEDULED' ? 'border-orange-500/40 text-orange-400 bg-orange-500/10' : 'border-yellow-500/40 text-yellow-400 bg-yellow-500/10'}`}>{app.status.replace('INTERVIEW_SCHEDULED','SCHEDULED').replace('INTERVIEW_SKIPPED','SKIPPED')}</div>
-                                                    </div>
-                                                ); })}
+                                                    );
+                                                })}
                                             </>
                                         );
                                     })() : (
@@ -1962,14 +2175,14 @@ function AdminDashboardContent() {
                                                 <div
                                                     key={app._id}
                                                     onClick={() => setSelectedItem(app)}
-                                                    className={`group px-6 py-4 border-b border-white/[0.06] hover:bg-cyan-500/[0.04] cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === app._id ? 'bg-cyan-500/[0.07] border-l-2 border-l-cyan-500 shadow-[inset_2px_0_8px_rgba(6,182,212,0.08)]' : 'border-l-2 border-l-transparent'}`}
+                                                    className={`group px-4 md:px-6 py-3 md:py-4 border-b border-white/[0.06] hover:bg-cyan-500/[0.04] cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between transition-all gap-3 sm:gap-4 ${selectedItem?._id === app._id ? 'bg-cyan-500/[0.07] border-l-2 border-l-cyan-500 shadow-[inset_2px_0_8px_rgba(6,182,212,0.08)]' : 'border-l-2 border-l-transparent'}`}
                                                 >
-                                                    <div className="flex items-center gap-5">
-                                                        <span className="text-[11px] font-mono text-gray-700 w-8 text-right">{String(idx + 1).padStart(2, '0')}</span>
+                                                    <div className="flex items-center gap-3 md:gap-5 w-full sm:w-auto">
+                                                        <span className="hidden sm:block text-[11px] font-mono text-gray-700 w-8 text-right">{String(idx + 1).padStart(2, '0')}</span>
                                                         <div>
-                                                            <h3 className="font-semibold text-sm text-white group-hover:text-cyan-300 transition-colors tracking-wide mb-1">
+                                                            <h3 className="font-semibold text-sm text-white group-hover:text-cyan-300 transition-colors tracking-wide mb-1 flex flex-wrap items-center gap-2">
                                                                 {app.firstName} {app.lastName}{orgName && (
-                                                                    <span className="ml-2 text-[9px] px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 uppercase font-bold">
+                                                                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 uppercase font-bold">
                                                                         {orgName}
                                                                     </span>
                                                                 )}
@@ -2007,23 +2220,24 @@ function AdminDashboardContent() {
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div className={`px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider border ${app.status === 'ACCEPTED' ? 'border-green-500/40 text-green-400 bg-green-500/10' : app.status === 'REJECTED' ? 'border-red-500/40 text-red-400 bg-red-500/10' : app.status === 'INTERVIEW_SCHEDULED' || app.status === 'INTERVIEW_SKIPPED' ? 'border-orange-500/40 text-orange-400 bg-orange-500/10' : app.status === 'WAITING' ? 'border-blue-500/40 text-blue-400 bg-blue-500/10' : 'border-yellow-500/40 text-yellow-400 bg-yellow-500/10'}`}>
-                                                        {app.status.replace('INTERVIEW_SCHEDULED','SCHEDULED').replace('INTERVIEW_SKIPPED','SKIPPED')}
+                                                    <div className={`px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider border self-start sm:self-auto ${app.status === 'ACCEPTED' ? 'border-green-500/40 text-green-400 bg-green-500/10' : app.status === 'REJECTED' ? 'border-red-500/40 text-red-400 bg-red-500/10' : app.status === 'INTERVIEW_SCHEDULED' || app.status === 'INTERVIEW_SKIPPED' ? 'border-orange-500/40 text-orange-400 bg-orange-500/10' : app.status === 'WAITING' ? 'border-blue-500/40 text-blue-400 bg-blue-500/10' : 'border-yellow-500/40 text-yellow-400 bg-yellow-500/10'}`}>
+                                                        {app.status.replace('INTERVIEW_SCHEDULED', 'SCHEDULED').replace('INTERVIEW_SKIPPED', 'SKIPPED')}
                                                     </div>
                                                 </div>
                                             );
-                                        })))
-                                    }
+                                        })
+                                    )
+                                )}
 
 
                                 {activeTab === 'fellows' && fellows.filter(f => f.email.toLowerCase().includes(searchTerm.toLowerCase())).map((fellow, idx) => (
                                     <div
                                         key={fellow._id}
                                         onClick={() => setSelectedItem(fellow)}
-                                        className={`group px-6 py-4 border-b border-white/[0.06] hover:bg-purple-500/[0.04] cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === fellow._id ? 'bg-purple-500/[0.07] border-l-2 border-l-purple-500' : 'border-l-2 border-l-transparent'}`}
+                                        className={`group px-4 md:px-6 py-3 md:py-4 border-b border-white/[0.06] hover:bg-purple-500/[0.04] cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between transition-all gap-3 sm:gap-4 ${selectedItem?._id === fellow._id ? 'bg-purple-500/[0.07] border-l-2 border-l-purple-500' : 'border-l-2 border-l-transparent'}`}
                                     >
-                                        <div className="flex items-center gap-5">
-                                            <span className="text-[11px] font-mono text-gray-700 w-8 text-right">{String(idx + 1).padStart(2, '0')}</span>
+                                        <div className="flex items-center gap-3 md:gap-5 w-full sm:w-auto">
+                                            <span className="hidden sm:block text-[11px] font-mono text-gray-700 w-8 text-right">{String(idx + 1).padStart(2, '0')}</span>
                                             <div>
                                                 <h3 className="font-semibold text-sm text-white group-hover:text-purple-300 transition-colors tracking-wide mb-1">{fellow.firstName} {fellow.lastName}</h3>
                                                 <div className="flex gap-3 text-[11px] font-sans text-gray-500 items-center">
@@ -2062,10 +2276,10 @@ function AdminDashboardContent() {
                                     <div
                                         key={org._id}
                                         onClick={() => { setSelectedItem(org); setOrgInspectorMember(null); router.replace(`${window.location.pathname}?orgCode=${org.code}`); }}
-                                        className={`group px-6 py-4 border-b border-white/[0.06] hover:bg-green-500/[0.04] cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === org._id ? 'bg-green-500/[0.07] border-l-2 border-l-green-500' : 'border-l-2 border-l-transparent'}`} 
+                                        className={`group px-4 md:px-6 py-3 md:py-4 border-b border-white/[0.06] hover:bg-green-500/[0.04] cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between transition-all gap-3 sm:gap-4 ${selectedItem?._id === org._id ? 'bg-green-500/[0.07] border-l-2 border-l-green-500' : 'border-l-2 border-l-transparent'}`}
                                     >
-                                        <div className="flex items-center gap-5">
-                                            <span className="text-[11px] font-mono text-gray-700 w-8 text-right">{String(idx + 1).padStart(2, '0')}</span>
+                                        <div className="flex items-center gap-3 md:gap-5 w-full sm:w-auto">
+                                            <span className="hidden sm:block text-[11px] font-mono text-gray-700 w-8 text-right">{String(idx + 1).padStart(2, '0')}</span>
                                             <div>
                                                 <h3 className="font-semibold text-sm text-white group-hover:text-green-300 transition-colors tracking-wide mb-1">{org.name}</h3>
                                                 <div className="flex gap-3 text-[11px] font-sans text-gray-500 items-center">
@@ -2141,10 +2355,10 @@ function AdminDashboardContent() {
                                     <div
                                         key={project._id}
                                         onClick={() => setSelectedItem(project)}
-                                        className={`group px-6 py-4 border-b border-white/[0.06] hover:bg-orange-500/[0.04] cursor-pointer flex items-center justify-between transition-all ${selectedItem?._id === project._id ? 'bg-orange-500/[0.07] border-l-2 border-l-orange-500' : 'border-l-2 border-l-transparent'}`}
+                                        className={`group px-4 md:px-6 py-3 md:py-4 border-b border-white/[0.06] hover:bg-orange-500/[0.04] cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between transition-all gap-4 ${selectedItem?._id === project._id ? 'bg-orange-500/[0.07] border-l-2 border-l-orange-500' : 'border-l-2 border-l-transparent'}`}
                                     >
-                                        <div className="flex items-center gap-5">
-                                            <span className="text-[11px] font-mono text-gray-700 w-8 text-right">{String(idx + 1).padStart(2, '0')}</span>
+                                        <div className="flex items-center gap-3 md:gap-5 w-full sm:w-auto">
+                                            <span className="hidden sm:block text-[11px] font-mono text-gray-700 w-8 text-right">{String(idx + 1).padStart(2, '0')}</span>
                                             <div>
                                                 <h3 className="font-semibold text-sm text-white group-hover:text-orange-300 transition-colors tracking-wide mb-1">{project.title}</h3>
                                                 <div className="flex gap-3 text-[11px] font-sans text-gray-500 items-center">
@@ -2166,12 +2380,11 @@ function AdminDashboardContent() {
                                             >
                                                 <ExternalLink className="w-3.5 h-3.5 text-orange-400" />
                                             </button>
-                                            <div className={`px-2.5 py-1 rounded-full border text-[9px] font-bold uppercase tracking-wider ${
-                                                (project.status || '').toLowerCase() === 'ongoing' ? 'border-blue-500/40 text-blue-400 bg-blue-500/10' :
-                                                (project.status || '').toLowerCase() === 'completed' ? 'border-green-500/40 text-green-400 bg-green-500/10' :
-                                                (project.status || '').toLowerCase() === 'onhold' || (project.status || '').toLowerCase() === 'on-hold' ? 'border-red-500/40 text-red-400 bg-red-500/10' :
-                                                project.isActive ? 'border-orange-500/40 text-orange-400 bg-orange-500/10' : 'border-red-500/40 text-red-400 bg-red-500/10'
-                                            }`}>
+                                            <div className={`px-2.5 py-1 rounded-full border text-[9px] font-bold uppercase tracking-wider ${(project.status || '').toLowerCase() === 'ongoing' ? 'border-blue-500/40 text-blue-400 bg-blue-500/10' :
+                                                    (project.status || '').toLowerCase() === 'completed' ? 'border-green-500/40 text-green-400 bg-green-500/10' :
+                                                        (project.status || '').toLowerCase() === 'onhold' || (project.status || '').toLowerCase() === 'on-hold' ? 'border-red-500/40 text-red-400 bg-red-500/10' :
+                                                            project.isActive ? 'border-orange-500/40 text-orange-400 bg-orange-500/10' : 'border-red-500/40 text-red-400 bg-red-500/10'
+                                                }`}>
                                                 {((project.status || project.isActive) ? (project.status || (project.isActive ? 'ACTIVE' : 'INACTIVE')) : 'UNKNOWN').toString().toUpperCase()}
                                             </div>
                                         </div>
@@ -2182,7 +2395,7 @@ function AdminDashboardContent() {
                     </div>
                 </main>
 
-            {/* Cyber Inspector Panel */}
+                {/* Cyber Inspector Panel */}
                 <AnimatePresence>
                     {selectedItem && (
                         <motion.aside
@@ -2190,33 +2403,33 @@ function AdminDashboardContent() {
                             animate={{ x: 0 }}
                             exit={{ x: '100%' }}
                             transition={{ type: 'tween', ease: 'circOut', duration: 0.3 }}
-                            className="w-[580px] bg-slate-950 border-l border-white/10 z-40 flex flex-col shrink-0 h-full min-h-0 shadow-[-50px_0_100px_rgba(0,0,0,0.8)]"
+                            className="fixed inset-0 md:relative md:inset-auto w-full md:w-[600px] lg:w-[680px] bg-slate-950 border-l border-white/10 z-[100] md:z-40 flex flex-col shrink-0 h-full min-h-0 shadow-[-50px_0_100px_rgba(0,0,0,0.8)]"
                         >
                             {/* Color-coded top strip */}
-                            <div className={`h-0.5 w-full ${ activeTab === 'fellows' ? 'bg-gradient-to-r from-purple-600 via-purple-400 to-purple-600' : activeTab === 'orgs' ? 'bg-gradient-to-r from-green-600 via-green-400 to-green-600' : activeTab === 'projects' ? 'bg-gradient-to-r from-orange-600 via-orange-400 to-orange-600' : 'bg-gradient-to-r from-cyan-600 via-cyan-400 to-cyan-600'}`} />
+                            <div className={`h-0.5 w-full ${activeTab === 'fellows' ? 'bg-gradient-to-r from-purple-600 via-purple-400 to-purple-600' : activeTab === 'orgs' ? 'bg-gradient-to-r from-green-600 via-green-400 to-green-600' : activeTab === 'projects' ? 'bg-gradient-to-r from-orange-600 via-orange-400 to-orange-600' : 'bg-gradient-to-r from-cyan-600 via-cyan-400 to-cyan-600'}`} />
                             <div className="h-16 flex items-center justify-between px-8 border-b border-white/[0.07] bg-black/20">
                                 <div className="flex items-center gap-3">
-                                    <div className={`w-1.5 h-6 rounded-full ${ activeTab === 'fellows' ? 'bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.6)]' : activeTab === 'orgs' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : activeTab === 'projects' ? 'bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.6)]' : 'bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.6)]'}`} />
+                                    <div className={`w-1.5 h-6 rounded-full ${activeTab === 'fellows' ? 'bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.6)]' : activeTab === 'orgs' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : activeTab === 'projects' ? 'bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.6)]' : 'bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.6)]'}`} />
                                     <h3 className="font-sans text-xs text-gray-300 uppercase tracking-[0.2em] font-bold">INSPECTOR</h3>
-                                    <span className={`text-[10px] font-mono ${ activeTab === 'fellows' ? 'text-purple-500' : activeTab === 'orgs' ? 'text-green-500' : activeTab === 'projects' ? 'text-orange-500' : 'text-cyan-500'}`}>{activeTab.toUpperCase()}</span>
+                                    <span className={`text-[10px] font-mono ${activeTab === 'fellows' ? 'text-purple-500' : activeTab === 'orgs' ? 'text-green-500' : activeTab === 'projects' ? 'text-orange-500' : 'text-cyan-500'}`}>{activeTab.toUpperCase()}</span>
                                 </div>
                                 <button onClick={() => { setSelectedItem(null); setOrgInspectorMember(null); }} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 text-gray-600 hover:text-white transition-all">
                                     <XCircle className="w-5 h-5" />
                                 </button>
                             </div>
 
-                            <div ref={inspectorRef} onScroll={saveInspectorScroll} className="flex-1 min-h-0 overflow-y-auto p-10 custom-scrollbar space-y-10">
+                            <div ref={inspectorRef} onScroll={saveInspectorScroll} className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 md:p-10 custom-scrollbar space-y-6 md:space-y-10">
                                 {activeTab === 'orgs' ? renderOrgInspector() : activeTab === 'projects' ? (
                                     <>
-                                        <div className="flex items-start gap-8 border-b border-white/10 pb-4">
-                                            <div className="w-24 h-24 border border-orange-500/30 flex items-center justify-center text-4xl font-bold bg-orange-500/5 text-orange-500">
-                                                <Code className="w-12 h-12" />
+                                        <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-8 border-b border-white/10 pb-6 sm:pb-8">
+                                            <div className="w-16 h-16 sm:w-24 sm:h-24 border border-orange-500/30 flex items-center justify-center text-2xl sm:text-4xl font-bold bg-orange-500/5 text-orange-500 shrink-0">
+                                                <Code className="w-8 h-8 sm:w-12 sm:h-12" />
                                             </div>
 
-                                            <div className="flex-1">
-                                                <div className="flex items-start justify-between gap-4">
-                                                    <div className="flex-1">
-                                                        <h2 className="text-3xl font-bold uppercase tracking-tight text-white">{selectedItem.title}</h2>
+                                            <div className="flex-1 w-full">
+                                                <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+                                                    <div className="flex-1 w-full">
+                                                        <h2 className="text-xl sm:text-3xl font-bold uppercase tracking-tight text-white">{selectedItem.title}</h2>
 
                                                         {/* Links icons row (only icons) */}
                                                         <div className="flex items-center gap-3 mt-3">
@@ -2235,12 +2448,12 @@ function AdminDashboardContent() {
                                                         <div className="mt-3 text-sm text-gray-400">Started on: {selectedItem.createdAt ? new Date(selectedItem.createdAt).toLocaleDateString('en-GB') : 'N/A'}</div>
                                                     </div>
 
-                                                    <div className="w-36 flex-shrink-0 flex items-start justify-end">
+                                                    <div className="w-auto sm:w-36 flex-shrink-0 flex items-start justify-end">
                                                         {(() => {
                                                             const st = (selectedItem.status || (selectedItem.isActive ? 'ACTIVE' : '')).toString().toLowerCase();
                                                             const cls = st === 'ongoing' ? 'border-blue-500/50 text-blue-500' : st === 'completed' ? 'border-green-500/50 text-green-500' : (st === 'onhold' || st === 'on-hold' ? 'border-red-500/50 text-red-500' : (selectedItem.isActive ? 'border-orange-500/50 text-orange-500' : 'border-red-500/50 text-red-500'));
                                                             const label = (selectedItem.status || (selectedItem.isActive ? 'ACTIVE' : 'UNKNOWN')).toString().toUpperCase();
-                                                            return (<div className={`px-4 py-2 border text-sm font-bold uppercase tracking-widest ${cls}`}>{label}</div>);
+                                                            return (<div className={`px-3 py-1 sm:px-4 sm:py-2 border text-[10px] sm:text-sm font-bold uppercase tracking-widest ${cls}`}>{label}</div>);
                                                         })()}
                                                     </div>
                                                 </div>
@@ -2250,9 +2463,9 @@ function AdminDashboardContent() {
                                         <div className="space-y-8">
                                             <div className="p-8 border border-white/10 bg-white/[0.02] space-y-6">
                                                 <h4 className="text-xs font-bold text-orange-500 uppercase tracking-widest border-b border-orange-900/30 pb-3">Project_Details</h4>
-                                                
+
                                                 <div className="space-y-4">
-                                                        <div className="space-y-2">
+                                                    <div className="space-y-2">
                                                         <div className="text-[10px] text-gray-500 uppercase font-sans tracking-widest">Contributors ({selectedItem.contributors?.length || 0})</div>
                                                         <div className="flex flex-wrap gap-2">
                                                             {(selectedItem.contributors || []).map((contributor, idx) => (
@@ -2300,51 +2513,51 @@ function AdminDashboardContent() {
                                     </>
                                 ) : (
                                     <>
-                                        <div className="flex items-start gap-8 border-b border-white/10 pb-4">
-                                            <div className={`w-24 h-24 border border-white/20 flex items-center justify-center text-4xl font-bold bg-white/20 ${activeTab === 'fellows' ? 'text-purple-500' : 'text-cyan-500'}`}>
+                                        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-8 border-b border-white/10 pb-6 sm:pb-8">
+                                            <div className={`w-16 h-16 sm:w-24 sm:h-24 border border-white/20 flex items-center justify-center text-3xl sm:text-4xl font-bold bg-white/20 ${activeTab === 'fellows' ? 'text-purple-500' : 'text-cyan-500'} shrink-0`}>
                                                 {selectedItem.firstName[0]}
                                             </div>
-                                            <div className="flex-1 space-y-3">
-                                                <h2 className="text-3xl font-bold uppercase tracking-tight text-white">{selectedItem.firstName} {selectedItem.lastName}</h2>
-                                                <div className="text-xs font-sans text-gray-500 grid grid-cols-2 gap-3">
-                                                    <span className="block p-2 border border-white/10">ID: {selectedItem.globalPid || 'NULL'}</span>
-                                                    <span className="block p-2 border border-white/10">ORG: {selectedItem.orgCode}</span>
-                                                    <span className="block p-2 border border-white/10 col-span-2 flex items-center justify-between">
-                                                    MAIL: {selectedItem.email}
-                                                    <button
-                                                        onClick={() => {
-                                                            navigator.clipboard.writeText(selectedItem.email).then(() => {
-                                                                toast.success("Email copied to clipboard");
-                                                            }).catch(() => {
-                                                                toast.error("Copy failed");
-                                                            });
-                                                        }}
-                                                        className="ml-2 p-1 hover:bg-white/20 rounded"
-                                                        title="Copy email"
-                                                    >
-                                                        <ClipboardCopy className="w-4 h-4 text-gray-400 hover:text-cyan-400" />
-                                                    </button>
-                                                </span>
+                                            <div className="flex-1 space-y-3 w-full text-center sm:text-left">
+                                                <h2 className="text-xl sm:text-3xl font-bold uppercase tracking-tight text-white">{selectedItem.firstName} {selectedItem.lastName}</h2>
+                                                <div className="text-[10px] sm:text-xs font-sans text-gray-500 flex flex-wrap justify-center sm:justify-start gap-3">
+                                                    <span className="px-2 py-1.5 border border-white/10">ID: {selectedItem.globalPid || 'NULL'}</span>
+                                                    <span className="px-2 py-1.5 border border-white/10">ORG: {selectedItem.orgCode}</span>
+                                                    <span className="px-2 py-1.5 border border-white/10 flex items-center justify-between gap-2 max-w-full">
+                                                        <span className="truncate">MAIL: {selectedItem.email}</span>
+                                                        <button
+                                                            onClick={() => {
+                                                                navigator.clipboard.writeText(selectedItem.email).then(() => {
+                                                                    toast.success("Email copied to clipboard");
+                                                                }).catch(() => {
+                                                                    toast.error("Copy failed");
+                                                                });
+                                                            }}
+                                                            className="p-1 hover:bg-white/20 rounded shrink-0"
+                                                            title="Copy email"
+                                                        >
+                                                            <ClipboardCopy className="w-3.5 h-3.5 text-gray-400 hover:text-cyan-400" />
+                                                        </button>
+                                                    </span>
                                                 </div>
-
                                             </div>
                                         </div>
 
                                         {activeTab === 'fellows' && (
-                                            <div className="grid grid-cols-2 gap-6">
+
+                                            <div className="grid grid-cols-2 gap-4 sm:gap-6">
                                                 <button
                                                     onClick={() => selectedItem.socials?.github ? window.open(ensureExternalLink(selectedItem.socials.github), '_blank') : toast.info("No GitHub link")}
-                                                    className={`p-6 border border-white/10 hover:border-white hover:bg-white/20 transition-all flex flex-col items-center gap-3 ${!selectedItem.socials?.github && 'opacity-40 grayscale'}`}
+                                                    className={`p-4 sm:p-6 border border-white/10 hover:border-white hover:bg-white/20 transition-all flex flex-col items-center gap-2 sm:gap-3 ${!selectedItem.socials?.github && 'opacity-40 grayscale'}`}
                                                 >
-                                                    <Github className="w-6 h-6 text-gray-400" />
-                                                    <span className="text-xs font-sans uppercase tracking-widest text-gray-500">GitHub_Uplink</span>
+                                                    <Github className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" />
+                                                    <span className="text-[10px] sm:text-xs font-sans uppercase tracking-widest text-gray-500">GitHub_Uplink</span>
                                                 </button>
                                                 <button
                                                     onClick={() => selectedItem.socials?.linkedin ? window.open(ensureExternalLink(selectedItem.socials.linkedin), '_blank') : toast.info("No LinkedIn link")}
-                                                    className={`p-6 border border-white/10 hover:border-white hover:bg-white/20 transition-all flex flex-col items-center gap-3 ${!selectedItem.socials?.linkedin && 'opacity-40 grayscale'}`}
+                                                    className={`p-4 sm:p-6 border border-white/10 hover:border-white hover:bg-white/20 transition-all flex flex-col items-center gap-2 sm:gap-3 ${!selectedItem.socials?.linkedin && 'opacity-40 grayscale'}`}
                                                 >
-                                                    <Linkedin className="w-6 h-6 text-gray-400" />
-                                                    <span className="text-xs font-sans uppercase tracking-widest text-gray-500">LinkedIn_Feed</span>
+                                                    <Linkedin className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" />
+                                                    <span className="text-[10px] sm:text-xs font-sans uppercase tracking-widest text-gray-500">LinkedIn_Feed</span>
                                                 </button>
                                             </div>
                                         )}
@@ -2358,25 +2571,26 @@ function AdminDashboardContent() {
                                                         <div className="space-y-2">
                                                             <div className="text-[10px] text-gray-500 uppercase font-sans tracking-widest flex justify-between">
                                                                 <span>What Makes You Stand Apart?</span>
-                                                                <span className={( (selectedItem?.whyJoinDeepCytes ?? selectedItem?.data?.whyJoin ?? '').length < 100) ? "text-red-500" : "text-green-500"}>
+                                                                <span className={((selectedItem?.whyJoinDeepCytes ?? selectedItem?.data?.whyJoin ?? '').length < 100) ? "text-red-500" : "text-green-500"}>
                                                                     LEN_{(selectedItem?.whyJoinDeepCytes ?? selectedItem?.data?.whyJoin ?? '').length}
                                                                 </span>
                                                             </div>
-                                                            <div className="p-4 bg-slate-900/60 border border-white/5 text-xs text-gray-400 font-sans leading-relaxed max-h-40 overflow-y-auto custom-scrollbar">
+                                                            <div className="p-3 sm:p-4 bg-slate-900/60 border border-white/5 text-xs text-gray-400 font-sans leading-relaxed max-h-40 overflow-y-auto custom-scrollbar">
                                                                 {selectedItem.whyJoinDeepCytes || selectedItem.data?.whyJoin || "NO_DATA_FOUND"}
                                                             </div>
                                                         </div>
 
                                                         <div className="space-y-2">
                                                             <div className="text-[10px] text-gray-500 uppercase font-sans tracking-widest">Any innovative ideas/projects you would like to pursue at DC?</div>
-                                                            <div className="p-4 bg-slate-900/60 border border-white/5 text-xs text-gray-400 font-sans leading-relaxed max-h-40 overflow-y-auto custom-scrollbar">
+                                                            <div className="p-3 sm:p-4 bg-slate-900/60 border border-white/5 text-xs text-gray-400 font-sans leading-relaxed max-h-40 overflow-y-auto custom-scrollbar">
                                                                 {selectedItem.data?.ideas || "NO_PROPOSAL_SUBMITTED"}
                                                             </div>
                                                         </div>
 
-                                                        <div className="space-y-2 grid grid-cols-2 gap-4">
-                                                            <div>
-                                                                <div className="text-[10px] text-gray-500 uppercase font-sans tracking-widest">Preferred_Specializations</div>
+                                                        <div className="space-y-4 pt-2">
+                                                            <div className="grid grid-cols-1 xs:grid-cols-2 gap-4">
+                                                                <div className="space-y-2">
+                                                                    <div className="text-[10px] text-gray-500 uppercase font-sans tracking-widest">Preferred_Specializations</div>
                                                                     <div className="flex flex-wrap gap-2">
                                                                         {(selectedItem.preferredRoles || []).length > 0 ? (
                                                                             selectedItem.preferredRoles.map((role, idx) => (
@@ -2389,62 +2603,40 @@ function AdminDashboardContent() {
                                                                         )}
                                                                     </div>
                                                                 </div>
-                                                            {(selectedItem.resume || selectedItem.data?.resumeLink) && (
-                                                                <div>
-                                                                    {selectedItem.resume && (
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={async (e) => { 
-                                                                                e.stopPropagation(); 
-                                                                                try {
-                                                                                    const token = localStorage.getItem("accessToken");
-                                                                                    const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
-                                                                                    
-                                                                                    // Fetch resume via authenticated endpoint
-                                                                                    const response = await fetch(`${serverUrl}/admin/resume/${selectedItem._id}`, {
-                                                                                        headers: { 
-                                                                                            'Authorization': `Bearer ${token}`
-                                                                                        }
-                                                                                    });
-                                                                                    
-                                                                                    if (!response.ok) throw new Error('Failed to fetch resume');
-                                                                                    
-                                                                                    // Create blob URL (hides actual file path)
-                                                                                    const blob = await response.blob();
-                                                                                    const blobUrl = URL.createObjectURL(blob);
-                                                                                    
-                                                                                    // Open in new tab
-                                                                                    window.open(blobUrl, '_blank');
-                                                                                    
-                                                                                    // Clean up blob URL after sufficient delay (5 seconds allows PDF to load even on slow connections)
-                                                                                    // Once the PDF is loaded in the new tab, it stays there even after URL is revoked
-                                                                                    setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
-                                                                                } catch (error) {
-                                                                                    console.error('Resume fetch error:', error);
-                                                                                    toast.error('Failed to open resume');
-                                                                                }
-                                                                            }}
-                                                                            className="py-4 px-6 border border-white/10 hover:bg-white/20 transition-all inline-flex items-center justify-center gap-3 group rounded-lg"
-                                                                        >
-                                                                            <FileText className="w-5 h-5" />
-                                                                            <span className="text-sm font-sans font-bold uppercase tracking-[0.08em]">Open uploaded CV</span>
-                                                                            <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                                        </button>
-                                                                    )}
-
-                                                                    {/* {selectedItem.data?.resumeLink && (
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={(e) => { e.stopPropagation(); window.open(ensureExternalLink(selectedItem.data.resumeLink), '_blank'); }}
-                                                                            className="w-full py-4 border border-white/10 hover:bg-white/20 transition-all flex items-center justify-center gap-3 group rounded-lg"
-                                                                        >
-                                                                            <ExternalLink className="w-5 h-5" />
-                                                                            <span className="text-sm font-sans font-bold uppercase tracking-[0.08em]">Open resume link</span>
-                                                                            <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                                        </button>
-                                                                    )} */}
-                                                                </div>
-                                                            )}
+                                                                {(selectedItem.resume || selectedItem.data?.resumeLink) && (
+                                                                    <div className="flex flex-col gap-2">
+                                                                        <div className="text-[10px] text-gray-500 uppercase font-sans tracking-widest">Credentials</div>
+                                                                        {selectedItem.resume && (
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={async (e) => {
+                                                                                    e.stopPropagation();
+                                                                                    try {
+                                                                                        const token = localStorage.getItem("accessToken");
+                                                                                        const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
+                                                                                        const response = await fetch(`${serverUrl}/admin/resume/${selectedItem._id}`, {
+                                                                                            headers: { 'Authorization': `Bearer ${token}` }
+                                                                                        });
+                                                                                        if (!response.ok) throw new Error('Failed to fetch resume');
+                                                                                        const blob = await response.blob();
+                                                                                        const blobUrl = URL.createObjectURL(blob);
+                                                                                        window.open(blobUrl, '_blank');
+                                                                                        setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+                                                                                    } catch (error) {
+                                                                                        console.error('Resume fetch error:', error);
+                                                                                        toast.error('Failed to open resume');
+                                                                                    }
+                                                                                }}
+                                                                                className="py-2.5 px-4 border border-white/10 hover:bg-white/20 transition-all inline-flex items-center justify-center gap-2 group rounded-lg"
+                                                                            >
+                                                                                <FileText className="w-4 h-4" />
+                                                                                <span className="text-[10px] font-sans font-bold uppercase">CV_UPLINK</span>
+                                                                                <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100" />
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </div>
 
@@ -2691,22 +2883,22 @@ function AdminDashboardContent() {
                                                         <button onClick={() => handleUpdateAppStatus('WAITING')} className="h-12 rounded-lg border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500 hover:text-black hover:border-yellow-500 transition-all text-xs font-bold uppercase tracking-widest">
                                                             WAITING
                                                         </button>
-                                                    {selectedItem.status !== 'REJECTED' && (
-                                                        <button
-                                                            onClick={() => handleUpdateAppStatus('ACCEPTED')}
-                                                            disabled={
-                                                                (selectedItem.status === 'PENDING')
-                                                                || !(selectedItem.assignedRole && String(selectedItem.assignedRole).trim())
-                                                            }
-                                                            className={`h-12 rounded-lg border transition-all text-xs font-bold uppercase tracking-widest ${ (selectedItem.status === 'PENDING' || !(selectedItem.assignedRole && String(selectedItem.assignedRole).trim())) ? 'border-gray-800 text-gray-700 cursor-not-allowed bg-transparent' : 'bg-cyan-600 border-cyan-500 text-black hover:bg-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.25)]'}`}
-                                                        >
-                                                            ACCEPT
-                                                        </button>
-                                                    )}
+                                                        {selectedItem.status !== 'REJECTED' && (
+                                                            <button
+                                                                onClick={() => handleUpdateAppStatus('ACCEPTED')}
+                                                                disabled={
+                                                                    (selectedItem.status === 'PENDING')
+                                                                    || !(selectedItem.assignedRole && String(selectedItem.assignedRole).trim())
+                                                                }
+                                                                className={`h-12 rounded-lg border transition-all text-xs font-bold uppercase tracking-widest ${(selectedItem.status === 'PENDING' || !(selectedItem.assignedRole && String(selectedItem.assignedRole).trim())) ? 'border-gray-800 text-gray-700 cursor-not-allowed bg-transparent' : 'bg-cyan-600 border-cyan-500 text-black hover:bg-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.25)]'}`}
+                                                            >
+                                                                ACCEPT
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </div>
 
-                                                
+
                                             </div>
                                         ) : (
                                             <div className="space-y-10">
@@ -2868,7 +3060,7 @@ function AdminDashboardContent() {
                                             <label className="text-[10px] uppercase font-sans text-gray-500">Available_Roles (Select Multiple)</label>
                                             <div className="text-[10px] text-gray-500 mt-1">Global roles are available across the app — use <span className="font-bold uppercase">ADD (GLOBAL)</span> to add a role globally or <span className="font-bold uppercase">ADD TO ORG (LOCAL)</span> to attach it only to this organization.</div>
                                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-3 p-3 bg-white/20 border border-white/10 max-h-36 sm:max-h-32 overflow-y-auto">
-                                                {([...(availableRoles || []).map(r => (typeof r === 'string' ? r : r.name)), ...(orgData.availableRoles || []).map(r => r.name)]).filter((v,i,a) => a.indexOf(v) === i).map(role => {
+                                                {([...(availableRoles || []).map(r => (typeof r === 'string' ? r : r.name)), ...(orgData.availableRoles || []).map(r => r.name)]).filter((v, i, a) => a.indexOf(v) === i).map(role => {
                                                     const roleObj = (orgData.availableRoles || []).find(r => r.name === role);
                                                     const isEditing = editingRoleDesc === role;
                                                     return (
@@ -3129,9 +3321,9 @@ function AdminDashboardContent() {
                                             >
                                                 <option value="">SELECT_ROLE</option>
                                                 {availableRoles.map(r => {
-                                                        const name = typeof r === 'string' ? r : r.name;
-                                                        return <option key={name} value={name}>{name}</option>;
-                                                    })}
+                                                    const name = typeof r === 'string' ? r : r.name;
+                                                    return <option key={name} value={name}>{name}</option>;
+                                                })}
                                             </select>
                                         </div>
 
@@ -3212,19 +3404,19 @@ function AdminDashboardContent() {
                                     <div className="space-y-4">
                                         <div className="space-y-1.5">
                                             <label className="text-base uppercase font-bold text-gray-200 tracking-widest">Project Title *</label>
-                                            <Input 
-                                                value={newProjectData.title} 
-                                                onChange={e => setNewProjectData({ ...newProjectData, title: e.target.value })} 
-                                                className="bg-slate-950 border-white/10 h-10 text-base font-sans text-white focus:border-orange-500" 
+                                            <Input
+                                                value={newProjectData.title}
+                                                onChange={e => setNewProjectData({ ...newProjectData, title: e.target.value })}
+                                                className="bg-slate-950 border-white/10 h-10 text-base font-sans text-white focus:border-orange-500"
                                                 placeholder="PROJECT_NAME"
                                             />
                                         </div>
-                                        
+
                                         <div className="space-y-1.5">
                                             <label className="text-base uppercase font-bold text-gray-200 tracking-widest">Description *</label>
-                                            <textarea 
-                                                value={newProjectData.description} 
-                                                onChange={e => setNewProjectData({ ...newProjectData, description: e.target.value })} 
+                                            <textarea
+                                                value={newProjectData.description}
+                                                onChange={e => setNewProjectData({ ...newProjectData, description: e.target.value })}
                                                 className="w-full bg-slate-950 border border-white/10 p-3 text-base font-sans text-white focus:border-orange-500 outline-none min-h-[100px] custom-scrollbar"
                                                 placeholder="PROJECT_DESCRIPTION..."
                                             />
@@ -3252,7 +3444,7 @@ function AdminDashboardContent() {
                                     {/* Links Section */}
                                     <div className="pt-4 border-t border-white/5 space-y-3">
                                         <label className="text-base uppercase font-bold text-orange-400 tracking-widest">Supported Links</label>
-                                        
+
                                         {/* Added Links */}
                                         {newProjectData.supportedLinks.length > 0 && (
                                             <div className="space-y-2 mb-3">
@@ -3263,7 +3455,7 @@ function AdminDashboardContent() {
                                                             <div className="text-orange-400">{link.linkName}</div>
                                                             <div className="text-gray-500 truncate">{link.url}</div>
                                                         </div>
-                                                        <button 
+                                                        <button
                                                             onClick={() => handleRemoveLink(idx)}
                                                             className="text-red-500 hover:text-red-400 p-1"
                                                         >
@@ -3276,19 +3468,19 @@ function AdminDashboardContent() {
 
                                         {/* Add Link Form */}
                                         <div className="flex gap-2">
-                                            <Input 
-                                                value={newLink.linkName} 
-                                                onChange={e => setNewLink({ ...newLink, linkName: e.target.value })} 
+                                            <Input
+                                                value={newLink.linkName}
+                                                onChange={e => setNewLink({ ...newLink, linkName: e.target.value })}
                                                 className="bg-slate-950 border-white/10 h-9 text-sm font-sans text-white focus:border-orange-500 flex-1"
                                                 placeholder="Link Name"
                                             />
-                                            <Input 
-                                                value={newLink.url} 
-                                                onChange={e => setNewLink({ ...newLink, url: e.target.value })} 
+                                            <Input
+                                                value={newLink.url}
+                                                onChange={e => setNewLink({ ...newLink, url: e.target.value })}
                                                 className="bg-slate-950 border-white/10 h-9 text-sm font-sans text-white focus:border-orange-500 flex-1"
                                                 placeholder="https://..."
                                             />
-                                            <button 
+                                            <button
                                                 onClick={handleAddLink}
                                                 className="px-3 h-9 bg-orange-900/20 border border-orange-500/50 text-orange-500 hover:bg-orange-500/10 text-sm font-bold uppercase"
                                             >
@@ -3300,7 +3492,7 @@ function AdminDashboardContent() {
                                     {/* Contributors Section */}
                                     <div className="pt-4 border-t border-white/5 space-y-3">
                                         <label className="text-sm uppercase font-bold text-orange-400 tracking-widest">Contributors</label>
-                                        
+
                                         {/* Added Contributors */}
                                         {newProjectData.contributors.length > 0 && (
                                             <div className="space-y-2 mb-3">
@@ -3312,7 +3504,7 @@ function AdminDashboardContent() {
                                                             <span className="text-gray-500 ml-2">({contributor.emailId})</span>
                                                             {contributor.role && <span className="text-base text-cyan-400 ml-2">[{contributor.role}]</span>}
                                                         </div>
-                                                        <button 
+                                                        <button
                                                             onClick={() => handleRemoveContributor(idx)}
                                                             className="text-red-500 hover:text-red-400 p-1"
                                                         >
@@ -3352,7 +3544,7 @@ function AdminDashboardContent() {
                                             </div>
 
                                             {/* Suggestions dropdown */}
-                                            { (contributorSuggestions.length > 0 || suggestionsLoading) && (
+                                            {(contributorSuggestions.length > 0 || suggestionsLoading) && (
                                                 <div className="absolute left-0 right-0 mt-2 z-50 bg-slate-950 border border-white/10 shadow-lg max-h-56 overflow-auto">
                                                     {suggestionsLoading && (
                                                         <div className="p-2 text-xs text-gray-400">Searching...</div>
