@@ -283,7 +283,7 @@ router.get('/admin/export-csv', authenticateJWT, isAdmin, async (req, res) => {
 });
 
 // 3.6 Admin: Export Organization Data to Excel (2 Sheets)
-router.get('/admin/export-org-csv/:orgCode', authenticateJWT, isAdmin, async (req, res) => {
+router.get('/admin/export-org-data/:orgCode', authenticateJWT, isAdmin, async (req, res) => {
     try {
         const ExcelJS = require('exceljs');
         const { orgCode } = req.params;

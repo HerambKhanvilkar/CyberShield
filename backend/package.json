@@ -15,6 +15,7 @@
   "description": "",
   "dependencies": {
     "@azure/communication-email": "^1.1.0",
+    "@azure/service-bus": "^7.9.5",
     "agenda": "^5.0.0",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.3",

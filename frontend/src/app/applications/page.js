@@ -1004,12 +1004,12 @@ function AdminDashboardContent() {
         }
     };
 
-    const handleExportOrgCSV = async (orgCode) => {
+    const handleExportOrgData = async (orgCode) => {
         try {
             const token = localStorage.getItem("accessToken");
             const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
 
-            const response = await axios.get(`${serverUrl}/application/admin/export-org-csv/${orgCode}`, {
+            const response = await axios.get(`${serverUrl}/application/admin/export-org-data/${orgCode}`, {
                 headers: { Authorization: `Bearer ${token}` },
                 responseType: 'blob'
             });
@@ -1017,7 +1017,7 @@ function AdminDashboardContent() {
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement('a');
             link.href = url;
-            const filename = `${orgCode}_data_${new Date().toISOString().split('T')[0]}.csv`;
+            const filename = `${orgCode}_data_${new Date().toISOString().split('T')[0]}.xlsx`;
             link.setAttribute('download', filename);
             document.body.appendChild(link);
             link.click();
@@ -1366,10 +1366,10 @@ function AdminDashboardContent() {
                             <span className={`px-2 py-1.5 border border-white/10 ${selectedItem.isActive ? 'text-green-500' : 'text-red-500'}`}>{selectedItem.isActive ? 'ACTIVE' : 'INACTIVE'}</span>
                             <button
                                 onClick={() => handleExportOrgCSV(selectedItem.code)}
-                                className="px-2 py-1.5 border border-cyan-500/50 text-cyan-500 hover:bg-cyan-500 hover:text-black flex items-center justify-center gap-2 transition-all text-[10px] font-bold uppercase tracking-widest"
+                                className="p-2 border border-cyan-500/50 text-cyan-500 hover:bg-cyan-500 hover:text-black flex items-center justify-center gap-2 transition-all text-[10px] font-bold uppercase tracking-widest"
                                 title="Download organization data as CSV"
                             >
-                                <Download className="w-3.5 h-3.5" /> CSV
+                                <Download className="w-3.5 h-3.5" /> Excel
                             </button>
                         </div>
                     </div>
@@ -2380,9 +2380,9 @@ function AdminDashboardContent() {
                                                 <ExternalLink className="w-3.5 h-3.5 text-orange-400" />
                                             </button>
                                             <div className={`px-2.5 py-1 rounded-full border text-[9px] font-bold uppercase tracking-wider ${(project.status || '').toLowerCase() === 'ongoing' ? 'border-blue-500/40 text-blue-400 bg-blue-500/10' :
-                                                    (project.status || '').toLowerCase() === 'completed' ? 'border-green-500/40 text-green-400 bg-green-500/10' :
-                                                        (project.status || '').toLowerCase() === 'onhold' || (project.status || '').toLowerCase() === 'on-hold' ? 'border-red-500/40 text-red-400 bg-red-500/10' :
-                                                            project.isActive ? 'border-orange-500/40 text-orange-400 bg-orange-500/10' : 'border-red-500/40 text-red-400 bg-red-500/10'
+                                                (project.status || '').toLowerCase() === 'completed' ? 'border-green-500/40 text-green-400 bg-green-500/10' :
+                                                    (project.status || '').toLowerCase() === 'onhold' || (project.status || '').toLowerCase() === 'on-hold' ? 'border-red-500/40 text-red-400 bg-red-500/10' :
+                                                        project.isActive ? 'border-orange-500/40 text-orange-400 bg-orange-500/10' : 'border-red-500/40 text-red-400 bg-red-500/10'
                                                 }`}>
                                                 {((project.status || project.isActive) ? (project.status || (project.isActive ? 'ACTIVE' : 'INACTIVE')) : 'UNKNOWN').toString().toUpperCase()}
                                             </div>

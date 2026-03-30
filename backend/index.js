@@ -17,6 +17,8 @@ const projectRoutes = require("./routes/ProjectManagment/projectRoutes");
 const fellowProjectRoutes = require("./routes/ProjectManagment/fellowProjectProfileManagementRoute");
 const ContributionLogRoutes = require("./routes/ProjectManagment/ContributionLogRoutes");
 const jobRoutes = require("./routes/jobStatus");
+const { startEmailQueueProcessor } = require("./servicebus/emailQueue");
+const { processEmailQueueMessage } = require("./services/emailService");
 const slowDown = require('express-slow-down');
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
@@ -142,6 +144,15 @@ app.use((err, req, res, next) => {
     app.listen(PORT, () => {
       logger.info(`Application initialized successfully on port ${PORT}`);
     });
+
+    const shouldStartQueueProcessor = String(
+      process.env.EMAIL_QUEUE_PROCESSOR_ENABLED || ''
+    ).toLowerCase() === 'true';
+    if (shouldStartQueueProcessor) {
+      await startEmailQueueProcessor({
+        onMessage: processEmailQueueMessage
+      });
+    }
 
     app.use((req, res, next) => {
       console.log(`${new Date().toISOString()} [${req.method}] ${req.url}`);
