@@ -258,7 +258,7 @@ function MyComponent() {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row bg-black/40 backdrop-blur-md justify-between gap-6 p-2">
+    <div className="flex flex-col lg:flex-row bg-slate-900/60 backdrop-blur-md justify-between gap-6 p-2">
     {/* Left side - Description and buttons */}
       <div className="flex flex-col justify-between space-y-4 lg:max-w-sm">
         <div className='my-auto'>
@@ -284,7 +284,7 @@ function MyComponent() {
     {/* Right side - CSV Preview Card */}
     <div className="flex-1 my-5">
       { !file ? (
-          <div className="w-full h-64 border border-dashed border-gray-400 rounded-lg bg-white/5 flex items-center justify-center text-gray-400">
+          <div className="w-full h-64 border border-dashed border-gray-400 rounded-lg bg-white/20 flex items-center justify-center text-gray-400">
           Select a File to preview.
           </div>
       ) : (
@@ -328,3 +328,4 @@ function MyComponent() {
 }
 
 export default MyComponent;
+

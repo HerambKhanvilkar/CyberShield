@@ -6,6 +6,11 @@ const profileSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'fellowshipprofiles'
     },
+    designation: {
+        type: String,
+        require: false,
+        default: "Individual Member"
+    },
     activeProject_id:[
         {   
             ref_id: {

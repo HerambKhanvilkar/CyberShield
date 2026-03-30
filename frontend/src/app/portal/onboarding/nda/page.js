@@ -132,8 +132,8 @@ export default function NDAPage() {
             </div>
 
             {/* <div className="relative group">
-                <div className="p-8 bg-black border border-white/10 max-h-60 overflow-y-auto text-xs text-gray-500 leading-relaxed font-mono custom-scrollbar opacity-50 group-hover:opacity-100 transition-opacity">
-                    <h3 className="text-lg font-black mb-6 text-center text-white bg-white/5 py-3 tracking-[0.2em] border-y border-white/10 uppercase">Security_Protocol_NDA</h3>
+                <div className="p-8 bg-slate-950 border border-white/10 max-h-60 overflow-y-auto text-xs text-gray-500 leading-relaxed font-mono custom-scrollbar opacity-50 group-hover:opacity-100 transition-opacity">
+                    <h3 className="text-lg font-black mb-6 text-center text-white bg-white/20 py-3 tracking-[0.2em] border-y border-white/10 uppercase">Security_Protocol_NDA</h3>
                     <p className="mb-4">This Non-Disclosure Agreement (the "Agreement") is entered into by and between DeepCytes R&D and the undersigned Participant...</p>
                     <div className="space-y-4">
                         <p>1. <span className="text-white font-bold">CONFIDENTIALITY:</span> The Participant acknowledges that in the course of the tenure, they may have access to confidential and proprietary information, including but not limited to source code, research data, product roadmaps, and internal methodologies.</p>
@@ -143,7 +143,7 @@ export default function NDAPage() {
                 </div>
 
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                    <div className="bg-black/80 backdrop-blur-sm border border-purple-500/50 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-purple-400">
+                    <div className="bg-slate-950/80 backdrop-blur-sm border border-purple-500/50 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-purple-400">
                         Scroll to Review Summary
                     </div>
                 </div>
@@ -169,7 +169,7 @@ export default function NDAPage() {
 
             {/* signed copy box if already executed */}
             {user?.nda?.dateTimeUser && user.nda.dateTimeUser !== "0" && (
-                <div className="p-8 bg-black border border-white/10 relative group hover:border-purple-500/50 transition-colors mt-6">
+                <div className="p-8 bg-slate-950 border border-white/10 relative group hover:border-purple-500/50 transition-colors mt-6">
                     <div className="absolute top-0 left-0 w-2 h-2 bg-purple-500" />
                     <ShieldCheck className="w-10 h-10 mb-4 text-purple-400/50 group-hover:text-purple-400 transition-colors" />
                     <h3 className="text-xs font-black uppercase tracking-widest text-white mb-2">Signed_NDA</h3>
@@ -186,7 +186,7 @@ export default function NDAPage() {
                     value={legalName}
                     onChange={e => setLegalName(e.target.value.toUpperCase())}
                     placeholder="ENTER_SIGNATURE_NAME"
-                    className="bg-white/5 border-white/10 text-2xl font-black tracking-[0.4em] text-center py-10 rounded-none h-20 focus:border-purple-500 transition-all text-white placeholder:text-gray-800"
+                    className="bg-white/20 border-white/10 text-2xl font-black tracking-[0.4em] text-center py-10 rounded-none h-20 focus:border-purple-500 transition-all text-white placeholder:text-gray-800"
                 />
 
                 <div className="flex flex-col gap-4">
@@ -202,3 +202,4 @@ export default function NDAPage() {
         </motion.div>
     );
 }
+

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
@@ -16,23 +17,23 @@ export default function AdminLogin() {
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const router = useRouter();
-    const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
-    const { fetchUser } = useAuthContext();
+    const { user, loading: authLoading, fetchUser } = useAuthContext();
 
     useEffect(() => {
-        // If already logged in as admin, redirect (only once)
-        if (hasCheckedAuth) return;
+        if (authLoading) return;
         
-        const user = JSON.parse(localStorage.getItem("user") || "null");
-        const token = localStorage.getItem("accessToken");
-        
-        if (user && user.isAdmin && token) {
-            setHasCheckedAuth(true);
+        if (user && user.isAdmin) {
             router.push("/applications");
-        } else {
-            setHasCheckedAuth(true);
         }
-    }, [router, hasCheckedAuth]);
+    }, [user, authLoading, router]);
+
+    if (authLoading) {
+        return (
+            <div className="h-screen w-screen bg-[#0d0d0d] flex items-center justify-center font-sans">
+                <div className="text-cyan-500 animate-pulse tracking-widest text-xl uppercase font-black">Decrypting Session...</div>
+            </div>
+        );
+    }
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -67,61 +68,123 @@ export default function AdminLogin() {
 
     return (
         <>
-            <Navbar />
-            <div className="min-h-screen bg-[#00040A] text-white flex items-center justify-center p-4 relative overflow-hidden">
-                {/* Decorative Grid */}
-                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
-                <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-cyan-500 opacity-20 blur-[100px]"></div>
+            <div className="relative flex flex-col min-h-screen bg-[#0d0d0d] overflow-hidden group/page">
+                {/* Minimal Logo Overlay */}
+                <div className="absolute top-6 left-8 z-50">
+                    <Link href="/">
+                        <img
+                            src="https://static.wixstatic.com/media/e48a18_c949f6282e6a4c8e9568f40916a0c704~mv2.png/v1/crop/x_0,y_151,w_1920,h_746/fill/w_203,h_79,fp_0.50_0.50,q_85,usm_0.66_1.00_0.01,enc_auto/For%20Dark%20Theme.png"
+                            className="h-8 w-auto opacity-70 hover:opacity-100 transition-opacity"
+                            alt="Logo"
+                        />
+                    </Link>
+                </div>
 
-                <div className="bg-white/5 backdrop-blur-2xl border border-white/10 p-8 rounded-3xl shadow-2xl w-full max-w-md relative z-10">
-                    <div className="flex justify-center mb-6">
-                        <div className="w-16 h-16 bg-cyan-600/20 rounded-2xl flex items-center justify-center border border-cyan-500/30">
-                            <Lock className="text-cyan-400 w-8 h-8" />
+                {/* Quick Home Link (Top Right) */}
+                <div className="absolute top-8 right-8 z-50">
+                    <button
+                        onClick={() => router.push("/")}
+                        className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-500 hover:text-cyan-400 transition-all flex items-center gap-2"
+                    >
+                        Public Site
+                    </button>
+                </div>
+
+                {/* Background effects */}
+                <div className="absolute inset-0 z-0 pointer-events-none">
+                    <div className="ball" style={{ "--delay": "-2s", "--size": "0.3", "--speed": "25s" }}></div>
+                    <div className="ball" style={{ "--delay": "-7s", "--size": "0.4", "--speed": "30s" }}></div>
+                    <div className="ball" style={{ "--delay": "-12s", "--size": "0.35", "--speed": "22s" }}></div>
+                </div>
+
+                <div className="flex-1 flex items-center justify-center p-4 md:p-8 pt-20 relative z-10">
+                    {/* Main Content Card */}
+                    <div className="w-full max-w-sm">
+                        {/* Header Icon Section */}
+                        <div className="flex flex-col items-center mb-6 group">
+                            <div className="relative w-14 h-14 mb-3">
+                                {/* Animated Lock from globals.css */}
+                                <div className="lock-container scale-100 transform transition-transform group-hover:scale-110">
+                                    <div className="lock">
+                                        <div className="keyhole"></div>
+                                    </div>
+                                </div>
+                                {/* Outer Glow Ring */}
+                                <div className="absolute inset-0 rounded-full border-2 border-cyan-500/20 animate-pulse"></div>
+                            </div>
+                            <h1 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-500 tracking-tight text-center mb-1.5">
+                                Admin Portal
+                            </h1>
+                            <div className="flex items-center gap-2 px-3 py-0.5 rounded-full border border-white/5 bg-white/5 backdrop-blur-md">
+                                <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse shadow-[0_0_8px_cyan]"></div>
+                                <span className="text-[8px] uppercase tracking-[0.25em] font-black text-gray-400">Security Access</span>
+                            </div>
                         </div>
-                    </div>
 
-                    <h1 className="text-3xl font-extrabold text-center mb-2 text-white">Admin Portal</h1>
-                    <p className="text-gray-400 text-center mb-8 text-sm italic">Authorized personnel only.</p>
+                        {/* Glassmorphic Login Card */}
+                        <div className="glass border border-white/5 p-8 shadow-[0_0_60px_-15px_rgba(0,0,0,0.5)] relative overflow-hidden group">
+                            {/* Interactive Glint Effect */}
+                            <div className="glint glintcenter opacity-5 group-hover:opacity-15 transition-opacity"></div>
+                            
+                            <form onSubmit={handleLogin} className="space-y-5 relative z-10">
+                                <div className="space-y-2">
+                                    <div className="flex justify-between items-center ml-1">
+                                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-500">
+                                            Administrator
+                                        </label>
+                                    </div>
+                                    <Input
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        required
+                                        placeholder="admin@deepcytes.io"
+                                        className="bg-white/[0.03] border-white/5 text-white h-11 pl-4 rounded-xl focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/20 transition-all duration-300 placeholder:text-gray-700 text-sm"
+                                    />
+                                </div>
 
-                    <form onSubmit={handleLogin} className="space-y-6">
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase tracking-widest text-gray-500 ml-1">Admin Email</label>
-                            <Input
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                                placeholder="admin@deepcytes.io"
-                                className="bg-black/40 border-white/10 text-white h-12 rounded-xl focus:border-cyan-500/50 transition-all shadow-inner"
+                                <div className="space-y-2">
+                                    <div className="flex justify-between items-center ml-1">
+                                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-500">
+                                            Key
+                                        </label>
+                                    </div>
+                                    <Input
+                                        type="password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        required
+                                        placeholder="••••••••"
+                                        className="bg-white/[0.03] border-white/5 text-white h-11 pl-4 rounded-xl focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/20 transition-all duration-300 placeholder:text-gray-700 text-sm"
+                                    />
+                                </div>
+
+                                <Button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full h-11 bg-white text-black hover:bg-cyan-500 hover:text-white rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-cyan-500/5 transform active:scale-[0.98] transition-all duration-300 border-none group/btn mt-2"
+                                >
+                                    {loading ? (
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-3 h-3 border-2 border-black border-t-transparent rounded-full animate-spin group-hover/btn:border-white"></div>
+                                            <span>Authenticating</span>
+                                        </div>
+                                    ) : (
+                                        "Enter System"
+                                    )}
+                                </Button>
+                            </form>
+                        </div>
+
+                        {/* Background subtle watermark & version */}
+                        <div className="mt-20 flex flex-col items-center gap-2 opacity-10">
+                            <img
+                                src="https://static.wixstatic.com/media/e48a18_c949f6282e6a4c8e9568f40916a0c704~mv2.png/v1/crop/x_0,y_151,w_1920,h_746/fill/w_203,h_79,fp_0.50_0.50,q_85,usm_0.66_1.00_0.01,enc_auto/For%20Dark%20Theme.png"
+                                className="h-4 w-auto brightness-0 invert"
+                                alt="Logo Watermark"
                             />
+                            <span className="text-[10px] font-mono tracking-widest text-white">v0.1.1-ALPHA</span>
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase tracking-widest text-gray-500 ml-1">Password</label>
-                            <Input
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                                placeholder="••••••••"
-                                className="bg-black/40 border-white/10 text-white h-12 rounded-xl focus:border-cyan-500/50 transition-all shadow-inner"
-                            />
-                        </div>
-                        <Button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full h-12 bg-gradient-to-r from-cyan-600 to-blue-700 hover:from-cyan-500 hover:to-blue-600 rounded-xl font-bold shadow-lg shadow-cyan-900/20 transform active:scale-[0.98] transition-all"
-                        >
-                            {loading ? "Authenticating..." : "Sign In to Dashboard"}
-                        </Button>
-                    </form>
-
-                    <div className="mt-8 pt-6 border-t border-white/5 text-center">
-                        <button
-                            onClick={() => router.push("/")}
-                            className="text-xs text-gray-500 hover:text-cyan-400 transition-colors uppercase tracking-widest"
-                        >
-                            Back to public site
-                        </button>
                     </div>
                 </div>
             </div>
@@ -129,3 +192,4 @@ export default function AdminLogin() {
         </>
     );
 }
+

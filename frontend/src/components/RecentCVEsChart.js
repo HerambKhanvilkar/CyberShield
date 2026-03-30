@@ -7,7 +7,7 @@ import  SkeletonBarGraph  from "@/components/Skeletonchart";
 function CustomTooltip({ active, payload, label }) {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white/10 backdrop-blur-sm rounded p-2 text-white border border-white/20">
+      <div className="bg-white/20 backdrop-blur-sm rounded p-2 text-white border border-white/20">
         <p className="font-semibold">{label}</p>
         <p>{`CVEs: ${payload[0].value}`}</p>
       </div>

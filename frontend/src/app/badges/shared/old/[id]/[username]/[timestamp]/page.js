@@ -114,7 +114,7 @@ const SharedBadgePage1 = () => {
 
   if (isLoading || !badge) {
     return (
-      <div className="min-h-screen flex flex-col bg-black text-white">
+      <div className="min-h-screen flex flex-col bg-slate-950 text-white">
         <Navbar />
         <div className="flex-grow flex flex-col items-center justify-center">
           <div className="loader border-8 border-t-8 border-[#38C8F8] h-16 w-16 animate-spin rounded-full mb-4" />
@@ -201,7 +201,7 @@ const BadgeSkillsList = ({ skills }) => (
           <div
             key={idx}
             title={skill}
-            className="bg-black/60 text-white border border-[#38C8F8] rounded-md px-3 py-2 text-sm shadow-md transition-all duration-200 
+            className="bg-slate-950/60 text-white border border-[#38C8F8] rounded-md px-3 py-2 text-sm shadow-md transition-all duration-200 
                        hover:border-cyan-400 hover:text-[#38C8F8] hover:shadow-[0_0_8px_2px_#38C8F8]"
           >
             {skill}
@@ -311,20 +311,20 @@ const BadgeMetrics = ({ badge }) => (
 
               {/* Passing Criteria */}
               <div className="flex flex-col sm:flex-row space-x-1 ">
-                <div className="relative w-full z-0 mb-5 group bg-black/60 border rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
-                  <strong className='block text-gray-500 hover:text-white border border-0 border-r border-l  rounded-lg -mt-7 bg-black w-max px-2.5'>Passing Criteria</strong> Scored at least 70% in their assessment and completed all mandatory tasks to earn this badge.
+                <div className="relative w-full z-0 mb-5 group bg-slate-950/60 border rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
+                  <strong className='block text-gray-500 hover:text-white border border-0 border-r border-l  rounded-lg -mt-7 bg-slate-950 w-max px-2.5'>Passing Criteria</strong> Scored at least 70% in their assessment and completed all mandatory tasks to earn this badge.
                 </div>
 
-                <div className="z-0 sm:w-2/5 mb-5 group bg-black/60 border  rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
-                  <strong className='block text-gray-500 hover:text-white border border-0 border-r border-l rounded-lg -mt-7 bg-black w-max px-2.5'>Course</strong> {badge.course}
+                <div className="z-0 sm:w-2/5 mb-5 group bg-slate-950/60 border  rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
+                  <strong className='block text-gray-500 hover:text-white border border-0 border-r border-l rounded-lg -mt-7 bg-slate-950 w-max px-2.5'>Course</strong> {badge.course}
                 </div>
               </div>
 
               {/* Certificate ID */}
               {displayCertificateId && (
                 <div className="mt-auto mb-2 w-full">
-                  <div className="relative w-full z-0 group bg-black/60 border rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
-                    <strong className='block text-gray-500 hover:text-white border border-0 border-r border-l rounded-lg -mt-7 bg-black w-max px-2.5 mb-2'>Certificate ID</strong>
+                  <div className="relative w-full z-0 group bg-slate-950/60 border rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
+                    <strong className='block text-gray-500 hover:text-white border border-0 border-r border-l rounded-lg -mt-7 bg-slate-950 w-max px-2.5 mb-2'>Certificate ID</strong>
                     <div className="mt-1 font-mono font-semibold text-sm">{displayCertificateId}</div>
                   </div>
                 </div>
@@ -340,3 +340,4 @@ const BadgeMetrics = ({ badge }) => (
 };
 
 export default SharedBadgePage1;
+

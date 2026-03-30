@@ -196,9 +196,9 @@ router.post("/register/otp", [body("email").isEmail().withMessage("Invalid email
         });
       }
 
-      // Cooldown: Minimum 30 seconds between requests
-      if (existingOtp.lastAttemptAt && (now - existingOtp.lastAttemptAt.getTime() < 30 * 1000)) {
-        const remainingTime = Math.ceil((30 * 1000 - (now - existingOtp.lastAttemptAt.getTime())) / 1000);
+      // Cooldown: Minimum 36 seconds between requests
+      if (existingOtp.lastAttemptAt && (now - existingOtp.lastAttemptAt.getTime() < 36 * 1000)) {
+        const remainingTime = Math.ceil((36 * 1000 - (now - existingOtp.lastAttemptAt.getTime())) / 1000);
         return res.status(429).json({
           msg: `Please wait ${remainingTime} seconds before requesting a new OTP.`
         });

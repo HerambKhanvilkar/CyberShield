@@ -73,7 +73,7 @@ const PrereqDropdown = ({ badges = [], formData, setFormData }) => {
       </div>
 
       <div className={(isOpen ? 'block' : 'hidden') + ' absolute z-50 w-full mt-2'}>
-        <div className="rounded-2xl bg-black/60 backdrop-blur-md border border-white/10 p-2 max-h-48 overflow-y-auto">
+        <div className="rounded-2xl bg-slate-950/60 backdrop-blur-md border border-white/10 p-2 max-h-48 overflow-y-auto">
           {filtered.length > 0 ? filtered.map((b) => {
             const id = String(b._id || b.id);
             const selected = formData.requires && formData.requires.includes(id);
@@ -96,3 +96,4 @@ const PrereqDropdown = ({ badges = [], formData, setFormData }) => {
 };
 
 export default PrereqDropdown;
+

@@ -429,7 +429,7 @@ useEffect(() => {
   };
 
   return (
-    <div className='w-full bg-black/50 backdrop-blur-md px-2'>
+    <div className='w-full bg-slate-950/50 backdrop-blur-md px-2'>
       <form onSubmit={handleBadgeFormSubmit} className="flex flex-col w-full mx-auto">
         <div className="flex flex-col md:flex-row md:items-stretch items-start py-2.5 justify-around ">
           {/* Left: Badges List */}
@@ -689,3 +689,4 @@ useEffect(() => {
  
 
 export default BadgeCreationForm;
+

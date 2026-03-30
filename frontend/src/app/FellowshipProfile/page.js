@@ -152,7 +152,7 @@ export default function FellowshipDashboard() {
     if (!profile) return null;
 
     return (
-        <div className="min-h-screen bg-black text-gray-100 font-sans selection:bg-cyan-500/30 selection:text-cyan-100 flex flex-col">
+        <div className="min-h-screen bg-slate-950 text-gray-100 font-sans selection:bg-cyan-500/30 selection:text-cyan-100 flex flex-col">
             {/* Background Grid */}
             <div className="fixed inset-0 z-0 opacity-20 pointer-events-none"
                 style={{
@@ -261,3 +261,4 @@ export default function FellowshipDashboard() {
         </div>
     );
 }
+

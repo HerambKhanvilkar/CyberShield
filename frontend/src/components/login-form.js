@@ -80,7 +80,7 @@ export function LoginForm() {
         open={showForgotPwd}
         onOpenChange={setShowForgotPwd}
       />
-      <Card className="mx-auto max-w-sm bg-white/5 backdrop-blur-md border-white/10 text-white shadow-2xl">
+      <Card className="mx-auto max-w-sm bg-white/20 backdrop-blur-md border-white/10 text-white shadow-2xl">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-cyan-400 text-center">Login</CardTitle>
           <CardDescription className="text-gray-400 text-center">
@@ -96,7 +96,7 @@ export function LoginForm() {
                 type="email"
                 placeholder="m@example.com"
                 required
-                className="bg-black/30 border-white/10 text-white"
+                className="bg-slate-950/30 border-white/10 text-white"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -116,7 +116,7 @@ export function LoginForm() {
                 id="password"
                 type="password"
                 required
-                className="bg-black/30 border-white/10 text-white"
+                className="bg-slate-950/30 border-white/10 text-white"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -136,3 +136,4 @@ export function LoginForm() {
     </>
   );
 }
+

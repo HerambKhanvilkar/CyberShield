@@ -1,4 +1,5 @@
 module.exports = {
+  experimental: {},
   turbopack: {},
     images: {
       localPatterns: [

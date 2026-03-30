@@ -13,7 +13,8 @@ export default function VideoBackground() {
       </video>
 
       {/* Optional: Add overlay blur/tint */}
-      {/* <div className="absolute inset-0 bg-black/50 backdrop-blur-sm z-10" /> */}
+      {/* <div className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm z-10" /> */}
     </div>
   );
 }
+

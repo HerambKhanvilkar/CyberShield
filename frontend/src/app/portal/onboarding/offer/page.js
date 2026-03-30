@@ -62,14 +62,14 @@ export default function OfferPage() {
 
             <div className="space-y-4">
                 <h2 className="text-4xl font-black uppercase tracking-tighter text-white italic">Profile: <span className="text-green-500">Active</span></h2>
-                <div className="inline-block px-4 py-2 bg-white/5 border border-white/10 rounded-none">
+                <div className="inline-block px-4 py-2 bg-white/20 border border-white/10 rounded-none">
                     <p className="text-[10px] font-mono text-cyan-400 uppercase tracking-[0.3em]">Fellowship ID: <span className="text-white font-black">{user.globalPid}</span></p>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 gap-6 w-full max-w-2xl px-4">
                 {/* /* Offer Letter Box */}
-                <div className="p-8 bg-black border border-white/10 relative group hover:border-cyan-500/50 transition-colors">
+                <div className="p-8 bg-slate-950 border border-white/10 relative group hover:border-cyan-500/50 transition-colors">
                     <div className="absolute top-0 left-0 w-2 h-2 bg-cyan-500" />
                     <FileText className="w-10 h-10 mb-4 text-cyan-400/50 group-hover:text-cyan-400 transition-colors" />
                     <h3 className="text-xs font-black uppercase tracking-widest text-white mb-2">Offer_Letter</h3>
@@ -94,3 +94,4 @@ export default function OfferPage() {
         </motion.div>
     );
 }
+
