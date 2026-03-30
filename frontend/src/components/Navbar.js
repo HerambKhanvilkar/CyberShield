@@ -10,7 +10,7 @@ import { useAuthContext } from "./AuthContext";
 import { useRouter } from "next/navigation"; // Next.js navigation hook
 import { Menu } from "lucide-react";
 
-function Navbar() {
+function Navbar({ minimal = false }) {
   const { user, loading, logout } = useAuthContext();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMoreDropdownOpen, setIsMoreDropdownOpen] = useState(false); // New dropdown state for "More"
@@ -185,125 +185,129 @@ function Navbar() {
             </Link>
           </div>
 
-          {/* Desktop Menu Links, center-aligned (optional, can be removed if not needed) */}
-          <div className="hidden sm:block md:hidden lg:block flex-1">
-            <div className="flex space-x-4 text-white font-medium justify-center">
-              <a
-                href="https://learn.deepcytes.io/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-[#3DB5DA] transition-colors flex items-center gap-2"
-              >
-                <span>Learn</span>
-              </a>
-              <Link
-                href="/badges"
-                className="hover:text-[#3DB5DA] transition-colors flex items-center gap-2"
-              >
-                <span>Badges</span>
-              </Link>
-              <Link
-                href="/apply"
-                className="hover:text-[#3DB5DA] transition-colors flex items-center gap-2"
-              >
-                <span>Fellowships</span>
-              </Link>
-
-              {user && user.isAdmin && (
+          {/* Desktop Menu Links, center-aligned */}
+          {!minimal && (
+            <div className="hidden sm:block md:hidden lg:block flex-1">
+              <div className="flex space-x-4 text-white font-medium justify-center">
+                <a
+                  href="https://learn.deepcytes.io/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-[#3DB5DA] transition-colors flex items-center gap-2"
+                >
+                  <span>Learn</span>
+                </a>
                 <Link
-                  href="/applications"
-                  className="px-4 py-1.5 rounded-full bg-red-500/10 border border-red-500/50 text-red-500 hover:bg-red-500 hover:text-white transition-all text-xs font-black uppercase tracking-widest"
+                  href="/badges"
+                  className="hover:text-[#3DB5DA] transition-colors flex items-center gap-2"
                 >
-                  Admin Control
+                  <span>Badges</span>
                 </Link>
-              )}
-
-              {user && (
                 <Link
-                  href={
-                    user.fellowshipStatus === 'FELLOW' ? '/FellowshipProfile' :
-                      user.fellowshipStatus === 'ONBOARDING' ? '/portal/onboarding' :
-                        '/portal'
-                  }
-                  className="px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500 hover:text-white transition-all text-xs font-black uppercase tracking-widest"
+                  href="/apply"
+                  className="hover:text-[#3DB5DA] transition-colors flex items-center gap-2"
                 >
-                  {user.fellowshipStatus === 'FELLOW' ? 'Fellowship Dashboard' : 'Fellowship Portal'}
+                  <span>Fellowships</span>
                 </Link>
-              )}
-            </div>
-          </div>
 
-          {/* User Authentication, right-aligned */}
-          <div className="flex items-center gap-4 whitespace-nowrap shrink-0 ml-auto">
-            {status === "loading" ? (
-              <p className="text-white">Loading...</p>
-            ) : user ? (
-              <div className="relative" ref={dropdownRef}>
-                <button
-                  onClick={toggleDropdown}
-                  className="flex items-center space-x-2 text-white bg-[#1a1a4b] px-4 py-2 rounded-lg hover:bg-[#2b2b6b]"
-                >
-                  {/* Show profile picture (preferred), then server image, then initials, then icon */}
-                  {user?.profilePicture || user?.image ? (
-                    <img
-                      src={user?.profilePicture ? user.profilePicture : process.env.SERVER_URL + user.image}
-                      alt={user?.firstName || user?.email || 'User'}
-                      crossOrigin="anonymous"
-                      className="w-8 h-8 rounded-full object-cover"
-                      onError={(e) => (e.currentTarget.src = "/default-avatar.png")}
-                    />
-                  ) : user?.firstName || user?.lastName ? (
-                    <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">
-                      {user.firstName?.[0]?.toUpperCase()}
-                      {user.lastName?.[0]?.toUpperCase()}
-                    </div>
-                  ) : (
-                    <FaUserCircle className="w-8 h-8" />
-                  )}
-                  <span className="hidden sm:inline ">{user.firstName}</span>
-                </button>
-                {isDropdownOpen && (
-                  <ul className="mt-2 w-36 bg-white text-black rounded-lg shadow-md z-50 absolute top-12 right-0">
-                    <li className="bg-slate-200 rounded-lg">
-                      <button
-                        onClick={handleProfile}
-                        className="block px-2 py-2 w-full text-left hover:bg-gray-400 transition-colors rounded-lg"
-                      >
-                        Profile
-                      </button>
-                    </li>
-                    {user && user.isAdmin && (
-                      <li className="bg-slate-200 rounded-lg">
-                        <button
-                          onClick={handlebadgeadmin}
-                          className="block px-2 py-2 w-full text-left hover:bg-gray-400 transition-colors rounded-lg"
-                        >
-                          Badge Admin
-                        </button>
-                      </li>
-                    )}
-                    <li className="bg-slate-200 rounded-lg">
-                      <button
-                        onClick={handleSignOut}
-                        className="block px-2 py-2 w-full text-left hover:bg-gray-400 transition-colors rounded-lg"
-                      >
-                        Sign Out
-                      </button>
-                    </li>
-                  </ul>
+                {user && user.isAdmin && (
+                  <Link
+                    href="/applications"
+                    className="px-4 py-1.5 rounded-full bg-red-500/10 border border-red-500/50 text-red-500 hover:bg-red-500 hover:text-white transition-all text-xs font-black uppercase tracking-widest"
+                  >
+                    Admin Control
+                  </Link>
+                )}
+
+                {user && (
+                  <Link
+                    href={
+                      user.fellowshipStatus === 'FELLOW' ? '/FellowshipProfile' :
+                        user.fellowshipStatus === 'ONBOARDING' ? '/portal/onboarding' :
+                          '/portal'
+                    }
+                    className="px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500 hover:text-white transition-all text-xs font-black uppercase tracking-widest"
+                  >
+                    {user.fellowshipStatus === 'FELLOW' ? 'Fellowship Dashboard' : 'Fellowship Portal'}
+                  </Link>
                 )}
               </div>
-            ) : (
-              <div className="flex space-x-2 md:m-2">
-                <LoginDialog />
-              </div>
-            )}
-          </div>
+            </div>
+          )}
+
+          {/* User Authentication, right-aligned */}
+          {!minimal && (
+            <div className="flex items-center gap-4 whitespace-nowrap shrink-0 ml-auto">
+              {status === "loading" ? (
+                <p className="text-white">Loading...</p>
+              ) : user ? (
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={toggleDropdown}
+                    className="flex items-center space-x-2 text-white bg-[#1a1a4b] px-4 py-2 rounded-lg hover:bg-[#2b2b6b]"
+                  >
+                    {/* Show profile picture (preferred), then server image, then initials, then icon */}
+                    {user?.profilePicture || user?.image ? (
+                      <img
+                        src={user?.profilePicture ? user.profilePicture : process.env.SERVER_URL + user.image}
+                        alt={user?.firstName || user?.email || 'User'}
+                        crossOrigin="anonymous"
+                        className="w-8 h-8 rounded-full object-cover"
+                        onError={(e) => (e.currentTarget.src = "/default-avatar.png")}
+                      />
+                    ) : user?.firstName || user?.lastName ? (
+                      <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">
+                        {user.firstName?.[0]?.toUpperCase()}
+                        {user.lastName?.[0]?.toUpperCase()}
+                      </div>
+                    ) : (
+                      <FaUserCircle className="w-8 h-8" />
+                    )}
+                    <span className="hidden sm:inline ">{user.firstName}</span>
+                  </button>
+                  {isDropdownOpen && (
+                    <ul className="mt-2 w-36 bg-white text-black rounded-lg shadow-md z-50 absolute top-12 right-0">
+                      <li className="bg-slate-200 rounded-lg">
+                        <button
+                          onClick={handleProfile}
+                          className="block px-2 py-2 w-full text-left hover:bg-gray-400 transition-colors rounded-lg"
+                        >
+                          Profile
+                        </button>
+                      </li>
+                      {user && user.isAdmin && (
+                        <li className="bg-slate-200 rounded-lg">
+                          <button
+                            onClick={handlebadgeadmin}
+                            className="block px-2 py-2 w-full text-left hover:bg-gray-400 transition-colors rounded-lg"
+                          >
+                            Badge Admin
+                          </button>
+                        </li>
+                      )}
+                      <li className="bg-slate-200 rounded-lg">
+                        <button
+                          onClick={handleSignOut}
+                          className="block px-2 py-2 w-full text-left hover:bg-gray-400 transition-colors rounded-lg"
+                        >
+                          Sign Out
+                        </button>
+                      </li>
+                    </ul>
+                  )}
+                </div>
+              ) : (
+                <div className="flex space-x-2 md:m-2">
+                  <LoginDialog />
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Mobile SideNav Menu */}
         <div
-          className={`fixed top-0 left-0 h-full bg-black/50 backdrop-blur-sm z-50 overflow-x-hidden transition-all duration-500 ${isSidenavOpen ? "w-[250px]" : "w-0"
+          className={`fixed top-0 left-0 h-full bg-slate-950/50 backdrop-blur-sm z-50 overflow-x-hidden transition-all duration-500 ${isSidenavOpen ? "w-[250px]" : "w-0"
             }`}
         >
           <button
@@ -401,3 +405,4 @@ function Navbar() {
   );
 }
 export default Navbar;
+

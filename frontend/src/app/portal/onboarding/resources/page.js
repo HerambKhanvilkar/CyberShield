@@ -45,7 +45,7 @@ export default function ResourcesPage() {
                     { title: 'Internal_Ethics_v1', icon: <FlaskConical className="w-5 h-5" />, type: 'PDF' },
                     { title: 'Comm_Protocols', icon: <MessageSquare className="w-5 h-5" />, type: 'DOCX' }
                 ].map((item, idx) => (
-                    <div key={idx} className="p-6 bg-black border border-white/5 relative overflow-hidden cursor-not-allowed">
+                    <div key={idx} className="p-6 bg-slate-950 border border-white/5 relative overflow-hidden cursor-not-allowed">
                         <div className="flex items-center gap-6">
                             <div className="w-12 h-12 border border-white/10 flex items-center justify-center text-gray-600">{item.icon}</div>
                             <div className="flex-1">
@@ -71,3 +71,4 @@ export default function ResourcesPage() {
         </motion.div>
     );
 }
+

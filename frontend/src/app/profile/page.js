@@ -119,7 +119,7 @@ async function handlePreviewResize(image){
 //   }, [preview]);
 
   const Card = ({ title, options}) => (
-    <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg rounded-2xl p-4 text-white transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)] w-full mb-5">
+    <div className="relative bg-white/20 backdrop-blur-xl border border-white/10 shadow-lg rounded-2xl p-4 text-white transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)] w-full mb-5">
       <h3 className="text-xl font-semibold mb-4">{title}</h3>
       <ScrollArea className="h-[150px] pr-2 overflow-y-auto">
         {options.length > 0 ? (
@@ -127,7 +127,7 @@ async function handlePreviewResize(image){
             {options.map((a, i) => (
               <li
                 key={i}
-                className="bg-white/5 backdrop-blur-md text-blue-100 text-xs font-thin px-2.5 py-0.5 rounded"
+                className="bg-white/20 backdrop-blur-md text-blue-100 text-xs font-thin px-2.5 py-0.5 rounded"
               >
                 <BoxReveal duration="0.9">
                   <span className="flex items-center">
@@ -466,7 +466,7 @@ const BadgeMetrics = ({ badge }) => (
       <main className="bg-gradient-to-br from-[#0a0a0f] to-[#000] via-[#141622] backdrop-blur-md text-white min-h-screen px-4 py-6 md:px-8">
         <div className=" w-full h-full mx-auto grid md:grid-cols-5 gap-6">
           {/* Sidebar */}
-          <aside className="relative bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg rounded-2xl p-4 text-white transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)] w-full mb-5 text-center">
+          <aside className="relative bg-white/20 backdrop-blur-xl border border-white/10 shadow-lg rounded-2xl p-4 text-white transition-shadow duration-300 ease-in-out hover:shadow-[0_0_10px_3px_rgba(0,178,255,0.8)] w-full mb-5 text-center">
             <div className="border-4 border-[#0c0e3c] rounded-full w-max h-28 mx-auto overflow-hidden mb-4">
               {userData.image ? (
                 <img
@@ -568,17 +568,17 @@ const BadgeMetrics = ({ badge }) => (
               { /* <BadgeSkillsList skills={badge.skillsEarned} /> */}
               {/* Passing Criteria */}
               <div className="flex space-x-2 ">
-              <div className="relative w-full z-0 mb-5 group bg-black/60 border rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
-                <strong className='block text-gray-500 hover:text-white border-r border-l rounded-lg -mt-7 bg-black w-max px-2.5'>Passing Criteria</strong> Scored at least 70% in their assessment and completed all mandatory tasks to earn this badge.
+              <div className="relative w-full z-0 mb-5 group bg-slate-950/60 border rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
+                <strong className='block text-gray-500 hover:text-white border-r border-l rounded-lg -mt-7 bg-slate-950 w-max px-2.5'>Passing Criteria</strong> Scored at least 70% in their assessment and completed all mandatory tasks to earn this badge.
               </div>
-              <div className="relative z-0 w-2/5 mb-5 group bg-black/60 border  rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
-                <strong className='block text-gray-500 hover:text-white border-r border-l rounded-lg -mt-7 bg-black w-max px-2.5'>Course</strong> {selectedBadge?.course}
+              <div className="relative z-0 w-2/5 mb-5 group bg-slate-950/60 border  rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
+                <strong className='block text-gray-500 hover:text-white border-r border-l rounded-lg -mt-7 bg-slate-950 w-max px-2.5'>Course</strong> {selectedBadge?.course}
               </div>
               </div>
               {displayCertificateId && (
                 <div className="mt-auto mb-2 w-full">
-                  <div className="relative w-full z-0 group bg-black/60 border rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
-                    <strong className='block text-gray-500 hover:text-white border-r border-l rounded-lg -mt-7 bg-black w-max px-2.5 mb-2'>Certificate ID</strong>
+                  <div className="relative w-full z-0 group bg-slate-950/60 border rounded-md p-4 shadow text-sm text-white hover:text-[#38C8F8]">
+                    <strong className='block text-gray-500 hover:text-white border-r border-l rounded-lg -mt-7 bg-slate-950 w-max px-2.5 mb-2'>Certificate ID</strong>
                     <div className="mt-1 font-mono font-semibold text-sm">{displayCertificateId}</div>
                   </div>
                 </div>
@@ -610,7 +610,7 @@ const BadgeMetrics = ({ badge }) => (
     { profileUpdateModal && (
       <>
         {showImageViewer && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={() => setShowImageViewer(false)}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70" onClick={() => setShowImageViewer(false)}>
             <img
               src={preview || (userData.image ? `${process.env.SERVER_URL}${userData.image}` : '')}
               alt="Profile Preview"
@@ -746,3 +746,4 @@ const BadgeMetrics = ({ badge }) => (
     </>
   );
 }
+

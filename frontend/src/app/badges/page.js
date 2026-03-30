@@ -242,7 +242,7 @@ export default function BadgesPage() {
                                 {owned ? 'BADGE_UNLOCKED' : 'BADGE_LOCKED'}
                               </div>
                             ) : (
-                              <div className="px-3 py-1 rounded text-[9px] font-mono tracking-widest uppercase border border-white/10 text-white/40 bg-white/5">
+                              <div className="px-3 py-1 rounded text-[9px] font-mono tracking-widest uppercase border border-white/10 text-white/40 bg-white/20">
                                 BADGE_STANDARD
                               </div>
                             )}
@@ -274,7 +274,7 @@ export default function BadgesPage() {
                           <div className="mt-8 pt-8 border-t border-white/5 relative z-10">
                             <div className="flex flex-wrap gap-2">
                               {badge.skillsEarned?.slice(0, 4).map((skill, i) => (
-                                <span key={i} className="px-2 py-1 bg-white/5 border border-white/5 rounded text-[10px] text-gray-400 font-mono uppercase tracking-tighter">
+                                <span key={i} className="px-2 py-1 bg-white/20 border border-white/5 rounded text-[10px] text-gray-400 font-mono uppercase tracking-tighter">
                                   {skill}
                                 </span>
                               ))}
@@ -317,3 +317,4 @@ export default function BadgesPage() {
     </div>
   );
 }
+

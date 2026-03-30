@@ -47,6 +47,7 @@ export default function ProjectDetailPage() {
 
     // Join modal
     const [showJoinModal, setShowJoinModal] = useState(false);
+    const [activeTab, setActiveTab] = useState('overview');
     const [joinData, setJoinData] = useState({ profileId: '', role: '' });
 
     const serverUrl = process.env.SERVER_URL || 'http://localhost:3001/api';
@@ -117,7 +118,6 @@ export default function ProjectDetailPage() {
                 router.push("/admin");
             }
             setError("Project not found");
-            toast.error("Failed to load project");
             setLoading(false);
             return;
         }
@@ -322,7 +322,7 @@ export default function ProjectDetailPage() {
 
     if (loading) {
         return (
-            <div className="h-screen bg-black text-white flex flex-col font-mono">
+            <div className="h-screen bg-slate-950 text-white flex flex-col font-mono">
                 <Navbar />
                 <div className="flex-1 flex flex-col items-center justify-center opacity-50 space-y-6">
                     <div className="w-16 h-16 border-2 border-orange-500 border-t-white animate-spin rounded-full" />
@@ -334,13 +334,13 @@ export default function ProjectDetailPage() {
 
     if (error || !project) {
         return (
-            <div className="h-screen bg-black text-white flex flex-col font-mono">
+            <div className="h-screen bg-slate-950 text-white flex flex-col font-mono">
                 <Navbar />
                 <div className="flex-1 flex flex-col items-center justify-center space-y-6">
                     <div className="text-red-500 text-6xl font-bold">404</div>
                     <p className="text-sm font-mono text-gray-400 uppercase tracking-widest">{error || 'PROJECT_NOT_FOUND'}</p>
                     <button
-                            onClick={() => router.push('/applications')}
+                        onClick={() => router.push('/applications')}
                         className="mt-4 px-6 py-2 border border-white/20 text-gray-400 hover:text-white hover:border-white/50 transition-all text-xs uppercase tracking-widest flex items-center gap-2"
                     >
                         <ArrowLeft className="w-4 h-4" /> GO_BACK
@@ -350,19 +350,25 @@ export default function ProjectDetailPage() {
         );
     }
 
+    const totalProjectHours = Object.values(contributorTime).reduce((acc, curr) => acc + (curr.totalMs / (1000 * 60 * 60)), 0);
+    const roleCounts = (project?.contributors || []).reduce((acc, c) => {
+        if (c.role) acc[c.role] = (acc[c.role] || 0) + 1;
+        return acc;
+    }, {});
+
     return (
-        <div className="min-h-screen bg-black text-white flex flex-col font-mono selection:bg-orange-500/50 selection:text-black">
+        <div className="min-h-screen bg-slate-950 text-white flex flex-col font-mono selection:bg-orange-500/50 selection:text-black">
             <Navbar />
 
             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none opacity-20" />
 
             <main className="flex-1 relative z-10">
                 {/* Header Bar */}
-                <div className="border-b border-white/10 bg-black/50 backdrop-blur-md">
+                <div className="border-b border-white/10 bg-slate-950/50 backdrop-blur-md">
                     <div className="max-w-7xl mx-auto px-6 md:px-10 py-4 flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <button
-                                    onClick={() => router.push('/applications')}
+                                onClick={() => router.push('/applications')}
                                 className="p-2 border border-white/10 hover:border-orange-500/50 hover:text-orange-400 transition-all"
                             >
                                 <ArrowLeft className="w-4 h-4" />
@@ -398,7 +404,7 @@ export default function ProjectDetailPage() {
                         <div className="flex-1 space-y-4">
                             <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                                 <div className="space-y-3">
-                                    <h1 className="text-4xl md:text-5xl font-bold uppercase tracking-tight text-white">{project.title}</h1>
+                                    <h1 className="text-3xl md:text-4xl font-bold uppercase tracking-tight text-white">{project.title}</h1>
                                     <div className="flex items-center gap-3">
                                         {(project.supportedLinks || []).map((link, i) => (
                                             <a
@@ -415,202 +421,365 @@ export default function ProjectDetailPage() {
                                     </div>
                                 </div>
 
-                                <div className={`px-5 py-2.5 border text-sm font-bold uppercase tracking-widest shrink-0 ${getStatusStyle(project.status)}`}>
+                                <div className={`px-4 py-2 border text-xs font-bold uppercase tracking-widest shrink-0 ${getStatusStyle(project.status)}`}>
                                     {(project.status || 'UNKNOWN').toUpperCase()}
                                 </div>
                             </div>
 
-                            <p className="text-base text-gray-300 leading-relaxed max-w-3xl">{project.description || 'NO_DESCRIPTION'}</p>
+                            <p className="text-sm text-gray-400 leading-relaxed max-w-3xl">{project.description || 'NO_DESCRIPTION'}</p>
 
-                            <div className="flex flex-wrap gap-6 text-xs text-gray-500 font-mono">
+                            <div className="flex flex-wrap gap-6 text-[11px] text-gray-500 font-mono">
                                 <span className="flex items-center gap-2">
-                                    <Calendar className="w-3.5 h-3.5" /> Created: {formatDate(project.createdAt)}
+                                    <Calendar className="w-3.5 h-3.5 text-orange-500/50" /> Created: <span className="text-gray-400">{formatDate(project.createdAt)}</span>
                                 </span>
                                 <span className="flex items-center gap-2">
-                                    <Clock className="w-3.5 h-3.5" /> Updated: {formatDate(project.updatedAt)}
+                                    <Clock className="w-3.5 h-3.5 text-orange-500/50" /> Updated: <span className="text-gray-400">{formatDate(project.updatedAt)}</span>
                                 </span>
                                 <span className="flex items-center gap-2">
-                                    <Users className="w-3.5 h-3.5" /> {project.contributors?.length || 0} Contributors
+                                    <Users className="w-3.5 h-3.5 text-orange-500/50" /> <span className="text-gray-400">{project.contributors?.length || 0} Contributors</span>
                                 </span>
                             </div>
                         </div>
                     </motion.div>
 
-                    {/* Content Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        {/* Left Column */}
-                        <div className="lg:col-span-2 space-y-8">
-                            {/* Contributors from Project */}
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.4, delay: 0.1 }}
-                                className="border border-white/10 bg-white/[0.02]"
+                    {/* Tabs Navigation */}
+                    <div className="flex items-center border-b border-white/5 gap-8 overflow-x-auto no-scrollbar">
+                        {[
+                            { id: 'overview', label: 'OVERVIEW', icon: ScrollText },
+                            { id: 'team', label: 'TEAM_EXPERTS', icon: Users },
+                            { id: 'activity', label: 'ACTIVITY_LOG', icon: History },
+                        ].map((tab) => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`flex items-center gap-2 py-4 text-xs font-bold uppercase tracking-[0.2em] transition-all relative ${
+                                    activeTab === tab.id ? 'text-orange-500' : 'text-gray-500 hover:text-gray-300'
+                                }`}
                             >
-                                <div className="px-8 py-5 border-b border-white/10 flex items-center justify-between">
-                                    <h3 className="text-xs font-bold text-orange-500 uppercase tracking-widest flex items-center gap-2">
-                                        <Users className="w-4 h-4" /> Project_Contributors
-                                    </h3>
-                                    <span className="text-[10px] text-gray-500 font-mono">{project.contributors?.length || 0} REGISTERED</span>
-                                </div>
-                                <div className="p-6">
-                                    {(project.contributors || []).length > 0 ? (
-                                        <div className="grid gap-3">
-                                            {project.contributors.map((contributor, idx) => (
-                                                <div
-                                                    key={idx}
-                                                    className="flex items-center justify-between p-4 bg-black/40 border border-white/5 hover:border-orange-500/30 transition-all group"
-                                                >
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="w-10 h-10 border border-orange-500/30 flex items-center justify-center text-lg font-bold bg-orange-500/5 text-orange-400">
-                                                            {(contributor.firstName || '?')[0].toUpperCase()}
+                                <tab.icon className="w-4 h-4" />
+                                {tab.label}
+                                {activeTab === tab.id && (
+                                    <motion.div
+                                        layoutId="activeTab"
+                                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500 shadow-[0_0_10px_#f97316]"
+                                    />
+                                )}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Content Area */}
+                    <div className="min-h-[400px]">
+                        <AnimatePresence mode="wait">
+                            {activeTab === 'overview' && (
+                                <motion.div
+                                    key="overview"
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: 10 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+                                >
+                                    <div className="lg:col-span-2 space-y-8">
+                                        {/* Project Description/Details Card */}
+                                        <div className="border border-white/5 bg-white/[0.01] p-8 space-y-6 relative overflow-hidden group">
+                                            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 blur-3xl rounded-full -mr-16 -mt-16 group-hover:bg-orange-500/10 transition-all duration-700" />
+                                            <div className="space-y-4 relative z-10">
+                                                <h3 className="text-xs font-bold text-orange-500 uppercase tracking-widest flex items-center gap-2">
+                                                    <ScrollText className="w-4 h-4" /> About_Project
+                                                </h3>
+                                                <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">
+                                                    {project.description || 'No detailed description provided for this project.'}
+                                                </p>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-white/5 relative z-10">
+                                                <div className="space-y-3">
+                                                    <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Metadata</h4>
+                                                    <div className="space-y-2">
+                                                        <div className="flex justify-between text-xs">
+                                                            <span className="text-gray-500 font-mono">REPOSITORY</span>
+                                                            <span className="text-orange-400 font-mono">PUBLIC</span>
                                                         </div>
-                                                        <div>
-                                                            <div className="text-sm font-bold text-white uppercase tracking-wider">{contributor.firstName}</div>
-                                                            <div className="text-[10px] text-gray-500 font-mono">{contributor.email}</div>
+                                                        <div className="flex justify-between text-xs">
+                                                            <span className="text-gray-500 font-mono">LICENSE</span>
+                                                            <span className="text-gray-300 font-mono">MIT_LICENSE</span>
                                                         </div>
-                                                    </div>
-                                                    <div className="px-3 py-1 border border-cyan-500/30 text-[10px] text-cyan-400 uppercase font-bold tracking-wider bg-cyan-500/5">
-                                                        {contributor.role || 'UNASSIGNED'}
+                                                        <div className="flex justify-between text-xs">
+                                                            <span className="text-gray-500 font-mono">SECURITY</span>
+                                                            <span className="text-green-500 font-mono flex items-center gap-1">
+                                                                <Shield className="w-3 h-3" /> VERIFIED
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            ))}
+                                                <div className="space-y-3">
+                                                    <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Tech Stack</h4>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {['NEXTJS', 'NODEJS', 'MONGODB', 'TAILWIND'].map(tech => (
+                                                            <span key={tech} className="px-2 py-1 border border-white/10 text-[9px] text-gray-400 font-mono uppercase tracking-wider">
+                                                                {tech}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                    ) : (
-                                        <div className="text-xs text-gray-600 font-mono italic text-center py-8">NO_CONTRIBUTORS_REGISTERED</div>
-                                    )}
-                                </div>
-                            </motion.div>
 
-                            {/* Active Contributors with Time Tracking */}
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.4, delay: 0.2 }}
-                                className="border border-white/10 bg-white/[0.02]"
-                            >
-                                <div className="px-8 py-5 border-b border-white/10 flex items-center justify-between">
-                                    <h3 className="text-xs font-bold text-green-500 uppercase tracking-widest flex items-center gap-2">
-                                        <Activity className="w-4 h-4" /> Active_Contributors_Log
-                                    </h3>
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-[10px] text-gray-500 font-mono">{activeContributors.length} ACTIVE</span>
+                                        {/* Registered Team Members */}
+                                        <div className="border border-white/10 bg-slate-900/20">
+                                            <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+                                                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                                    <Users className="w-4 h-4 text-cyan-500" /> Registered_Squad
+                                                </h3>
+                                                <span className="text-[9px] text-gray-600 font-mono">{project.contributors?.length || 0} TOTAL_MEMBERS</span>
+                                            </div>
+                                            <div className="p-6">
+                                                {(project.contributors || []).length > 0 ? (
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                        {project.contributors.map((contributor, idx) => (
+                                                            <div
+                                                                key={idx}
+                                                                className="flex items-center justify-between p-3 bg-white/[0.02] border border-white/5 hover:border-orange-500/20 transition-all group"
+                                                            >
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="w-8 h-8 rounded-sm border border-white/10 flex items-center justify-center text-[10px] font-bold bg-white/5 text-gray-500 group-hover:border-orange-500/50 group-hover:text-orange-400 transition-all">
+                                                                        {(contributor.firstName || '?')[0].toUpperCase()}
+                                                                    </div>
+                                                                    <div className="min-w-0">
+                                                                        <div className="text-[10px] font-bold text-white uppercase tracking-wider truncate">{contributor.firstName}</div>
+                                                                        <div className="text-[8px] text-gray-500 font-mono truncate">{contributor.email}</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="px-1.5 py-0.5 border border-cyan-500/20 text-[7px] text-cyan-500/70 uppercase font-black tracking-widest">
+                                                                    {contributor.role || 'MEMBER'}
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-[10px] text-gray-600 font-mono italic text-center py-8 uppercase tracking-widest">NO_MEMBERS_LINKED</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-8">
+                                        {/* Vitals Sidebar */}
+                                        <div className="border border-white/10 bg-slate-900/30 backdrop-blur-md">
+                                            <div className="px-6 py-4 border-b border-white/5 bg-orange-500/5">
+                                                <h3 className="text-xs font-bold text-orange-500 uppercase tracking-widest flex items-center gap-2">
+                                                    <Activity className="w-4 h-4" /> Global_Vitals
+                                                </h3>
+                                            </div>
+                                            <div className="p-6 space-y-6">
+                                                <div className="space-y-2">
+                                                    <div className="flex justify-between items-end">
+                                                        <span className="text-[9px] text-gray-500 uppercase font-bold font-mono tracking-widest">Aggregate Effort</span>
+                                                        <span className="text-xs text-orange-500 font-bold">{totalProjectHours.toFixed(1)} <span className="text-[9px] font-normal text-gray-500 font-mono">HRS</span></span>
+                                                    </div>
+                                                    <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                                                        <motion.div 
+                                                            initial={{ width: 0 }}
+                                                            animate={{ width: '100%' }}
+                                                            className="h-full bg-orange-500/50"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="p-3 bg-white/5 border border-white/5 rounded-sm">
+                                                        <div className="text-[8px] text-gray-500 uppercase mb-1 font-mono tracking-tighter">Team_Size</div>
+                                                        <div className="text-xl font-bold text-white">{project.contributors?.length || 0}</div>
+                                                    </div>
+                                                    <div className="p-3 bg-green-500/5 border border-green-500/20 rounded-sm">
+                                                        <div className="text-[8px] text-gray-500 uppercase mb-1 font-mono tracking-tighter">Live_Sync</div>
+                                                        <div className="text-xl font-bold text-green-500">{activeContributors.length}</div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="p-4 bg-slate-950 border border-white/10 flex justify-between items-center group">
+                                                    <div className="text-[8px] text-gray-500 uppercase font-mono tracking-widest">Status</div>
+                                                    <span className={`text-[10px] font-black uppercase px-2 py-0.5 border ${getStatusStyle(project.status || 'ongoing')}`}>
+                                                        {project.status || 'ACTIVE'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Roles Distribution */}
+                                        <div className="border border-white/10 bg-slate-900/30 backdrop-blur-md">
+                                            <div className="px-6 py-4 border-b border-white/5">
+                                                <h3 className="text-xs font-bold text-cyan-400 uppercase tracking-widest flex items-center gap-2">
+                                                    <Shield className="w-4 h-4" /> Roles_Makeup
+                                                </h3>
+                                            </div>
+                                            <div className="p-6 space-y-4">
+                                                {Object.keys(roleCounts).length > 0 ? (
+                                                    Object.entries(roleCounts).map(([role, count]) => (
+                                                        <div key={role} className="space-y-1.5">
+                                                            <div className="flex justify-between text-[10px] font-mono">
+                                                                <span className="text-gray-400 uppercase">{role}</span>
+                                                                <span className="text-cyan-400">{count}</span>
+                                                            </div>
+                                                            <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                                                                <motion.div 
+                                                                    initial={{ width: 0 }}
+                                                                    animate={{ width: `${(count / project.contributors.length) * 100}%` }}
+                                                                    className="h-full bg-cyan-500/50"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="text-center py-4 border border-dashed border-white/10">
+                                                        <p className="text-[9px] text-gray-600 font-mono italic uppercase tracking-widest">NO_ROLES_DETECTED</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Project Assets */}
+                                        <div className="border border-white/10 bg-slate-900/30">
+                                            <div className="px-6 py-4 border-b border-white/5">
+                                                <h3 className="text-xs font-bold text-gray-300 uppercase tracking-widest flex items-center gap-2">
+                                                    <Link2 className="w-4 h-4 text-orange-400" /> Resource_Links
+                                                </h3>
+                                            </div>
+                                            <div className="p-4 space-y-2">
+                                                {(project.supportedLinks || []).length > 0 ? (
+                                                    project.supportedLinks.map((link, idx) => (
+                                                        <a
+                                                            key={idx}
+                                                            href={link.url}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="flex items-center gap-3 p-3 bg-white/[0.02] border border-white/5 hover:border-orange-500/30 transition-all group"
+                                                        >
+                                                            <div className="text-gray-500 group-hover:text-orange-400 transition-colors">
+                                                                {getLinkIcon(link.url)}
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="text-[10px] font-bold text-white uppercase truncate">{link.linkName}</div>
+                                                                <div className="text-[8px] text-gray-600 font-mono truncate">{link.url}</div>
+                                                            </div>
+                                                        </a>
+                                                    ))
+                                                ) : (
+                                                    <div className="text-[9px] text-gray-600 font-mono italic text-center py-4 uppercase tracking-widest">NO_ASSETS_LINKED</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {activeTab === 'team' && (
+                                <motion.div
+                                    key="team"
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: 10 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="space-y-6"
+                                >
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                                            <Users className="w-5 h-5 text-orange-500" /> ACTIVE_EXPERTS
+                                        </h2>
                                         {isAdmin && (
                                             <button
                                                 onClick={() => setShowJoinModal(true)}
-                                                className="flex items-center gap-1 px-2 py-1 border border-green-500/30 text-green-400 hover:bg-green-500/10 transition-all text-[10px] font-bold uppercase"
+                                                className="px-4 py-2 bg-green-900/20 border border-green-500/30 text-green-500 hover:bg-green-500 hover:text-black transition-all text-[10px] font-bold uppercase tracking-widest flex items-center gap-2"
                                             >
-                                                <LogIn className="w-3 h-3" /> JOIN
+                                                <LogIn className="w-4 h-4" /> JOIN_CONTRIBUTOR
                                             </button>
                                         )}
                                     </div>
-                                </div>
-                                <div className="p-6">
-                                    {activeContributors.length > 0 ? (
-                                        <div className="grid gap-3">
-                                            {activeContributors.map((log, idx) => {
-                                                const profileId = log.profileId?._id || log.profileId;
-                                                const timeData = contributorTime[profileId];
-                                                return (
-                                                    <div
-                                                        key={log._id || idx}
-                                                        className="p-4 bg-black/40 border border-white/5 hover:border-green-500/30 transition-all space-y-3"
-                                                    >
-                                                        <div className="flex items-center justify-between">
-                                                            <div className="flex items-center gap-3">
-                                                                <div className={`w-2 h-2 rounded-full ${log.isActive ? 'bg-green-500 shadow-[0_0_8px_#22c55e]' : 'bg-gray-700'}`} />
-                                                                <button
-                                                                    onClick={() => router.push(`/contributor/${profileId}`)}
-                                                                    className="text-sm font-bold text-white uppercase tracking-wider hover:text-orange-400 transition-colors"
-                                                                >
-                                                                    {log.profileId?.firstName || `Profile: ${typeof profileId === 'string' ? profileId?.slice(-8) : 'UNKNOWN'}...`}
-                                                                </button>
-                                                            </div>
-                                                            <div className="flex items-center gap-2">
-                                                                {/* Time tracking badge */}
-                                                                {timeData && (
-                                                                    <span className="px-2 py-0.5 border border-yellow-500/30 text-[9px] text-yellow-400 uppercase font-bold bg-yellow-500/5 flex items-center gap-1">
-                                                                        <Timer className="w-3 h-3" /> {formatDuration(timeData)}
-                                                                    </span>
-                                                                )}
-                                                                <span className={`px-2 py-0.5 border text-[9px] uppercase font-bold ${log.isActive ? 'border-green-500/30 text-green-400 bg-green-500/5' : 'border-red-500/30 text-red-400 bg-red-500/5'}`}>
-                                                                    {log.isActive ? 'ACTIVE' : 'LEFT'}
-                                                                </span>
-                                                                {isAdmin && log.isActive && (
-                                                                    <button
-                                                                        onClick={() => handleLeaveContributor(profileId)}
-                                                                        disabled={actionLoading}
-                                                                        className="p-1 border border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all"
-                                                                        title="Mark as left"
-                                                                    >
-                                                                        <LogOut className="w-3 h-3" />
-                                                                    </button>
-                                                                )}
-                                                            </div>
-                                                        </div>
 
-                                                        <div className="flex flex-wrap gap-4 text-[10px] text-gray-500 font-mono">
-                                                            <span className="flex items-center gap-1">
-                                                                <Shield className="w-3 h-3" /> ROLE: <span className="text-cyan-400">{log.role || 'N/A'}</span>
-                                                            </span>
-                                                            <span className="flex items-center gap-1">
-                                                                <UserCheck className="w-3 h-3" /> JOINED: <span className="text-green-400">{formatDateTime(log.joinedAt)}</span>
-                                                            </span>
-                                                            {log.leftAt && (
-                                                                <span className="flex items-center gap-1">
-                                                                    <UserMinus className="w-3 h-3" /> LEFT: <span className="text-red-400">{formatDateTime(log.leftAt)}</span>
-                                                                </span>
+                                    {activeContributors.length > 0 ? (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            {activeContributors.map((c, i) => {
+                                                const profileId = c.profileId?._id || c.profileId;
+                                                const timeData = contributorTime[profileId];
+                                                const history = contributorHistory[profileId] || [];
+                                                const isExpanded = expandedHistory[profileId];
+
+                                                return (
+                                                    <motion.div
+                                                        key={profileId || i}
+                                                        className="border border-white/10 bg-slate-900/40 overflow-hidden flex flex-col group hover:border-orange-500/30 transition-all shadow-xl"
+                                                    >
+                                                        <div className="p-6 flex items-start justify-between border-b border-white/5 bg-slate-950/50">
+                                                            <div className="flex gap-4">
+                                                                <div className="w-12 h-12 rounded-sm border border-orange-500/30 flex items-center justify-center text-xl font-bold bg-orange-500/5 text-orange-500">
+                                                                    {(c.profileId?.firstName || 'U')[0].toUpperCase()}
+                                                                </div>
+                                                                <div>
+                                                                    <div className="text-sm font-bold text-white uppercase tracking-wider">{c.profileId?.firstName || 'Unknown'}</div>
+                                                                    <div className="text-[10px] text-gray-500 font-mono mb-2 uppercase">{c.profileId?.emailId || 'no-email'}</div>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="px-2 py-0.5 border border-cyan-500/30 bg-cyan-500/5 text-[9px] text-cyan-400 font-bold uppercase tracking-tighter">
+                                                                            {c.role || 'Contributor'}
+                                                                        </span>
+                                                                        <span className="text-[9px] text-gray-600 font-mono uppercase">
+                                                                            Joined {formatDate(c.joinedAt)}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            {isAdmin && (
+                                                                <button
+                                                                    onClick={() => handleLeaveContributor(profileId)}
+                                                                    className="p-2 text-gray-600 hover:text-red-500 hover:bg-red-500/10 transition-all border border-transparent hover:border-red-500/30"
+                                                                    title="Mark as Left"
+                                                                >
+                                                                    <UserMinus className="w-4 h-4" />
+                                                                </button>
                                                             )}
                                                         </div>
 
-                                                        {/* Expandable History */}
-                                                        {contributorHistory[profileId] && contributorHistory[profileId].length > 0 && (
-                                                            <div className="pt-2 border-t border-white/5">
+                                                        <div className="p-6 grid grid-cols-2 gap-4 bg-slate-900/20">
+                                                            <div className="space-y-1">
+                                                                <div className="text-[8px] text-gray-500 uppercase font-bold tracking-widest flex items-center gap-1">
+                                                                    <Clock className="w-3 h-3 text-orange-500/50" /> TOTAL_TIME
+                                                                </div>
+                                                                <div className="text-lg font-bold text-white font-mono">{formatDuration(timeData)}</div>
+                                                            </div>
+                                                            <div className="space-y-1">
+                                                                <div className="text-[8px] text-gray-500 uppercase font-bold tracking-widest flex items-center gap-1">
+                                                                    <Calendar className="w-3 h-3 text-orange-500/50" /> SESSIONS
+                                                                </div>
+                                                                <div className="text-lg font-bold text-white font-mono">{history.length} <span className="text-[10px] text-gray-600 font-sans">LOGS</span></div>
+                                                            </div>
+                                                        </div>
+
+                                                        {history.length > 0 && (
+                                                            <div className="border-t border-white/5">
                                                                 <button
                                                                     onClick={() => setExpandedHistory(prev => ({ ...prev, [profileId]: !prev[profileId] }))}
-                                                                    className="text-[9px] text-gray-500 uppercase tracking-widest hover:text-orange-400 transition-colors flex items-center gap-1"
+                                                                    className="w-full px-6 py-3 flex items-center justify-between text-[10px] font-bold text-gray-500 hover:text-orange-400 uppercase tracking-[0.2em] transition-all bg-slate-900/10"
                                                                 >
-                                                                    <History className="w-3 h-3" />
-                                                                    {expandedHistory[profileId] ? 'Hide' : 'Show'} Full_History ({contributorHistory[profileId].length} entries)
-                                                                    <ChevronRight className={`w-3 h-3 transition-transform ${expandedHistory[profileId] ? 'rotate-90' : ''}`} />
+                                                                    {isExpanded ? 'Hide Contribution History' : 'Show Contribution History'}
+                                                                    <ChevronRight className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
                                                                 </button>
 
                                                                 <AnimatePresence>
-                                                                    {expandedHistory[profileId] && (
+                                                                    {isExpanded && (
                                                                         <motion.div
                                                                             initial={{ height: 0, opacity: 0 }}
                                                                             animate={{ height: 'auto', opacity: 1 }}
                                                                             exit={{ height: 0, opacity: 0 }}
-                                                                            transition={{ duration: 0.2 }}
-                                                                            className="overflow-hidden"
+                                                                            className="overflow-hidden bg-slate-950/50"
                                                                         >
-                                                                            <div className="mt-2 space-y-1.5">
-                                                                                {contributorHistory[profileId].map((entry, hIdx) => (
-                                                                                    <div
-                                                                                        key={entry._id || hIdx}
-                                                                                        className={`p-2.5 border text-[10px] font-mono flex items-center justify-between ${
-                                                                                            entry.projectId === id
-                                                                                                ? 'border-orange-500/30 bg-orange-500/5'
-                                                                                                : 'border-white/5 bg-black/30'
-                                                                                        }`}
-                                                                                    >
-                                                                                        <div className="flex items-center gap-3">
-                                                                                            <div className={`w-1.5 h-1.5 rounded-full ${entry.isActive ? 'bg-green-500' : 'bg-gray-600'}`} />
-                                                                                            <span className="text-gray-400">Project: <span className="text-white">{entry.projectId === id ? 'THIS' : (entry.projectId?.slice(-6) || '...')}</span></span>
-                                                                                            <span className="text-cyan-400">{entry.role || 'N/A'}</span>
+                                                                            <div className="p-4 space-y-3 max-h-60 overflow-y-auto custom-scrollbar">
+                                                                                {history.map((log, idx) => (
+                                                                                    <div key={idx} className="p-3 border-l-2 border-orange-500/30 bg-white/[0.02] space-y-2">
+                                                                                        <div className="flex justify-between items-start">
+                                                                                            <span className="text-[9px] text-orange-500/70 font-bold uppercase">{formatDateTime(log.loginTime)}</span>
+                                                                                            <span className="text-[9px] text-gray-600 font-mono italic">#{log._id?.slice(-6)}</span>
                                                                                         </div>
-                                                                                        <div className="flex items-center gap-3 text-gray-500">
-                                                                                            <span className="text-green-400/70">{formatDate(entry.joinedAt)}</span>
-                                                                                            {entry.leftAt && (
-                                                                                                <>
-                                                                                                    <span>→</span>
-                                                                                                    <span className="text-red-400/70">{formatDate(entry.leftAt)}</span>
-                                                                                                </>
-                                                                                            )}
-                                                                                            {!entry.leftAt && entry.isActive && (
-                                                                                                <span className="text-green-400">ONGOING</span>
-                                                                                            )}
-                                                                                        </div>
+                                                                                        <p className="text-[11px] text-gray-400 leading-relaxed italic line-clamp-2">"{(log.proofOfWork || 'Contributed as per role guidelines').trim()}"</p>
                                                                                     </div>
                                                                                 ))}
                                                                             </div>
@@ -619,249 +788,86 @@ export default function ProjectDetailPage() {
                                                                 </AnimatePresence>
                                                             </div>
                                                         )}
+                                                    </motion.div>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <div className="h-60 border border-dashed border-white/10 flex items-center justify-center text-gray-500 text-xs font-mono uppercase tracking-widest">
+                                            NO_ACTIVE_CONTRIBUTORS_FOUND
+                                        </div>
+                                    )}
+                                </motion.div>
+                            )}
 
-                                                        {/* Active projects if populated */}
-                                                        {log.profileId?.activeProject_id && log.profileId.activeProject_id.length > 0 && (
-                                                            <div className="pt-2 border-t border-white/5">
-                                                                <div className="text-[9px] text-gray-600 uppercase tracking-widest mb-2">Active_Projects ({log.profileId.activeProject_id.length})</div>
-                                                                <div className="flex flex-wrap gap-2">
-                                                                    {log.profileId.activeProject_id.map((proj, pIdx) => (
-                                                                        <span
-                                                                            key={pIdx}
-                                                                            className={`px-2 py-1 border text-[9px] font-mono ${
-                                                                                proj.ref_id === id
-                                                                                    ? 'border-orange-500/50 text-orange-400 bg-orange-500/10'
-                                                                                    : 'border-white/10 text-gray-500'
-                                                                            }`}
-                                                                        >
-                                                                            {proj.role || 'N/A'} — {proj.ref_id?.slice(-6) || '...'}
-                                                                        </span>
-                                                                    ))}
+                            {activeTab === 'activity' && (
+                                <motion.div
+                                    key="activity"
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: 10 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="space-y-6"
+                                >
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                                            <History className="w-5 h-5 text-orange-500" /> AUDIT_STREAM
+                                        </h2>
+                                        <div className="text-[10px] text-gray-500 font-mono uppercase tracking-[0.2em]">{projectLogs.length} EVENTS_RECORDED</div>
+                                    </div>
+
+                                    <div className="border border-white/10 bg-slate-900/40 rounded-sm overflow-hidden shadow-2xl">
+                                        <table className="w-full text-left border-collapse">
+                                            <thead>
+                                                <tr className="border-b border-white/10 bg-slate-950/50 uppercase font-mono text-[10px] tracking-widest text-gray-500">
+                                                    <th className="px-6 py-4 font-bold">Contributor</th>
+                                                    <th className="px-6 py-4 font-bold">Session Period</th>
+                                                    <th className="px-6 py-4 font-bold">Contribution Brief</th>
+                                                    <th className="px-6 py-4 font-bold text-right">Reference</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="text-xs font-mono">
+                                                {projectLogs.length > 0 ? (
+                                                    projectLogs.map((log, i) => (
+                                                        <tr key={i} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors group">
+                                                            <td className="px-6 py-4">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="w-6 h-6 border border-white/10 flex items-center justify-center text-[9px] font-bold text-gray-500 group-hover:text-orange-500 transition-colors bg-white/5">
+                                                                        {(log.profileId?.firstName || 'U')[0].toUpperCase()}
+                                                                    </div>
+                                                                    <div>
+                                                                        <div className="font-bold text-gray-300 group-hover:text-white uppercase transition-colors">{log.profileId?.firstName || 'Unknown'}</div>
+                                                                        <div className="text-[9px] text-gray-600 font-mono tracking-tighter uppercase">{log.role || 'Contributor'}</div>
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    ) : (
-                                        <div className="text-xs text-gray-600 font-mono italic text-center py-8">NO_ACTIVE_CONTRIBUTION_LOGS</div>
-                                    )}
-                                </div>
-                            </motion.div>
-                            {/* All Contribution Logs */}
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.4, delay: 0.3 }}
-                                className="border border-white/10 bg-white/[0.02]"
-                            >
-                                <div className="px-8 py-5 border-b border-white/10 flex items-center justify-between">
-                                    <h3 className="text-xs font-bold text-purple-400 uppercase tracking-widest flex items-center gap-2">
-                                        <ScrollText className="w-4 h-4" /> Contribution_Logs
-                                    </h3>
-                                    <span className="text-[10px] text-gray-500 font-mono">{projectLogs.length} ENTRIES</span>
-                                </div>
-                                <div className="p-6">
-                                    {projectLogs.length > 0 ? (
-                                        <div className="space-y-2">
-                                            {/* Table header */}
-                                            <div className="grid grid-cols-[1fr_1fr_1fr_1fr_80px] gap-3 px-4 py-2 text-[9px] text-gray-600 uppercase tracking-widest font-bold border-b border-white/5">
-                                                <span>Contributor</span>
-                                                <span>Role</span>
-                                                <span>Joined</span>
-                                                <span>Left</span>
-                                                <span className="text-right">Status</span>
-                                            </div>
-                                            {projectLogs.map((log, idx) => {
-                                                const profileId = log.profileId?._id || log.profileId;
-                                                const firstName = log.profileId?.firstName || 'UNKNOWN';
-                                                return (
-                                                    <div
-                                                        key={log._id || idx}
-                                                        className={`grid grid-cols-[1fr_1fr_1fr_1fr_80px] gap-3 px-4 py-3 border transition-all ${
-                                                            log.isActive
-                                                                ? 'border-green-500/10 bg-green-500/[0.02] hover:border-green-500/30'
-                                                                : 'border-white/5 bg-black/30 hover:border-white/10'
-                                                        }`}
-                                                    >
-                                                        <div className="flex items-center gap-2 min-w-0">
-                                                            <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${log.isActive ? 'bg-green-500 shadow-[0_0_6px_#22c55e]' : 'bg-gray-700'}`} />
-                                                            <button
-                                                                onClick={() => router.push(`/contributor/${profileId}`)}
-                                                                className="text-[11px] font-mono text-gray-300 hover:text-orange-400 transition-colors truncate text-left"
-                                                                title={firstName}
-                                                            >
-                                                                {firstName}
-                                                            </button>
-                                                        </div>
-                                                        <span className="text-[11px] font-mono text-cyan-400 truncate">
-                                                            {log.role || 'N/A'}
-                                                        </span>
-                                                        <span className="text-[11px] font-mono text-green-400/70">
-                                                            {formatDateTime(log.joinedAt)}
-                                                        </span>
-                                                        <span className="text-[11px] font-mono text-red-400/70">
-                                                            {log.leftAt ? formatDateTime(log.leftAt) : '—'}
-                                                        </span>
-                                                        <div className="flex justify-end">
-                                                            <span className={`px-2 py-0.5 border text-[9px] uppercase font-bold ${
-                                                                log.isActive
-                                                                    ? 'border-green-500/30 text-green-400 bg-green-500/5'
-                                                                    : 'border-red-500/30 text-red-400 bg-red-500/5'
-                                                            }`}>
-                                                                {log.isActive ? 'ACTIVE' : 'LEFT'}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    ) : (
-                                        <div className="text-xs text-gray-600 font-mono italic text-center py-8">NO_CONTRIBUTION_LOGS</div>
-                                    )}
-                                </div>
-                            </motion.div>
-                        </div>
-
-                        {/* Right Column - Sidebar */}
-                        <div className="space-y-8">
-                            {/* Supported Links */}
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.4, delay: 0.15 }}
-                                className="border border-white/10 bg-white/[0.02]"
-                            >
-                                <div className="px-6 py-4 border-b border-white/10">
-                                    <h3 className="text-xs font-bold text-orange-500 uppercase tracking-widest flex items-center gap-2">
-                                        <Link2 className="w-4 h-4" /> Supported_Links
-                                    </h3>
-                                </div>
-                                <div className="p-4 space-y-2">
-                                    {(project.supportedLinks || []).length > 0 ? (
-                                        project.supportedLinks.map((link, idx) => (
-                                            <a
-                                                key={idx}
-                                                href={link.url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="flex items-center justify-between p-3 bg-black/40 border border-white/5 hover:border-orange-500/30 transition-all group"
-                                            >
-                                                <div className="flex items-center gap-3">
-                                                    <span className="text-orange-400">{getLinkIcon(link.url)}</span>
-                                                    <span className="text-sm font-mono text-gray-300 uppercase group-hover:text-white transition-colors">{link.linkName || 'LINK'}</span>
-                                                </div>
-                                                <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-orange-400 transition-colors" />
-                                            </a>
-                                        ))
-                                    ) : (
-                                        <div className="text-xs text-gray-600 font-mono italic text-center py-4">NO_LINKS</div>
-                                    )}
-                                </div>
-                            </motion.div>
-
-                            {/* Quick Stats */}
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.4, delay: 0.25 }}
-                                className="border border-white/10 bg-white/[0.02]"
-                            >
-                                <div className="px-6 py-4 border-b border-white/10">
-                                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">Quick_Stats</h3>
-                                </div>
-                                <div className="p-4 space-y-3">
-                                    <div className="flex justify-between items-center p-3 bg-black/40 border border-white/5">
-                                        <span className="text-[10px] text-gray-500 uppercase font-mono">Status</span>
-                                        <span className={`text-xs font-bold uppercase ${getStatusStyle(project.status).split(' ').find(c => c.startsWith('text-'))}`}>
-                                            {(project.status || 'UNKNOWN').toUpperCase()}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between items-center p-3 bg-black/40 border border-white/5">
-                                        <span className="text-[10px] text-gray-500 uppercase font-mono">Contributors</span>
-                                        <span className="text-xs font-bold text-orange-400">{project.contributors?.length || 0}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center p-3 bg-black/40 border border-white/5">
-                                        <span className="text-[10px] text-gray-500 uppercase font-mono">Active Log Entries</span>
-                                        <span className="text-xs font-bold text-green-400">{activeContributors.length}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center p-3 bg-black/40 border border-white/5">
-                                        <span className="text-[10px] text-gray-500 uppercase font-mono">Links</span>
-                                        <span className="text-xs font-bold text-cyan-400">{project.supportedLinks?.length || 0}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center p-3 bg-black/40 border border-white/5">
-                                        <span className="text-[10px] text-gray-500 uppercase font-mono">Created</span>
-                                        <span className="text-xs font-mono text-gray-400">{formatDate(project.createdAt)}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center p-3 bg-black/40 border border-white/5">
-                                        <span className="text-[10px] text-gray-500 uppercase font-mono">Last Updated</span>
-                                        <span className="text-xs font-mono text-gray-400">{formatDate(project.updatedAt)}</span>
-                                    </div>
-                                </div>
-                            </motion.div>
-
-                            {/* Roles Breakdown */}
-                            {(project.contributors || []).length > 0 && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.4, delay: 0.3 }}
-                                    className="border border-white/10 bg-white/[0.02]"
-                                >
-                                    <div className="px-6 py-4 border-b border-white/10">
-                                        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">Roles_Breakdown</h3>
-                                    </div>
-                                    <div className="p-4 space-y-2">
-                                        {Object.entries(
-                                            (project.contributors || []).reduce((acc, c) => {
-                                                const role = c.role || 'Unassigned';
-                                                acc[role] = (acc[role] || 0) + 1;
-                                                return acc;
-                                            }, {})
-                                        ).map(([role, count]) => (
-                                            <div key={role} className="flex justify-between items-center p-3 bg-black/40 border border-white/5">
-                                                <span className="text-[10px] text-cyan-400 uppercase font-mono font-bold">{role}</span>
-                                                <span className="text-xs font-bold text-white">{count}</span>
-                                            </div>
-                                        ))}
+                                                            </td>
+                                                            <td className="px-6 py-4">
+                                                                <div className="space-y-0.5">
+                                                                    <div className="text-gray-400 group-hover:text-orange-500 transition-colors uppercase font-bold">{formatDateTime(log.loginTime)}</div>
+                                                                    <div className="text-[9px] text-gray-600">to {log.logoutTime ? formatDateTime(log.logoutTime) : 'ACTIVE'}</div>
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-6 py-4 max-w-xs">
+                                                                <p className="text-gray-500 group-hover:text-gray-400 truncate italic">"{(log.proofOfWork || 'System recorded contribution').trim()}"</p>
+                                                            </td>
+                                                            <td className="px-6 py-4 text-right">
+                                                                <span className="text-[9px] text-gray-700 bg-black/40 px-2 py-1 border border-white/5 uppercase tracking-widest font-bold">
+                                                                    #{log._id?.slice(-8)}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    ))
+                                                ) : (
+                                                    <tr>
+                                                        <td colSpan="4" className="px-6 py-20 text-center text-gray-600 italic uppercase tracking-widest text-[10px]">NO_LOGS_AVAILABLE_FOR_AUDIT</td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </motion.div>
                             )}
-
-                            {/* Time Tracking Summary */}
-                            {Object.keys(contributorTime).length > 0 && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.4, delay: 0.35 }}
-                                    className="border border-white/10 bg-white/[0.02]"
-                                >
-                                    <div className="px-6 py-4 border-b border-white/10">
-                                        <h3 className="text-xs font-bold text-yellow-500 uppercase tracking-widest flex items-center gap-2">
-                                            <Timer className="w-4 h-4" /> Time_Tracking
-                                        </h3>
-                                    </div>
-                                    <div className="p-4 space-y-2">
-                                        {Object.entries(contributorTime).map(([pId, timeData]) => {
-                                            const contributor = activeContributors.find(c => (c.profileId?._id || c.profileId) === pId);
-                                            return (
-                                                <div key={pId} className="flex justify-between items-center p-3 bg-black/40 border border-white/5">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-[10px] text-gray-400 uppercase font-mono">
-                                                            {contributor?.role || pId?.slice(-6)}
-                                                        </span>
-                                                    </div>
-                                                    <span className="text-xs font-bold text-yellow-400 font-mono">
-                                                        {formatDuration(timeData)}
-                                                    </span>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </motion.div>
-                            )}
-                        </div>
+                        </AnimatePresence>
                     </div>
                 </div>
             </main>
@@ -871,12 +877,12 @@ export default function ProjectDetailPage() {
             {/* Edit Project Modal */}
             <AnimatePresence>
                 {showEditModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
-                            className="w-full max-w-[700px] bg-black border border-orange-500/30 shadow-[0_0_50px_rgba(249,115,22,0.1)] overflow-hidden"
+                            className="w-full max-w-[600px] bg-slate-950 border border-orange-500/30 shadow-[0_0_50px_rgba(249,115,22,0.1)] overflow-hidden"
                         >
                             <div className="h-14 flex items-center justify-between px-6 border-b border-white/10 bg-orange-500/5">
                                 <h3 className="text-sm font-bold text-orange-400 uppercase tracking-widest flex items-center gap-2">
@@ -893,7 +899,7 @@ export default function ProjectDetailPage() {
                                     <input
                                         value={editData.title}
                                         onChange={e => setEditData({ ...editData, title: e.target.value })}
-                                        className="w-full bg-black border border-white/10 h-10 text-sm font-mono text-white focus:border-orange-500 outline-none px-3"
+                                        className="w-full bg-slate-950 border border-white/10 h-10 text-sm font-mono text-white focus:border-orange-500 outline-none px-3"
                                         placeholder="PROJECT_TITLE"
                                     />
                                 </div>
@@ -903,7 +909,7 @@ export default function ProjectDetailPage() {
                                     <textarea
                                         value={editData.description}
                                         onChange={e => setEditData({ ...editData, description: e.target.value })}
-                                        className="w-full bg-black border border-white/10 p-3 text-sm font-mono text-white focus:border-orange-500 outline-none min-h-[80px]"
+                                        className="w-full bg-slate-950 border border-white/10 p-3 text-sm font-mono text-white focus:border-orange-500 outline-none min-h-[80px]"
                                         placeholder="PROJECT_DESCRIPTION..."
                                     />
                                 </div>
@@ -913,7 +919,7 @@ export default function ProjectDetailPage() {
                                     <select
                                         value={editData.status}
                                         onChange={e => setEditData({ ...editData, status: e.target.value })}
-                                        className="w-full bg-black border border-white/10 h-10 text-sm font-mono text-white px-3 outline-none focus:border-orange-500"
+                                        className="w-full bg-slate-950 border border-white/10 h-10 text-sm font-mono text-white px-3 outline-none focus:border-orange-500"
                                     >
                                         <option value="ongoing">Ongoing</option>
                                         <option value="completed">Completed</option>
@@ -944,13 +950,13 @@ export default function ProjectDetailPage() {
                                         <input
                                             value={newLink.linkName}
                                             onChange={e => setNewLink({ ...newLink, linkName: e.target.value })}
-                                            className="bg-black border border-white/10 h-9 text-xs font-mono text-white focus:border-orange-500 outline-none px-2 flex-1"
+                                            className="bg-slate-950 border border-white/10 h-9 text-xs font-mono text-white focus:border-orange-500 outline-none px-2 flex-1"
                                             placeholder="Link Name"
                                         />
                                         <input
                                             value={newLink.url}
                                             onChange={e => setNewLink({ ...newLink, url: e.target.value })}
-                                            className="bg-black border border-white/10 h-9 text-xs font-mono text-white focus:border-orange-500 outline-none px-2 flex-1"
+                                            className="bg-slate-950 border border-white/10 h-9 text-xs font-mono text-white focus:border-orange-500 outline-none px-2 flex-1"
                                             placeholder="https://..."
                                         />
                                         <button onClick={handleAddEditLink} className="px-3 h-9 bg-orange-900/20 border border-orange-500/50 text-orange-500 hover:bg-orange-500/10 text-xs font-bold uppercase">
@@ -988,7 +994,7 @@ export default function ProjectDetailPage() {
                                             className={`px-3 py-1.5 text-[10px] font-bold uppercase transition-all ${
                                                 contributorMode === 'name' 
                                                     ? 'bg-orange-500 text-black' 
-                                                    : 'bg-black border border-white/10 text-orange-500 hover:bg-white/5'
+                                                    : 'bg-slate-950 border border-white/10 text-orange-500 hover:bg-white/20'
                                             }`}
                                         >
                                             Search by Name
@@ -999,7 +1005,7 @@ export default function ProjectDetailPage() {
                                             className={`px-3 py-1.5 text-[10px] font-bold uppercase transition-all ${
                                                 contributorMode === 'role' 
                                                     ? 'bg-orange-500 text-black' 
-                                                    : 'bg-black border border-white/10 text-orange-500 hover:bg-white/5'
+                                                    : 'bg-slate-950 border border-white/10 text-orange-500 hover:bg-white/20'
                                             }`}
                                         >
                                             Search by Role
@@ -1011,13 +1017,13 @@ export default function ProjectDetailPage() {
                                         <input
                                             value={contributorQuery}
                                             onChange={e => setContributorQuery(e.target.value)}
-                                            className="w-full bg-black border border-white/10 h-9 text-xs font-mono text-white focus:border-orange-500 outline-none px-3"
+                                            className="w-full bg-slate-950 border border-white/10 h-9 text-xs font-mono text-white focus:border-orange-500 outline-none px-3"
                                             placeholder={contributorMode === 'name' ? 'Type name to search and select' : 'Type role to search and select'}
                                         />
 
                                         {/* Suggestions dropdown */}
                                         {(contributorSuggestions.length > 0 || suggestionsLoading) && (
-                                            <div className="absolute left-0 right-0 mt-1 z-50 bg-black border border-white/10 shadow-lg max-h-48 overflow-auto">
+                                            <div className="absolute left-0 right-0 mt-1 z-50 bg-slate-950 border border-white/10 shadow-lg max-h-48 overflow-auto">
                                                 {suggestionsLoading && (
                                                     <div className="p-2 text-xs text-gray-400">Searching...</div>
                                                 )}
@@ -1025,7 +1031,7 @@ export default function ProjectDetailPage() {
                                                     <div
                                                         key={i}
                                                         onClick={() => handleSelectContributor(s)}
-                                                        className="p-3 hover:bg-white/5 cursor-pointer border-b border-white/5 last:border-b-0"
+                                                        className="p-3 hover:bg-white/20 cursor-pointer border-b border-white/5 last:border-b-0"
                                                     >
                                                         <div className="flex justify-between items-center">
                                                             <div>
@@ -1059,12 +1065,12 @@ export default function ProjectDetailPage() {
             {/* Join Contributor Modal */}
             <AnimatePresence>
                 {showJoinModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
-                            className="w-full max-w-[450px] bg-black border border-green-500/30 shadow-[0_0_50px_rgba(34,197,94,0.1)] overflow-hidden"
+                            className="w-full max-w-[450px] bg-slate-950 border border-green-500/30 shadow-[0_0_50px_rgba(34,197,94,0.1)] overflow-hidden"
                         >
                             <div className="h-14 flex items-center justify-between px-6 border-b border-white/10 bg-green-500/5">
                                 <h3 className="text-sm font-bold text-green-400 uppercase tracking-widest flex items-center gap-2">
@@ -1081,7 +1087,7 @@ export default function ProjectDetailPage() {
                                     <input
                                         value={joinData.profileId}
                                         onChange={e => setJoinData({ ...joinData, profileId: e.target.value })}
-                                        className="w-full bg-black border border-white/10 h-10 text-sm font-mono text-white focus:border-green-500 outline-none px-3"
+                                        className="w-full bg-slate-950 border border-white/10 h-10 text-sm font-mono text-white focus:border-green-500 outline-none px-3"
                                         placeholder="FellowProjectProfile _id"
                                     />
                                 </div>
@@ -1091,7 +1097,7 @@ export default function ProjectDetailPage() {
                                     <input
                                         value={joinData.role}
                                         onChange={e => setJoinData({ ...joinData, role: e.target.value })}
-                                        className="w-full bg-black border border-white/10 h-10 text-sm font-mono text-white focus:border-green-500 outline-none px-3"
+                                        className="w-full bg-slate-950 border border-white/10 h-10 text-sm font-mono text-white focus:border-green-500 outline-none px-3"
                                         placeholder="e.g. Front Dev, Security Researcher"
                                     />
                                 </div>

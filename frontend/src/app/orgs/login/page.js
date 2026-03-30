@@ -39,7 +39,7 @@ export default function OrgLoginPage() {
     };
 
     return (
-        <div className="min-h-screen bg-black text-green-500 font-mono flex flex-col items-center justify-center relative overflow-hidden">
+        <div className="min-h-screen bg-slate-950 text-green-500 font-mono flex flex-col items-center justify-center relative overflow-hidden">
             {/* Background Effects */}
             <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
             <div className="absolute inset-0 bg-radial-gradient(circle_at_center,transparent_0%,black_100%) pointer-events-none" />
@@ -62,7 +62,7 @@ export default function OrgLoginPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
                     onSubmit={handleSubmit}
-                    className="space-y-6 bg-white/5 border border-green-500/20 p-8 rounded-sm backdrop-blur-sm relative group"
+                    className="space-y-6 bg-white/20 border border-green-500/20 p-8 rounded-sm backdrop-blur-sm relative group"
                 >
                     {/* Corner accents */}
                     <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-green-500/50" />
@@ -79,7 +79,7 @@ export default function OrgLoginPage() {
                                 required
                                 value={formData.orgCode}
                                 onChange={(e) => setFormData({ ...formData, orgCode: e.target.value.toUpperCase() })}
-                                className="w-full bg-black/50 border border-green-500/20 rounded-none px-10 py-2 text-sm text-green-400 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500/50 placeholder-green-900/50 transition-all font-mono uppercase"
+                                className="w-full bg-slate-950/50 border border-green-500/20 rounded-none px-10 py-2 text-sm text-green-400 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500/50 placeholder-green-900/50 transition-all font-mono uppercase"
                                 placeholder="IITB"
                             />
                         </div>
@@ -94,7 +94,7 @@ export default function OrgLoginPage() {
                                 required
                                 value={formData.password}
                                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                className="w-full bg-black/50 border border-green-500/20 rounded-none px-10 py-2 text-sm text-green-400 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500/50 placeholder-green-900/50 transition-all font-mono"
+                                className="w-full bg-slate-950/50 border border-green-500/20 rounded-none px-10 py-2 text-sm text-green-400 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500/50 placeholder-green-900/50 transition-all font-mono"
                                 placeholder="••••••••"
                             />
                         </div>
@@ -123,3 +123,4 @@ export default function OrgLoginPage() {
         </div>
     );
 }
+

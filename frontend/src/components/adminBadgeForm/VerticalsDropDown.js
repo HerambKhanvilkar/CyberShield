@@ -68,7 +68,7 @@ const VerticalsDropDown = ({ verticals, formData, handleChange }) => {
 
 
     <div className="relative"> 
-      <div className={(isSkillsDropDownOpen ? "display" : "hidden" ) + " absolute z-50  w-full flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm rounded-2xl bg-black/60 backdrop-blur backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)]"}>
+      <div className={(isSkillsDropDownOpen ? "display" : "hidden" ) + " absolute z-50  w-full flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm rounded-2xl bg-slate-950/60 backdrop-blur backdrop-blur-md border border-white/10 shadow-[inset_0_0_10px_rgba(255,255,255,0.05)]"}>
       <div className="p-1 text-foreground w-full max-h-50  overflow-y-auto" aria-labelledby="dropdownSearchButton" >
     <div role="group">
         {filteredSkills.length > 0 ? (
@@ -93,4 +93,5 @@ const VerticalsDropDown = ({ verticals, formData, handleChange }) => {
     )
 };
 export default VerticalsDropDown;
+
 

@@ -89,7 +89,7 @@ const ForgotPasswordDialog = ({ open, onOpenChange, onBack }) => {
           {onBack && step === 1 && (
             <button
               onClick={onBack}
-              className="absolute left-3 top-3 text-gray-400 hover:text-white transition p-1 rounded hover:bg-white/10"
+              className="absolute left-3 top-3 text-gray-400 hover:text-white transition p-1 rounded hover:bg-white/20"
               aria-label="Go back"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -100,7 +100,7 @@ const ForgotPasswordDialog = ({ open, onOpenChange, onBack }) => {
           {step === 2 && (
             <button
               onClick={() => setStep(1)}
-              className="absolute left-3 top-3 text-gray-400 hover:text-white transition p-1 rounded hover:bg-white/10"
+              className="absolute left-3 top-3 text-gray-400 hover:text-white transition p-1 rounded hover:bg-white/20"
               aria-label="Go back"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -132,7 +132,7 @@ const ForgotPasswordDialog = ({ open, onOpenChange, onBack }) => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
-                  className="col-span-3 bg-black/30 border-white/10 text-white"
+                  className="col-span-3 bg-slate-950/30 border-white/10 text-white"
                 />
               </div>
             </>
@@ -148,7 +148,7 @@ const ForgotPasswordDialog = ({ open, onOpenChange, onBack }) => {
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
                   placeholder="Enter OTP"
-                  className="col-span-3 bg-black/30 border-white/10 text-white"
+                  className="col-span-3 bg-slate-950/30 border-white/10 text-white"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4 text-white">
@@ -162,7 +162,7 @@ const ForgotPasswordDialog = ({ open, onOpenChange, onBack }) => {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="New password"
-                    className="pr-10 bg-black/30 border-white/10 text-white"
+                    className="pr-10 bg-slate-950/30 border-white/10 text-white"
                   />
                   <button
                     type="button"
@@ -184,7 +184,7 @@ const ForgotPasswordDialog = ({ open, onOpenChange, onBack }) => {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Confirm password"
-                    className="pr-10 bg-black/30 border-white/10 text-white"
+                    className="pr-10 bg-slate-950/30 border-white/10 text-white"
                   />
                   <button
                     type="button"
@@ -223,3 +223,4 @@ const ForgotPasswordDialog = ({ open, onOpenChange, onBack }) => {
 };
 
 export default ForgotPasswordDialog;
+

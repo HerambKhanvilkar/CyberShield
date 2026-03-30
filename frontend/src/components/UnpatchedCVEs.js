@@ -98,7 +98,7 @@ export default function UnpatchedCVEs() {
         </div>
         
         {/* Hover Tooltip */}
-        <span className="absolute left-1/2 transform -translate-x-1/2 -top-2 opacity-0 group-hover:opacity-100 transition bg-white/10 backdrop-blur-sm text-white text-xs rounded px-2 py-1 border border-white/20">
+        <span className="absolute left-1/2 transform -translate-x-1/2 -top-2 opacity-0 group-hover:opacity-100 transition bg-white/20 backdrop-blur-sm text-white text-xs rounded px-2 py-1 border border-white/20">
           {percentage}% fixable in {label}
         </span>
       </div>

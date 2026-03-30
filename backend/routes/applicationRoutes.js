@@ -189,7 +189,7 @@ router.post('/apply', (req, res, next) => {
         }
 
         // Duplicate Check (Pending Application)
-        const existingApplicant = await Applicant.findOne({ email, status: { $in: ['PENDING', 'INTERVIEW_SCHEDULED'] } });
+        const existingApplicant = await Applicant.findOne({ email, status: { $in: ['PENDING', 'INTERVIEW_SCHEDULED', 'WAITING'] } });
         if (existingApplicant) {
             return res.status(400).json({ message: "You already have a pending application. Please check your status in the portal." });
         }
@@ -392,7 +392,7 @@ router.get('/admin/export-org-data/:orgCode', authenticateJWT, isAdmin, async (r
 // 4. Update Status (Admin)
 router.patch('/admin/status', authenticateJWT, isAdmin, [
     check('applicantId').notEmpty(),
-    check('status').isIn(['ACCEPTED', 'REJECTED']),
+    check('status').isIn(['ACCEPTED', 'REJECTED', 'WAITING']),
     // assignedRole may be provided by admin when accepting; optional string
     check('assignedRole').optional().trim().escape()
 ], async (req, res) => {
@@ -511,6 +511,13 @@ router.patch('/admin/status', authenticateJWT, isAdmin, [
                 await sendApplicationStatusEmail(applicant.email, 'REJECTED');
             } catch (emailErr) {
                 console.error(`Failed to send rejection email to ${applicant.email}:`, emailErr);
+            }
+        } else if (status === 'WAITING') {
+            // Send Waiting Email (non-fatal)
+            try {
+                await sendApplicationStatusEmail(applicant.email, 'WAITING');
+            } catch (emailErr) {
+                console.error(`Failed to send waiting email to ${applicant.email}:`, emailErr);
             }
         }
 

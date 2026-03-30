@@ -33,7 +33,7 @@ export default function ResearchPage() {
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-cyan-400 text-sm font-medium mb-8"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 border border-white/10 text-cyan-400 text-sm font-medium mb-8"
                     >
                         <FlaskConical className="w-4 h-4" />
                         <span>R&D LABORATORIES</span>
@@ -80,11 +80,11 @@ export default function ResearchPage() {
                                 className="w-48 h-64 bg-gradient-to-br from-white/10 to-white/5 border border-white/20 rounded-lg p-6 shadow-2xl backdrop-blur-xl relative group"
                             >
                                 <div className="absolute inset-0 bg-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg" />
-                                <div className="w-full h-8 bg-black/40 rounded mb-4" />
+                                <div className="w-full h-8 bg-slate-900/60 rounded mb-4" />
                                 <div className="space-y-2">
-                                    <div className="w-full h-2 bg-white/10 rounded" />
-                                    <div className="w-3/4 h-2 bg-white/10 rounded" />
-                                    <div className="w-full h-2 bg-white/10 rounded" />
+                                    <div className="w-full h-2 bg-white/20 rounded" />
+                                    <div className="w-3/4 h-2 bg-white/20 rounded" />
+                                    <div className="w-full h-2 bg-white/20 rounded" />
                                 </div>
                                 <div className="absolute bottom-6 left-6 right-6">
                                     <p className="text-[10px] text-cyan-400 font-mono mb-1">DOCUMENT {DOCUMENTS[activeDoc].id}</p>
@@ -100,7 +100,7 @@ export default function ResearchPage() {
                                     onClick={() => setActiveDoc(idx)}
                                     className={`text-left px-6 py-3 rounded-xl border transition-all ${activeDoc === idx
                                         ? 'bg-cyan-500 border-cyan-400 text-black font-bold shadow-lg shadow-cyan-500/20'
-                                        : 'bg-white/5 border-white/10 text-gray-500 hover:border-white/20'
+                                        : 'bg-white/20 border-white/10 text-gray-500 hover:border-white/20'
                                         }`}
                                 >
                                     {doc.name}
@@ -129,12 +129,12 @@ export default function ResearchPage() {
                         <motion.div
                             key={idx}
                             whileHover={{ y: -10 }}
-                            className="bg-white/5 border border-white/10 rounded-3xl p-8 relative overflow-hidden group cursor-pointer"
+                            className="bg-white/20 border border-white/10 rounded-3xl p-8 relative overflow-hidden group cursor-pointer"
                         >
                             <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${project.color} opacity-10 blur-3xl group-hover:scale-150 transition-transform duration-700`} />
 
                             <div className="flex justify-between items-start mb-6">
-                                <div className="p-4 bg-white/5 rounded-2xl text-cyan-400 border border-white/10">
+                                <div className="p-4 bg-white/20 rounded-2xl text-cyan-400 border border-white/10">
                                     {project.icon}
                                 </div>
                                 <span className={`text-[10px] font-black px-3 py-1 rounded-full border ${project.status === 'COMPLETED'
@@ -160,7 +160,7 @@ export default function ResearchPage() {
             {/* CTA */}
             <section className="py-20 px-4">
                 <div className="max-w-3xl mx-auto p-12 bg-gradient-to-br from-cyan-600 to-blue-800 rounded-[3rem] text-center shadow-2xl relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-[80px] rounded-full -translate-y-1/2 translate-x-1/2" />
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 blur-[80px] rounded-full -translate-y-1/2 translate-x-1/2" />
                     <h2 className="text-4xl font-black mb-6">READY TO JOIN THE LAB?</h2>
                     <p className="text-white/80 mb-8 max-w-md mx-auto italic">Applications are processed via Organization Codes. Contact your institutional lead for access.</p>
                     <button className="px-10 py-4 bg-white text-black font-black rounded-full hover:scale-105 transition-transform">
@@ -173,3 +173,4 @@ export default function ResearchPage() {
         </div>
     );
 }
+

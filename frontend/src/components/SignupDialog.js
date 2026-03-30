@@ -205,7 +205,7 @@ const SignupDialog = ({ open, onOpenChange, onBack }) => {
           {onBack && (
             <button
               onClick={onBack}
-              className="absolute left-3 top-3 text-gray-400 hover:text-white transition p-1 rounded hover:bg-white/10"
+              className="absolute left-3 top-3 text-gray-400 hover:text-white transition p-1 rounded hover:bg-white/20"
               aria-label="Go back"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -336,7 +336,7 @@ const SignupDialog = ({ open, onOpenChange, onBack }) => {
                     title={resendCooldown > 0 ? `Wait ${resendCooldown}s` : "Resend OTP"}
                     className={`w-9 h-9 rounded-full flex items-center justify-center p-1 ${resendCooldown > 0
                         ? 'bg-gray-700 cursor-not-allowed opacity-50'
-                        : 'bg-white/5 hover:bg-white/10'
+                        : 'bg-white/20 hover:bg-white/20'
                       }`}
                   >
                     {resendCooldown > 0 ? (
@@ -372,3 +372,4 @@ const SignupDialog = ({ open, onOpenChange, onBack }) => {
 };
 
 export default SignupDialog;
+

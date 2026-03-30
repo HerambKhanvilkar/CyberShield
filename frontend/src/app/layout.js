@@ -1,10 +1,17 @@
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
 import { AuthProvider } from "@/components/AuthContext";
+import { Lato } from "next/font/google";
 
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer, Slide } from "react-toastify";
 import { WatchlistProvider } from "@/context/WatchlistContext";
 import "./globals.css";
+
+const lato = Lato({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-sans",
+});
 
 export const metadata = {
   title: "Profile Portal | DeepCytes",
@@ -14,7 +21,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning={true}>
-      <body className="bg-[#00011e]">
+      <body className={`${lato.variable} bg-[#00011e]`}>
         <SessionProviderWrapper>
           <AuthProvider>
             <WatchlistProvider>

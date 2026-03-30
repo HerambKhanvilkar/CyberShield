@@ -109,7 +109,7 @@ export default function ContributorProfilePage() {
 
     if (loading) {
         return (
-            <div className="h-screen bg-black text-white flex flex-col font-mono">
+            <div className="h-screen bg-slate-950 text-white flex flex-col font-mono">
                 <Navbar />
                 <div className="flex-1 flex flex-col items-center justify-center opacity-50 space-y-6">
                     <div className="w-16 h-16 border-2 border-orange-500 border-t-white animate-spin rounded-full" />
@@ -121,7 +121,7 @@ export default function ContributorProfilePage() {
 
     if (error || !profile) {
         return (
-            <div className="h-screen bg-black text-white flex flex-col font-mono">
+            <div className="h-screen bg-slate-950 text-white flex flex-col font-mono">
                 <Navbar />
                 <div className="flex-1 flex flex-col items-center justify-center space-y-6">
                     <div className="text-red-500 text-6xl font-bold">404</div>
@@ -138,14 +138,14 @@ export default function ContributorProfilePage() {
     }
 
     return (
-        <div className="min-h-screen bg-black text-white flex flex-col font-mono selection:bg-orange-500/50 selection:text-black">
+        <div className="min-h-screen bg-slate-950 text-white flex flex-col font-mono selection:bg-orange-500/50 selection:text-black">
             <Navbar />
 
             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none opacity-20" />
 
             <main className="flex-1 relative z-10">
                 {/* Header Bar */}
-                <div className="border-b border-white/10 bg-black/50 backdrop-blur-md">
+                <div className="border-b border-white/10 bg-slate-950/50 backdrop-blur-md">
                     <div className="max-w-7xl mx-auto px-6 md:px-10 py-4 flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <button
@@ -256,7 +256,7 @@ export default function ContributorProfilePage() {
                                                 return (
                                                     <div
                                                         key={log._id || idx}
-                                                        className="p-5 bg-black/40 border border-white/5 hover:border-green-500/30 transition-all space-y-4 cursor-pointer group"
+                                                        className="p-5 bg-slate-900/60 border border-white/5 hover:border-green-500/30 transition-all space-y-4 cursor-pointer group"
                                                         onClick={() => router.push(`/project/${project._id}`)}
                                                     >
                                                         <div className="flex items-start justify-between gap-4">
@@ -330,7 +330,7 @@ export default function ContributorProfilePage() {
                                         {fellowshipProfile.tenures.map((tenure, idx) => (
                                             <div
                                                 key={tenure._id || idx}
-                                                className="p-4 bg-black/40 border border-white/5 hover:border-purple-500/30 transition-all space-y-3"
+                                                className="p-4 bg-slate-900/60 border border-white/5 hover:border-purple-500/30 transition-all space-y-3"
                                             >
                                                 <div className="flex items-start justify-between">
                                                     <div className="space-y-2">
@@ -395,30 +395,30 @@ export default function ContributorProfilePage() {
                                     <h3 className="text-xs font-bold text-orange-500 uppercase tracking-widest">Quick_Stats</h3>
                                 </div>
                                 <div className="p-4 space-y-3">
-                                    <div className="flex justify-between items-center p-3 bg-black/40 border border-white/5">
+                                    <div className="flex justify-between items-center p-3 bg-slate-900/60 border border-white/5">
                                         <span className="text-[10px] text-gray-500 uppercase font-mono">Active Projects</span>
                                         <span className="text-xs font-bold text-green-400">{activeProjects.length}</span>
                                     </div>
                                     {profile?.activeProject_id && (
-                                        <div className="flex justify-between items-center p-3 bg-black/40 border border-white/5">
+                                        <div className="flex justify-between items-center p-3 bg-slate-900/60 border border-white/5">
                                             <span className="text-[10px] text-gray-500 uppercase font-mono">Total Projects (All)</span>
                                             <span className="text-xs font-bold text-orange-400">{profile.activeProject_id.length}</span>
                                         </div>
                                     )}
                                     {profile?.nonActiveProject_id && profile.nonActiveProject_id.length > 0 && (
-                                        <div className="flex justify-between items-center p-3 bg-black/40 border border-white/5">
+                                        <div className="flex justify-between items-center p-3 bg-slate-900/60 border border-white/5">
                                             <span className="text-[10px] text-gray-500 uppercase font-mono">Past Projects</span>
                                             <span className="text-xs font-bold text-gray-400">{profile.nonActiveProject_id.length}</span>
                                         </div>
                                     )}
                                     {fellowshipProfile?.tenures && (
-                                        <div className="flex justify-between items-center p-3 bg-black/40 border border-white/5">
+                                        <div className="flex justify-between items-center p-3 bg-slate-900/60 border border-white/5">
                                             <span className="text-[10px] text-gray-500 uppercase font-mono">Tenures</span>
                                             <span className="text-xs font-bold text-purple-400">{fellowshipProfile.tenures.length}</span>
                                         </div>
                                     )}
                                     {fellowshipProfile?.createdAt && (
-                                        <div className="flex justify-between items-center p-3 bg-black/40 border border-white/5">
+                                        <div className="flex justify-between items-center p-3 bg-slate-900/60 border border-white/5">
                                             <span className="text-[10px] text-gray-500 uppercase font-mono">Joined</span>
                                             <span className="text-xs font-mono text-gray-400">{formatDate(fellowshipProfile.createdAt)}</span>
                                         </div>
@@ -439,18 +439,18 @@ export default function ContributorProfilePage() {
                                     </div>
                                     <div className="p-4 space-y-3">
                                         {fellowshipProfile.onboardingState && (
-                                            <div className="flex justify-between items-center p-3 bg-black/40 border border-white/5">
+                                            <div className="flex justify-between items-center p-3 bg-slate-900/60 border border-white/5">
                                                 <span className="text-[10px] text-gray-500 uppercase font-mono">Onboarding</span>
                                                 <span className="text-xs font-bold text-cyan-400">{fellowshipProfile.onboardingState}</span>
                                             </div>
                                         )}
                                         {fellowshipProfile.assigned_role && (
-                                            <div className="flex justify-between items-center p-3 bg-black/40 border border-white/5">
+                                            <div className="flex justify-between items-center p-3 bg-slate-900/60 border border-white/5">
                                                 <span className="text-[10px] text-gray-500 uppercase font-mono">Assigned Role</span>
                                                 <span className="text-xs font-bold text-cyan-400">{fellowshipProfile.assigned_role}</span>
                                             </div>
                                         )}
-                                        <div className="flex justify-between items-center p-3 bg-black/40 border border-white/5">
+                                        <div className="flex justify-between items-center p-3 bg-slate-900/60 border border-white/5">
                                             <span className="text-[10px] text-gray-500 uppercase font-mono">Email Verified</span>
                                             {fellowshipProfile.isEmailVerified ? (
                                                 <CheckCircle className="w-4 h-4 text-green-500" />
@@ -459,7 +459,7 @@ export default function ContributorProfilePage() {
                                             )}
                                         </div>
                                         {fellowshipProfile.nda?.version && (
-                                            <div className="flex justify-between items-center p-3 bg-black/40 border border-white/5">
+                                            <div className="flex justify-between items-center p-3 bg-slate-900/60 border border-white/5">
                                                 <span className="text-[10px] text-gray-500 uppercase font-mono">NDA Version</span>
                                                 <span className="text-xs font-mono text-gray-400">{fellowshipProfile.nda.version}</span>
                                             </div>
@@ -481,7 +481,7 @@ export default function ContributorProfilePage() {
                                     </div>
                                     <div className="p-4 space-y-2">
                                         {profile.activeProject_id.map((proj, idx) => (
-                                            <div key={proj._id || idx} className="p-3 bg-black/40 border border-white/5 hover:border-cyan-500/30 transition-all">
+                                            <div key={proj._id || idx} className="p-3 bg-slate-900/60 border border-white/5 hover:border-cyan-500/30 transition-all">
                                                 <div className="flex items-center justify-between text-[10px] font-mono">
                                                     <span className="text-cyan-400 font-bold uppercase">{proj.role || 'N/A'}</span>
                                                     <span className="text-gray-500">{proj.ref_id?.slice(-6) || '...'}</span>
@@ -500,3 +500,4 @@ export default function ContributorProfilePage() {
         </div>
     );
 }
+
