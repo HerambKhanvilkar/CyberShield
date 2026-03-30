@@ -17,23 +17,23 @@ export default function AdminLogin() {
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const router = useRouter();
-    const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
-    const { fetchUser } = useAuthContext();
+    const { user, loading: authLoading, fetchUser } = useAuthContext();
 
     useEffect(() => {
-        // If already logged in as admin, redirect (only once)
-        if (hasCheckedAuth) return;
+        if (authLoading) return;
         
-        const user = JSON.parse(localStorage.getItem("user") || "null");
-        const token = localStorage.getItem("accessToken");
-        
-        if (user && user.isAdmin && token) {
-            setHasCheckedAuth(true);
+        if (user && user.isAdmin) {
             router.push("/applications");
-        } else {
-            setHasCheckedAuth(true);
         }
-    }, [router, hasCheckedAuth]);
+    }, [user, authLoading, router]);
+
+    if (authLoading) {
+        return (
+            <div className="h-screen w-screen bg-[#0d0d0d] flex items-center justify-center font-sans">
+                <div className="text-cyan-500 animate-pulse tracking-widest text-xl uppercase font-black">Decrypting Session...</div>
+            </div>
+        );
+    }
 
     const handleLogin = async (e) => {
         e.preventDefault();

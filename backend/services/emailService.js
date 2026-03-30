@@ -394,27 +394,42 @@ const sendApplicationStatusEmail = async (email, status, options = {}) => {
   if (!options.bypassQueue && isQueueEnabled()) {
     return enqueueEmail('APPLICATION_STATUS', { email, status });
   }
+
   const isAccepted = status === 'ACCEPTED';
-  const subject = isAccepted ? 'DeepCytes Fellowship Application Approved' : 'DeepCytes Fellowship Application Status';
+  const isWaiting = status === 'WAITING';
+
+  let subject;
+  if (isAccepted) {
+    subject = 'DeepCytes Fellowship Application Approved';
+  } else if (isWaiting) {
+    subject = 'DeepCytes Fellowship Application Update: Waiting List';
+  } else {
+    subject = 'DeepCytes Fellowship Application Status';
+  }
+
   const portalLink = `${process.env.FRONTEND || 'http://localhost:3000'}/portal`;
 
   const html = getPremiumTemplate({
-    title: isAccepted ? 'Application Approved' : 'Application Status Update',
+    title: isAccepted ? 'Application Approved' : (isWaiting ? 'Application in Waiting Area' : 'Application Status Update'),
     message: isAccepted
       ? 'We are pleased to inform you that your application for the DeepCytes Fellowship has been approved. Please follow the instructions below to proceed.'
-      : 'Thank you for your interest in the DeepCytes Fellowship. After careful consideration, we regret to inform you that we are unable to offer you a position at this time.',
+      : (isWaiting
+        ? 'Thank you for your patience as we review your application for the DeepCytes Fellowship. We wanted to inform you that your application is currently being held in our waiting area.'
+        : 'Thank you for your interest in the DeepCytes Fellowship. After careful consideration, we regret to inform you that we are unable to offer you a position at this time.'),
     bodyContent: `
       <div style="margin: 30px 0;">
-        <span style="font-size: 14px; color: ${isAccepted ? '#10b981' : '#ef4444'}; font-family: monospace; border: 1px solid currentColor; padding: 4px 12px; border-radius: 100px;">
+        <span style="font-size: 14px; color: ${isAccepted ? '#10b981' : (isWaiting ? '#f59e0b' : '#ef4444')}; font-family: monospace; border: 1px solid currentColor; padding: 4px 12px; border-radius: 100px;">
           STATUS: ${status}
         </span>
       </div>
       ${isAccepted ? `
         <p style="color: #b0b0b0; margin-bottom: 25px;">Your credentials have been provisioned. You may now access the Fellowship Portal to begin onboarding.</p>
         <a href="${portalLink}" style="display: inline-block; padding: 14px 28px; background: #ffffff; color: #000; text-decoration: none; font-weight: bold; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; border-radius: 4px;">Access Fellowship Portal</a>
+      ` : (isWaiting ? `
+        <p style="color: #b0b0b0; margin-bottom: 25px;">Our team is giving your profile further consideration as part of a secondary pool. We will provide a final decision as soon as possible.</p>
       ` : `
         <p style="color: #888; font-size: 14px;">We encourage you to apply for future cohorts. Your application data will be retained for 12 months for future consideration.</p>
-      `}
+      `)}
     `
   });
 

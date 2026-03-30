@@ -512,6 +512,13 @@ router.patch('/admin/status', authenticateJWT, isAdmin, [
             } catch (emailErr) {
                 console.error(`Failed to send rejection email to ${applicant.email}:`, emailErr);
             }
+        } else if (status === 'WAITING') {
+            // Send Waiting Email (non-fatal)
+            try {
+                await sendApplicationStatusEmail(applicant.email, 'WAITING');
+            } catch (emailErr) {
+                console.error(`Failed to send waiting email to ${applicant.email}:`, emailErr);
+            }
         }
 
         await HiringAuditLog.create({

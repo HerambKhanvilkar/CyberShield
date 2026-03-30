@@ -802,17 +802,29 @@ function AdminDashboardContent() {
     };
 
     // Check authentication before loading data
-    useEffect(() => {
-        if (authLoading) return; // Wait for useAuth hook to finish loading
+     useEffect(() => {
+         if (authLoading) return; // Wait for useAuth hook to finish loading
+ 
+         if (!user || !user.isAdmin) {
+             router.push("/admin");
+             return;
+         }
+ 
+         fetchData();
+         fetchProjects();
+     }, [user, authLoading, router]);
 
-        if (!user || !user.isAdmin) {
-            router.push("/admin");
-            return;
-        }
+     if (authLoading) {
+         return (
+             <div className="h-screen w-screen bg-slate-950 flex items-center justify-center font-sans">
+                 <div className="text-cyan-500 animate-pulse tracking-widest text-xl uppercase font-black">Decrypting Dashboard...</div>
+             </div>
+         );
+     }
 
-        fetchData();
-        fetchProjects();
-    }, [user, authLoading, router]);
+     if (!user || !user.isAdmin) {
+         return null;
+     }
 
     const handleUpdateAppStatus = async (status) => {
         setActionLoading(true);
