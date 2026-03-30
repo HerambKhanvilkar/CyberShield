@@ -802,29 +802,63 @@ function AdminDashboardContent() {
     };
 
     // Check authentication before loading data
-     useEffect(() => {
-         if (authLoading) return; // Wait for useAuth hook to finish loading
- 
-         if (!user || !user.isAdmin) {
-             router.push("/admin");
-             return;
-         }
- 
-         fetchData();
-         fetchProjects();
-     }, [user, authLoading, router]);
+    useEffect(() => {
+        if (authLoading) return; // Wait for useAuth hook to finish loading
 
-     if (authLoading) {
-         return (
-             <div className="h-screen w-screen bg-slate-950 flex items-center justify-center font-sans">
-                 <div className="text-cyan-500 animate-pulse tracking-widest text-xl uppercase font-black">Decrypting Dashboard...</div>
-             </div>
-         );
-     }
+        if (!user || !user.isAdmin) {
+            router.push("/admin");
+            return;
+        }
 
-     if (!user || !user.isAdmin) {
-         return null;
-     }
+        fetchData();
+        fetchProjects();
+    }, [user, authLoading, router]);
+
+    const searchParams = useSearchParams();
+    useEffect(() => {
+        if (loading) return;
+        const email = searchParams.get('email');
+        const type = searchParams.get('type');
+        const orgCode = searchParams.get('orgCode');
+        const memberEmail = searchParams.get('memberEmail');
+
+        // legacy/email shortcuts (apps / fellows)
+        if (email && type) {
+            if (type === 'apps') {
+                const item = apps.find(a => a.email === email);
+                if (item) { setActiveTab('applications'); setSelectedItem(item); }
+            } else if (type === 'fellows') {
+                const item = fellows.find(f => f.email === email);
+                if (item) { setActiveTab('fellows'); setSelectedItem(item); }
+            }
+            return; // prefer explicit email/type handling when present
+        }
+
+        // restore org inspector + nested member from query (persists view across reload)
+        if (orgCode) {
+            const org = orgs.find(o => o.code === orgCode);
+            if (org) {
+                setActiveTab('orgs');
+                setSelectedItem(org);
+                if (memberEmail) {
+                    const mem = (fellows || []).find(f => f.email === memberEmail) || (apps || []).find(a => a.email === memberEmail);
+                    if (mem) setOrgInspectorMember(mem);
+                }
+            }
+        }
+    }, [loading, searchParams, orgs, fellows, apps]);
+
+    if (authLoading) {
+        return (
+            <div className="h-screen w-screen bg-slate-950 flex items-center justify-center font-sans">
+                <div className="text-cyan-500 animate-pulse tracking-widest text-xl uppercase font-black">Decrypting Dashboard...</div>
+            </div>
+        );
+    }
+
+    if (!user || !user.isAdmin) {
+        return null;
+    }
 
     const handleUpdateAppStatus = async (status) => {
         setActionLoading(true);
@@ -1084,39 +1118,6 @@ function AdminDashboardContent() {
         } catch (error) { toast.error("Update failed"); }
     };
 
-    const searchParams = useSearchParams();
-    useEffect(() => {
-        if (loading) return;
-        const email = searchParams.get('email');
-        const type = searchParams.get('type');
-        const orgCode = searchParams.get('orgCode');
-        const memberEmail = searchParams.get('memberEmail');
-
-        // legacy/email shortcuts (apps / fellows)
-        if (email && type) {
-            if (type === 'apps') {
-                const item = apps.find(a => a.email === email);
-                if (item) { setActiveTab('applications'); setSelectedItem(item); }
-            } else if (type === 'fellows') {
-                const item = fellows.find(f => f.email === email);
-                if (item) { setActiveTab('fellows'); setSelectedItem(item); }
-            }
-            return; // prefer explicit email/type handling when present
-        }
-
-        // restore org inspector + nested member from query (persists view across reload)
-        if (orgCode) {
-            const org = orgs.find(o => o.code === orgCode);
-            if (org) {
-                setActiveTab('orgs');
-                setSelectedItem(org);
-                if (memberEmail) {
-                    const mem = (fellows || []).find(f => f.email === memberEmail) || (apps || []).find(a => a.email === memberEmail);
-                    if (mem) setOrgInspectorMember(mem);
-                }
-            }
-        }
-    }, [loading, searchParams, orgs, fellows, apps]);
 
     const filteredApps = apps.filter(a => {
         const matchesSearch = a.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
