@@ -1365,7 +1365,7 @@ function AdminDashboardContent() {
                             <span className="px-2 py-1.5 border border-white/10">CODE: {selectedItem.code}</span>
                             <span className={`px-2 py-1.5 border border-white/10 ${selectedItem.isActive ? 'text-green-500' : 'text-red-500'}`}>{selectedItem.isActive ? 'ACTIVE' : 'INACTIVE'}</span>
                             <button
-                                onClick={() => handleExportOrgCSV(selectedItem.code)}
+                                onClick={() => handleExportOrgData(selectedItem.code)}
                                 className="p-2 border border-cyan-500/50 text-cyan-500 hover:bg-cyan-500 hover:text-black flex items-center justify-center gap-2 transition-all text-[10px] font-bold uppercase tracking-widest"
                                 title="Download organization data as CSV"
                             >
