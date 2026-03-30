@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { headers } from "../../../next.config";
 
 function AdminDashboardContent() {
-    const { user, logout } = useAuthContext();
+    const { user, logout, loading: authLoading } = useAuthContext();
     const sixMonthsFromNow = () => {
         const d = new Date();
         d.setMonth(d.getMonth() + 6);
@@ -803,17 +803,16 @@ function AdminDashboardContent() {
 
     // Check authentication before loading data
     useEffect(() => {
-        const token = localStorage.getItem("accessToken");
-        const user = JSON.parse(localStorage.getItem("user") || "null");
+        if (authLoading) return; // Wait for useAuth hook to finish loading
 
-        if (!token || !user || !user.isAdmin) {
+        if (!user || !user.isAdmin) {
             router.push("/admin");
             return;
         }
 
         fetchData();
         fetchProjects();
-    }, []);
+    }, [user, authLoading, router]);
 
     const handleUpdateAppStatus = async (status) => {
         setActionLoading(true);
