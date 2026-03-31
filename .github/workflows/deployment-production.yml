@@ -40,11 +40,6 @@ jobs:
           key: ${{ secrets.PROD_AZURE_VM_PEM }}
           source: "deploy.tar.gz"
           target: "/home/${{ secrets.PROD_SERVER_USER }}"
-          host: ${{ secrets.PROD_SERVER_IP }}
-          username: ${{ secrets.PROD_SERVER_USER }}
-          key: ${{ secrets.PROD_AZURE_VM_PEM }}
-          source: "deploy.zip"
-          target: "/home/${{ secrets.PROD_SERVER_USER }}"
 
       - name: Run & Deploy on Azure VM
         uses: appleboy/ssh-action@master
