@@ -1229,7 +1229,11 @@ function AdminDashboardContent() {
     const renderOrgInspector = () => {
         const orgApps = apps.filter(a => a.orgCode === selectedItem.code && a.status === 'PENDING');
         const orgInterviewees = apps.filter(a => a.orgCode === selectedItem.code && (a.status === 'INTERVIEW_SCHEDULED' || a.status === 'INTERVIEW_SKIPPED'));
-        const orgFellows = fellows.filter(f => f.orgCode === selectedItem.code);
+        const orgFellows = fellows.filter(f => {
+            const hasOrgCode = String(f.orgCode || '').trim().toUpperCase() === String(selectedItem.code || '').trim().toUpperCase();
+            const tenureMatch = Array.isArray(f.tenures) && f.tenures.some(t => String(t.orgCode || '').trim().toUpperCase() === String(selectedItem.code || '').trim().toUpperCase());
+            return hasOrgCode || tenureMatch;
+        });
         const orgWaiting = apps.filter(a => a.orgCode === selectedItem.code && a.status === 'WAITING');
         const orgRejected = apps.filter(a => a.orgCode === selectedItem.code && a.status === 'REJECTED');
 
