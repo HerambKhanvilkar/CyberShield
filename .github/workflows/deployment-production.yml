@@ -12,13 +12,34 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Create zip file of the repo to transfer
+      - name: Cache backend node_modules
+        uses: actions/cache@v3
+        with:
+          path: backend/node_modules
+          key: ${{ runner.os }}-backend-${{ hashFiles('**/backend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-backend-
+
+      - name: Cache frontend node_modules
+        uses: actions/cache@v3
+        with:
+          path: frontend/node_modules
+          key: ${{ runner.os }}-frontend-${{ hashFiles('**/frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-frontend-
+
+      - name: Create tar file of the repo to transfer
         run: |
-          zip -r deploy.zip . -x "*.git*" "node_modules/*" ".next/*" "coverage/*"
+          tar --exclude='.git' --exclude='node_modules' --exclude='frontend/.next' --exclude='coverage' -czf deploy.tar.gz .
 
       - name: Copy files to Azure VM
         uses: appleboy/scp-action@master
         with:
+          host: ${{ secrets.PROD_SERVER_IP }}
+          username: ${{ secrets.PROD_SERVER_USER }}
+          key: ${{ secrets.PROD_AZURE_VM_PEM }}
+          source: "deploy.tar.gz"
+          target: "/home/${{ secrets.PROD_SERVER_USER }}"
           host: ${{ secrets.PROD_SERVER_IP }}
           username: ${{ secrets.PROD_SERVER_USER }}
           key: ${{ secrets.PROD_AZURE_VM_PEM }}
@@ -59,8 +80,8 @@ jobs:
                 sudo apt-get install -y unzip
             fi
 
-            # Unzip the deployment package
-            unzip -o /home/${{ secrets.PROD_SERVER_USER }}/deploy.zip
+            # Extract the deployment package
+            tar -xzf /home/${{ secrets.PROD_SERVER_USER }}/deploy.tar.gz -C /home/${{ secrets.PROD_SERVER_USER }}/Badge-Viewer
 
             # Set ownership and permissions
             sudo chown -R ${{ secrets.PROD_SERVER_USER }}:${{ secrets.PROD_SERVER_USER }} /home/${{ secrets.PROD_SERVER_USER }}/Badge-Viewer
@@ -69,14 +90,14 @@ jobs:
             # First run the backend
             cd backend
             if [ -f package-lock.json ]; then
-              npm ci
+              npm ci --cache ~/.npm_cache --prefer-offline
             else
-              npm install
+              npm install --cache ~/.npm_cache --prefer-offline
             fi
 
             pm2 describe Badge-Viewer-Backend > /dev/null
             if [ $? -eq 0 ]; then
-              pm2 restart Badge-Viewer-Backend
+              pm2 reload Badge-Viewer-Backend
             else
               pm2 start npm --name "Badge-Viewer-Backend" -- start
             fi
@@ -86,16 +107,16 @@ jobs:
             # Now move to frontend, build and start the PM2 process
             cd ../frontend
             if [ -f package-lock.json ]; then
-              npm ci
+              npm ci --cache ~/.npm_cache --prefer-offline
             else
-              npm install
+              npm install --cache ~/.npm_cache --prefer-offline
             fi
 
             npm run build
 
             pm2 describe Badge-Viewer-Frontend > /dev/null
             if [ $? -eq 0 ]; then
-              pm2 restart Badge-Viewer-Frontend
+              pm2 reload Badge-Viewer-Frontend
             else
               pm2 start npm --name "Badge-Viewer-Frontend" -- start
             fi

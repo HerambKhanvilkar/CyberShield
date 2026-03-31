@@ -4,16 +4,16 @@ const FellowshipProfile = require('../../models/FellowshipProfile');
 
 router.get('/contributor/autocompleteByname', async(req, res)=>{
     try{
-        const letter = req.query.letter;
+        const queryText = (req.query.q || req.query.letter || '').trim();
 
-        if(!letter){
-            return res.status(400).json({ message: "Please provide first letter"});
+        if(!queryText){
+            return res.status(400).json({ message: "Please provide name query"});
         }
 
         const contributor_details = await FellowshipProfile.find(
             {
                 firstName: {
-                    $regex: "^" + letter,
+                    $regex: "^" + queryText,
                     $options: "i"
                 }
             },
@@ -32,16 +32,16 @@ router.get('/contributor/autocompleteByname', async(req, res)=>{
 })
 router.get('/contributor/autocompleteByrole', async(req, res)=>{
     try{
-        const letter = req.query.letter;
+        const queryText = (req.query.q || req.query.letter || '').trim();
 
-        if(!letter){
-            return res.status(400).json({ message: "Please provide first letter"});
+        if(!queryText){
+            return res.status(400).json({ message: "Please provide role query"});
         }
 
         const contributor_details = await FellowshipProfile.find(
             {
                 assigned_role: {
-                    $regex: "^" + letter,
+                    $regex: "^" + queryText,
                     $options: "i"
                 }
             },

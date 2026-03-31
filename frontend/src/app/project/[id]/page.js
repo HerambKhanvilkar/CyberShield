@@ -70,10 +70,10 @@ export default function ProjectDetailPage() {
             setContributorSuggestions([]);
             return;
         }
-        const letter = encodeURIComponent(query[0].toLowerCase());
+        const q = encodeURIComponent(query.trim());
         const endpoint = contributorMode === 'name' 
-            ? `${serverUrl}/contributor/autocompleteByname?letter=${letter}` 
-            : `${serverUrl}/contributor/autocompleteByrole?letter=${letter}`;
+            ? `${serverUrl}/contributor/autocompleteByname?q=${q}` 
+            : `${serverUrl}/contributor/autocompleteByrole?q=${q}`;
 
         try {
             setSuggestionsLoading(true);

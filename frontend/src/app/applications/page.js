@@ -156,9 +156,9 @@ function AdminDashboardContent() {
             setContributorSuggestions([]);
             return;
         }
-        const letter = encodeURIComponent(query[0].toLowerCase());
+        const q = encodeURIComponent(query.trim());
         const serverUrl = process.env.SERVER_URL || 'http://localhost:3000/api';
-        const endpoint = contributorMode === 'name' ? `${serverUrl}/contributor/autocompleteByname?letter=${letter}` : `${serverUrl}/contributor/autocompleteByrole?letter=${letter}`
+        const endpoint = contributorMode === 'name' ? `${serverUrl}/contributor/autocompleteByname?q=${q}` : `${serverUrl}/contributor/autocompleteByrole?q=${q}`
 
         try {
             setSuggestionsLoading(true);
@@ -167,7 +167,7 @@ function AdminDashboardContent() {
             const data = await res.json();
             setContributorSuggestions(Array.isArray(data) ? data : []);
         } catch (err) {
-            console.error('Autocomplete fetch error');
+            console.error('Autocomplete fetch error', err);
             setContributorSuggestions([]);
         } finally {
             setSuggestionsLoading(false);
