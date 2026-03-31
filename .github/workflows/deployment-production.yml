@@ -30,7 +30,7 @@ jobs:
 
       - name: Create tar file of the repo to transfer
         run: |
-          tar --exclude='.git' --exclude='node_modules' --exclude='frontend/.next' --exclude='coverage' -czf deploy.tar.gz .
+          tar --exclude='.git' --exclude='node_modules' --exclude='frontend/.next' --exclude='coverage' --exclude='deploy.tar.gz' -czf deploy.tar.gz .
 
       - name: Copy files to Azure VM
         uses: appleboy/scp-action@master
